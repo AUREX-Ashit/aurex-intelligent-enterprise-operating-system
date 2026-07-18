@@ -15,8 +15,12 @@ node_modules/
 # Logs
 *.log
 
+# Microsoft Office temporary files
+~$*
+
 # OS Files
 Thumbs.db
+Desktop.ini
 .DS_Store
 
 # Build

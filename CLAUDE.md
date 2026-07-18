@@ -243,9 +243,15 @@ A task is complete only when:
 
 -   implementation is complete
 -   architecture is respected
+-   the AUREX Design System (DS-001) is respected
+-   the governing Capability Specification is respected
 -   tests pass
 -   security is verified
+-   accessibility is verified
+-   performance is acceptable
 -   tenant isolation is preserved
+-   the change is traceable to its governing canonical documents
+-   the implementation is maintainable
 -   documentation is updated if required
 -   build succeeds
 
@@ -263,6 +269,13 @@ A task is complete only when:
 8.  Never guess.
 9.  Preserve architectural integrity.
 10. Leave the repository better than you found it.
+11. Justify before creating.
+12. One entity, one definition. One database table, one responsibility.
+13. One API, one responsibility. One event, one purpose. One
+    permission, one responsibility.
+14. One component, one purpose. One token, one meaning. One theme,
+    one behaviour.
+15. One visual language. One design system.
 
 # 16. Canonical Authority Resolution
 
@@ -273,6 +286,12 @@ Use the document that owns the architectural concern.
 
 Examples:
 
+- Enterprise Architecture → ARCH-000
+- Design language, design tokens, themes, brand architecture,
+  components, accessibility, responsive behaviour, motion, and design
+  governance → DS-001
+- Feature behaviour → the governing Capability Specification
+- Business implementation → the governing Business Activity
 - Enterprise Experience → PE-001
 - Capability Experience → PE-001-Cxxx
 - Business Activity implementation methodology → IMP-001
@@ -280,6 +299,8 @@ Examples:
 - Enterprise Intelligence → EIA-001
 - Canonical enterprise vocabulary → CIL
 - Architecture decisions → ADRs
+
+No implementation may contradict these constitutional authorities.
 
 Do not merge conflicting definitions.
 
@@ -319,7 +340,9 @@ Do NOT infer missing architecture.
 Do NOT redesign existing solutions.
 
 If the required behaviour, structure or business rule is not explicitly
-documented:
+documented, if the governing architectural authority cannot be
+identified, or if creation of a new artifact cannot be justified
+against the existing architecture:
 
 STOP.
 
@@ -328,6 +351,8 @@ Report precisely what information is missing.
 Ask for clarification.
 
 Never fill architectural or business gaps using assumptions.
+
+Never guess. Guessing is prohibited.
 
 Implementation follows documentation.
 
@@ -353,6 +378,12 @@ Do NOT introduce:
 • new navigation models
 • new security models
 • new technology choices
+• new permissions
+• new AUREX components, design tokens, or themes
+• new background jobs or scheduled processes
+• alternative UI libraries, design systems, or token systems
+• parallel component libraries
+• duplicate Business Activities, APIs, or entities
 
 unless they are explicitly documented or approved.
 
@@ -375,14 +406,20 @@ Never change architecture to make implementation easier.
 
 # 19. Implementation Start Checklist (Mandatory)
 
-# 19. Implementation Start Checklist (Mandatory)
+The CorpStage Enterprise Operating System has entered **Architecture
+Implementation Mode**.
 
-The CorpStage Enterprise Operating System has completed its
-Architecture, Design, Data Modeling and Capability Engineering phases.
+Enterprise Architecture (ARCH-000), the Design System (DS-001),
+Capability Engineering, and Engineering Documentation are complete.
+Architecture creation has ended; architecture implementation begins.
 
 Implementation SHALL conform to the approved architecture.
 
 Implementation SHALL NEVER redefine architecture.
+
+Architecture SHALL NOT evolve during implementation unless explicitly
+approved through the existing Architecture Decision Record (ADR)
+process (`architecture/07-Decisions`).
 
 No implementation work shall begin until the following checklist has
 been completed.
@@ -446,6 +483,18 @@ This includes, but is not limited to:
 • AUREX Components
 • Design Tokens
 • Themes
+• Brand Architecture
+• Colours, Typography, Spacing
+• Motion and Responsive Behaviour
+• Accessibility Behaviour
+• Visual Hierarchy and Interaction Patterns
+
+DS-001 is the sole authority for every item in this subsection. Claude
+Code SHALL NEVER invent a component, token, theme, colour, typographic
+scale, spacing value, motion behaviour, responsive behaviour,
+accessibility behaviour, visual hierarchy, or interaction pattern. If
+DS-001 does not define something a feature requires, Claude Code SHALL
+STOP and request architectural clarification rather than inventing one.
 
 Claude Code SHALL list the governing assets reviewed before
 implementation begins.
@@ -468,9 +517,14 @@ For every requested feature, Claude Code MUST identify every existing
 • Role
 • Screen
 • Component
+• Design Token
+• Theme
 • Business Rule
+• Test
 
 already governing the requested functionality.
+
+Failure to perform this search is an architectural violation.
 
 For every identified asset Claude Code SHALL determine whether it is
 
@@ -498,6 +552,16 @@ The analysis SHALL identify
 • Missing documentation
 
 • Potential conflicts
+
+• Why each existing asset cannot satisfy the requirement as-is
+
+• Why extension of an existing asset is insufficient, where applicable
+
+• Why creation of a new artifact is architecturally necessary, if
+  proposed
+
+Claude Code SHALL NOT create a new artifact unless this justification
+is demonstrated. Creation is always the final option, never the first.
 
 -------------------------------------------------------------------------------
 19.4 Architectural Impact Assessment
@@ -606,6 +670,24 @@ After implementation Claude Code SHALL verify
 ✓ Existing Business Activities were reused where applicable
 
 ✓ Existing AUREX components were reused where applicable
+
+✓ Existing Design Tokens were reused where applicable
+
+✓ Existing Themes were reused where applicable
+
+✓ DS-001 (Design System) compliance maintained
+
+✓ ARCH-000 (Enterprise Architecture) compliance maintained
+
+✓ Reuse was proven impossible before any creation
+
+✓ Extension was proven insufficient before any creation
+
+✓ Architectural justification was recorded for every new artifact
+
+✓ Tests were updated
+
+✓ Documentation was updated
 
 ✓ No undocumented architecture was introduced
 

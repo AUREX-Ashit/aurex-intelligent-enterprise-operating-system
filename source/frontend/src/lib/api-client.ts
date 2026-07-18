@@ -70,7 +70,7 @@ async function request<T>(
   headers.set("Content-Type", "application/json");
 
   const token = tokenProvider();
-  if (token) {
+  if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
