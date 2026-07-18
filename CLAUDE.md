@@ -292,3 +292,366 @@ If two canonical documents appear to conflict:
 5. Report the conflict before changing code.
 
 Never resolve canonical architecture conflicts by assumption.
+
+# 17. Canonical Document Compliance (Mandatory)
+
+The CorpStage Enterprise Operating System has already completed its
+Architecture and Design phases.
+
+The repository contains the approved canonical specifications for the
+platform.
+
+These documents are the ONLY source of truth.
+
+Before implementing any feature, capability, user journey, API,
+database change or UI, Claude Code MUST:
+
+1. Identify the canonical documents governing the requested feature.
+2. Review those documents before implementation.
+3. List the documents reviewed at the beginning of the implementation report.
+
+Implementation SHALL conform to the approved documentation.
+
+Do NOT implement functionality based on assumptions.
+
+Do NOT infer missing architecture.
+
+Do NOT redesign existing solutions.
+
+If the required behaviour, structure or business rule is not explicitly
+documented:
+
+STOP.
+
+Report precisely what information is missing.
+
+Ask for clarification.
+
+Never fill architectural or business gaps using assumptions.
+
+Implementation follows documentation.
+
+Documentation does not follow implementation.
+
+------------------------------------------------------------------------
+
+# 18. Architectural Change Control
+
+Claude Code is an Implementation Engineer.
+
+It is not authorised to modify the approved architecture.
+
+Do NOT introduce:
+
+• new entities
+• new database tables
+• new database columns
+• new APIs
+• new service boundaries
+• new workflows
+• new business rules
+• new navigation models
+• new security models
+• new technology choices
+
+unless they are explicitly documented or approved.
+
+If implementation appears to require an architectural change:
+
+STOP.
+
+Explain:
+
+• why the change appears necessary
+• which canonical documents were reviewed
+• which documents appear incomplete
+• which APIs are affected
+• which database objects are affected
+• possible implementation options
+
+Wait for approval before continuing.
+
+Never change architecture to make implementation easier.
+
+# 19. Implementation Start Checklist (Mandatory)
+
+# 19. Implementation Start Checklist (Mandatory)
+
+The CorpStage Enterprise Operating System has completed its
+Architecture, Design, Data Modeling and Capability Engineering phases.
+
+Implementation SHALL conform to the approved architecture.
+
+Implementation SHALL NEVER redefine architecture.
+
+No implementation work shall begin until the following checklist has
+been completed.
+
+-------------------------------------------------------------------------------
+19.1 Identify Governing Canonical Assets
+-------------------------------------------------------------------------------
+
+Before implementing ANY feature, capability, Business Activity,
+workflow, API, database change, screen, or UI component,
+Claude Code MUST identify and review every governing canonical asset.
+
+This includes, but is not limited to:
+
+### Architecture & Design
+
+• Architecture Documents
+• Capability Documents
+• Implementation Specifications
+• Architecture Decision Records (ADRs)
+• Canonical Information Library (CIL)
+
+### Governance
+
+• Rules
+• Laws
+• Principles
+• Standards
+• Guidelines
+• Policies
+• Conventions
+• Business Rules
+
+### Enterprise Objects
+
+• Business Activities
+• Entities
+• Aggregates
+• Database Tables
+• Database Views
+• Database Functions
+• Database Columns
+• Relationships
+• Enumerations
+
+### Application
+
+• Services
+• APIs
+• Events
+• DTOs
+• Workflows
+• Permissions
+• Roles
+
+### Presentation
+
+• Screens
+• User Journeys
+• Widgets
+• AUREX Components
+• Design Tokens
+• Themes
+
+Claude Code SHALL list the governing assets reviewed before
+implementation begins.
+
+-------------------------------------------------------------------------------
+19.2 Discover Existing Assets
+-------------------------------------------------------------------------------
+
+Claude Code SHALL search the repository before creating anything.
+
+For every requested feature, Claude Code MUST identify every existing
+
+• Entity
+• Table
+• API
+• Service
+• Business Activity
+• Workflow
+• Permission
+• Role
+• Screen
+• Component
+• Business Rule
+
+already governing the requested functionality.
+
+For every identified asset Claude Code SHALL determine whether it is
+
+• Reused
+• Extended
+• Configured
+• Referenced
+
+Creation of new assets is the last option.
+
+-------------------------------------------------------------------------------
+19.3 Gap Analysis
+-------------------------------------------------------------------------------
+
+Before implementation, Claude Code SHALL produce a Gap Analysis.
+
+The analysis SHALL identify
+
+• Existing assets that satisfy the requirement
+
+• Existing assets requiring extension
+
+• Missing architecture
+
+• Missing documentation
+
+• Potential conflicts
+
+-------------------------------------------------------------------------------
+19.4 Architectural Impact Assessment
+-------------------------------------------------------------------------------
+
+If implementation appears to require
+
+• new entities
+
+• new database tables
+
+• new database columns
+
+• new APIs
+
+• new services
+
+• new Business Activities
+
+• new workflows
+
+• new permissions
+
+• new events
+
+• new screens
+
+• new UI components
+
+• changes to canonical business rules
+
+Claude Code SHALL STOP.
+
+Claude Code SHALL NOT implement the change.
+
+Instead Claude Code SHALL report
+
+• why the change appears necessary
+
+• which canonical documents were reviewed
+
+• which existing assets were evaluated
+
+• which architecture is affected
+
+• available implementation options
+
+Wait for approval before continuing.
+
+-------------------------------------------------------------------------------
+19.5 Implementation Rules
+-------------------------------------------------------------------------------
+
+Only after Sections 19.1 through 19.4 have completed successfully
+may implementation begin.
+
+Claude Code SHALL always follow this order
+
+Reuse
+
+↓
+
+Configure
+
+↓
+
+Extend
+
+↓
+
+Compose
+
+↓
+
+Create
+
+Claude Code SHALL prefer improving an existing implementation over
+creating a parallel implementation.
+
+-------------------------------------------------------------------------------
+19.6 Compliance Verification
+-------------------------------------------------------------------------------
+
+After implementation Claude Code SHALL verify
+
+✓ Architecture remains unchanged
+
+✓ Existing Business Rules remain unchanged
+
+✓ Existing Laws remain unchanged
+
+✓ Existing Principles remain unchanged
+
+✓ Existing Guidelines remain unchanged
+
+✓ Existing Standards remain unchanged
+
+✓ Existing Policies remain unchanged
+
+✓ Existing Conventions remain unchanged
+
+✓ Existing database tables were reused where applicable
+
+✓ Existing APIs were reused where applicable
+
+✓ Existing Business Activities were reused where applicable
+
+✓ Existing AUREX components were reused where applicable
+
+✓ No undocumented architecture was introduced
+
+If any verification fails,
+
+STOP
+
+and report the violation.
+
+-------------------------------------------------------------------------------
+Golden Rule
+-------------------------------------------------------------------------------
+
+Implementation follows Architecture.
+
+Implementation SHALL NEVER change
+
+• Architecture
+
+• Rules
+
+• Laws
+
+• Principles
+
+• Standards
+
+• Guidelines
+
+• Policies
+
+• Conventions
+
+• Canonical Business Rules
+
+• Canonical Data Model
+
+• Canonical APIs
+
+• Canonical User Experience
+
+• Canonical Design System
+
+Code is an implementation of the Enterprise Operating System.
+
+Code is NEVER the source of truth.
+
+The approved architecture and canonical documentation remain the
+single source of truth.

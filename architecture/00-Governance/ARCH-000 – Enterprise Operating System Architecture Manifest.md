@@ -56,6 +56,7 @@ These documents define the Enterprise Operating System.
 | CAP-001 | Capability Identity, Canonical Capability Name and Business Intent |
 | Complete Blueprint | Enterprise Philosophy, Enterprise Operating Model, Enterprise Intelligence Vision and Constitutional Principles |
 | SD-001 | Enterprise Presentation Architecture |
+| DS-001 | AUREX Design System — Enterprise Visual Design Architecture |
 | SD-002 | Canonical Business Object Architecture |
 | SD-003 | Enterprise Interaction Architecture |
 | URA-001 | Enterprise Identity, Authorization and Assignment Architecture |
@@ -109,15 +110,16 @@ Architecture should always be read in the following sequence.
 | 1 | CAP-001 – Enterprise Capability Registry |
 | 2 | Complete Blueprint |
 | 3 | SD-001 – Enterprise Presentation Architecture |
-| 4 | SD-002 – Canonical Business Object Architecture |
-| 5 | SD-003 – Enterprise Interaction Architecture |
-| 6 | URA-001 – Universal Role Architecture |
-| 7 | ERG-001 – Enterprise Relationship Graph |
-| 8 | CMD-001 – Canonical Metadata Architecture |
-| 9 | RTA-001 – Runtime Architecture & Execution |
-| 10 | IMP-001 – Implementation Playbook |
-| 11 | Master Technical Architecture |
-| 12 | MDP-001 – Master Data Population Specification |
+| 4 | DS-001 – AUREX Design System |
+| 5 | SD-002 – Canonical Business Object Architecture |
+| 6 | SD-003 – Enterprise Interaction Architecture |
+| 7 | URA-001 – Universal Role Architecture |
+| 8 | ERG-001 – Enterprise Relationship Graph |
+| 9 | CMD-001 – Canonical Metadata Architecture |
+| 10 | RTA-001 – Runtime Architecture & Execution |
+| 11 | IMP-001 – Implementation Playbook |
+| 12 | Master Technical Architecture |
+| 13 | MDP-001 – Master Data Population Specification |
 
 ---
 
@@ -131,6 +133,7 @@ Use this table to identify the authoritative document for any architectural conc
 | Why the Enterprise Operating System exists | Complete Blueprint |
 | Enterprise Philosophy and Constitutional Principles | Complete Blueprint |
 | How enterprise information is presented | SD-001 |
+| How the platform's visual language, design tokens, themes, and components are governed | DS-001 |
 | What Business Objects exist | SD-002 |
 | How enterprise interactions work | SD-003 |
 | Identity, Roles and Permissions | URA-001 |
@@ -153,6 +156,7 @@ Each architectural concern has **one and only one owner**.
 | Capability Identity & Business Intent | CAP-001 |
 | Enterprise Philosophy | Complete Blueprint |
 | Enterprise Presentation | SD-001 |
+| Enterprise Visual Design (AUREX Design System) | DS-001 |
 | Enterprise Business Objects | SD-002 |
 | Enterprise Interaction | SD-003 |
 | Enterprise Identity & Authority | URA-001 |
@@ -205,6 +209,8 @@ Complete Blueprint
         │
 ──────────────────────────────────────────────
 Enterprise Presentation (SD-001)
+
+Enterprise Visual Design (DS-001)
 
 Enterprise Business Objects (SD-002)
 
@@ -305,6 +311,7 @@ The following documents are considered constitutional architecture.
 
 - Complete Blueprint
 - SD-001
+- DS-001
 - SD-002
 - SD-003
 - URA-001

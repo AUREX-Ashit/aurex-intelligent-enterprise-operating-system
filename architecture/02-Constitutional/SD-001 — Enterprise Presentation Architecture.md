@@ -778,3 +778,9 @@ The following v1.0 content was filed under SD-001 in error — it defines what b
 SD-001 v2.0 is ready for lock. Every defect identified in the independent review has been corrected: the duplication is removed, Section 11 is written, the header typo is fixed, the L2 violation is purged, the five absent laws (L7, L9, L33, L36, L38) are now operationalized principles, the two tensions (L18, L31) are explicitly resolved, and every principle that governed business objects or interaction logic rather than screen design has been relocated — not deleted — to the appendices above, ready for SD-002 and SD-003.
 
 One open item is flagged rather than silently resolved: **SD-002-CANDIDATE-022 (Effective Configuration Resolution)** still has no stated precedence rule for conflicting overrides at the same key across two layers. This must be settled during SD-002 drafting — it is called out explicitly here so it is not lost in the handoff.
+
+
+
+
+
+
