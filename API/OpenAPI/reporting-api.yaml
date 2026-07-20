@@ -1,0 +1,32 @@
+openapi: 3.0.3
+
+info:
+  title: CorpStage Reporting API
+  description: ESG reporting and disclosure APIs
+  version: 1.0.0
+
+servers:
+  - url: https://api.corpstage.com
+
+paths:
+
+  /reporting/generate:
+    post:
+      summary: Generate ESG report
+      description: Generates ESG disclosure reports
+
+      responses:
+        '200':
+          description: ESG report generated successfully
+          
+  /reporting/export:
+    post:
+      summary: Export ESG report
+      description: Exports ESG reports in multiple formats
+
+      responses:
+        '200':
+          description: ESG report exported successfully
+
+
+components: {}

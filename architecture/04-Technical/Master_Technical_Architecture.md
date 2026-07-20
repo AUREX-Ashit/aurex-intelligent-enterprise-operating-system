@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.3)
+CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.7)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -38,7 +38,7 @@ DOCUMENT VERSION HISTORY
     mechanism. Zero AMD-011 tables now left with an unresolved RLS decision
     (18 implemented, 4 intentionally exempt as global/master-reference data).
     Verified total at v6.2: 136 distinct tables, 94 RLS policies.
-  v6.3 (this version): closed a pre-existing, pre-AMD-011 gap explicitly
+  v6.3: closed a pre-existing, pre-AMD-011 gap explicitly
     flagged (not silently left) at v6.2 — organization_hierarchy itself had
     no RLS policy of its own anywhere in this document. Added
     org_isolation_hierarchy using the same tenant_workspace-schema mechanism
@@ -46,7 +46,70 @@ DOCUMENT VERSION HISTORY
     child_node_id, placed immediately after organization_node's own policy
     in Part D. This closes the last identified RLS gap in the document —
     pre-AMD-011 or AMD-011 — across all 136 tables.
-    Final verified total: 136 distinct tables, 95 RLS policies.
+    Verified total at v6.3: 136 distinct tables, 95 RLS policies.
+  v6.4: AMD-012 applied — Enterprise Intelligence Engineering
+    Architecture Enhancement, closing the Engineering Architecture content
+    gaps identified by the post-Stage-III Enterprise Intelligence Execution
+    Architecture Readiness Review. Net addition: 4 new tables (Knowledge
+    Asset Registry, Document Chunk Registry, Vector Index Registry, AI Tool
+    Registry), 1 existing table extended in place (enterprise_knowledge_graph_
+    registry, +1 column), 4 new RLS policies, and two new sections — Part F
+    Addendum (Knowledge & Intelligence Services) and Part G (Discover →
+    Explore → Correlate → Reason → Validate Architecture) — closing the
+    standing Part G dangling reference flagged at H.3. This amendment adds
+    engineering *design* content only (what exists); it defines no runtime
+    execution sequence (RTA-001's exclusive scope, per the Engineering
+    Responsibility Model this amendment follows) and no implementation
+    pattern (IMP-001's exclusive scope). See AMD-012 CHANGELOG below.
+    Verified total at v6.4: 140 distinct tables, 99 RLS policies.
+  v6.5 (this version): AMD-013 applied — Enterprise Intelligence
+    Orchestration Enhancement (Phase 1 of 3). Generalizes AMD-012's single
+    Discovery/Retrieval/Agent-Orchestration design into a
+    provider-, modality-, agent-, and reasoning-engine-agnostic
+    architecture: multiple Discovery Providers (enterprise, external, and
+    real-time source categories), multi-modal Enterprise Knowledge Objects,
+    a multi-agent registry (11 agent types), a vendor-neutral Reasoning
+    Engine registry (the Reasoning Contract), an Enterprise Evidence Model
+    (Evidence Fusion), and a Discovery Strategy registry (Sequential /
+    Parallel / Hybrid / Dynamic Graph / Adaptive). Net addition: 7 new
+    tables, 0 existing tables altered, 7 new RLS policies. As with AMD-012,
+    this amendment adds engineering *design* content only — runtime
+    execution of these strategies and agents remains RTA-001's exclusive
+    scope (Phase 2, pending); implementation patterns remain IMP-001's
+    exclusive scope (Phase 3, pending). See AMD-013 CHANGELOG below.
+    Verified total at v6.5: 147 distinct tables, 106 RLS policies.
+  v6.6 (this version): AMD-013 Phase 1A applied — a single conceptual note
+    ("Execution Capability," Part F Addendum) recording the approved
+    architectural refinement from the AMD-013 Phase 1 validation: Agent
+    Registry, AI Tool Registry, and Reasoning Engine Registry are named as
+    three roles (Invoking / Invoked / Transforming) of one parent
+    abstraction, so a future execution paradigm (MCP, AI Foundry, AI
+    Skills/Functions, or any other) has a named conceptual seam without
+    requiring schema redesign. Purely conceptual: 0 new tables, 0 new
+    columns, 0 new foreign keys, 0 new RLS policies, 0 services, 0 runtime
+    states. Every registry listed in the AMD-013 Phase 1 CHANGELOG remains
+    exactly as implemented — unchanged in structure, relationships, and
+    policy.
+    Verified total at v6.6: 147 distinct tables, 106 RLS policies — identical
+    to v6.5, confirming this version introduced no schema change.
+  v6.7 (this version): documentation-currency correction only, closing the
+    single Minor observation from EAC-002 (Final Enterprise Intelligence
+    Engineering Certification). Ten live cross-references in Part F
+    Addendum and Part G (Agent Orchestration Service, Discovery Provider
+    Service ×2, Reasoning Engine Service, Evidence Fusion Service,
+    Enterprise Memory Service, the Planner Principle note, the
+    Multi-Strategy and Multi-Agent Execution paragraph, the H.3
+    ANNOTATION, and Appendix H's own H.3 bullet) previously described
+    RTA-001 Phase 2 or IMP-001 Phase 3 work as "pending." Both phases
+    completed under AMD-013; all ten references now cite the specific
+    completed RTA-001/IMP-001 section that fulfills them. The AMD-013
+    CHANGELOG's own historical narrative (describing what was true when
+    Phase 1 was written) is left verbatim, per the same historical-record
+    treatment already established for AMD-011's Assumption 1. No table,
+    column, RLS policy, service, or registry was added, changed, or
+    removed.
+    Final verified total: 147 distinct tables, 106 RLS policies — identical
+    to v6.6, confirming this version introduced no schema change.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -199,6 +262,197 @@ ASSUMPTIONS AND FLAGGED ITEMS (not silently resolved):
 END AMD-011 CHANGELOG
 ======================================================================
 
+======================================================================
+AMD-012 CHANGELOG — ENTERPRISE INTELLIGENCE ENGINEERING ARCHITECTURE
+ENHANCEMENT (Phase 1 of 3: Master Technical Architecture)
+======================================================================
+
+CONTEXT: A post-Stage-III Enterprise Intelligence Execution Architecture
+Readiness Review found that Constitutional Baseline v2.0 is complete and
+correctly owned, but that Knowledge Graph, Memory Graph, Enterprise RAG,
+Agent Orchestration, and the Discover-First-Ask-Later execution pipeline
+had no Engineering Architecture content anywhere in the repository — a
+content gap, not an ownership gap. This amendment closes the portion of
+that gap owned by Master Technical Architecture: physical schema,
+technology architecture, and component/service design ("what exists").
+Runtime execution sequencing ("how it executes") remains RTA-001's
+exclusive scope and is deliberately not duplicated here; implementation
+patterns ("how it is coded") remain IMP-001's exclusive scope and are
+likewise not duplicated here. Phases 2 (RTA-001) and 3 (IMP-001) are
+follow-on work, not part of this amendment.
+
+TABLES ADDED, 4:
+  knowledge_asset_registry   — physical realization of the Enterprise
+    Knowledge Model (Signal -> Knowledge Asset, per EIA-001 Vol. I §7 and
+    CMD-001 §24.4's "Knowledge Asset" canonical business object)
+  document_chunk_registry    — physical realization of the chunking layer
+    between a source document (data_ingestion_registry / evidence_registry)
+    and its vector representation
+  vector_index_registry      — the vector index configuration a
+    document_chunk_registry row's embedding is stored against
+  ai_tool_registry            — the registry of tools an AI Runtime Engine
+    (RTA-001 §13) may select at runtime; this table is the registry only —
+    tool selection logic is RTA-001's scope, not this table's
+
+TABLE EXTENDED, 1:
+  enterprise_knowledge_graph_registry — added graph_engine_reference
+    column. See inline "AMD-012" comment at the table definition for the
+    architectural clarification this closes: this table is, and always
+    was, a Postgres-side relational index/audit trail of the graph, not
+    the graph's primary store. The primary, traversable store is Neo4j
+    Aura (already named in this document's own Cloud & Deployment
+    section, I.9 / 7D.13) — this was previously implied by the technology
+    stack list but never stated at the table definition itself.
+
+NEW SECTIONS, 2 (placed after Part E, before Appendix H):
+  Part F Addendum — Knowledge & Intelligence Services: component/service
+    architecture for the five new services this amendment's tables
+    support. Deliberately scoped as an addendum, not a renumbering of
+    Part F's own pre-existing, partially-uncited F.1-F.21 service
+    catalog (see H.2's own "23 claimed, 21 confirmed" note) — this
+    amendment does not have evidentiary access to that catalog's
+    unfilled numbers and does not invent them.
+  Part G — Discover -> Explore -> Correlate -> Reason -> Validate
+    Architecture: the component/node design of the pipeline Appendix H.3
+    already names as unspecified ("the LangGraph orchestration graph...
+    has not been specified as executable workflow logic anywhere"). This
+    amendment specifies the conceptual node graph and each node's
+    responsibility and owning service. It explicitly does NOT specify
+    executable workflow logic, state transitions, or invocation
+    sequencing — H.3's own distinction is preserved; the executable
+    sequence remains RTA-001's scope. H.3 is annotated below to record
+    this partial closure without overstating it.
+
+RLS POLICIES ADDED, 4: one per new table, all reusing the existing
+tenant_workspace-schema org-isolation mechanism already established for
+every other table in Part D — no new isolation mechanism introduced.
+
+NO EXISTING CONTENT REMOVED OR REDEFINED: no table, column, RLS policy,
+Part A-E section, or Appendix H/I finding present before this amendment
+is altered beyond the one-column extension and the H.3 annotation
+listed above. AMD-011's ASSUMPTIONS AND FLAGGED ITEMS list (items 1-6)
+is untouched and remains fully in force.
+
+======================================================================
+END AMD-012 CHANGELOG
+======================================================================
+
+======================================================================
+AMD-013 CHANGELOG — ENTERPRISE INTELLIGENCE ORCHESTRATION ENHANCEMENT
+(Phase 1 of 3: Master Technical Architecture)
+======================================================================
+
+CONTEXT: AMD-012 specified a single Discovery path, a single Retrieval
+path, and a single Tool Registry. AMD-013 generalizes each into a
+provider-, modality-, agent-, and reasoning-engine-agnostic design, per
+the governing law: Evidence First, Discovery First, Ask User Last — the
+platform shall attempt autonomous discovery, across every configured
+source and modality, until evidence is sufficient, before the user
+becomes a discovery source. This amendment adds engineering design
+content only ("what exists"). It does not define discovery strategy
+execution, agent orchestration execution, or the Evidence Sufficiency
+Gate's runtime evaluation — all three remain RTA-001's exclusive scope
+(Phase 2 of this enhancement, pending approval). It does not define
+implementation patterns — IMP-001's exclusive scope (Phase 3, pending).
+
+TABLES ADDED, 7:
+  discovery_provider_registry     — one row per configured discovery
+    source (a SharePoint tenant, a public benchmark provider, an email
+    inbox, ...), typed by provider_category (ENTERPRISE / EXTERNAL /
+    REALTIME) and provider_type (an enumerated CHECK constraint covering
+    every source named in this amendment's authority, not a table per
+    source — see ASSUMPTION below). Reuses api_credential_registry
+    (pre-existing) for connection credentials; does not duplicate it.
+  enterprise_knowledge_object_registry — the multi-modal normalization
+    target every discovered item becomes before reasoning, per the
+    governing law's "normalized into Enterprise Knowledge Objects before
+    reasoning" requirement. Typed by modality_type. Links to
+    document_chunk_registry and knowledge_asset_registry (both AMD-012)
+    once an object is chunked and/or curated — extends, does not
+    duplicate, either.
+  agent_registry                  — one row per agent type this
+    amendment's authority names (Research, Knowledge, Memory, Retrieval,
+    Compliance, Risk, Financial, Framework Mapping, Calculation,
+    Validation, Specialist Domain), with explicit Knowledge
+    Graph/Memory/Evidence read-write permission flags per the "every
+    agent shall be capable of reading... and writing... where permitted"
+    requirement.
+  agent_tool_grant                — join table, which ai_tool_registry
+    (AMD-012) tools a given agent_registry row may select from. Does not
+    duplicate ai_tool_registry; grants access to it.
+  reasoning_engine_registry       — the vendor-neutral Multi-LLM
+    registry (GPT, Claude, Gemini, DeepSeek, open-weight, enterprise
+    models are configuration rows, never hardcoded branches) and the
+    physical realization of the Reasoning Contract this amendment's
+    authority requires: input_contract_schema_json and
+    output_contract_schema_json columns fix the Evidence/Knowledge/
+    Memory/Context/Intent input shape and the Enterprise Intelligence/
+    Evidence/Confidence/Citations/Knowledge-Updates/Memory-Updates/
+    Recommended-Actions/Follow-up-Questions output shape, reusing the
+    same JSONB-schema-column pattern ai_tool_registry (AMD-012) already
+    established for input_schema_json/output_schema_json — no new schema
+    mechanism introduced. No reasoning algorithm is defined; only the
+    contract's shape.
+  evidence_fusion_registry        — the physical realization of the
+    Enterprise Evidence Model (Evidence Fusion) and the Evidence
+    Sufficiency Gate's seven dimensions (Coverage, Quality, Diversity,
+    Freshness, Consistency, Confidence, Cost, Latency), replacing a
+    confidence-only decision model per this amendment's explicit
+    instruction. The Confidence dimension reuses confidence_scoring_
+    registry (pre-existing); it is not a second confidence mechanism.
+    sufficiency_determination is a data column only — the runtime rule
+    that computes it is RTA-001's scope (Phase 2).
+  discovery_strategy_registry     — the Planner's strategy catalog
+    (Sequential, Parallel, Hybrid, Dynamic Graph, Adaptive), configuration
+    only — which strategy is selected for a given request is a runtime
+    decision (RTA-001's scope, Phase 2), not this table's.
+
+TABLES ALTERED: none. AMD-012's four tables and its one extended table
+(enterprise_knowledge_graph_registry) are referenced, not modified.
+
+RLS POLICIES ADDED, 7: one per new table, all reusing the existing
+tenant_workspace-schema mechanism already established for every other
+table in Part D — no new isolation mechanism introduced. Platform-wide
+rows (a shared external-source provider, a platform-default reasoning
+engine, a platform-default strategy) permit organization_id IS NULL,
+following the exact precedent already established for vector_index_
+registry and ai_tool_registry (AMD-012).
+
+NEW/EXTENDED SECTIONS: Part F Addendum is extended with four new
+services (Discovery Provider Service, Agent Orchestration Service
+extended, Reasoning Engine Service, Evidence Fusion Service). Part G is
+extended with a new subsection positioning multiple Discovery Strategies
+and multi-agent execution against its existing five-node graph, without
+altering any of the five nodes AMD-012 already defined.
+
+ASSUMPTION (flagged, not silently resolved): this amendment's authority
+names approximately 30 specific discovery sources across three
+categories (Enterprise, External, Real-Time). Consistent with this
+document's own established discipline (event_type, confidence_type,
+tool_type are all configuration-driven CHECK-constraint enumerations,
+never one table per instance — AMD-003, AMD-012), discovery_provider_
+registry.provider_type is a single enumerated column listing all ~30
+values, not 30 separate tables. Each named source's connector-specific
+configuration (a SharePoint site URL, a Bloomberg terminal endpoint, an
+IoT topic filter) lives in connection_config_json, per source instance,
+not in the schema — this table defines the registry shape common to
+every provider type, not each provider type's own connector protocol,
+which remains an implementation concern (IMP-001, Phase 3). A human
+reviewer should confirm this treatment is acceptable, consistent with
+this document's own precedent for flagging rather than silently
+resolving a modeling choice (AMD-011 Assumptions 1-6, AMD-012's two
+assumptions).
+
+NO EXISTING CONTENT REMOVED OR REDEFINED: no table, column, RLS policy,
+Part A-E section, Part F/G content, or Appendix H/I finding present
+before this amendment is altered beyond the additions listed above.
+AMD-011's and AMD-012's own assumptions and flagged items remain
+untouched and fully in force.
+
+======================================================================
+END AMD-013 CHANGELOG
+======================================================================
+
 BLUEPRINT v2.2 ALIGNMENT SUMMARY (v5.0 changes)
   AMD-004: 4-tier CDE hierarchy (CANONICAL/INDUSTRY/TENANT/TEMPORARY) added to
     metric_registry and customer_metric_registry. Semantic-match-before-create
@@ -234,6 +488,44 @@ FINAL VERIFIED STATE (v6.3, mechanically checked):
   Assumption 4), with 4 tables intentionally RLS-exempt as global/master
   reference data and zero tables left with an unresolved RLS decision
   anywhere in the document.
+
+FINAL VERIFIED STATE (v6.4, mechanically checked):
+  140 distinct tables (136 at v6.3 + 4 AMD-012 additions: knowledge_asset_
+  registry, document_chunk_registry, vector_index_registry, ai_tool_
+  registry), 99 RLS policies (95 at v6.3 + 4 AMD-012 additions, one per new
+  table, all reusing the existing tenant_workspace-schema mechanism — zero
+  new isolation mechanisms). enterprise_knowledge_graph_registry gains 1
+  column (graph_engine_reference) with no change to its primary key,
+  existing columns, or existing RLS policy. Zero tables from v6.3 dropped,
+  renamed, or redefined.
+
+FINAL VERIFIED STATE (v6.5, mechanically checked):
+  147 distinct tables (140 at v6.4 + 7 AMD-013 additions:
+  discovery_provider_registry, enterprise_knowledge_object_registry,
+  agent_registry, agent_tool_grant, reasoning_engine_registry,
+  evidence_fusion_registry, discovery_strategy_registry), 106 RLS policies
+  (99 at v6.4 + 7 AMD-013 additions, one per new table, all reusing the
+  existing tenant_workspace-schema mechanism — zero new isolation
+  mechanisms). Zero tables from v6.4 dropped, renamed, or redefined; zero
+  columns altered on any pre-existing table.
+
+FINAL VERIFIED STATE (v6.6, mechanically checked):
+  147 distinct tables, 106 RLS policies — unchanged from v6.5. This
+  version's sole change is the "Execution Capability" conceptual note
+  (Part F Addendum), confirmed to introduce zero tables, zero columns,
+  zero foreign keys, and zero RLS policies. Agent Registry, AI Tool
+  Registry, and Reasoning Engine Registry are byte-for-byte unchanged
+  from their v6.5 definitions.
+
+FINAL VERIFIED STATE (v6.7, mechanically checked):
+  147 distinct tables, 106 RLS policies — unchanged from v6.6. Zero
+  remaining live references describe AMD-013 Phase 2 or Phase 3 as
+  pending anywhere in Part F Addendum or Part G; a repository-wide check
+  confirms every other "pending" occurrence in this document is either
+  the AMD-013 CHANGELOG's own historical narrative (preserved verbatim)
+  or an unrelated business workflow status value (e.g. `approval_status`,
+  `review_status`) with no relationship to this amendment. No table,
+  column, foreign key, or RLS policy changed.
 
 
 DOCUMENT SCOPE AND AUTHORITY
@@ -2422,6 +2714,15 @@ CREATE TABLE cross_domain_relationship_registry (
 -- enterprise_knowledge_graph_registry
 -- PURPOSE: Creates: AI-native enterprise memory Connects: events risks stakeholders metrics decisions incidents financials benchmarks
 -- FK (per Chapter 9 — authoritative): polymorphic (source_entity_type/source_entity_id, target_entity_type/target_entity_id)
+-- AMD-012 CLARIFICATION: this table is, and always was, the Postgres-side
+-- relational index and RLS-governed audit trail of the Enterprise Knowledge
+-- Graph — not its primary store. The primary, traversable graph store is
+-- Neo4j Aura (named in this document's own Cloud & Deployment section, I.9
+-- / 7D.13, and in the frozen technology stack, I.13 / 7D.17). RTA-001 §12
+-- (Knowledge Graph Runtime) governs the synchronization that keeps this
+-- table and the Neo4j graph consistent; that runtime sequencing is not
+-- restated here. graph_engine_reference (added below) is this table's
+-- pointer into the authoritative Neo4j relationship.
 -- =========================================================================
 CREATE TABLE enterprise_knowledge_graph_registry (
     knowledge_graph_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -2435,10 +2736,221 @@ CREATE TABLE enterprise_knowledge_graph_registry (
     explainability_reference VARCHAR(255)  -- evidence,
     active_flag BOOLEAN DEFAULT FALSE  -- active,
     created_at TIMESTAMP WITH TIME ZONE  -- audit,
-    confidence_rule_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- AMD-003
+    confidence_rule_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- AMD-003,
+    graph_engine_reference VARCHAR(255)  -- AMD-012 — Neo4j relationship identifier this row indexes; null until the Knowledge Graph Runtime (RTA-001 §12) synchronizes this row
 );
 
 -- =========================================================================
+-- knowledge_asset_registry
+-- PURPOSE: AMD-012. Physical realization of the Enterprise Knowledge Model's Knowledge Asset concept (EIA-001 Vol. I §7: "a curated, governed unit of knowledge produced from one or more Signals"; CMD-001 §24.4). A Knowledge Asset is what a Signal becomes once curated — this table is the curated side; the originating Signal is not separately tabled here (see ASSUMPTIONS note below).
+-- FK (per Chapter 9 — authoritative): organization_id -> organization_master | source_ingestion_id -> data_ingestion_registry | confidence_rule_id -> confidence_scoring_registry
+-- ASSUMPTION (flagged, not silently resolved): EIA-001 Vol. I §7 names "Signal" as the pre-curation concept a Knowledge Asset is produced from, but no repository document specifies Signal's own physical schema. This table's source_ingestion_id column is the closest existing physical anchor (data_ingestion_registry already tracks raw intake) and is used as the Signal reference until a dedicated signal schema, if ever needed, is specified elsewhere. A human reviewer should confirm this treatment is acceptable.
+-- =========================================================================
+CREATE TABLE knowledge_asset_registry (
+    knowledge_asset_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    knowledge_asset_name VARCHAR(255)  -- canonical name,
+    knowledge_asset_type VARCHAR(255)  -- fact/relationship/summary/narrative-fragment,
+    source_ingestion_id UUID REFERENCES data_ingestion_registry(ingestion_id)  -- provenance — see ASSUMPTION above,
+    curation_status VARCHAR(50) DEFAULT 'PROPOSED' CHECK (curation_status IN ('PROPOSED', 'VALIDATED', 'ACCEPTED', 'REJECTED', 'SUPERSEDED'))  -- EIA-001 Vol. II §13 Knowledge Validation states,
+    provenance_reference VARCHAR(255)  -- traceable origin, per EIA-001 Vol. I §7.3 invariant: no Knowledge Asset without Provenance,
+    freshness_last_confirmed_at TIMESTAMP WITH TIME ZONE  -- EIA-001 Vol. II §17.5 — Freshness Decays Unless Renewed,
+    graph_engine_reference VARCHAR(255)  -- Neo4j node identifier this Knowledge Asset is realized as, once composed into the graph (RTA-001 §12),
+    confidence_rule_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- AMD-003 mechanism, reused not duplicated,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id)  -- AMD-001
+);
+
+-- =========================================================================
+-- document_chunk_registry
+-- PURPOSE: AMD-012. The physical unit of a source document once split for retrieval — the schema gap between evidence_registry (whole document) and a Vector Database entry (one retrievable unit). Chunking strategy itself (algorithm, size, overlap) is an implementation pattern and is intentionally not specified by this table — see IMP-001 (Phase 3 of this enhancement).
+-- FK (per Chapter 9 — authoritative): evidence_id -> evidence_registry | vector_index_id -> vector_index_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE document_chunk_registry (
+    document_chunk_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    evidence_id UUID NOT NULL REFERENCES evidence_registry(evidence_id)  -- source document this chunk was extracted from,
+    chunk_sequence_number INT  -- ordinal position within the source document,
+    chunk_locator VARCHAR(255)  -- page/section/table/cell reference, per SD-002-043 granular evidence traceability,
+    chunk_text_hash VARCHAR(255)  -- tamper-proofing, mirrors evidence_registry.document_hash_signature,
+    vector_index_id UUID REFERENCES vector_index_registry(vector_index_id)  -- which index this chunk's embedding is stored in,
+    embedding_reference VARCHAR(255)  -- pointer into the Vector Database (Azure AI Search) entry; the vector itself is not stored in PostgreSQL,
+    embedding_model_version VARCHAR(255)  -- which embedding model produced embedding_reference — see vector_index_registry for the model this must match,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id)  -- AMD-001
+);
+
+-- =========================================================================
+-- vector_index_registry
+-- PURPOSE: AMD-012. Configuration of a Vector Database index (Azure AI Search, per the frozen technology stack, I.13 / 7D.17). One row per index; document_chunk_registry rows reference the index their embedding lives in. This table is configuration/design only — retrieval mechanics (hybrid search, reranking) are RTA-001's runtime scope.
+-- FK (per Chapter 9 — authoritative): organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE vector_index_registry (
+    vector_index_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    index_name VARCHAR(255)  -- e.g. evidence-index-v1,
+    embedding_model VARCHAR(255)  -- named model/version this index is built against,
+    embedding_dimension INT  -- vector dimensionality, must match embedding_model,
+    retrieval_mode VARCHAR(50) DEFAULT 'HYBRID' CHECK (retrieval_mode IN ('SEMANTIC', 'LEXICAL', 'HYBRID'))  -- index capability, not a runtime choice,
+    refresh_cadence VARCHAR(255)  -- how often the index is rebuilt/refreshed,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-wide shared index; set for a tenant-dedicated index
+);
+
+-- =========================================================================
+-- ai_tool_registry
+-- PURPOSE: AMD-012. The registry of tools an AI Runtime Engine (RTA-001 §13) may select from. This table defines what a Tool is and what it declares — tool *selection* (the runtime decision of which tool to invoke) is RTA-001's scope, not this table's, per the Critical Engineering Principle governing this amendment.
+-- FK (per Chapter 9 — authoritative): governing_policy_id -> confidence_scoring_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE ai_tool_registry (
+    ai_tool_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tool_name VARCHAR(255)  -- canonical name,
+    tool_type VARCHAR(255)  -- retrieval/knowledge-graph-query/business-activity-invocation/external-integration,
+    input_schema_json JSONB  -- declared input contract,
+    output_schema_json JSONB  -- declared output contract,
+    invokes_business_activity_id UUID  -- where tool_type = business-activity-invocation, the Business Activity this tool wraps (BAR, IMP-001 §6.22) — no FK declared here, cross-registry reference only,
+    governing_policy_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- reused governance mechanism, not duplicated,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-wide tool; set for a tenant-specific tool
+);
+
+-- =========================================================================
+-- =========================================================================
+-- discovery_provider_registry
+-- PURPOSE: AMD-013. One row per configured Enterprise Intelligence discovery source. Replaces AMD-012's implicit single-source assumption (data_ingestion_registry alone) with a typed, extensible provider registry spanning Enterprise, External, and Real-Time source categories, per the governing law that the platform shall not assume uploaded documents represent complete enterprise knowledge.
+-- FK (per Chapter 9 — authoritative): credential_id -> api_credential_registry (pre-existing) | governing_policy_id -> confidence_scoring_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE discovery_provider_registry (
+    discovery_provider_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider_name VARCHAR(255)  -- e.g. Finance SharePoint, Bloomberg Terminal, Plant A IoT Feed,
+    provider_category VARCHAR(50) NOT NULL CHECK (provider_category IN ('ENTERPRISE', 'EXTERNAL', 'REALTIME')),
+    provider_type VARCHAR(100) NOT NULL CHECK (provider_type IN (
+        'UPLOADED_DOCUMENT', 'SHAREPOINT', 'ONEDRIVE', 'GOOGLE_DRIVE', 'TEAMS', 'SLACK', 'CONFLUENCE', 'JIRA', 'SAP', 'ORACLE', 'SALESFORCE', 'SERVICENOW', 'SQL_DATABASE', 'DATA_WAREHOUSE', 'ENTERPRISE_API',
+        'CORPORATE_WEBSITE', 'ANNUAL_REPORT', 'SUSTAINABILITY_REPORT', 'REGULATORY_FILING', 'GOVERNMENT_DATABASE', 'STOCK_EXCHANGE_FILING', 'STANDARDS_BODY', 'PUBLIC_API', 'INTERNET_SEARCH', 'BENCHMARK_PROVIDER', 'INDUSTRY_DATABASE',
+        'EMAIL', 'EVENT_STREAM', 'IOT', 'SENSOR', 'MESSAGE_QUEUE'
+    ))  -- category-consistent with provider_category; enumerated per this amendment's authority, not one table per type — see AMD-013 ASSUMPTION,
+    connection_config_json JSONB  -- connector-specific configuration (endpoint, site URL, topic filter); never credentials — see credential_id,
+    credential_id UUID REFERENCES api_credential_registry(credential_id)  -- reused, not duplicated,
+    discovery_cadence VARCHAR(50) DEFAULT 'ON_DEMAND' CHECK (discovery_cadence IN ('CONTINUOUS', 'SCHEDULED', 'ON_DEMAND')),
+    governing_policy_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- reused governance mechanism,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-wide shared provider (e.g. a public benchmark provider); set for a tenant-specific connection
+);
+
+-- =========================================================================
+-- enterprise_knowledge_object_registry
+-- PURPOSE: AMD-013. The multi-modal normalization target every discovered item becomes before reasoning, per the governing law's requirement that all discovered knowledge be normalized into Enterprise Knowledge Objects before reasoning occurs. Generalizes AMD-012's document_chunk_registry (text-only) to every named modality.
+-- FK (per Chapter 9 — authoritative): source_discovery_provider_id -> discovery_provider_registry | document_chunk_id -> document_chunk_registry (AMD-012) | knowledge_asset_id -> knowledge_asset_registry (AMD-012) | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE enterprise_knowledge_object_registry (
+    knowledge_object_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_discovery_provider_id UUID REFERENCES discovery_provider_registry(discovery_provider_id),
+    modality_type VARCHAR(50) NOT NULL CHECK (modality_type IN ('DOCUMENT', 'IMAGE', 'AUDIO', 'VIDEO', 'PRESENTATION', 'SPREADSHEET', 'EMAIL', 'CAD_DRAWING', 'GIS_DATA', 'API', 'STRUCTURED_DATA', 'UNSTRUCTURED_DATA')),
+    original_reference VARCHAR(255)  -- pointer to the original object (Azure Blob path, API response identifier, ...),
+    normalized_representation_reference VARCHAR(255)  -- pointer to this object's normalized form (extracted text, transcript, structured extraction) — normalization mechanics are IMP-001's scope, not this column's,
+    document_chunk_id UUID REFERENCES document_chunk_registry(document_chunk_id)  -- AMD-012 — set once this object has been chunked, where chunking applies to its modality,
+    knowledge_asset_id UUID REFERENCES knowledge_asset_registry(knowledge_asset_id)  -- AMD-012 — set once curated into a Knowledge Asset,
+    provenance_reference VARCHAR(255)  -- traceable origin, per EIA-001 Vol. I §7.3's Provenance invariant, extended here to every modality,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id)  -- AMD-001
+);
+
+-- =========================================================================
+-- agent_registry
+-- PURPOSE: AMD-013. One row per agent type the Planner may launch, per this amendment's authority. Distinct from ai_tool_registry (AMD-012): a Tool is invoked by an agent; an Agent is an autonomous invoker of tools, with its own Knowledge Graph/Memory/Evidence read-write permissions.
+-- FK (per Chapter 9 — authoritative): governing_policy_id -> confidence_scoring_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE agent_registry (
+    agent_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_name VARCHAR(255)  -- canonical name,
+    agent_type VARCHAR(50) NOT NULL CHECK (agent_type IN ('RESEARCH', 'KNOWLEDGE', 'MEMORY', 'RETRIEVAL', 'COMPLIANCE', 'RISK', 'FINANCIAL', 'FRAMEWORK_MAPPING', 'CALCULATION', 'VALIDATION', 'SPECIALIST_DOMAIN')),
+    specialist_domain VARCHAR(255)  -- populated only where agent_type = SPECIALIST_DOMAIN; the CIL domain this agent specializes in,
+    knowledge_graph_read_flag BOOLEAN DEFAULT FALSE,
+    knowledge_graph_write_flag BOOLEAN DEFAULT FALSE,
+    memory_read_flag BOOLEAN DEFAULT FALSE,
+    memory_write_flag BOOLEAN DEFAULT FALSE,
+    evidence_write_flag BOOLEAN DEFAULT FALSE,
+    governing_policy_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- reused governance mechanism,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-wide agent type; set for a tenant-specific agent
+);
+
+-- =========================================================================
+-- agent_tool_grant
+-- PURPOSE: AMD-013. Join table — which ai_tool_registry (AMD-012) tools a given agent_registry row may select from. Does not duplicate ai_tool_registry; grants access to it.
+-- FK (per Chapter 9 — authoritative): agent_id -> agent_registry | ai_tool_id -> ai_tool_registry
+-- =========================================================================
+CREATE TABLE agent_tool_grant (
+    agent_tool_grant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    agent_id UUID NOT NULL REFERENCES agent_registry(agent_id),
+    ai_tool_id UUID NOT NULL REFERENCES ai_tool_registry(ai_tool_id),
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit
+);
+
+-- =========================================================================
+-- reasoning_engine_registry
+-- PURPOSE: AMD-013. The vendor-neutral Multi-LLM registry and the physical realization of the Reasoning Contract: the Enterprise Operating System defines the input/output contract; the reasoning implementation behind a given row remains model-independent. No reasoning algorithm is defined here — only the contract's shape, reusing ai_tool_registry's (AMD-012) input_schema_json/output_schema_json pattern.
+-- FK (per Chapter 9 — authoritative): organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE reasoning_engine_registry (
+    reasoning_engine_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    engine_name VARCHAR(255)  -- e.g. GPT-4, Claude, Gemini, DeepSeek, Enterprise-Fine-Tuned-X,
+    engine_vendor VARCHAR(255),
+    engine_category VARCHAR(50) CHECK (engine_category IN ('COMMERCIAL_API', 'OPEN_WEIGHT', 'ENTERPRISE_PROPRIETARY')),
+    input_contract_schema_json JSONB  -- fixes the Reasoning Contract's input shape: Evidence, Knowledge, Memory, Context, Intent,
+    output_contract_schema_json JSONB  -- fixes the Reasoning Contract's output shape: Enterprise Intelligence, Evidence, Confidence, Citations, Knowledge Updates, Memory Updates, Recommended Actions, Follow-up Questions,
+    cost_tier VARCHAR(50),
+    latency_tier VARCHAR(50),
+    data_classification_allowed VARCHAR(50)  -- maximum data sensitivity this engine is permitted to process,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-wide engine; set for a tenant-restricted engine
+);
+
+-- =========================================================================
+-- evidence_fusion_registry
+-- PURPOSE: AMD-013. The physical realization of the Enterprise Evidence Model (Evidence Fusion) and the Evidence Sufficiency Gate's seven dimensions, replacing a confidence-only decision model per this amendment's explicit instruction. The Confidence dimension reuses confidence_scoring_registry; it is not a second confidence mechanism. sufficiency_determination is a data column only — the rule that computes it is RTA-001's scope.
+-- FK (per Chapter 9 — authoritative): confidence_rule_id -> confidence_scoring_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE evidence_fusion_registry (
+    evidence_fusion_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    intelligence_request_reference VARCHAR(255)  -- correlates to the RTA-001 §22 request instance this fusion serves; cross-runtime reference only, no FK, per the same pattern ai_tool_registry.invokes_business_activity_id (AMD-012) already established,
+    fused_from_json JSONB  -- the evidence_registry / knowledge_asset_registry / enterprise_knowledge_object_registry rows fused into this record,
+    evidence_coverage_score INT CHECK (evidence_coverage_score BETWEEN 0 AND 100),
+    evidence_quality_score INT CHECK (evidence_quality_score BETWEEN 0 AND 100),
+    evidence_diversity_score INT CHECK (evidence_diversity_score BETWEEN 0 AND 100),
+    evidence_freshness_score INT CHECK (evidence_freshness_score BETWEEN 0 AND 100),
+    evidence_consistency_score INT CHECK (evidence_consistency_score BETWEEN 0 AND 100),
+    confidence_rule_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- reused — the Confidence dimension,
+    cost_incurred_units INT  -- platform-defined cost unit, not currency-specific,
+    latency_ms INT,
+    sufficiency_determination VARCHAR(50) CHECK (sufficiency_determination IN ('SUFFICIENT', 'INSUFFICIENT_CONTINUE', 'INSUFFICIENT_ESCALATE'))  -- data column only; the runtime rule producing this value is RTA-001's scope,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id)  -- AMD-001
+);
+
+-- =========================================================================
+-- discovery_strategy_registry
+-- PURPOSE: AMD-013. The Planner's discovery/execution strategy catalog. Configuration only — which strategy is selected for a given request, and how it executes, is a runtime decision (RTA-001's scope).
+-- FK (per Chapter 9 — authoritative): governing_policy_id -> confidence_scoring_registry | organization_id -> organization_master
+-- =========================================================================
+CREATE TABLE discovery_strategy_registry (
+    discovery_strategy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    strategy_name VARCHAR(255),
+    strategy_type VARCHAR(50) NOT NULL CHECK (strategy_type IN ('SEQUENTIAL', 'PARALLEL', 'HYBRID', 'DYNAMIC_GRAPH', 'ADAPTIVE')),
+    applicable_agent_types_json JSONB  -- which agent_registry.agent_type values this strategy may orchestrate,
+    governing_policy_id UUID REFERENCES confidence_scoring_registry(confidence_scoring_id)  -- reused governance mechanism,
+    active_flag BOOLEAN DEFAULT FALSE  -- active,
+    created_at TIMESTAMP WITH TIME ZONE  -- audit,
+    organization_id UUID REFERENCES organization_master(organization_id)  -- null for a platform-default strategy; set for a tenant-customized strategy
+);
+
 -- architecture_health_registry
 -- PURPOSE: Measures: whether CorpStage architecture itself is healthy Tracks: missing evidence broken workflows stale predictions trust degradation orphan relationships
 -- FK (per Chapter 9 — authoritative): polymorphic (linked_entity_type/linked_entity_id)
@@ -3566,6 +4078,57 @@ ALTER TABLE memory_evidence_registry ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON memory_evidence_registry
     USING (organization_id = current_setting('app.organization_id')::uuid);
 
+-- AMD-012: 4 new policies, reusing this same tenant_workspace-schema mechanism. No new isolation mechanism introduced.
+ALTER TABLE knowledge_asset_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON knowledge_asset_registry
+    USING (organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE document_chunk_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON document_chunk_registry
+    USING (organization_id = current_setting('app.organization_id')::uuid);
+
+-- vector_index_registry and ai_tool_registry permit organization_id IS NULL for platform-wide, shared rows (a
+-- platform-wide index/tool is visible to every tenant; a tenant-specific one is isolated as usual).
+ALTER TABLE vector_index_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON vector_index_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE ai_tool_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON ai_tool_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+-- AMD-013: 7 new policies, reusing this same tenant_workspace-schema mechanism. No new isolation mechanism introduced.
+ALTER TABLE discovery_provider_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON discovery_provider_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE enterprise_knowledge_object_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON enterprise_knowledge_object_registry
+    USING (organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE agent_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON agent_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+-- agent_tool_grant carries no organization_id of its own; isolation follows agent_registry's, per SD-002-113-style
+-- resolution precedent — enforced at the application/repository layer, consistent with how join tables without
+-- their own tenant column are already handled elsewhere in this document (e.g. group_membership, AMD-011).
+ALTER TABLE agent_tool_grant ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON agent_tool_grant
+    USING (agent_id IN (SELECT agent_id FROM agent_registry WHERE organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid));
+
+ALTER TABLE reasoning_engine_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON reasoning_engine_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE evidence_fusion_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON evidence_fusion_registry
+    USING (organization_id = current_setting('app.organization_id')::uuid);
+
+ALTER TABLE discovery_strategy_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON discovery_strategy_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
 ALTER TABLE metric_review_workflow ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON metric_review_workflow
     USING (organization_id = current_setting('app.organization_id')::uuid);
@@ -3863,14 +4426,313 @@ Tier 1 — Full Pre-Seed (21 tables, platform ships with complete data):
   309 Framework Mapping rows (as of Domain 10 completion). See Blueprint v2.2
   Part E for the detailed CIL-to-table seeding specification.
 
-Tier 2 — Partial Pre-Seed (11 tables, platform seeds defaults, customer extends):
+Tier 2 — Partial Pre-Seed (17 tables, platform seeds defaults, customer extends):
   scenario_registry, scenario_external_factor_mapping, risk_registry,
   risk_metric_mapping, external_factor_impact_mapping, competitor_profile_registry,
   market_trend_registry, master_entity_registry, enterprise_configuration_registry,
-  cross_domain_relationship_registry, enterprise_knowledge_graph_registry.
+  cross_domain_relationship_registry, enterprise_knowledge_graph_registry,
+  vector_index_registry (AMD-012 — platform ships default indices, tenants may add their own),
+  ai_tool_registry (AMD-012 — platform ships default tools, tenants may register their own),
+  discovery_provider_registry (AMD-013 — platform ships default external/public providers, tenants add enterprise connections),
+  agent_registry (AMD-013 — platform ships all 11 default agent types, tenants may register specialist-domain agents),
+  reasoning_engine_registry (AMD-013 — platform ships default reasoning engines, tenants may add or restrict),
+  discovery_strategy_registry (AMD-013 — platform ships default strategies, tenants may customize).
 
-Tier 3 — Customer-Created (76 tables, empty at onboarding):
+Tier 3 — Customer-Created (80 tables, empty at onboarding):
   All remaining transactional tables — populated as customers use the platform.
+  Includes, from AMD-012: knowledge_asset_registry, document_chunk_registry.
+  Includes, from AMD-013: enterprise_knowledge_object_registry, agent_tool_grant, evidence_fusion_registry.
+
+PART F ADDENDUM: KNOWLEDGE & INTELLIGENCE SERVICES (AMD-012)
+
+Appendix I already cites four services from this document's own service
+map by number — Workflow Service (I.6, tables at Part F.5: action_tracker,
+workflow_execution, ...), Narrative Service (I.2, Part F.6: report_registry,
+recommendation_registry, decision_traceability_registry), Event
+Intelligence Service (I.5, Part F.13: event_registry, event_acceptance_log,
+orchestration_trigger_registry), and Platform Health Service (I.2, Part
+F.16: enterprise_configuration_registry). Those four citations describe a
+service catalog this document does not otherwise contain: H.2 records "23
+domain-driven microservices... claimed" against only 21 confirmed anywhere
+in this document, meaning most of Part F's own F.1-F.21 numbering is not
+evidenced in this file. This amendment does not have evidentiary access to
+that catalog and does not invent the missing numbers or re-derive which of
+F.1-F.4, F.7-F.12, F.14-F.15, F.17-F.21 might already be assigned.
+
+What follows is scoped narrowly: the service design for the five new
+tables this amendment adds, presented as an addendum rather than as
+numbered insertions into Part F's uncertain sequence, to avoid any
+collision with an F.x number this document cannot verify is free.
+
+  Knowledge Graph Service
+    Owns: enterprise_knowledge_graph_registry, knowledge_asset_registry
+      (the Postgres-side registries; Neo4j Aura is the primary graph
+      store, per I.9/7D.13).
+    Responsibility: maintains the Enterprise Knowledge Model — the
+      Knowledge Asset and Relationship concepts EIA-001 Vol. I §7 and
+      CMD-001 §24 fix. Component design only; the runtime synchronization
+      pipeline that keeps Postgres and Neo4j consistent is RTA-001 §12's
+      exclusive scope.
+
+  Retrieval Service
+    Owns: document_chunk_registry, vector_index_registry.
+    Responsibility: the component boundary between a stored document
+      (evidence_registry, data_ingestion_registry) and a retrievable
+      unit (a chunk with an embedding in a vector_index_registry index).
+      Hybrid retrieval, reranking, and citation assembly are runtime
+      behavior, specified at RTA-001 §13.7/§13's AI Response stage
+      (AMD-012 Phase 2, complete). Chunking algorithm choice is an
+      implementation pattern, specified at IMP-001 §13.4 (AMD-012 Phase
+      3, complete).
+
+  Agent Orchestration Service
+    Owns: ai_tool_registry (AMD-012); extended by AMD-013 to also own
+      agent_registry, agent_tool_grant, reasoning_engine_registry, and
+      discovery_strategy_registry.
+    Responsibility: the component boundary that holds what a Tool is,
+      what an Agent is (its type and Knowledge Graph/Memory/Evidence
+      read-write permissions), which tools an Agent may select from
+      (agent_tool_grant), what a Reasoning Engine is (the Reasoning
+      Contract's physical shape, reasoning_engine_registry), and what a
+      Discovery Strategy is (discovery_strategy_registry) — component
+      design only. Planning, task decomposition, tool selection, agent
+      selection, strategy selection, and reasoning-engine selection are
+      all runtime decisions, specified at RTA-001 §13.6a-§13.9a (AMD-012
+      Phase 2, complete) and extended for multi-strategy/multi-agent
+      execution at RTA-001 §§13.6d-13.6f and §13.9b (AMD-013 Phase 2,
+      complete).
+
+  Discovery Provider Service *(new, AMD-013)*
+    Owns: discovery_provider_registry.
+    Responsibility: the component boundary for every configured
+      discovery source across the Enterprise, External, and Real-Time
+      categories this amendment's authority names. A provider's
+      connector protocol (how a SharePoint API call or an IoT topic
+      subscription is actually made) is an implementation pattern —
+      IMP-001's exclusive scope, specified at IMP-001 §13.8, Discovery
+      Provider Resolver Pattern (AMD-013 Phase 3, complete). Which
+      providers a given discovery run consults, and in what order or
+      parallelism, is a runtime decision — RTA-001's exclusive scope,
+      specified at RTA-001 §13.6f and §13.6d (AMD-013 Phase 2, complete).
+
+  Reasoning Engine Service *(new, AMD-013)*
+    Owns: reasoning_engine_registry.
+    Responsibility: the component boundary holding the Reasoning
+      Contract's physical shape (input_contract_schema_json,
+      output_contract_schema_json) and the catalog of interchangeable
+      reasoning engines. Engine selection for a given task is a runtime
+      decision — RTA-001's exclusive scope, specified at RTA-001 §13.9b
+      (AMD-013 Phase 2, complete). The internal reasoning implementation
+      behind any given engine is, by this amendment's own explicit
+      instruction, never specified by this document, RTA-001, or IMP-001
+      — it is the one concern this architecture deliberately treats as
+      opaque and model-independent.
+
+  Evidence Fusion Service *(new, AMD-013)*
+    Owns: evidence_fusion_registry.
+    Responsibility: the component boundary holding the Enterprise
+      Evidence Model — a fused record's coverage, quality, diversity,
+      freshness, and consistency scores, plus its reused confidence
+      score (confidence_scoring_registry) — replacing a confidence-only
+      decision model at the data-shape level. The rule that evaluates
+      these seven dimensions and produces sufficiency_determination is a
+      runtime decision — the Evidence Sufficiency Gate, RTA-001's
+      exclusive scope, specified at RTA-001 §13.11b (AMD-013 Phase 2,
+      complete).
+
+  Enterprise Memory Service
+    Owns: enterprise_memory_registry, memory_evidence_registry (both
+      pre-existing, AMD-011-era tables; no new table added by AMD-012 or
+      AMD-013 — see ASSUMPTION below).
+    Responsibility: the component boundary for the Enterprise Memory
+      Model EIA-001 Vol. II Chapters 26-28 fix. Runtime behavior is
+      specified at RTA-001 §21, Memory Runtime (AMD-012 Phase 2,
+      complete). Every agent_registry row's memory_read_flag/
+      memory_write_flag (AMD-013) governs an Agent's permission to reach
+      this service; the permission check itself is a runtime concern,
+      specified at RTA-001 §13.7b (AMD-013 Phase 2, complete).
+
+  Document Ingestion Service
+    Owns: data_ingestion_registry, evidence_registry (both pre-existing;
+      no new table added by AMD-012). Extended by AMD-013's Discovery
+      Provider Service, which supplies this service with discovered
+      items across every configured provider rather than uploaded
+      documents alone.
+    Responsibility: unchanged from the existing schema. Named here only
+      to complete the service map for the document lifecycle this
+      addendum's Retrieval Service depends on.
+
+ASSUMPTION (flagged, not silently resolved): this addendum assigns
+existing pre-AMD-012 tables (enterprise_memory_registry,
+memory_evidence_registry, data_ingestion_registry, evidence_registry) to
+services named here for the first time. No prior version of this document
+stated which service owns these tables. This is a reasonable, minimal
+service assignment consistent with each table's own stated PURPOSE
+comment, not a new architectural decision — but a human reviewer should
+confirm the assignment is acceptable, consistent with Assumption 1's
+treatment elsewhere in this document.
+
+EXECUTION CAPABILITY — CONCEPTUAL PARENT ABSTRACTION (AMD-013 Phase 1A)
+
+This note is conceptual only. It introduces no table, column, foreign
+key, RLS policy, service, runtime component, or implementation pattern.
+Agent Registry, AI Tool Registry, and Reasoning Engine Registry are
+unchanged by it — every column, relationship, and RLS policy on all three
+remains exactly as AMD-012 and AMD-013 Phase 1 defined.
+
+An Execution Capability is any governed runtime capability capable of
+participating in Enterprise Intelligence execution. It is the parent
+architectural concept the Agent Orchestration Service's three registries
+already realize as three roles:
+
+  Invoking Execution Capability — realized today by Agent Registry.
+    Examples of this role beyond today's realization: an AI Skill, an
+    Autonomous Worker, a future orchestration component.
+
+  Invoked Execution Capability — realized today by AI Tool Registry.
+    Examples of this role beyond today's realization: an MCP Server, a
+    Function, a Plugin, an Enterprise API.
+
+  Transforming Execution Capability — realized today by Reasoning Engine
+    Registry. Examples of this role beyond today's realization: an LLM,
+    a Domain AI, a Rule Engine, an ML Model.
+
+Why this exists: the Enterprise Operating System's engineering
+architecture shall remain independent of any specific AI vendor, LLM
+vendor, agent framework, MCP, AI Foundry, AI Skill/Function convention,
+or future execution technology. Agent Registry, AI Tool Registry, and
+Reasoning Engine Registry already satisfy this independence at the
+schema level — none of the three names a vendor, a framework, or a
+calling convention anywhere in their column definitions. What this note
+adds is the vocabulary connecting them: if a future execution paradigm
+does not cleanly present itself as an Agent, a Tool, or a Reasoning
+Engine, it still presents itself as an Execution Capability performing
+one of these three roles (or, per the approved refinement, a future
+role not yet named — the concept does not close the set of possible
+roles). The seam future extension needs is therefore already in the
+vocabulary, not something the schema must be redesigned to expose.
+
+Relationship to the existing registries: Execution Capability is never
+itself a registry, a table, or a queryable object. It is realized
+exclusively through Agent Registry, AI Tool Registry, and Reasoning
+Engine Registry — the three specialized, already-implemented registries
+this note names above. A new capability role, should one ever be needed,
+would be realized the same way: a specialized registry of its own,
+conceptually a fourth Execution Capability role, never a change to this
+note's definition or to the three existing registries.
+
+Planner Principle: the Planner SHALL be specified as selecting Execution
+Capabilities — not as three independently-specified selection mechanisms
+that happen to resemble each other. The runtime realizes a selected
+capability through whichever of the three registries actually holds it.
+This principle is now fully realized: RTA-001 §§13.6b and 13.9b specify
+the Planner selecting Execution Capabilities (AMD-013 Phase 2, complete),
+and IMP-001 §13.6 (Planner Implementation Pattern) and §13.7 (Execution
+Capability Resolver Pattern) implement it (AMD-013 Phase 3, complete).
+This note remains conceptual only; no runtime behavior, state, or
+selection logic was ever added by this note itself, and this note is not
+modified by either phase's completion — only cross-referenced here.
+
+PART G: DISCOVER -> EXPLORE -> CORRELATE -> REASON -> VALIDATE
+ARCHITECTURE — CONCEPTUAL AND COMPONENT DESIGN (AMD-012)
+
+H.3 names this gap directly: "The LangGraph orchestration graph actually
+implementing the Discover/Infer/Validate/Ask pipeline (Part G) has not
+been specified as executable workflow logic anywhere — only as the
+conceptual 4-stage pattern already proven out at the CIL content level."
+This Part specifies the conceptual node graph and each node's
+responsibility and owning service. It does not specify executable
+workflow logic, state-transition rules, or invocation sequencing — that
+remains RTA-001's scope, per this amendment's own governing separation
+between engineering design and runtime execution, and is addressed in
+Phase 2 of this enhancement, not here. H.3 is accordingly annotated below
+as partially, not fully, closed.
+
+Node design (five nodes, corresponding to Complete Blueprint's IDAL
+stages and the Enterprise Operating System's fundamental law, Discover ->
+Explore -> Correlate -> Reason -> Validate -> Ask User only when
+autonomous discovery cannot continue):
+
+  Discovery Node
+    Corresponds to: IDAL Stage 1 (Extract) and Stage 2 (Retrieve).
+    Owning service: Document Ingestion Service (internal sources) and
+      Retrieval Service (external/retrieved sources).
+    Responsibility: acquire deterministic and contextual truth. Produces
+      candidate knowledge_asset_registry rows in PROPOSED state.
+
+  Correlation Node
+    Corresponds to: part of IDAL Stage 3 (Infer) — specifically
+      relationship and cross-signal inference.
+    Owning service: Knowledge Graph Service.
+    Responsibility: establish Relationships among candidate and existing
+      Knowledge Assets (enterprise_knowledge_graph_registry /
+      knowledge_asset_registry), surfacing Contradiction Detection
+      candidates (per Complete Blueprint's IDAL Component table) as a
+      by-product of correlation, not as a separate node.
+
+  Reasoning Node
+    Corresponds to: the remainder of IDAL Stage 3 (Infer) — deterministic,
+      benchmark, pattern, and behavioural inference.
+    Owning service: Agent Orchestration Service, consuming Knowledge
+      Graph Service and Enterprise Memory Service output.
+    Responsibility: this is the node EIA-001 Vol. I §10.5 names
+      "Interpretation" and records, in its own Chapter 14, as having no
+      implementation-ready mechanism anywhere in the repository. This
+      amendment fixes the node's position in the graph and its owning
+      service; it does not fix the Interpretation mechanism itself — that
+      remains an open Engineering Architecture item for RTA-001 (Phase 2).
+
+  Validation Node
+    Corresponds to: IDAL Stage 4 (Confirm) and Stage 5 (Correct), for
+      their automated-confidence-check portion only.
+    Owning service: Agent Orchestration Service, consuming
+      confidence_scoring_registry (existing table — Confidence
+      Propagation, per its propagation_rule column, already covers the
+      Confidence Propagation mechanic IDAL names).
+    Responsibility: determine whether confidence is adequate to proceed
+      without a human, per confidence_scoring_registry's existing
+      green/amber/red thresholds.
+
+  Ask-User Node
+    Corresponds to: IDAL Stage 5a (Route) and Stage 6 (Ask).
+    Owning service: Agent Orchestration Service, handing off to the
+      existing human-review/escalation mechanisms (URA-001 Approval
+      Authorities, SD-003 Review & Approval Laws) rather than a new
+      escalation mechanism of its own.
+    Responsibility: the terminal gate. Reached only when the Validation
+      Node's confidence check fails and Correlation/Reasoning have no
+      further autonomous option — the exact condition IDAL's own Stage 6
+      states ("Only when: cannot extract AND cannot retrieve AND cannot
+      infer AND confidence inadequate AND materiality high AND routing
+      has not resolved it").
+
+MULTI-STRATEGY AND MULTI-AGENT EXECUTION (AMD-013): the five nodes above
+remain the pipeline's semantic backbone, unaltered by this amendment. What
+AMD-013 generalizes is how each node is realized: any node may now be
+executed by one or more agent_registry rows (of the eleven agent_type
+values this amendment's authority names), selected and sequenced
+according to one discovery_strategy_registry row (Sequential, Parallel,
+Hybrid, Dynamic Graph, or Adaptive). For example, the Discovery Node may
+be realized by several Research Agents running in parallel against
+several discovery_provider_registry rows simultaneously, rather than the
+single-source sequential realization AMD-012 implicitly assumed. Which
+strategy and which agents a given request actually uses is a runtime
+decision — RTA-001's exclusive scope, specified at RTA-001 §13.6d
+(Execution Strategy Selection and Runtime Semantics), §13.6e (Capability
+Delegation), §13.9b (Execution Capability Selection), and §22 (the
+Runtime State Machine's strategy/capability-agnostic state realization),
+AMD-013 Phase 2, complete. This paragraph fixes only that the five-node
+graph and the strategy/agent registries compose; RTA-001 fixes how, and
+is not restated here.
+
+H.3 ANNOTATION (AMD-012, AMD-013): closed. The conceptual node graph and
+each node's owning service were specified under AMD-012. Executable
+workflow logic — state transitions, retry/failure handling, and the
+actual invocation sequence — was specified at RTA-001 §22 (the Runtime
+State Machine, AMD-012 Phase 2, complete). The runtime execution of the
+multiple discovery strategies and multi-agent orchestration introduced
+immediately above — previously unspecified — is now specified at RTA-001
+§§13.6d-13.6f, 13.9b, and 22 (AMD-013 Phase 2, complete).
 
 APPENDIX H: KNOWN OPEN ITEMS AND ENGINEERING DECISIONS DEFERRED
 
@@ -3890,7 +4752,16 @@ than invented.
 H.3 — The LangGraph orchestration graph actually implementing the Discover/
 Infer/Validate/Ask pipeline (Part G) has not been specified as executable
 workflow logic anywhere — only as the conceptual 4-stage pattern already
-proven out at the CIL content level across all 9 domains.
+proven out at the CIL content level across all 9 domains. CLOSED: Part G
+(added above, immediately before this Appendix) specifies the conceptual
+node graph and each node's owning service (AMD-012). Executable workflow
+logic for the five-node graph is specified at RTA-001 §22, the Runtime
+State Machine (AMD-012 Phase 2, complete). Executable workflow logic for
+*multiple* discovery strategies and multi-agent realization of each node
+(Part G's "MULTI-STRATEGY AND MULTI-AGENT EXECUTION" paragraph) is
+specified at RTA-001 §§13.6d-13.6f, 13.9b, and 22 (AMD-013 Phase 2,
+complete). See the H.3 ANNOTATION note at the end of Part G for the
+current, complete state of this item.
 
 H.4 — CLOSED in the follow-up pass (see Part I below). All 13 remaining
 sections (7D.1, 7D.2, 7D.3, 7D.5, 7D.9-7D.17) were reviewed. 2 genuine

@@ -1,0 +1,199 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Authentication API
+  description: Multi-tenant authenticating, token issuing, and routing authorization service specs for the CorpStage enterprise platform.
+  version: 1.0.0
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a corporate user within a designated Tenant and issues cryptographically signed access and refresh keys.
+      parameters:
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          description: RFC 4122 compliant UUID representing the tenant scope
+          schema:
+            type: string
+            format: uuid
+            example: "d3b07384-d113-4956-a5db-2ad99386e8a8"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid header configuration or credentials membership failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid JSON schema format validator failures.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '501':
+          description: Endpoint under construction (Stub mode active).
+        '500':
+          description: Server internal exception error.
+
+  /auth/refresh:
+    post:
+      summary: Regenerate access credentials
+      description: Issues a brand-new short-lived access credentials set using verified refresh token payload signatures.
+      parameters:
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          description: RFC 4122 compliant UUID representing the tenant scope
+          schema:
+            type: string
+            format: uuid
+            example: "d3b07384-d113-4956-a5db-2ad99386e8a8"
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer scheme formatted persistent refresh token (e.g. Bearer <token>)
+          schema:
+            type: string
+            example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token renewal rotation succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '400':
+          description: Missing block Authorization header format constraints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '412':
+          description: Expired or invalidated security parameters.
+        '401':
+          description: Cryptographic credentials validation checks failed.
+
+  /health:
+    get:
+      summary: Microservice health check
+      description: Executes readiness diagnostics on DB engines and cache pools.
+      responses:
+        '200':
+          description: Health check telemetry active and green.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Registered corporate email address.
+          example: "user@corpstage.com"
+        password:
+          type: string
+          minLength: 8
+          description: Secure password key credentials.
+          example: "securePassWord123"
+
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+          description: Cryptographically signed security bearer token.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          description: Session authorization scheme.
+          example: "bearer"
+        expires_in:
+          type: integer
+          description: Seconds until expiration limit.
+          example: 3600
+        refresh_token:
+          type: string
+          description: Durable refresh credentials key.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RefreshTokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: Newly signed JWT access credentials.
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          description: Bearer protocol design.
+          example: "bearer"
+        expires_in:
+          type: integer
+          description: Validity timeframe.
+          example: 3600
+
+    HealthStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        service:
+          type: string
+          example: "CorpStage AuthService"
+        dependencies:
+          type: object
+          properties:
+            database:
+              type: string
+              example: "uninitialized"
+            cache:
+              type: string
+              example: "uninitialized"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Header 'X-Tenant-ID' is required to route requests."
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Validation failed for request data."
+        detail:
+          type: array
+          items:
+            type: object

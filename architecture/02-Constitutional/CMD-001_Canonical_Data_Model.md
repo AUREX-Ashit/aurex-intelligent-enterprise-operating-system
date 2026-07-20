@@ -1,8 +1,20 @@
 # CMD-001: Canonical Data Model & Master Data Governance Architecture
-### Version 1.1 — GOLD STANDARD (Supersedes v1.0)
+### Version 1.3 — GOLD STANDARD (Supersedes v1.2)
 
 **Status:** LOCKED
-**Companion documents:** SD-001 v2.0, SD-002 v2.0, SD-003 v2.0, URA-001 v2.1, ERG-001 v2.0, Technical Architecture v2, IMP-001 v1.1, MDP-001 v1.1 — all locked.
+**Companion documents:** SD-001 v2.0, SD-002 v2.2, SD-003 v2.0, URA-001 v2.1, ERG-001 v2.0, Technical Architecture v2, IMP-001 v1.1, MDP-001 v1.1, ONT-001 v1.0 — all locked or current.
+
+## Changelog from v1.2
+
+| Fix | Detail |
+|---|---|
+| Ontology cross-reference added (ARP-001 WP-1E) | §24's "Ontology" Aggregate Root entry now cites ONT-001 (Enterprise Ontology Architecture) as the constitutional owner of Ontology's business-semantic definition, resolving the certified gap where this entry named but never defined the term. This section's own canonical-data-shape scope for the entry is unchanged. |
+
+## Changelog from v1.1
+
+| Fix | Detail |
+|---|---|
+| CBOR formalized (ARP-001 WP-3) | §26.4a (Identifier Strategy) and §26.4b (Relationship to Enterprise Information Objects) added, citing SD-002-004 as CBOR's governing identifier rule and clarifying EIO as CBOR's catalogued form of a Business Object. No existing CBOR content redefined. |
 
 ## Changelog from v1.0
 
@@ -19,7 +31,9 @@
 
 **Canonical Data Model, Master Data & Governance Architecture**
 
-**Planned Structure (30 Sections)**
+**Original Planning Outline (Historical — see body Section headings below for the final, delivered structure)**
+
+*(CERT-021 correction: this outline predates final drafting and no longer matches the delivered section titles, order, or count — the body contains 30 sections, Section 7 onward retitled and reordered from what is listed here. Retained for historical record; not rewritten, per minimum-change scope. The authoritative structure is the sequence of `**Section N —**` headings starting below.)*
 
 **PART I --- Foundation**
 
@@ -1253,6 +1267,18 @@ rules, data, events, APIs and interactions.
 
 The Enterprise Domain Model serves as the highest level of business
 organization below Enterprise Capabilities and above Business Objects.
+
+*(CERT-023 addition, per ARP-001 WP-4: CAP-001 — Enterprise Capability
+Registry — is the sole canonical authority for capability identity,
+canonical capability name, and business intent, per ARCH-000 §6 and
+§12.7. The "Business Capability" and "Business Domain" tiers used in
+this section's hierarchy (§2.16, §2.17, §3.3) describe a canonical-data
+traceability and design-sequencing viewpoint — establishing that no
+physical table is built before its governing business purpose is
+understood — and are not a competing enumeration of CAP-001's specific,
+numbered capabilities and domains. This section does not assign or
+redefine any capability or domain identity; CAP-001 remains
+authoritative for that concern.)*
 
 It provides the foundation for:
 
@@ -9347,7 +9373,7 @@ Roots.
 
   WorkflowInstance         Runtime execution state
 
-  Assignment               Allocation of work
+  WorkAssignment            Allocation of work
 
   Review                   Business verification
 
@@ -9355,6 +9381,8 @@ Roots.
   -----------------------------------------------------------------------
 
 Each Aggregate Root defines an independent execution boundary.
+
+*(CERT-006 correction: this Aggregate Root was originally named "Assignment," colliding with the Identity & Access Domain's "Assignment" Aggregate Root at Section 18.3 — Delegation of permissions and responsibilities — in violation of UDS-003 (Section 16), which requires every Business Object to belong to exactly one Aggregate Root. Renamed to "WorkAssignment" using this table's own responsibility text. Section 18.3's "Assignment" is unchanged, consistent with URA-001's own title, "User, Role, Permission, Event and Assignment," which already establishes "Assignment" in the permission/identity sense.)*
 
 **20.4 Canonical Business Objects**
 
@@ -9372,7 +9400,7 @@ such as:
 
   Workflow Instance             Transaction Data
 
-  Assignment                    Transaction Data
+  WorkAssignment                 Transaction Data
 
   Review                        Transaction Data
 
@@ -9445,7 +9473,7 @@ Business Process\
 │\
 ├── Workflow\
 │\
-├── Assignment\
+├── WorkAssignment\
 │\
 ├── Review\
 │\
@@ -11042,6 +11070,8 @@ The Knowledge & AI Domain shall contain the following Aggregate Roots.
 
   KnowledgeGraph           Semantic relationships
 
+*(CERT-024 addition, per ARP-001 WP-1E: "Ontology" here names a canonical-data-shape aggregate root only, per this section's own Knowledge & AI Domain scope. Its constitutional business-semantic definition — the relationship taxonomy of Classification, Specialization, Generalization, Composition, Aggregation, Association, and Reference — is owned by ONT-001 (Enterprise Ontology Architecture), not by this section. This entry does not redefine ONT-001, and ONT-001 does not redefine this entry's canonical data shape.)*
+
   AIAgent                  Intelligent execution
 
   Prompt                   AI interaction
@@ -11890,6 +11920,14 @@ information.
   Status              Draft / Approved / Deprecated / Retired
   -----------------------------------------------------------------------
 
+**26.4a Identifier Strategy** *(formalized per ARP-001 WP-3)*
+
+The Business Object Identifier is governed by SD-002-004 (Universal Identity): a globally unique, permanent identifier in `PREFIX-NNNNNN` form, matching the format SD-002-004 already establishes for every business object type (e.g. `CDE-000001`, `BA-000089`). This section does not define a competing identifier format; illustrative examples elsewhere in this document (e.g. `BO-001`) are shorthand for worked examples, not a separate constitutional numbering rule.
+
+**26.4b Relationship to Enterprise Information Objects** *(formalized per ARP-001 WP-3)*
+
+An Enterprise Information Object (EIO), as the term is used in PE-001-Cxxx and EIA-001, denotes a Business Object once it has been assigned a Business Object Identifier and registered in the CBOR. EIO is not a distinct canonical concept requiring separate definition — it is the catalogued, identifier-bearing form of a Business Object already defined by SD-002 and structured by this section. A "Pending Canonical Binding" marker for an EIO reference, as used throughout PE-001-Cxxx, denotes a Business Object whose CBOR registration (per §26.3) has not yet occurred.
+
 **26.5 Relationship Mapping**
 
 Every Business Object shall explicitly define its relationships.
@@ -12035,7 +12073,7 @@ Example:
   Intelligence           Metric, KPI, Framework, MaterialTopic, Benchmark
 
   Business Execution     BusinessProcess, BusinessActivity, Workflow,
-                         Assignment
+                         WorkAssignment
 
   Disclosure &           Report, Disclosure, Narrative, Publication
   Intelligence Delivery  
@@ -13813,7 +13851,9 @@ and ERG-001, CMD-001 forms an integral part of the CorpStage Enterprise
 Architecture Framework and shall serve as the authoritative standard for
 all future data architecture, implementation, and governance activities.
 
-**Overall Review of CMD-001**
+**Overall Review of CMD-001 (Superseded — Historical Record)**
+
+*(CERT-007 correction: this subsection was drafted during pre-freeze review, before this document was superseded by Version 1.1 — GOLD STANDARD, Status: LOCKED, per the header at the top of this document. It is retained below for audit history, not as the current position. CMD-001 is frozen as-is; the three refinements below remain unactioned recommendations for a possible future architectural decision, not prerequisites to freezing and not created, promoted, or rejected by this correction.)*
 
 Having now completed all 30 sections, I believe **CMD-001 is one of the
 strongest architecture documents in the overall CorpStage framework**,

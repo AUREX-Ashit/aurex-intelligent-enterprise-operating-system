@@ -33,8 +33,9 @@ export function useLogin() {
   const router = useRouter();
 
   const completeLogin = useCallback(
-    (accessToken: string) => {
+    (accessToken: string, refreshToken: string) => {
       authStorage.setToken(accessToken);
+      authStorage.setRefreshToken(refreshToken);
       notify("Signed in.", "success");
       router.push(ADMIN_WORKSPACE_ROOT);
     },
@@ -58,7 +59,7 @@ export function useLogin() {
           return;
         }
 
-        completeLogin(response.access_token);
+        completeLogin(response.access_token, response.refresh_token);
       } catch (error) {
         setState({ status: "error", message: describeError(error) });
       }
@@ -85,7 +86,7 @@ export function useLogin() {
           return;
         }
 
-        completeLogin(response.access_token);
+        completeLogin(response.access_token, response.refresh_token);
       } catch (error) {
         setState({ status: "error", message: describeError(error) });
       }

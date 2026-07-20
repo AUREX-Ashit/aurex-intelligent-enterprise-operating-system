@@ -1,0 +1,22 @@
+cors:
+  allow_origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+  allow_credentials: true
+  allow_methods:
+    - "*"
+  allow_headers:
+    - "*"
+
+database:
+  # Local development — postgres superuser against the corpstage-postgres Docker container.
+  # USER: postgres (superuser, required until auth_service_user is granted CREATE on public schema)
+  # WARNING: Do not use superuser credentials in staging or production.
+  #          Replace with auth_service_user once service-user password is retrieved
+  #          and GRANT CREATE ON SCHEMA public TO auth_service_user has been applied.
+  url: "postgresql+asyncpg://postgres:CorpStageMasterDatabasePass123!@localhost:5432/corpstage"
+
+auth:
+  jwt_algorithm: "HS256"
+  access_token_expiry_minutes: 60
+  refresh_token_expiry_days: 7

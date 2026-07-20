@@ -16,7 +16,7 @@ Confidential --- Internal Product Leadership
 +-----------------------------------------------------------------------+
 | **Companion Documents — Detailed Design Authority**                   |
 |                                                                       |
-| This Blueprint is the conceptual and constitutional source. Four      |
+| This Blueprint is the conceptual and constitutional source. Five      |
 | companion documents own the detailed design in their domain and are   |
 | the authority to consult for implementation specifics — this          |
 | Blueprint intentionally does not re-explain what they already own     |
@@ -27,7 +27,7 @@ Confidential --- Internal Product Leadership
 | structured, the Two-Layer Sacred 12, Guided Completion, the Action    |
 | Center.                                                                |
 |                                                                       |
-| SD-002 v2.0 (Universal Business Object Rules) --- what a business     |
+| SD-002 v2.2 (Universal Business Object Rules) --- what a business     |
 | object is: CDEs, BQs, Business Activities, Evidence, the Canonical    |
 | Intelligence Library, and the general Configuration Hierarchy         |
 | precedence rule (SD-002-113).                                         |

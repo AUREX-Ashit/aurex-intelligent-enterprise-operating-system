@@ -1,0 +1,31 @@
+openapi: 3.0.3
+
+info:
+  title: CorpStage Tenant API
+  description: Tenant and organization management APIs
+  version: 1.0.0
+
+servers:
+  - url: https://api.corpstage.com
+
+paths:
+
+  /tenant/create:
+    post:
+      summary: Create tenant
+      description: Creates a new tenant organization
+
+      responses:
+        '200':
+          description: Tenant created successfully
+
+  /tenant/users:
+    get:
+      summary: Get tenant users
+      description: Retrieves users belonging to a tenant
+
+      responses:
+        '200':
+          description: Tenant users retrieved successfully        
+
+components: {}

@@ -26,20 +26,38 @@ export class ApiError extends Error {
 interface RequestOptions {
   headers?: HeadersInit;
   signal?: AbortSignal;
+  /**
+   * Opts a call out of the 401 refresh-and-retry behavior below. Set only
+   * by src/services/auth-api.ts's own login/refresh calls, where a 401 is
+   * a genuine authentication failure to surface, not an expired session
+   * to silently recover from.
+   */
+  skipAuthRetry?: boolean;
 }
 
 /**
  * Resolves an access token to attach to outgoing requests, if any.
- *
- * Deliberately a no-op today (always returns null). Authentication is
- * infrastructure being prepared here, not implemented: this is the single
- * seam a future login implementation wires a real session store into, via
- * `setAuthTokenProvider`, without any other part of the API layer changing.
+ * Wired to real storage via `setAuthTokenProvider` (see src/app/providers.tsx).
  */
 let tokenProvider: () => string | null = () => null;
 
 export function setAuthTokenProvider(provider: () => string | null): void {
   tokenProvider = provider;
+}
+
+/**
+ * Attempts to silently renew the session (via AuthService's POST
+ * /auth/refresh — see src/services/auth-api.ts) when a request comes back
+ * 401. Resolves `true` if a new access token is now available and the
+ * failed request should be retried once, `false` otherwise (no refresh
+ * token, or the refresh itself failed — the caller sees the original 401).
+ * Wired via `setRefreshHandler` (see src/app/providers.tsx).
+ */
+let refreshHandler: (() => Promise<boolean>) | null = null;
+let refreshInFlight: Promise<boolean> | null = null;
+
+export function setRefreshHandler(handler: (() => Promise<boolean>) | null): void {
+  refreshHandler = handler;
 }
 
 async function parseErrorBody(response: Response): Promise<{ message: string; detail?: unknown }> {
@@ -64,6 +82,7 @@ async function request<T>(
   path: string,
   body?: unknown,
   options: RequestOptions = {},
+  isRetryAfterRefresh = false,
 ): Promise<T> {
   const url = path.startsWith("http") ? path : `${appConfig.authServiceUrl}${path}`;
   const headers = new Headers(options.headers);
@@ -90,6 +109,18 @@ async function request<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && !options.skipAuthRetry && !isRetryAfterRefresh && refreshHandler) {
+      if (!refreshInFlight) {
+        refreshInFlight = refreshHandler().finally(() => {
+          refreshInFlight = null;
+        });
+      }
+      const refreshed = await refreshInFlight;
+      if (refreshed) {
+        return request<T>(method, path, body, options, true);
+      }
+    }
+
     const { message, detail } = await parseErrorBody(response);
     logger.warn("API request returned an error response", { method, url, status: response.status });
     throw new ApiError(message, response.status, detail);

@@ -2,6 +2,10 @@
 
 **CorpStage Implementation Playbook**
 
+**Classification:** Enterprise Engineering Architecture (Layer 3, per ARCH-000)
+**Status:** Active — governs current engineering practice; evolves via Controlled Evolution (ARCH-000 §12.6)
+**Governing framework:** ARCH-000
+
 **Purpose**
 
 IMP-001 defines the mandatory engineering standards, implementation
@@ -30,11 +34,13 @@ IMP-001 is built upon the principles established by:
 
 -   SD-003 -- Enterprise Interaction Laws
 
--   URA-001 -- User, Role, Permission & Assignment
+-   URA-001 -- User, Role, Permission, Event & Assignment
 
 -   ERG-001 -- Enterprise Structure & Relationship Management
 
--   CMD-001 -- Canonical Data Model, Master Data & Governance
+-   CMD-001 -- Canonical Data Model & Master Data Governance Architecture
+
+-   RTA-001 -- Runtime Architecture and Execution *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3 — Section 13 implements RTA-001's Sections 12, 13, 21, and 22, including AMD-013 Phase 2's Execution Strategy, Execution Capability Selection, Evidence Fusion, and Evidence Sufficiency Gate extensions)*
 
 It does **not redefine architecture**. It operationalizes it.
 
@@ -42,7 +48,7 @@ It does **not redefine architecture**. It operationalizes it.
 
 *(This replaces an earlier planning outline that proposed 20 sections but was superseded during drafting by a different, 7-section structure plus Appendix A. That outline was never updated to match, creating a genuine internal-consistency defect identified during the Version 1.0 constitutional validation and corrected here. The list below is the actual, final structure of this document.)*
 
-Section 1 — Purpose & Guiding Principles. Section 2 — Canonical Implementation Lifecycle (CIL). Section 3 — Canonical Implementation Unit (CIU). Section 4 — Repository Architecture & Project Structure. Section 5 — Canonical Business Object Implementation Pattern. Section 6 — Canonical Business Activity Implementation Pattern (CBAIP). Section 7 — Architectural Alignment & Implementation Guidance. Section 8 — API Standards. Section 9 — Event Implementation Standards. Section 10 — Frontend Standards. Section 11 — Testing Strategy. Section 12 — CI/CD & DevOps. Appendix A — Canonical Reference Implementation.
+Section 1 — Purpose & Guiding Principles. Section 2 — Canonical Implementation Lifecycle (CIL). Section 3 — Canonical Implementation Unit (CIU). Section 4 — Repository Architecture & Project Structure. Section 5 — Canonical Business Object Implementation Pattern. Section 6 — Canonical Business Activity Implementation Pattern (CBAIP). Section 7 — Architectural Alignment & Implementation Guidance. Section 8 — API Standards. Section 9 — Event Implementation Standards. Section 10 — Frontend Standards. Section 11 — Testing Strategy. Section 12 — CI/CD & DevOps. Section 13 — Enterprise Intelligence Implementation Patterns *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3; extended under AMD-013 Phase 3 with Planner, Execution Capability/Discovery Provider/Reasoning Engine Resolver, Execution Strategy, Multi-Agent, Evidence Fusion, Knowledge & Memory, and Discovery Pipeline patterns)*. Appendix A — Canonical Reference Implementation.
 
 
 **Section 1 — Purpose & Guiding Principles**
@@ -61,7 +67,7 @@ Implementation follows the same discipline the constitutional architecture alrea
 
 **1.4 Relationship with Architecture Documents**
 
-IMP-001 sits downstream of, and is constrained by, the eight constitutional documents (Section 7.1's table). It translates their principles into engineering practice; it does not have authority to alter them. Where an engineering constraint appears to conflict with a constitutional principle, the constitutional principle governs, and the conflict is raised for architectural review rather than resolved by implementation convenience.
+IMP-001 sits downstream of, and is constrained by, the ten constitutional documents (Section 7.1's table). It translates their principles into engineering practice; it does not have authority to alter them. Where an engineering constraint appears to conflict with a constitutional principle, the constitutional principle governs, and the conflict is raised for architectural review rather than resolved by implementation convenience.
 
 **1.5 Human Governed, AI Assisted**
 
@@ -2211,346 +2217,9 @@ The manifest shall contain:
 Claude Code shall use the CBAM as the implementation contract for
 Business Activities.
 
-**6.15 Architectural Enhancement (Major Recommendation)**
+**Editorial Note (WP-7 Repository Hygiene):** Sections 6.15 through 6.30 originally appeared twice in this document — first as an architect's restructuring recommendation and outline summary, then again as the fully detailed specification. The two copies shared section numbers (6.15–6.30), which CR-3.0 identified as a duplicate-numbering defect. The recommendation was accepted and fully realized in the detailed sections below; the outline copy added no content beyond what the detailed sections already state in full, and has been removed here as superseded scaffolding. The recommendation's original rationale is preserved below.
 
-**Business Activity Engine (BAE)**
-
-I recommend introducing a **Business Activity Engine** as a core
-platform capability.
-
-Rather than each domain implementing activity execution independently,
-the BAE would provide a common execution pipeline for:
-
--   Authorization
-
--   Validation
-
--   Metadata resolution
-
--   Workflow orchestration
-
--   Event publication
-
--   Audit logging
-
--   AI assistance
-
--   Error handling
-
-Each Business Activity would contribute only its domain-specific
-business logic, while the engine manages the common execution flow. This
-reduces duplication and ensures every activity behaves consistently
-across the platform.
-
-**My Assessment**
-
-I believe this section is one of the defining differentiators of
-CorpStage. Most enterprise systems are **entity-centric** or
-**CRUD-centric**. CorpStage is **Business Activity-centric**. By
-standardizing every executable operation through the Canonical Business
-Activity Implementation Pattern and the Business Activity Engine, the
-platform gains consistent behavior, centralized governance, and a
-predictable execution model that aligns perfectly with SD-002, SD-003,
-URA-001, ERG-001, and CMD-001.
-
-**Proposed Structure for IMP-001 v2.0**
-
-**Part A --- Foundation (retain with minor refinements)**
-
--   6.1 Purpose
-
--   6.2 Architectural Principle
-
--   6.3 Business Activity Lifecycle
-
--   6.4 Business Activity Components
-
--   6.5 Business Activity Template
-
--   6.6 Business Activity Types
-
--   6.7 Business Activity Contract (BAC)
-
--   6.8 Business Activity Granularity
-
--   6.9 Workflow Integration
-
--   6.10 Event Integration
-
--   6.11 Authorization Integration
-
--   6.12 AI Assistance
-
--   6.13 Testing Requirements
-
--   6.14 Canonical Business Activity Manifest (CBAM)
-
-These sections are already strong and only need minor enhancements.
-
-**Part B --- Business Activity Engine (new)**
-
-This should become the heart of the document.
-
-**6.15 Business Activity Engine (BAE)**
-
-Promote it from a recommendation to a **mandatory platform capability**.
-
-Include:
-
--   Purpose
-
--   Responsibilities
-
--   Execution pipeline
-
--   Pluggable architecture
-
--   Extension points
-
--   Engine interfaces
-
-**6.16 Business Activity Execution Pipeline**
-
-Define the complete runtime flow:
-
-Request\
-\
-↓\
-\
-Context Resolution\
-\
-↓\
-\
-Authorization\
-\
-↓\
-\
-Validation\
-\
-↓\
-\
-Metadata Resolution\
-\
-↓\
-\
-Workflow Resolution\
-\
-↓\
-\
-Business Logic\
-\
-↓\
-\
-Persistence\
-\
-↓\
-\
-Transaction Commit\
-\
-↓\
-\
-Domain Events\
-\
-↓\
-\
-Notifications\
-\
-↓\
-\
-Audit\
-\
-↓\
-\
-AI Hooks\
-\
-↓\
-\
-Response
-
-This becomes the canonical execution sequence for the entire platform.
-
-**6.17 Business Activity Context (BACX)**
-
-Define the runtime context injected into every Business Activity.
-
-**6.18 Business Activity State Model**
-
-Introduce lifecycle states:
-
--   Draft
-
--   Ready
-
--   Running
-
--   Waiting
-
--   Suspended
-
--   Completed
-
--   Failed
-
--   Cancelled
-
--   Rolled Back
-
-**6.19 Transaction Management**
-
-Specify:
-
--   Transaction ownership
-
--   Nested activities
-
--   Commit rules
-
--   Rollback rules
-
-**6.20 Idempotency & Replay Protection**
-
-Mandatory support for:
-
--   Idempotency keys
-
--   Duplicate detection
-
--   Safe retries
-
-**6.21 Compensation & Recovery**
-
-Support Saga/compensation patterns for distributed business operations.
-
-**Part C --- Runtime Governance**
-
-**6.22 Business Activity Registry**
-
-A metadata registry for all Business Activities.
-
-**6.23 Activity Versioning**
-
-Versioning and backward compatibility.
-
-**6.24 Activity Composition**
-
-Support parent/child and composite activities.
-
-**6.25 Execution Policies**
-
-Execution modes:
-
--   Sync
-
--   Async
-
--   Scheduled
-
--   Event-triggered
-
--   Workflow-triggered
-
--   AI-triggered (governed)
-
-**6.26 Performance & SLA**
-
-Capture runtime metrics:
-
--   Duration
-
--   Success rate
-
--   Retry count
-
--   Queue time
-
--   Throughput
-
-**6.27 Observability**
-
-Standardized:
-
--   Logging
-
--   Tracing
-
--   Metrics
-
--   Correlation IDs
-
-**6.28 Error Classification**
-
-Categorize errors as:
-
--   Validation
-
--   Authorization
-
--   Business Rule
-
--   Integration
-
--   Infrastructure
-
--   AI
-
--   System
-
-**6.29 Enhanced CBAM**
-
-Extend the manifest with:
-
--   Version
-
--   Execution mode
-
--   Retry policy
-
--   Compensation activity
-
--   SLA
-
--   Dependencies
-
--   Feature flags
-
--   Security classification
-
--   Observability metadata
-
-**6.30 Architectural Principles**
-
-Conclude with the immutable principles:
-
--   Activities represent business intent.
-
--   The Business Activity Engine owns execution.
-
--   Domains provide only business logic.
-
--   Workflows orchestrate; Activities execute.
-
--   Events communicate outcomes.
-
--   AI assists but does not govern.
-
--   Every Activity is observable, auditable, versioned, and testable.
-
-**Why this approach?**
-
-At present:
-
--   **SD-002** defines **what** the platform manages (Business Objects).
-
--   **URA-001** defines **who** can perform operations.
-
--   **ERG-001** defines **where** operations occur in the enterprise.
-
--   **CMD-001** defines **what data** is manipulated.
-
--   **IMP-001** should define **how** business intent is executed.
-
-That makes IMP-001 the platform\'s **execution constitution**,
-completing the architectural foundation.
+*Rationale (originally recorded alongside the recommendation to introduce the Business Activity Engine as a core platform capability, rather than having each domain implement activity execution independently): this is one of the defining differentiators of CorpStage. Most enterprise systems are entity-centric or CRUD-centric; CorpStage is Business Activity-centric. Standardizing every executable operation through the Canonical Business Activity Implementation Pattern and the Business Activity Engine gives the platform consistent behavior, centralized governance, and a predictable execution model aligned with SD-002, SD-003, URA-001, ERG-001, and CMD-001. SD-002 defines what the platform manages (Business Objects); URA-001 defines who can perform operations; ERG-001 defines where operations occur; CMD-001 defines what data is manipulated; IMP-001 defines how business intent is executed — completing the architectural foundation.*
 
 **6.15 Business Activity Engine (BAE)**
 
@@ -5160,6 +4829,14 @@ implementation metadata.
 The Business Activity Registry is the authoritative source for Business
 Activity discovery, execution, governance, monitoring, and lifecycle
 management.
+
+**6.22.1a Constitutional Authority** *(formalized per ARP-001 WP-3)*
+
+The Business Activity Registry operationalizes, at the engineering layer, the identity and rules SD-002 §5 (Business Activities Rules) already establishes at the constitutional layer. SD-002 defines what a Business Activity is and the rules it must satisfy; the Registry catalogs the identified instances. IMP-001 does not redefine Business Activity semantics here — per §1.2, it governs how the platform is built, not what is built.
+
+**6.22.1b Identifier Strategy** *(formalized per ARP-001 WP-3)*
+
+The Activity Identifier referenced throughout this section is governed by SD-002-004 (Universal Identity): a globally unique, permanent identifier in `PREFIX-NNNNNN` form (e.g. `BA-000089`), matching the format SD-002-004 already establishes for every business object type. This section does not define a competing identifier format.
 
 **6.22.2 Architectural Principle**
 
@@ -8921,7 +8598,9 @@ The constitutional architecture is organized as follows.
   -------------------------- --------------------------------------------
   Blueprint                  Enterprise Operating Model and Platform Laws
 
-  SD-001                     User Experience Architecture
+  SD-001                     Enterprise Presentation Architecture
+
+  DS-001                     AUREX Design System — Enterprise Visual Design
 
   SD-002                     Canonical Business Object Model
 
@@ -8929,15 +8608,19 @@ The constitutional architecture is organized as follows.
 
   URA-001                    Identity, Authorization and Assignment
 
-  ERG-001                    Enterprise Structure and Relationship Graph
+  ERG-001                    Enterprise Structure and Relationship Management
 
   CMD-001                    Canonical Metadata Architecture
 
-  IMP-001                    Business Activity Execution Architecture
+  RTA-001                    Runtime Architecture and Enterprise Execution
+
+  EIA-001                    Enterprise Intelligence Architecture
   -----------------------------------------------------------------------
 
+*(Table corrected per ARP-001 WP-4: IMP-001 itself is Layer 3 Engineering, not a constitutional document, and has been removed from this list; DS-001, RTA-001 and EIA-001 — each ratified since this table was last updated — have been added, matching ARCH-000 §10's current Constitutional Documents list exactly.)*
+
 Together these documents define the complete operating model of the
-platform.
+platform. IMP-001 (this document) is the Layer 3 engineering standard positioned downstream of, and constrained by, all ten.
 
 **7.2 Relationship with SD-002**
 
@@ -9473,7 +9156,9 @@ business specification. I believe this separation is one of the
 strongest aspects of the CorpStage architecture because it keeps
 business intent independent from implementation technology.
 
-**A.6 Canonical Business Activity Manifest (CBAM)**
+**A.6 Canonical Business Activity Manifest (CBAM) — Superseded, Retained for Historical Record**
+
+*(CERT-014 correction: this Appendix defines a 20-section CBAM structure that is structurally different from, and unreconciled with, the 16-section structure at Section 6.29, "Enhanced Canonical Business Activity Manifest (CBAM v2)." Section 6.29 is the authoritative, current CBAM structure: it is body text registered in this document's own Table of Contents, and its own name ("CBAM v2") already identifies it as superseding the structure below. This Appendix is retained for historical record and is not the implementation contract; Section 6.29 is. No content from either structure has been merged or rewritten — this correction only resolves which one governs.)*
 
 **A.6.1 Purpose**
 
@@ -11745,7 +11430,7 @@ The constitutional documents collectively define:
 
   URA-001                  Identity, Authorization & Assignment
 
-  ERG-001                  Enterprise Structure & Relationship Graph
+  ERG-001                  Enterprise Structure & Relationship Management
 
   CMD-001                  Canonical Metadata Architecture
 
@@ -12055,6 +11740,18 @@ Per Section 9.3 (IMP-EVT-002) and the Master Data Population Specification's own
 
 Given the volume of language-purge corrections required across every constitutional document in this platform's history, this is elevated from a manual review checklist item to a mandatory automated test: any CI pipeline run scans newly generated content (screen labels, narrative text, report templates) against the binding substitution table and fails the build if a banned term (ESG, Sustainability, Carbon, Net Zero, Green Bond, Scope 1/2/3, Diversity Metrics, CSRD) appears outside an explicitly-tagged internal reference table (per the precedent established for `framework_registry`'s legitimate specialist content). This closes the gap where every document in this platform's history needed a manual language-purge pass after the fact.
 
+**11.6 Enterprise Intelligence Requires Contract Tests at the Knowledge, Retrieval, and Agent Boundaries** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3)*
+
+**IMP-TEST-005**
+
+Section 13's Knowledge Graph, Retrieval, and Agent Orchestration implementation patterns each require the same Contract testing discipline IMP-TEST-001 already establishes for Business Activities, applied at three additional boundaries: (1) a `KnowledgeGraphRepository` contract test verifying that a write is visible through both its Postgres registry row and its Neo4j graph reference, per RTA-001 §12.7's synchronization guarantee; (2) a `RetrievalService` contract test verifying that a query returns results ranked consistently with `vector_index_registry.retrieval_mode`, and that every returned result carries a citation locator, per RTA-001 §13.7; (3) an `AgentOrchestrator` contract test verifying that every execution reaches the Ask User Gate (RTA-001 §13.12a) only when all five Termination Criteria are independently, verifiably false — never on a mocked shortcut. A Section 13 implementation with passing unit tests but no contract test at these three boundaries is not done, per the same Definition of Done IMP-TEST-001 extends.
+
+**11.7 Enterprise Intelligence Orchestration Requires Contract and Determinism Tests at Eleven Further Boundaries** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3, AMD-013)*
+
+**IMP-TEST-006**
+
+Section 13.6–13.14's patterns each require a contract test verifying they honor the runtime rule they implement, never merely that they return a value: (1) `Planner` — a produced `Plan` is validated against every RTA-001 §13.6b Planner Responsibility field being present and non-null, and a `replan()` call is verified to produce a new `Plan` instance, never a mutation of the prior one; (2) `ExecutionCapabilityResolver` — verified to never return a capability whose permission, availability, health, or policy check failed, and never to leak which registry (Agent/Tool/Reasoning Engine) answered through the returned `ExecutableCapability`'s type; (3) `DiscoveryProviderResolver` — verified to return every active, in-scope provider when more than one matches, never a single provider by default; (4) `ReasoningEngineResolver` — verified that `ExecutableReasoningEngine.invoke()` accepts and returns only contract-shaped objects, with a test asserting no vendor SDK type is reachable from the interface's public surface (a compile-time or reflection-based check, not a runtime one); (5) `ExecutionStrategy` — each of the five implementations independently tested against the same `TaskGraph` fixture, asserting Sequential never begins a task before its predecessor completes and Parallel never blocks an independent task on an unrelated one; (6) Multi-Agent execution — a Capability Delegation test verifying a delegation absent from `agent_tool_grant` is refused by the resolver, never by the delegating capability's own logic; (7) `EvidenceFusionService` — verified to compute all seven `evidence_fusion_registry` dimensions but never to write `sufficiency_determination` itself; (8) the Ask User Gate — a test asserting the gate remains closed when any one of its conditions (RTA-001 §13.12a) is untested/unknown, never defaulting to open; (9) the Evidence Sufficiency Gate — a test asserting all three determinations (SUFFICIENT / INSUFFICIENT_CONTINUE / INSUFFICIENT_ESCALATE) are independently reachable from distinct fixture inputs, not just the two extremes; (10) Knowledge updates — a `PermissionEnforcingKnowledgeGraphRepository` test verifying a write is refused when `knowledge_graph_write_flag` is false, structurally (via the decorator), not by convention; (11) Memory updates — the equivalent test for `memory_write_flag` against `MemoryRepository`. A Section 13.6–13.14 implementation with passing unit tests but no contract/determinism test at these eleven boundaries is not done, per the same Definition of Done IMP-TEST-001 extends.
+
 ---
 
 **Section 12 — CI/CD & DevOps**
@@ -12083,5 +11780,156 @@ Before promoting a build to any environment, the pipeline verifies that the depl
 
 **12.5 Reference Pipeline**
 
-Build → run `IMP-TEST-001` through `IMP-TEST-004` → verify `architecture_version_registry` alignment (IMP-CICD-003) → apply pending migrations under the deprecation floor (IMP-CICD-001) → execute MDP-001 seed stage (IMP-CICD-002) → promote.
+Build → run `IMP-TEST-001` through `IMP-TEST-006` → verify `architecture_version_registry` alignment (IMP-CICD-003) → apply pending migrations under the deprecation floor (IMP-CICD-001) → execute MDP-001 seed stage (IMP-CICD-002) → provision/verify Enterprise Intelligence infrastructure (IMP-CICD-004) → provision/verify distributed orchestration infrastructure (IMP-CICD-005) → promote.
+
+**12.6 Enterprise Intelligence Infrastructure Provisioning Is a Pipeline Stage** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3)*
+
+**IMP-CICD-004**
+
+Provisioning or verifying the Neo4j Aura graph instance, the `vector_index_registry` indices, and the `ai_tool_registry`'s platform-default rows (Master Technical Architecture, AMD-012, Part F Addendum) is a pipeline stage, following IMP-CICD-002's same idempotent-on-every-deployment discipline — never a manually-run provisioning script. A build that reaches promotion without this stage having verified the graph instance and default vector indices exist fails the pipeline, consistent with IMP-CICD-003's version-alignment check.
+
+**12.7 Distributed Orchestration Infrastructure Provisioning and Observability** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3, AMD-013)*
+
+**IMP-CICD-005**
+
+`Planner` (§13.6), `ExecutionCapabilityResolver` (§13.7), `DiscoveryProviderResolver` (§13.8), and `ReasoningEngineResolver` (§13.9) instances are stateless services and shall be deployed horizontally scalable behind a load balancer, following the same principle IMP-CICD-004 already applies to infrastructure provisioning: no manual scaling step, and no single-instance deployment assumed anywhere in Section 13.6–13.14's implementation guidance. High availability for `agent_registry`, `discovery_provider_registry`, `reasoning_engine_registry`, and `discovery_strategy_registry` default-row provisioning (Master Technical Architecture, AMD-013 Phase 1) is verified as part of this pipeline stage, extending IMP-CICD-004's Enterprise Intelligence infrastructure check rather than duplicating it. Every pattern in Section 13.6–13.14 is observable per Section 13's own §13.15 pointer to this stage: `Planner` Plan/Replan events, `ExecutionCapabilityResolver`/`DiscoveryProviderResolver`/`ReasoningEngineResolver` resolution outcomes, `EvidenceFusionService` dimension scores, and every RTA-001 §22.12 Runtime Event (including the AMD-013 additions, `EVIDENCE_FUSED` and `REPLANNED`) shall emit telemetry through the same Observability Platform every other runtime in this document already reports to — no Section 13.6–13.14 pattern introduces a separate, parallel telemetry mechanism.
+
+---
+
+**Section 13 — Enterprise Intelligence Implementation Patterns** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3)*
+
+**13.1 Purpose**
+
+This section closes the implementation-pattern gap the post-Stage-III Enterprise Intelligence Execution Architecture Readiness Review identified: Master Technical Architecture (AMD-012) now specifies what the Knowledge Graph, Memory Graph, Enterprise RAG, Vector Database, and AI Tool Registry *are*; RTA-001 (§§12, 13, 21, 22) now specifies how they *execute*. Neither specifies how an engineer *builds* them. This section is implementation guidance only — coding patterns, interfaces, and reference structure. It does not restate architecture (Master Technical Architecture's exclusive scope) or runtime execution sequencing (RTA-001's exclusive scope); every pattern below cites the architectural or runtime authority it implements rather than re-describing it.
+
+**13.2 Knowledge Graph Implementation Pattern**
+
+**IMP-EI-001**
+
+A Knowledge Asset is implemented using the same Canonical Business Object Stack Section 5.3 already mandates (Aggregate Root → Metadata → Business Rules → Validation → Persistence → Repository → Domain Service), applied to the `knowledge_asset_registry` and `enterprise_knowledge_graph_registry` tables Master Technical Architecture (AMD-012) defines. The Persistence layer is dual: a `KnowledgeGraphRepository` interface exposes one implementation writing to PostgreSQL (the registry rows) and one writing to the Neo4j driver (the traversable graph), coordinated so that a single Domain Service call updates both — the engineer never writes to Neo4j and PostgreSQL from two independent call sites. The synchronization sequence this Repository's write path follows is RTA-001 §12.7's Graph Synchronization Pipeline; it is not re-specified here.
+
+**13.3 Enterprise RAG & Retrieval Implementation Pattern**
+
+**IMP-EI-002**
+
+`Backend/Services/AIService/services/rag_engine.py`, `embedding_provider.py`, and `vector_provider.py` are this pattern's existing canonical reference implementation, in the same sense Appendix A is the canonical reference implementation for Section 6 — this section formalizes their existing shape as the mandatory pattern, rather than introducing a new one:
+
+- A `RAGService` domain service, dependency-injected with an `EmbeddingProvider` and a `VectorProvider` interface (already the actual constructor shape of `RAGEngine`) — no Business Activity may call an embedding model or vector store directly; every call passes through `RAGService`.
+- `EmbeddingProvider` and `VectorProvider` are interfaces, not concrete classes, so the embedding model and vector database named in Master Technical Architecture's frozen technology stack can be substituted in tests (§13.6 below) without a `RAGService` code change.
+- `RAGService.retrieve()` returns a result set including, for every item, the `document_chunk_registry` row it came from — never bare text — so that Citation Generation (RTA-001 §13, AI Response stage) has a locator to attach without a second lookup.
+- Reranking and hybrid-mode combination (`vector_index_registry.retrieval_mode`) are implemented as strategy objects injected into `RAGService`, not as conditional branches inside it — a new retrieval mode is added by registering a new strategy, never by editing `RAGService` itself.
+
+**13.4 Chunking Strategy Implementation Pattern**
+
+**IMP-EI-003**
+
+A `ChunkingStrategy` interface, implemented per source document type (structured table, prose document, transcript), producing `document_chunk_registry` rows. Default parameters: sentence-boundary-aware splitting, target chunk size and overlap configurable per `ChunkingStrategy` implementation, never hardcoded in the caller. Every produced chunk carries `chunk_locator` (page/section/table/cell, per SD-002-043) at creation time — a chunk without a locator is a defect in the `ChunkingStrategy` implementation, not an acceptable partial result. Chunking runs as part of Document Ingestion (Master Technical Architecture Part F Addendum's Document Ingestion Service); it is never deferred to first-query time.
+
+**13.5 Agent Orchestration Implementation Pattern**
+
+**IMP-EI-004**
+
+An `AgentOrchestrator` domain service implementing RTA-001 §13.6a's Agent Execution Lifecycle as code, composed of three injected interfaces mirroring RTA-001's own §13.6b/§13.6c/§13.9a naming exactly, so that a reader moving between RTA-001 and this codebase finds the same vocabulary:
+
+- `Planner` — produces a Plan and its Termination Criterion (RTA-001 §13.6b). Implemented as a strategy per AI Capability Category (RTA-001 §13.5), not a single monolithic planner.
+- `TaskDecomposer` — decomposes a Plan's sub-tasks (RTA-001 §13.6c). A sub-task resolving to a Business Activity is dispatched through the existing `BusinessActivityEngine` interface (Section 6.15), never through a path `AgentOrchestrator` maintains itself — this is a hard dependency, not a convention.
+- `ToolSelector` — selects from `ai_tool_registry` (RTA-001 §13.9a) via a `ToolRegistryRepository`, itself following the same Repository pattern as §13.2 above.
+
+`AgentOrchestrator` itself contains no business logic — it sequences calls to these three interfaces and to `RAGService` (§13.3) and `KnowledgeGraphRepository` (§13.2), exactly mirroring RTA-001 §22's state machine. The state machine's states (REQUESTED, DISCOVERING, ...) are implemented as an explicit enum the orchestrator transitions through, not inferred from control flow, so that RTA-001 §22.12's Runtime Events can be emitted deterministically at each transition.
+
+**13.5a AMD-013 Phase 3 Note**
+
+Sections 13.6 through 13.14 below extend this Section under the Enterprise Intelligence Orchestration Enhancement (AMD-013 Phase 3). Every pattern in them resolves abstractions dynamically at runtime, per this phase's governing Implementation Philosophy: no interface, type signature, or dependency-injection binding anywhere below names a specific AI vendor, LLM vendor, agent framework, MCP, AI Foundry, AI Skill, or AI Function — every such choice is resolved through Master Technical Architecture's registries and RTA-001's runtime policies, referenced by name and never restated.
+
+**13.6 Planner Implementation Pattern**
+
+**IMP-EI-005**
+
+A `Planner` interface, one implementation per AI Capability Category (RTA-001 §13.5), matching 13.5's own `AgentOrchestrator` composition:
+
+- `Planner.initialize(PlanningContext)` — `PlanningContext` carries the execution objective, the resolved Enterprise Context (RTA-001 §10), and, on Replanning, the prior Plan and its failure or Result Evaluation reason. `PlanningContext` is a value object, never a mutable shared state the rest of the pipeline reaches into.
+- `Planner.produce() → Plan` — a `Plan` is an immutable value object fixing every element RTA-001 §13.6b's Planner Responsibilities list requires: execution strategy, discovery strategy, capability requirements (not concrete capabilities — see §13.7), provider/source requirements, execution ordering, a `TaskGraph`, `RetryPolicy`, `TimeoutPolicy`, `CostPolicy`, `LatencyPolicy`, `EscalationPolicy`, and `CompletionPolicy`. A `Plan` is never mutated after `produce()` returns — Dynamic Replanning (below) always produces a new `Plan` instance.
+- Goal decomposition, task graph construction, and dependency graph generation are internal `Planner` responsibilities producing the `TaskGraph` — a directed graph of sub-tasks and their dependencies, the same graph Task Decomposition (RTA-001 §13.6c) and Execution Graph generation (§13.10 below) consume. `TaskGraph` construction never assumes a specific execution strategy; strategy is applied to an already-built `TaskGraph`, never baked into its construction.
+- `Planner.replan(PlanningContext, priorPlan, reason) → Plan` — a distinct method, implementing RTA-001 §13.6b's Replanning rule: every Replan is a new, separately auditable `Plan`, produced through this method only, never through re-invoking `produce()` on mutated state.
+- Retry Planning and Completion Planning are `Plan` attributes (`RetryPolicy`, `CompletionPolicy`), not separate planners — a single `Plan` carries its own retry and completion behavior end to end.
+
+**13.7 Execution Capability Resolver Pattern**
+
+**IMP-EI-006**
+
+An `ExecutionCapabilityResolver` interface implementing RTA-001 §13.9b's Execution Capability Selection and Master Technical Architecture's Execution Capability conceptual abstraction (Part F Addendum, AMD-013 Phase 1A) as code:
+
+- `ExecutionCapabilityResolver.resolve(CapabilityRequirement) → ExecutableCapability` — `CapabilityRequirement` names a role (Invoking, Invoked, or Transforming) and a declared contract, never a specific Agent, Tool, or Reasoning Engine by identity. Internally, the resolver queries whichever of Agent Registry, AI Tool Registry, or Reasoning Engine Registry realizes the requested role, via the same Repository pattern §13.2 and §13.5 already establish — the caller of `resolve()` never knows or cares which registry answered.
+- Resolution evaluates, in order: **permission** (the capability's declared read/write flags against the requester's Authorization Context, per RTA-001 §13.7b), **availability** (an injected `AvailabilityCheck` port, never a hardcoded ping), **health** (an injected `HealthCheck` port), and **policy** (the capability's governing policy, reused from `confidence_scoring_registry` via §13.2's Repository pattern, never re-implemented).
+- `ExecutionCapabilityResolver.resolve()` returns an `ExecutableCapability` — a single, uniform interface (`invoke(input) → output`) regardless of whether the underlying realization is an Agent, a Tool, or a Reasoning Engine. No caller of `ExecutableCapability.invoke()` ever branches on which registry produced it — this is the resolver's entire purpose: Agent, Tool, and Reasoning Engine are architectural roles the resolver implements dynamically, never fixed types the implementation depends on.
+
+**13.8 Discovery Provider Resolver Pattern**
+
+**IMP-EI-007**
+
+A `DiscoveryProviderResolver` interface implementing RTA-001 §13.6f's provider-selection runtime rule:
+
+- `DiscoveryProviderResolver.resolve(ProviderCategory, DiscoveryCriteria) → List<ExecutableProvider>` — `ProviderCategory` is Enterprise, External, or Real-Time, matching Discovery Provider Registry's `provider_category` (Master Technical Architecture). The resolver queries the registry via the Repository pattern and **never returns a single provider when multiple active, in-scope providers match** — implementing RTA-001 §13.6f's rule that the runtime shall not assume a single source represents complete enterprise knowledge.
+- Before returning, the resolver evaluates each candidate's availability, permissions, latency, cost, freshness, and health through the same injected-port pattern §13.7 establishes (`AvailabilityCheck`, `HealthCheck`) plus a `LatencyProbe` and `CostEstimator` — all pluggable, none hardcoded per named provider type (SharePoint, SAP, Bloomberg, and so on are configuration rows, per Master Technical Architecture's `provider_type` enumeration; none of them appears in this resolver's code).
+- `ExecutableProvider`, like `ExecutableCapability` (§13.7), is a uniform interface (`fetch(query) → List<RawItem>`) — the resolver's caller never branches on provider type.
+
+**13.9 Reasoning Engine Resolver Pattern**
+
+**IMP-EI-008**
+
+A `ReasoningEngineResolver` interface implementing vendor-independent reasoning, per RTA-001 §13.9b/§13.9c:
+
+- `ReasoningEngineResolver.resolve(TaskRequirement) → ExecutableReasoningEngine` — selects among commercial, enterprise-proprietary, open-weight, and future engine categories (Reasoning Engine Registry's `engine_category`, Master Technical Architecture) using the same cost/performance/data-classification/latency criteria Model Selection (RTA-001 §13.9) already fixes.
+- `ExecutableReasoningEngine` exposes exactly one method: `invoke(ContractInput) → ContractOutput`, where `ContractInput` and `ContractOutput` are generated or validated from the selected engine's `input_contract_schema_json`/`output_contract_schema_json` (Reasoning Engine Registry) — the Reasoning Contract RTA-001 §13.9c governs. No vendor SDK type (an OpenAI response object, an Anthropic message type, a Gemini candidate type) ever appears in this interface or in any type that implements it; adapting a specific vendor's SDK to `ContractInput`/`ContractOutput` is this pattern's own internal, encapsulated concern, never exposed to a caller.
+- Swapping the underlying model — GPT for Claude, Claude for an enterprise-hosted model — is a `reasoning_engine_registry` configuration change and a new `ExecutableReasoningEngine` implementation registered against it, never a change to any calling code.
+
+**13.10 Execution Strategy Pattern**
+
+**IMP-EI-009**
+
+One `ExecutionStrategy` interface (`execute(TaskGraph, ExecutionCapabilityResolver) → List<Result>`), with one implementing class per RTA-001 §13.6d strategy — `SequentialExecutionStrategy`, `ParallelExecutionStrategy`, `HybridExecutionStrategy`, `DynamicGraphExecutionStrategy`, `AdaptiveExecutionStrategy` — following the classic Strategy pattern. The Planner (§13.6) selects a strategy by name, resolved from Discovery Strategy Registry (Master Technical Architecture) through a factory/registry lookup keyed on `strategy_type`, never a conditional or switch statement branching on strategy inline in the orchestrator. `AdaptiveExecutionStrategy` is implemented as a composite that itself selects among the other four per sub-task, per RTA-001 §13.6d's Adaptive semantics — it does not introduce a sixth execution mechanism of its own.
+
+**13.11 Multi-Agent Implementation Pattern**
+
+**IMP-EI-010**
+
+Single-capability, multiple-capability, parallel, sequential, adaptive, and graph-based capability execution are not six separate implementations — they are `ExecutionStrategy` (§13.10) applied to the set of `ExecutableCapability` instances (§13.7) a Plan's `TaskGraph` names. `AgentOrchestrator` (§13.5) composes `Planner` (§13.6), `ExecutionCapabilityResolver` (§13.7), and `ExecutionStrategy` (§13.10); it introduces no further orchestration concept. Capability Delegation (RTA-001 §13.6e) — one `ExecutableCapability` invoking another — is implemented as a nested `ExecutionCapabilityResolver.resolve()` call from within a capability's own `invoke()` implementation, gated by the same grant check (`agent_tool_grant`, Master Technical Architecture) the resolver already enforces; delegation never bypasses the resolver. No orchestration framework (LangGraph, CrewAI, AutoGen, Semantic Kernel, or any other) is named in any interface, type, or dependency-injection binding in this pattern; where a concrete `ExecutionStrategy` implementation uses one internally, it is fully encapsulated behind that implementation's own `execute()` method and never exposed.
+
+**13.12 Evidence Fusion Pattern**
+
+**IMP-EI-011**
+
+An `EvidenceFusionService` implementing the data pipeline RTA-001 §13.11a's continuous fusion runtime behavior requires, and nothing beyond it:
+
+- **Evidence Collection** — accepts evidence items as they arrive from any `ExecutableCapability`, `ExecutableProvider`, or modality normalization (§13.14), never polling or batching by default.
+- **Evidence Normalization** — maps each item to the Enterprise Evidence Model's common shape before merging.
+- **Evidence Correlation** — groups items supporting or contradicting the same intelligence element, feeding the Correlation Node's contradiction handling (RTA-001 §22.5) — this pattern detects candidate correlations; RTA-001 governs what happens on a contradiction.
+- **Evidence Consolidation** — merges correlated items into the current `evidence_fusion_registry` row (Master Technical Architecture), updating `fused_from_json` with full traceability, per SD-002-049.
+- **Evidence Quality and Evidence Sufficiency** — this pattern computes and persists the seven `evidence_fusion_registry` dimension scores (Coverage, Quality, Diversity, Freshness, Consistency, Confidence, Cost, Latency) as data; it does **not** decide `sufficiency_determination` — that determination is the Evidence Sufficiency Gate's runtime rule (RTA-001 §13.11b), consumed by `AgentOrchestrator`, never recomputed by `EvidenceFusionService` itself.
+
+**13.13 Knowledge & Memory Pattern**
+
+**IMP-EI-012**
+
+`KnowledgeGraphRepository` (§13.2) and a parallel `MemoryRepository` provide Knowledge and Memory access and updates; a `ContextService` provides Enterprise Context retrieval and persistence, per RTA-001 §13.7's Context Assembly. Permission Enforcement (RTA-001 §13.7b) is implemented as a decorator wrapping every one of these three repositories/services — `PermissionEnforcingKnowledgeGraphRepository`, and equivalently for Memory and Context — checking the invoking capability's declared read/write flags (Agent Registry, Master Technical Architecture) before delegating to the underlying repository. Business logic never performs this check inline; it is structurally impossible to reach the underlying repository without passing through the decorator, since only the decorator is registered for dependency injection.
+
+**13.14 Discovery Pipeline Pattern**
+
+**IMP-EI-013**
+
+An end-to-end pipeline, implemented as a Chain of Responsibility with one independently testable, independently swappable stage per step, realizing RTA-001 §22.4's DISCOVERING state in full:
+
+Discovery (§13.8's `DiscoveryProviderResolver.resolve().fetch()`) → Normalization (implementing RTA-001 §13.7a's Multi-Modal Normalization Runtime, one `Normalizer` implementation per `modality_type`) → Knowledge Object generation (persisted via a `KnowledgeObjectRepository` to `enterprise_knowledge_object_registry`, Master Technical Architecture) → Embedding (§13.3's `EmbeddingProvider`) → Retrieval (§13.3's `RAGService`) → Evidence creation (via `EvidenceFusionService`, §13.12) → Knowledge update and Memory update (via §13.13's decorated repositories).
+
+Each stage depends only on the interface of the stage before it, never its concrete implementation — a new modality's `Normalizer` or a new provider's fetch behavior is added without changing any other stage.
+
+**13.15 Testing and Deployment**
+
+Testing for §13.2–§13.5 is governed by Section 11.6 (IMP-TEST-005); testing for §13.6–§13.14 is governed by Section 11.7 (IMP-TEST-006, added under AMD-013 Phase 3). Deployment/provisioning for §13.2–§13.5 is governed by Section 12.6 (IMP-CICD-004); deployment for §13.6–§13.14 is governed by Section 12.7 (IMP-CICD-005, added under AMD-013 Phase 3). None is restated here.
+
+**13.16 Implementation Sequence**
+
+Knowledge Graph Repository (§13.2) → Retrieval Service (§13.3), which depends on Document Chunking (§13.4) → Discovery Provider Resolver (§13.8) and Reasoning Engine Resolver (§13.9), which depend on Execution Capability Resolver (§13.7) → Execution Strategy (§13.10) → Planner (§13.6), which depends on all preceding resolvers and strategies being available to plan against → Agent Orchestrator (§13.5) and Multi-Agent Pattern (§13.11), which compose the Planner, resolvers, and strategies → Evidence Fusion (§13.12) and Knowledge & Memory (§13.13), consumed throughout → Discovery Pipeline (§13.14), which composes Discovery, Normalization, Embedding, Retrieval, Evidence, Knowledge, and Memory into one end-to-end flow, and depends on every preceding pattern in this section. No pattern in this section is independently implementable out of this order without stubbing the dependency this sequence states.
+
+---
 

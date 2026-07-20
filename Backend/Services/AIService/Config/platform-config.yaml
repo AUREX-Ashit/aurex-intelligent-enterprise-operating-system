@@ -1,0 +1,214 @@
+# CORPSTAGE PLATFORM CONFIGURATION
+# Version: v1.0.0
+
+platform:
+  name: CorpStage
+  environment: development
+  region: centralindia
+
+# =========================================================
+# CLOUD PROVIDER CONFIGURATION
+# =========================================================
+cloud:
+  primary_provider: azure
+
+  providers:
+    azure:
+      enabled: true
+      region: centralindia
+    aws:
+      enabled: false
+      region: ap-south-1
+
+# =========================================================
+# AI PROVIDER CONFIGURATION
+# =========================================================
+ai:
+  primary_provider: azure_openai
+
+  providers:
+    azure_openai:
+      enabled: true
+      endpoint: YOUR_AZURE_OPENAI_ENDPOINT
+      api_version: "2024-02-15-preview"
+      models:
+        primary_llm: gpt-4o
+        lightweight_llm: gpt-4o-mini
+        embedding_model: text-embedding-3-large
+
+    claude:
+      enabled: false
+      models:
+        primary_llm: claude-3-5-sonnet
+        lightweight_llm: claude-3-haiku
+
+    gemini:
+      enabled: false
+      models:
+        primary_llm: gemini-1.5-pro
+        lightweight_llm: gemini-1.5-flash
+
+# =========================================================
+# OCR CONFIGURATION
+# =========================================================
+ocr:
+  primary_provider: azure_document_intelligence
+  azure_document_intelligence:
+    enabled: true
+    model: prebuilt-layout
+    endpoint: YOUR_AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+
+# =========================================================
+# AUTHENTICATION CONFIGURATION
+# =========================================================
+authentication:
+  jwt:
+    algorithm: HS256
+    access_token_expiry_minutes: 60
+    refresh_token_expiry_days: 7
+  tenant:
+    header_name: X-Tenant-ID
+
+# =========================================================
+# DATABASE CONFIGURATION
+# =========================================================
+database:
+  primary_engine: postgresql
+  postgresql:
+    enabled: true
+    version: "16"
+    host: localhost
+    port: 5432
+    database_name: corpstage
+    username: corpstage
+    password: CHANGE_IN_ENVIRONMENT
+    pool_size: 30
+    max_overflow: 10
+
+# =========================================================
+# VECTOR SEARCH CONFIGURATION
+# =========================================================
+vector_search:
+  primary_provider: azure_ai_search
+  azure_ai_search:
+    enabled: true
+    semantic_search: true
+    hybrid_search: true
+  opensearch:
+    enabled: false
+
+# =========================================================
+# STORAGE CONFIGURATION
+# =========================================================
+storage:
+  primary_provider: azure_blob_storage
+  azure_blob_storage:
+    enabled: true
+    container: corpstage-evidence
+  s3:
+    enabled: false
+
+# =========================================================
+# ASYNC QUEUE CONFIGURATION
+# =========================================================
+queues:
+  primary_provider: azure_service_bus
+  azure_service_bus:
+    enabled: true
+    max_retry_attempts: 5
+    dead_letter_enabled: true
+  kafka:
+    enabled: false
+
+# =========================================================
+# OBSERVABILITY CONFIGURATION
+# =========================================================
+observability:
+  tracing:
+    enabled: true
+    provider: opentelemetry
+  logging:
+    structured_json: true
+  metrics:
+    enabled: true
+
+# =========================================================
+# SECURITY CONFIGURATION
+# =========================================================
+security:
+  enable_mfa: true
+  enable_rls: true
+  enforce_tls: true
+
+# =========================================================
+# CORS CONFIGURATION
+# =========================================================
+cors:
+  allow_origins:
+    - http://localhost:3000
+    - http://localhost:5173
+  allow_credentials: true
+  allow_methods:
+    - "*"
+  allow_headers:
+    - "*"
+
+# =========================================================
+# FRONTEND CONFIGURATION
+# =========================================================
+frontend:
+  framework: nextjs
+  ui_theme: dark
+  accessibility_standard: WCAG_2_2_AA
+
+# =========================================================
+# BACKEND CONFIGURATION
+# =========================================================
+backend:
+  framework: fastapi
+  enable_async_processing: true
+
+# =========================================================
+# AI GOVERNANCE CONFIGURATION
+# =========================================================
+ai_governance:
+  hallucination_detection: true
+  grounded_responses_only: true
+  confidence_scoring_enabled: true
+  human_review_required: true
+
+# =========================================================
+# FILE INGESTION LIMITS
+# =========================================================
+ingestion:
+  max_file_size_mb: 200
+  allowed_extensions:
+    - pdf
+    - xlsx
+    - csv
+    - docx
+
+# =========================================================
+# FEATURE FLAGS
+# =========================================================
+feature_flags:
+  enable_copilot: true
+  enable_rag: true
+  enable_financial_intelligence: true
+  enable_bulk_validation: true
+
+# =========================================================
+# RETENTION CONFIGURATION
+# =========================================================
+retention:
+  observability_days: 90
+  audit_years: 7
+  ai_memory_minutes: 60
+
+# =========================================================
+# COST CONTROLS
+# =========================================================
+cost_controls:
+  max_daily_ai_tokens: 10000000
+  enable_ai_cost_monitoring: true
+  enable_embedding_cache: true

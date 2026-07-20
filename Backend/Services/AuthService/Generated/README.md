@@ -1,0 +1,61 @@
+# Auth Service
+
+Responsibilities:
+- User login
+- Token refresh
+- JWT management
+- Role-based access control
+- Tenant-aware authentication
+
+API Contract:
+- auth-api.yaml
+
+openapi: 3.0.3
+
+info:
+  title: CorpStage Authentication API
+  description: Authentication and authorization APIs for CorpStage platform
+  version: 1.0.0
+
+servers:
+  - url: https://api.corpstage.com
+
+paths:
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns access tokens
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+
+      responses:
+        '200':
+          description: Login successful
+
+        '401':
+          description: Invalid credentials
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Generates a new access token using refresh token
+
+      responses:
+        '200':
+          description: Token refreshed successfully
+
+components: {}

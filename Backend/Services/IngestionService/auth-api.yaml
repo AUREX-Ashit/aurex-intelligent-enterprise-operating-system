@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Internal Security & Auth Spec
+  version: 1.0.0
+  description: Shared JWT structure and tenant boundary definition across the enterprise mesh.
+
+components:
+  securitySchemes:
+    JWTBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter valid CorpStage JWT Bearer. Claims must include sub, tenant_id, role, and email.
+
+  schemas:
+    JWTPayload:
+      type: object
+      required:
+        - sub
+        - tenant_id
+        - role
+        - exp
+      properties:
+        sub:
+          type: string
+          format: uuid
+          description: Unique enterprise user system ID
+        tenant_id:
+          type: string
+          description: Tenant ID that this user is assigned to
+        role:
+          type: string
+          enum: [platform_admin, tenant_admin, analyst, auditor]
+        email:
+          type: string
+          format: email
+        exp:
+          type: integer
+          description: Unix expiration timestamp
+        nbf:
+          type: integer
+          description: Unix not before timestamp

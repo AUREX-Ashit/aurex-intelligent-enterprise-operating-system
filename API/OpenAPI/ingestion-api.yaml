@@ -1,0 +1,31 @@
+openapi: 3.0.3
+
+info:
+  title: CorpStage Ingestion API
+  description: Document ingestion and OCR APIs
+  version: 1.0.0
+
+servers:
+  - url: https://api.corpstage.com
+
+paths:
+
+  /ingestion/upload:
+    post:
+      summary: Upload ESG document
+      description: Uploads ESG documents for OCR and AI extraction
+
+      responses:
+        '200':
+          description: Document uploaded successfully
+
+  /ingestion/ocr/start:
+    post:
+      summary: Start OCR processing
+      description: Initiates OCR processing for uploaded document
+
+      responses:
+        '200':
+          description: OCR processing started
+
+components: {}

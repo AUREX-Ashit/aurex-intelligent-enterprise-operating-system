@@ -1,5 +1,5 @@
 # SD-002: Universal Business Object Rules
-### Version 2.0 — GOLD STANDARD (Supersedes v1.0 Draft)
+### Version 2.2 — GOLD STANDARD (Supersedes v2.1)
 
 **Status:** LOCKED
 **Scope:** Defines what business objects are and their universal behaviors across the CorpStage Enterprise Intelligence Platform.
@@ -7,6 +7,18 @@
 **Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
+
+## Changelog from v2.1
+
+| Fix | Detail |
+|---|---|
+| Enterprise Intelligence / AI governance cross-reference added (ARP-001 WP-5) | Section 6 (Evidence & Source Intelligence Rules) now explicitly notes that EIA-001 Vol. II §12's Knowledge Asset model (Provenance, Confidence, Freshness, Authority, Lineage) extends this section's Evidence rules into the Enterprise Intelligence domain, and that reasoning provenance and confidence scoring for AI-assisted output are owned by EIA-001 under this section's authority. No existing Evidence rule redefined. |
+
+## Changelog from v2.0
+
+| Fix | Detail |
+|---|---|
+| BAR/CBOR cross-references added (ARP-001 WP-3) | SD-002-004 (Universal Identity) and SD-002-034/035 (Business Activities) now cite the Business Activity Registry (BAR, IMP-001 §6.22) and Canonical Business Object Register (CBOR, CMD-001 §26) as the registries that operationalize this rule, formalizing an already-anticipated relationship without redefining SD-002's own content. |
 
 ## Changelog from v1.0 Draft
 
@@ -52,6 +64,8 @@ This section is the single inheritance contract for every business object in Cor
 **SD-002-004: Universal Identity**
 
 Every business object possesses a globally unique, permanent identity (`CDE-000001`, `BQ-000025`, `BA-000089`, `REP-000014`, `EVD-000112`) alongside a canonical name, business name, description, and version. Business names and labels may change per tenant; the canonical identity never does.
+
+*(Formalized per ARP-001 WP-3: this identity is assigned and catalogued, not merely declared. Business Objects are registered in the Canonical Business Object Register — CBOR, CMD-001 §26; Business Activities are registered in the Business Activity Registry — BAR, IMP-001 §6.22. Both registries operationalize this rule; neither redefines it.)*
 
 **SD-002-005: Canonical Definition, Independent of Presentation**
 
@@ -212,6 +226,8 @@ A BQ may be resolved via Discover, Upload, Enter, Import, or Skip — mirroring 
 
 An Activity is named for the business work it represents, not the data it collects. *Bad: "Financial Data Entry." Good: "Cost of Delivery Assessment."* An Activity must be understandable to a business user with no platform training.
 
+*(Formalized per ARP-001 WP-3: every Activity satisfying SD-002-034 is catalogued in the Business Activity Registry — BAR, IMP-001 §6.22 — per SD-002-004's Universal Identity rule.)*
+
 **SD-002-035: Activities Aggregate Questions Into Coherent Work**
 
 One Activity contains many Business Questions, which in turn populate many CDEs. This aggregation is what allows SD-001's Guided Completion screens (SD-001-009) to present one named piece of work rather than a list of disconnected questions.
@@ -235,6 +251,8 @@ Identical in spirit to SD-002-028 for CDEs: a customer-created Activity inherits
 ---
 
 ## SECTION 6: Evidence & Source Intelligence Rules
+
+*(Formalized per ARP-001 WP-5: this section's Evidence, confidence, and source rules are the foundation Enterprise Intelligence reasoning builds on. EIA-001 Vol. II §12's Knowledge Asset model — Provenance, Confidence, Freshness, Authority, Lineage — extends these rules into the Enterprise Intelligence domain specifically; it does not define a competing Evidence concept. Reasoning provenance and confidence scoring for AI-assisted output are owned by EIA-001 under this section's authority, per ARCH-000 §7c.)*
 
 **SD-002-040: Evidence Is a First-Class Business Object, Not an Attachment**
 

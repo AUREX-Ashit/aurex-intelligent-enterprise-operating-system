@@ -1,0 +1,31 @@
+openapi: 3.0.3
+
+info:
+  title: CorpStage AI Extraction API
+  description: AI extraction and ESG intelligence APIs
+  version: 1.0.0
+
+servers:
+  - url: https://api.corpstage.com
+
+paths:
+
+  /ai/extract:
+    post:
+      summary: Extract ESG metrics
+      description: Extracts ESG metrics and disclosures using AI
+
+      responses:
+        '200':
+          description: ESG extraction completed
+
+  /ai/validate:
+    post:
+      summary: Validate AI extraction
+      description: Validates extracted ESG metrics using governance rules
+
+      responses:
+        '200':
+          description: Validation completed
+
+components: {}
