@@ -1,5 +1,8 @@
 """
-WP-01 — Organization Management (C-004), Business Activity: Establish Organization.
+WP-01 — Organization Management (C-004).
+
+Business Activities implemented here: BA-01 Establish Organization,
+BA-02 View Organization Details.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -18,6 +21,8 @@ Response) and reuses WP-00's established patterns exactly:
 """
 
 from __future__ import annotations
+
+from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
@@ -103,4 +108,23 @@ class OrganizationService:
                 "status": organization.status,
             },
         )
+        return organization
+
+    async def get_details(self, organization_id: UUID) -> Organization:
+        """
+        Business Activity: View Organization Details.
+
+        Read-only — no audit record or domain event, on the same basis
+        already established for Person's read-side Business Activity
+        (PersonRecognitionService.recognize does not audit either; only
+        the write path, establish, does). Reuses BaseRepository.get_by_id
+        via OrganizationRepository as-is — no new repository method
+        required.
+        """
+        organization = await self.organization_repo.get_by_id(organization_id)
+        if organization is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization exists with id '{organization_id}'.",
+            )
         return organization

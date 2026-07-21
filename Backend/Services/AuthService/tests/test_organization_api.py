@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
@@ -154,3 +155,78 @@ def test_establish_organization_does_not_require_tenant_header(client: TestClien
     )
 
     assert response.status_code == 201
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — View Organization Details
+# ---------------------------------------------------------------------------
+
+def test_view_organization_returns_details_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-007",
+            "organization_name": "API View Org",
+            "organization_type": "CORPORATE",
+            "description": "Created for the view test.",
+        },
+    )
+    assert established.status_code == 201
+    organization_id = established.json()["id"]
+
+    response = client.get(f"/organizations/{organization_id}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_id
+    assert body["organization_code"] == "API-ORG-007"
+    assert body["description"] == "Created for the view test."
+    assert body["status"] == "ACTIVE"
+
+
+def test_view_organization_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.get(
+        f"/organizations/{uuid.uuid4()}",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404
+
+
+def test_view_organization_requires_authorization_header(client: TestClient) -> None:
+    response = client.get(f"/organizations/{uuid.uuid4()}")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_view_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.get(
+        f"/organizations/{uuid.uuid4()}",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_view_organization_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.get("/organizations/not-a-uuid", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_view_organization_does_not_require_tenant_header(client: TestClient) -> None:
+    """
+    GET /organizations/{id} is tenant-agnostic (middleware/tenant.py's
+    prefix exemption for /organizations/*), same basis as Establish
+    Organization. No X-Tenant-ID header sent; a 404 (not 400) proves the
+    request reached the handler rather than being blocked by the
+    tenant-header check.
+    """
+    response = client.get(
+        f"/organizations/{uuid.uuid4()}",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404

@@ -14,7 +14,7 @@
 **Business Activities**
 
 - ✅ BA-01 Establish Organization
-- ⏳ BA-02 View Organization
+- ✅ BA-02 View Organization
 - ⏳ BA-03 Search Organizations
 - ⏳ BA-04 Update Organization
 - ⏳ BA-05 Activate Organization
@@ -24,13 +24,13 @@
 
 **Progress**
 
-- Completed: 1 / 8
-- Progress: 12.5%
-- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`)
-- API endpoints delivered: 1 (`POST /organizations`)
-- UI screens delivered: 1 (`/platform-admin/organizations`)
-- Tests added: 11 (3 unit, 8 integration)
-- ADRs raised during implementation: 0 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
+- Completed: 2 / 8
+- Progress: 25%
+- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; BA-02 required no schema change)
+- API endpoints delivered: 2 (`POST /organizations`, `GET /organizations/{organization_id}`)
+- UI screens delivered: 1 (`/platform-admin/organizations`, now with an Establish section and a View Organization section)
+- Tests added: 19 (5 unit, 14 integration)
+- ADRs raised during implementation: 0 across both BA-01 and BA-02 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
 
 ---
 
@@ -143,7 +143,7 @@ Observations recorded (none blocking, none require remediation before BA-02):
 1. `ck_organizations_status` exists in the migration but is not declared on the ORM model (`models/organization.py`) — model/migration drift; no test currently exercises the constraint.
 2. The `IntegrityError` concurrent-duplicate-race branch in `OrganizationService.establish()` is implemented but not covered by a dedicated test (only the sequential pre-check path is tested).
 3. Audit/event emission happens after `flush()` but before the outer session commit — a post-flush commit failure would emit a false-success signal. Low severity given the interim, log-only observability mechanism.
-4. Nothing in the repository (WP-00 through BA-01) is committed yet — noted as a repository-hygiene/certification-trail concern, not a BA-01 code defect.
+4. ~~Nothing in the repository (WP-00 through BA-01) is committed yet~~ — **resolved 2026-07-21**: committed as `d5150ab` (WP-00 + IC-001 remediation + WP-00A), `56994ae` (WP-01 IRA-001 + ADR-003/004/005), `145acfe` (BA-01 Establish Organization). Working tree clean, all three §19.7 completion-gate conditions now satisfied.
 5. `get_current_claims` returns 400 (not 401) for a missing Authorization header — deliberate and tested, flagged only as a design note.
 
 Recommendation from review: pick up observations 1–2 opportunistically in a later BA rather than blocking.
@@ -167,6 +167,123 @@ Certification Status: Pending (WP-level activity, performed only after WP-01 com
 **Known issues:** None outside the Known Limitations listed above (all are deliberate WP-01 scope deferrals, not defects).
 
 **Recommended next Business Activity:** BA-02 View Organization (read-side; lowest-risk next step, per IRA-001 §9/§10's recommended sequence, and a dependency for BA-03 Search).
+
+---
+
+## Business Activity: BA-02 — View Organization Details
+
+**Date Completed:** 2026-07-21
+
+### Scope Delivered
+
+Read-only vertical slice for fetching a single Organization by id: `GET /organizations/{organization_id}`, gated by the same `require_platform_admin` dependency BA-01 introduced, returning 404 for an unknown id. No database or model change was required — reused every existing layer (model, `OrganizationRepository.get_by_id()` via `BaseRepository`, `OrganizationResponse` schema) as-is. Extended `TenantMiddleware`'s exemption from an exact-match list entry to a prefix match (`/organizations` and `/organizations/*`) since BA-02 introduced the first path-parameterized Organization endpoint — this covers this and every future WP-01 endpoint under the same prefix without further middleware edits. No ADR was required.
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `source/frontend/src/features/organization/components/OrganizationDetailsList.tsx` | Shared presentational definition-list, extracted from BA-01's `OrganizationResultPanel` so Establish and View render organization details identically instead of duplicating markup |
+| `source/frontend/src/features/organization/state/useViewOrganization.ts` | View Organization Details state hook |
+| `source/frontend/src/features/organization/components/ViewOrganizationSection.tsx` | ID input + result display |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/services/organization_service.py` | Added `OrganizationService.get_details()`; updated module docstring |
+| `Backend/Services/AuthService/routers/organization.py` | Added `GET /{organization_id}` |
+| `Backend/Services/AuthService/middleware/tenant.py` | Exemption list entry `"/organizations"` generalized to a prefix check covering `/organizations/*` |
+| `Backend/Services/AuthService/organization-api.yaml` | Added the `GET /organizations/{organization_id}` path |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | Added BA-02 unit tests |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Added BA-02 integration tests |
+| `Backend/Services/AuthService/README.md` | Updated Organization Management section/tree for BA-02 files |
+| `source/frontend/src/services/organization-api.ts` | Added `getOrganization()` |
+| `source/frontend/src/features/organization/components/OrganizationResultPanel.tsx` | Refactored to reuse `OrganizationDetailsList` instead of inline markup |
+| `source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx` | Renders `ViewOrganizationSection` alongside the existing Establish flow |
+
+### Database
+
+- **Migration(s):** None — BA-02 required no schema change.
+- **Schema changes / Constraints / Indexes:** None.
+
+### APIs
+
+- **Endpoint added:** `GET /organizations/{organization_id}` (200/400/401/403/404/422).
+- **Request/Response models:** Path param `organization_id: UUID` (FastAPI-validated, 422 on malformed input) → existing `OrganizationResponse` (no new schema).
+- **Authorization:** Same `require_platform_admin` dependency as BA-01 — no new authorization tier introduced (Domain Permission-level view/edit distinction remains deferred, per IRA-001 §2.7).
+
+### Frontend
+
+- **Route:** `/platform-admin/organizations` (unchanged — extended, not a new route).
+- **Screen:** `OrganizationManagementScreen` now composes both the BA-01 Establish flow and the new `ViewOrganizationSection`.
+- **Components:** `ViewOrganizationSection` (new), `OrganizationDetailsList` (new, shared with BA-01's result panel) — all built from existing `ui/` primitives; no new design-system component invented.
+- **API integration:** `services/organization-api.ts`'s new `getOrganization()`, same `apiClient` pattern as BA-01.
+
+### Testing
+
+- **Unit Tests:** 2 new (`test_organization_service.py`, 5 total in that file) — fetch-by-id returns the created organization; unknown id raises 404.
+- **Integration Tests:** 6 new (`test_organization_api.py`, 14 total in that file) — success, 404, missing/wrong-role auth (400/403), invalid UUID (422), tenant-header exemption.
+- **API Tests:** covered by the integration suite above.
+- **UI Tests:** none added — same pre-existing gap as BA-01 (no frontend test harness yet); verified via `tsc --noEmit` (0 errors).
+- **Overall test results:** 48/48 backend tests passing (8 new this BA, 0 regressions). Frontend: 0 TypeScript errors.
+
+### Manual Verification
+
+1. Using a `PLATFORM_ADMIN` access token, `POST /organizations` to create one, capture its `id`.
+2. `GET /organizations/{id}` with the same token → expect `200` with matching fields.
+3. `GET /organizations/{random-uuid}` → expect `404`.
+4. Repeat without `Authorization` → `400`; with a non-`PLATFORM_ADMIN` token → `403`; with a malformed id (e.g. `/organizations/not-a-uuid`) → `422`.
+5. In the frontend, on `/platform-admin/organizations`, paste a valid organization id into the new "View Organization Details" section and confirm the detail list renders; try an unknown id and confirm the "No organization exists with this ID" banner appears.
+
+### Known Limitations (intentionally deferred, per WP-01 scope)
+
+- Same authorization/lifecycle/schema-scope/RLS/frontend-test-harness limitations as BA-01 (unchanged — see BA-01 section above); none are specific to BA-02.
+- No listing/search capability yet — a caller must already know the organization's id (BA-03 Search Organizations addresses this).
+
+### Architecture Compliance
+
+- **ARCH-000:** No architecture redefinition; implementation only.
+- **IMP-001:** Read-side Business Activity — no audit record or domain event, consistent with the existing precedent that `PersonRecognitionService.recognize` (a read) is not audited while `establish` (a write) is (§6.3 applies fully to writes; a pure query returns data without a state transition to record).
+- **ERG-001:** Unaffected — no EnterpriseNode/Relationship/View concept touched.
+- **C-004 / ADR-004:** No new fields exposed beyond the approved subset; `OrganizationResponse` is reused unchanged.
+- **URA-001:** Unaffected.
+- **Approved ADRs:** ADR-003, ADR-004, ADR-005 — all still honored; none re-litigated. No new ADR raised.
+
+### Implementation Status
+
+✅ IMPLEMENTATION COMPLETE
+
+### Independent Review
+
+**Independent Review: Accepted — CERTIFIED PASS WITH OBSERVATIONS** (2026-07-21, fresh-context subagent with no memory of the implementation session; ran the full test suite and `tsc --noEmit` independently, traced the authorization dependency chain by hand, and diffed the working tree itself rather than trusting this report's claims).
+
+**Findings:** architecture unchanged, no duplicated business logic (`get_details()` reuses `BaseRepository.get_by_id()`; router reuses BA-01's `require_platform_admin` unmodified), no unnecessary schema change (confirmed no new migration and `models/organization.py`/`repositories/organization_repository.py` untouched), authorization unbypassable, `OrganizationDetailsList` extraction genuinely removed the duplicate markup from `OrganizationResultPanel`, no new DS-001 component invented, error handling in `useViewOrganization.ts` (not-found / network-error / generic) is complete, and the "read paths aren't audited" claim was verified true against `PersonRecognitionService.recognize`'s precedent, not just asserted.
+
+**Defect found and corrected:** this report originally mis-stated BA-02's test counts (claimed 5 new unit / 11 new overall; actual is 2 new unit / 8 new overall, verified via `grep -c` against the test files). Corrected above — a report-accuracy issue only, not a code defect; the code and its 8 new tests were always correct.
+
+**Risk recorded (non-blocking):** the `middleware/tenant.py` exemption now uses a prefix match (`/organizations/*`) rather than an exact-match list entry. Correct for BA-02, but means any future sub-resource under this prefix that should be tenant-scoped would be silently exempted unless revisited when added.
+
+**Recommendation carried into BA-03:** add a dedicated `TenantMiddleware` test asserting the `/organizations/*` prefix behavior directly (currently only exercised incidentally via BA-02's own endpoint test).
+
+### Certification
+
+**Certification Status: PASS WITH OBSERVATIONS**
+
+---
+
+## Ready for Review — BA-02 View Organization Details
+
+**Summary of what was implemented:** `GET /organizations/{organization_id}`, PLATFORM_ADMIN-gated, 404 on unknown id, reusing BA-01's model/repository/schema/auth dependency unchanged. Frontend View Organization Details section added to the existing screen, sharing a newly-extracted `OrganizationDetailsList` component with BA-01's result panel. `TenantMiddleware`'s exemption generalized from exact-match to prefix-match to support the new path parameter.
+
+**Evidence available:**
+- 48/48 backend tests passing (8 new — 2 unit, 6 integration).
+- `tsc --noEmit` — 0 TypeScript errors.
+- `organization-api.yaml` YAML-validated with the new path.
+- Manual verification steps above.
+
+**Known issues:** None outside the Known Limitations listed (unchanged from BA-01, none BA-02-specific).
+
+**Recommended next Business Activity:** BA-03 Search Organizations, per IRA-001's recommended sequence — natural follow-on now that both create and fetch-by-id exist.
 
 ---
 

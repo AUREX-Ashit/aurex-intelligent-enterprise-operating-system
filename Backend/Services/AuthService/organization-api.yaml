@@ -4,10 +4,11 @@ info:
   description: >
     Organization Management (C-004, WP-01) endpoints for the CorpStage
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
-    Lifecycle model: ADR-005. Currently covers Business Activity 1
-    (Establish Organization) only — Activate/Suspend, Profile Update,
-    Configuration, Search/Listing, and Audit History land as WP-01's
-    later phases (see IRA-001 §9) and extend this file, not a new one.
+    Lifecycle model: ADR-005. Currently covers BA-01 (Establish
+    Organization) and BA-02 (View Organization Details) —
+    Search, Update, Activate/Suspend, Configuration, and Audit History
+    land as WP-01's later phases (see IRA-001 §9) and extend this file,
+    not a new one.
   version: 1.0.0
 paths:
   /organizations:
@@ -62,6 +63,56 @@ paths:
                 $ref: '#/components/schemas/HTTPExceptionResponse'
         '422':
           description: Invalid request (e.g., missing or empty required field).
+
+  /organizations/{organization_id}:
+    get:
+      summary: View organization details
+      description: >
+        WP-01 Business Activity 2: View Organization Details. Requires the
+        PLATFORM_ADMIN role, same interim gate as Establish Organization
+        (IRA-001 §2.7). Tenant-agnostic, same basis as Establish Organization.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '404':
+          description: No organization exists with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: organization_id is not a valid UUID.
 
 components:
   securitySchemes:

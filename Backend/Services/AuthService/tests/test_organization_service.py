@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from fastapi import HTTPException
 from sqlalchemy import select
@@ -75,3 +77,37 @@ async def test_establish_rejects_duplicate_organization_code(db_session: AsyncSe
         select(Organization).where(Organization.organization_code == "ACME-003")
     )
     assert len(result.scalars().all()) == 1
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — View Organization Details
+# ---------------------------------------------------------------------------
+
+async def test_get_details_returns_the_established_organization(db_session: AsyncSession) -> None:
+    """BA-02: fetching by id returns exactly the organization created by BA-01's establish()."""
+    service = _service(db_session)
+    request = EstablishOrganizationRequest(
+        organization_code="ACME-004",
+        organization_name="Acme Fourth",
+        organization_type="CORPORATE",
+        description="Fetched by id.",
+    )
+    created = await service.establish(request)
+
+    fetched = await service.get_details(created.id)
+
+    assert fetched.id == created.id
+    assert fetched.organization_code == "ACME-004"
+    assert fetched.organization_name == "Acme Fourth"
+    assert fetched.description == "Fetched by id."
+    assert fetched.status == OrganizationStatus.ACTIVE.value
+
+
+async def test_get_details_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """BA-02: a well-formed but non-existent id is a 404, not a 500 or an empty success."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_details(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404

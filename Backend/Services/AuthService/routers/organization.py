@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -66,4 +67,38 @@ async def establish_organization(
     organization = await organization_service.establish(
         request, actor_id=claims.get("person_id")
     )
+    return OrganizationResponse.model_validate(organization)
+
+
+@router.get(
+    "/{organization_id}",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="View organization details",
+    description=(
+        "WP-01 Business Activity: View Organization Details (C-004). Requires the "
+        "PLATFORM_ADMIN role, same interim gate as Establish Organization "
+        "(IRA-001 §2.7)."
+    ),
+    responses={
+        200: {"description": "Organization found."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No organization exists with this id."},
+        422: {"description": "organization_id is not a valid UUID."},
+    },
+)
+async def get_organization(
+    organization_id: UUID,
+    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> OrganizationResponse:
+    """
+    No tenant-scoping, same basis as establish_organization above:
+    PLATFORM_ADMIN operates across organization boundaries, so a
+    per-request tenant header is not applicable here — see
+    middleware/tenant.py's exemption for the /organizations prefix.
+    """
+    organization = await organization_service.get_details(organization_id)
     return OrganizationResponse.model_validate(organization)
