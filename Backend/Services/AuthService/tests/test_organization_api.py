@@ -480,6 +480,105 @@ def test_activate_organization_does_not_require_tenant_header(client: TestClient
 
 
 # ---------------------------------------------------------------------------
+# BA-06 — Suspend Organization
+# ---------------------------------------------------------------------------
+
+def test_suspend_organization_succeeds_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-016", "organization_name": "Active Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_id
+    assert body["status"] == "SUSPENDED"
+
+
+def test_suspend_organization_rejects_already_suspended(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-017", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    first = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+    assert first.status_code == 200
+
+    second = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+
+    assert second.status_code == 409
+
+
+def test_suspend_organization_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/suspend", headers=_auth_headers())
+
+    assert response.status_code == 404
+
+
+def test_suspend_organization_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/suspend")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_suspend_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.post(
+        f"/organizations/{uuid.uuid4()}/suspend",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_suspend_organization_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.post("/organizations/not-a-uuid/suspend", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_suspend_organization_does_not_require_tenant_header(client: TestClient) -> None:
+    """POST /organizations/{id}/suspend is covered by the same /organizations/* prefix exemption as GET."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-018", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+
+    assert response.status_code == 200
+
+
+def test_suspend_then_activate_round_trip_keeps_is_active_in_sync(client: TestClient) -> None:
+    """
+    TD-012 resolution, exercised end-to-end through the HTTP API: suspend
+    sets is_active False, a subsequent activate sets it back to True.
+    """
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-019", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    assert established.json()["is_active"] is True
+
+    suspended = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+    assert suspended.status_code == 200
+    assert suspended.json()["is_active"] is False
+
+    activated = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
+    assert activated.status_code == 200
+    assert activated.json()["is_active"] is True
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 
@@ -528,6 +627,31 @@ def test_search_organizations_filters_by_status(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert all(item["status"] == "SUSPENDED" for item in body["items"])
+
+
+def test_search_organizations_status_filter_includes_and_excludes_mixed_statuses(client: TestClient) -> None:
+    """
+    TD-008 resolution, exercised end-to-end through the HTTP API: with
+    Suspend Organization (BA-06) now available, prove the status filter
+    correctly includes a SUSPENDED organization and excludes it from the
+    ACTIVE filter, against a real mixed-status dataset.
+    """
+    active_org = _establish(client, "STAT-MIX-001", "Still Active Org")
+    suspended_org = _establish(client, "STAT-MIX-002", "To Be Suspended Org")
+    suspend_response = client.post(f"/organizations/{suspended_org['id']}/suspend", headers=_auth_headers())
+    assert suspend_response.status_code == 200
+
+    active_response = client.get(
+        "/organizations", headers=_auth_headers(), params={"status": "ACTIVE", "q": "STAT-MIX"}
+    )
+    suspended_response = client.get(
+        "/organizations", headers=_auth_headers(), params={"status": "SUSPENDED", "q": "STAT-MIX"}
+    )
+
+    active_codes = {item["organization_code"] for item in active_response.json()["items"]}
+    suspended_codes = {item["organization_code"] for item in suspended_response.json()["items"]}
+    assert active_codes == {active_org["organization_code"]}
+    assert suspended_codes == {suspended_org["organization_code"]}
 
 
 def test_search_organizations_respects_pagination_params(client: TestClient) -> None:

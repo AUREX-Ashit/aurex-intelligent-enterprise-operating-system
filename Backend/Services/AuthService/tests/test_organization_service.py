@@ -279,6 +279,94 @@ async def test_activate_does_not_change_profile_fields(db_session: AsyncSession)
 
 
 # ---------------------------------------------------------------------------
+# BA-06 — Suspend Organization
+# ---------------------------------------------------------------------------
+
+async def test_suspend_transitions_active_organization_to_suspended(db_session: AsyncSession) -> None:
+    """Business Activity Contract: suspending an ACTIVE organization transitions its status to SUSPENDED."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="SUS-001", organization_name="Active Org", organization_type="CORPORATE"
+        )
+    )
+
+    suspended = await service.suspend(created.id, actor_id="platform-admin-1")
+
+    assert suspended.id == created.id
+    assert suspended.status == OrganizationStatus.SUSPENDED.value
+
+
+async def test_suspend_rejects_already_suspended_organization(db_session: AsyncSession) -> None:
+    """Business Rule: suspending an already-SUSPENDED organization is a 409, not a silent no-op."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="SUS-002", organization_name="Already Suspended Org", organization_type="CORPORATE"
+        )
+    )
+    await service.suspend(created.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.suspend(created.id)
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_suspend_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """A well-formed but non-existent id is a 404, same basis as activate()/get_details()/update_profile()."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.suspend(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
+
+
+async def test_suspend_does_not_change_profile_fields(db_session: AsyncSession) -> None:
+    """Suspend Organization touches only status/is_active — name, type, description, and code are untouched."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="SUS-003",
+            organization_name="Stable Profile Org",
+            organization_type="CORPORATE",
+            description="Should not change.",
+        )
+    )
+
+    suspended = await service.suspend(created.id)
+
+    assert suspended.organization_code == "SUS-003"
+    assert suspended.organization_name == "Stable Profile Org"
+    assert suspended.organization_type == "CORPORATE"
+    assert suspended.description == "Should not change."
+
+
+async def test_suspend_and_activate_keep_is_active_in_sync_with_status(db_session: AsyncSession) -> None:
+    """
+    TD-012 resolution: is_active must move in lockstep with status for
+    both transitions — SUSPENDED implies is_active=False, and a
+    subsequent activate() back to ACTIVE implies is_active=True again.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="SUS-004", organization_name="Sync Org", organization_type="CORPORATE"
+        )
+    )
+    assert created.is_active is True
+
+    suspended = await service.suspend(created.id)
+    assert suspended.status == OrganizationStatus.SUSPENDED.value
+    assert suspended.is_active is False
+
+    reactivated = await service.activate(created.id)
+    assert reactivated.status == OrganizationStatus.ACTIVE.value
+    assert reactivated.is_active is True
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 
@@ -343,6 +431,32 @@ async def test_search_filters_by_status(db_session: AsyncSession) -> None:
     assert active_total == 2
     assert suspended_total == 0
     assert suspended_items == []
+
+
+async def test_search_status_filter_correctly_includes_and_excludes_mixed_statuses(db_session: AsyncSession) -> None:
+    """
+    TD-008 resolution: with Suspend Organization (BA-06) now available,
+    prove the status filter's true inclusion/exclusion against a mixed
+    ACTIVE/SUSPENDED dataset — previously only the trivial "SUSPENDED
+    returns empty" case was provable, since no Business Activity could
+    produce a SUSPENDED row.
+    """
+    service = _service(db_session)
+    active_org = await _seed(service, "MIX-001", "Still Active Org")
+    suspended_org = await _seed(service, "MIX-002", "Now Suspended Org")
+    await service.suspend(suspended_org.id)
+
+    active_items, active_total = await service.search(
+        query=None, status_filter="ACTIVE", skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+    suspended_items, suspended_total = await service.search(
+        query=None, status_filter="SUSPENDED", skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert active_total == 1
+    assert active_items[0].organization_code == active_org.organization_code
+    assert suspended_total == 1
+    assert suspended_items[0].organization_code == suspended_org.organization_code
 
 
 async def test_search_pagination_returns_correct_page_and_total(db_session: AsyncSession) -> None:

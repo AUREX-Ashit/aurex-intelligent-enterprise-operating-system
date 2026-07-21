@@ -3,7 +3,8 @@ WP-01 — Organization Management (C-004).
 
 Business Activities implemented here: BA-01 Establish Organization,
 BA-02 View Organization Details, BA-03 Search & List Organizations,
-BA-04 Update Organization Profile, BA-05 Activate Organization.
+BA-04 Update Organization Profile, BA-05 Activate Organization,
+BA-06 Suspend Organization.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -203,6 +204,11 @@ class OrganizationService:
 
         Does not touch organization_name/organization_type/description
         (BA-04's scope) or organization_code (immutable natural key).
+
+        TD-012 resolution (BA-06): also syncs the legacy `is_active`
+        boolean to `True` so it no longer silently diverges from
+        `status` — see suspend()'s matching sync in the opposite
+        direction.
         """
         organization = await self.organization_repo.get_by_id(organization_id)
         if organization is None:
@@ -233,7 +239,7 @@ class OrganizationService:
 
         previous_status = organization.status
         updated = await self.organization_repo.update(
-            organization_id, {"status": OrganizationStatus.ACTIVE.value}
+            organization_id, {"status": OrganizationStatus.ACTIVE.value, "is_active": True}
         )
         await self.organization_repo.session.flush()
 
@@ -250,6 +256,78 @@ class OrganizationService:
         )
         publish_event(
             "ORGANIZATION_ACTIVATED",
+            {
+                "organization_id": str(updated.id),
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "status": updated.status,
+            },
+        )
+        return updated
+
+    async def suspend(self, organization_id: UUID, actor_id: str | None = None) -> Organization:
+        """
+        Business Activity: Suspend Organization (BA-06).
+
+        Interim lifecycle model (ADR-005): mirrors activate()'s pattern
+        in the opposite direction. Business Rule: only an ACTIVE
+        organization may be suspended. Suspending an already-SUSPENDED
+        organization is rejected with 409, the same explicit-transition
+        precedent activate() established for BA-06 to follow.
+
+        Does not touch organization_name/organization_type/description
+        (BA-04's scope) or organization_code (immutable natural key).
+
+        TD-012 resolution: also syncs the legacy `is_active` boolean to
+        `False`, closing the divergence risk BA-05 flagged — `is_active`
+        and `status` now always move together for both transitions.
+        """
+        organization = await self.organization_repo.get_by_id(organization_id)
+        if organization is None:
+            record_audit(
+                action="SUSPEND_ORGANIZATION",
+                resource=f"organization:{organization_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        if organization.status == OrganizationStatus.SUSPENDED.value:
+            record_audit(
+                action="SUSPEND_ORGANIZATION",
+                resource=f"organization:{organization.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization already SUSPENDED", "organization_code": organization.organization_code},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Organization '{organization_id}' is already SUSPENDED.",
+            )
+
+        previous_status = organization.status
+        updated = await self.organization_repo.update(
+            organization_id, {"status": OrganizationStatus.SUSPENDED.value, "is_active": False}
+        )
+        await self.organization_repo.session.flush()
+
+        record_audit(
+            action="SUSPEND_ORGANIZATION",
+            resource=f"organization:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "new_status": updated.status,
+            },
+        )
+        publish_event(
+            "ORGANIZATION_SUSPENDED",
             {
                 "organization_id": str(updated.id),
                 "organization_code": updated.organization_code,

@@ -7,9 +7,9 @@ info:
     Lifecycle model: ADR-005. Currently covers BA-01 (Establish
     Organization), BA-02 (View Organization Details), BA-03
     (Search & List Organizations), BA-04 (Update Organization Profile),
-    and BA-05 (Activate Organization) — Suspend, Configuration, and
-    Audit History land as WP-01's later phases (see IRA-001 §9) and
-    extend this file, not a new one.
+    BA-05 (Activate Organization), and BA-06 (Suspend Organization) —
+    Configuration and Audit History land as WP-01's later phases (see
+    IRA-001 §9) and extend this file, not a new one.
   version: 1.0.0
 paths:
   /organizations:
@@ -309,6 +309,65 @@ paths:
                 $ref: '#/components/schemas/HTTPExceptionResponse'
         '409':
           description: Organization is already ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: organization_id is not a valid UUID.
+
+  /organizations/{organization_id}/suspend:
+    post:
+      summary: Suspend organization
+      description: >
+        WP-01 Business Activity 6: Suspend Organization. Requires the
+        PLATFORM_ADMIN role, same interim gate as the other Organization
+        Management endpoints (IRA-001 §2.7). Transitions status from
+        ACTIVE to SUSPENDED per ADR-005's interim lifecycle model.
+        Rejects an already-SUSPENDED organization with 409 rather than a
+        silent no-op. Tenant-agnostic, same basis as Activate Organization.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization suspended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '404':
+          description: No organization exists with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '409':
+          description: Organization is already SUSPENDED.
           content:
             application/json:
               schema:

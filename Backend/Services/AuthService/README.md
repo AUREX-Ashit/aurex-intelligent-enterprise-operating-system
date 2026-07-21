@@ -173,8 +173,8 @@ feature_flags:
 ## 🏢 Organization Management (WP-01)
 
 BA-01 (Establish Organization), BA-02 (View Organization Details), BA-03 (Search & List
-Organizations), BA-04 (Update Organization Profile), and BA-05 (Activate Organization) of C-004,
-per IRA-001 and ADR-003/004/005.
+Organizations), BA-04 (Update Organization Profile), BA-05 (Activate Organization), and BA-06
+(Suspend Organization) of C-004, per IRA-001 and ADR-003/004/005.
 
 - `POST /organizations` — requires `Authorization: Bearer <access_token>` for a caller holding
   the `PLATFORM_ADMIN` role. Rejects a duplicate `organization_code` with `409`.
@@ -186,13 +186,17 @@ per IRA-001 and ADR-003/004/005.
   lifecycle `status` are immutable through this endpoint (code is the natural key; status is
   owned by the Activate/Suspend Business Activities).
 - `POST /organizations/{organization_id}/activate` — same authorization; `404` if the id doesn't
-  exist; `409` if already `ACTIVE`. Transitions `status` from `SUSPENDED` to `ACTIVE`.
+  exist; `409` if already `ACTIVE`. Transitions `status` from `SUSPENDED` to `ACTIVE` (and syncs
+  the legacy `is_active` boolean to `True`).
+- `POST /organizations/{organization_id}/suspend` — same authorization; `404` if the id doesn't
+  exist; `409` if already `SUSPENDED`. Transitions `status` from `ACTIVE` to `SUSPENDED` (and
+  syncs `is_active` to `False`).
 
-All five are tenant-agnostic (no `X-Tenant-ID` required).
+All six are tenant-agnostic (no `X-Tenant-ID` required).
 
 Full contract: [`organization-api.yaml`](organization-api.yaml).
 
-Remaining Business Activities (Suspend, Configuration, Audit History) are later WP-01 phases —
+Remaining Business Activities (Configuration, Audit History) are later WP-01 phases —
 see IRA-001 §9 — and will extend this same contract file.
 
 ---
