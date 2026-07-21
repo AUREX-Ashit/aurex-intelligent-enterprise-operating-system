@@ -24,3 +24,22 @@ export interface OrganizationResponse {
   created_at: string;
   updated_at: string | null;
 }
+
+export type OrganizationSortField = "organization_name" | "organization_code" | "created_at";
+export type SortOrder = "asc" | "desc";
+
+export interface SearchOrganizationsParams {
+  q?: string;
+  status?: OrganizationStatus;
+  skip?: number;
+  limit?: number;
+  sort_by?: OrganizationSortField;
+  sort_order?: SortOrder;
+}
+
+export interface OrganizationListResponse {
+  items: OrganizationResponse[];
+  total: number;
+  skip: number;
+  limit: number;
+}

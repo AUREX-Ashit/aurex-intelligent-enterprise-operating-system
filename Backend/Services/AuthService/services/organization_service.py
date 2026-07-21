@@ -2,7 +2,7 @@
 WP-01 — Organization Management (C-004).
 
 Business Activities implemented here: BA-01 Establish Organization,
-BA-02 View Organization Details.
+BA-02 View Organization Details, BA-03 Search & List Organizations.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -22,6 +22,7 @@ Response) and reuses WP-00's established patterns exactly:
 
 from __future__ import annotations
 
+from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -128,3 +129,32 @@ class OrganizationService:
                 detail=f"No organization exists with id '{organization_id}'.",
             )
         return organization
+
+    async def search(
+        self,
+        query: str | None,
+        status_filter: str | None,
+        skip: int,
+        limit: int,
+        sort_by: str,
+        sort_order: str,
+    ) -> tuple[Sequence[Organization], int]:
+        """
+        Business Activity: Search & List Organizations.
+
+        Read-only, same basis as get_details — no audit record or domain
+        event. Delegates filtering/sorting/counting entirely to
+        OrganizationRepository.search(); this method's job is only to sit
+        in the same Business Activity orchestration layer as establish()
+        and get_details(), not to hold query logic itself (that stays in
+        the repository, consistent with MembershipRepository's existing
+        query methods).
+        """
+        return await self.organization_repo.search(
+            query=query,
+            status=status_filter,
+            skip=skip,
+            limit=limit,
+            sort_by=sort_by,
+            sort_order=sort_order,
+        )

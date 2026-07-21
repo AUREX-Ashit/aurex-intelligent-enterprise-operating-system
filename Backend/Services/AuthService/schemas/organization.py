@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -45,3 +46,34 @@ class OrganizationResponse(BaseModel):
     updated_at: datetime | None
 
     model_config = {"from_attributes": True}
+
+
+class OrganizationSortField(str, Enum):
+    """Whitelisted sortable fields for BA-03 Search & List — mirrors repositories/organization_repository.py's _SORTABLE_COLUMNS."""
+    organization_name = "organization_name"
+    organization_code = "organization_code"
+    created_at = "created_at"
+
+
+class SortOrder(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
+
+class OrganizationListResponse(BaseModel):
+    """Response for BA-03 Search & List Organizations — a page of results plus enough metadata to render pagination."""
+    items: list[OrganizationResponse]
+    total: int = Field(..., description="Total organizations matching the query, independent of pagination")
+    skip: int
+    limit: int
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "items": [],
+                "total": 0,
+                "skip": 0,
+                "limit": 20,
+            }
+        }
+    }

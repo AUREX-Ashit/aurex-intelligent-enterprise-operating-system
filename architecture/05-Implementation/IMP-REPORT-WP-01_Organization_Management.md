@@ -15,7 +15,7 @@
 
 - ✅ BA-01 Establish Organization
 - ✅ BA-02 View Organization
-- ⏳ BA-03 Search Organizations
+- ✅ BA-03 Search Organizations
 - ⏳ BA-04 Update Organization
 - ⏳ BA-05 Activate Organization
 - ⏳ BA-06 Suspend Organization
@@ -24,13 +24,13 @@
 
 **Progress**
 
-- Completed: 2 / 8
-- Progress: 25%
-- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; BA-02 required no schema change)
-- API endpoints delivered: 2 (`POST /organizations`, `GET /organizations/{organization_id}`)
-- UI screens delivered: 1 (`/platform-admin/organizations`, now with an Establish section and a View Organization section)
-- Tests added: 19 (5 unit, 14 integration)
-- ADRs raised during implementation: 0 across both BA-01 and BA-02 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
+- Completed: 3 / 8
+- Progress: 37.5%
+- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; neither BA-02 nor BA-03 required schema changes)
+- API endpoints delivered: 3 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`)
+- UI screens delivered: 1 (`/platform-admin/organizations`, now the primary Search/List grid with Create and View Details as modal actions, plus the standalone by-ID lookup section)
+- Tests added: 35 (11 unit, 24 integration)
+- ADRs raised during implementation: 0 across BA-01, BA-02, and BA-03 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
 
 ---
 
@@ -269,6 +269,10 @@ Read-only vertical slice for fetching a single Organization by id: `GET /organiz
 
 **Certification Status: PASS WITH OBSERVATIONS**
 
+### Repository
+
+Committed as `4d5c52a` — "feat(auth-service): WP-01 BA-02 - View Organization Details" (2026-07-21). Working tree clean at commit time; all three §19.7 completion-gate conditions satisfied.
+
 ---
 
 ## Ready for Review — BA-02 View Organization Details
@@ -284,6 +288,152 @@ Read-only vertical slice for fetching a single Organization by id: `GET /organiz
 **Known issues:** None outside the Known Limitations listed (unchanged from BA-01, none BA-02-specific).
 
 **Recommended next Business Activity:** BA-03 Search Organizations, per IRA-001's recommended sequence — natural follow-on now that both create and fetch-by-id exist.
+
+---
+
+## Business Activity: BA-03 — Search & List Organizations
+
+**Date Completed:** 2026-07-21
+
+### Scope Delivered
+
+The primary Organization Management screen: `GET /organizations` with text search (name/code substring, case-insensitive), status filter, pagination (skip/limit, max 100/page), and whitelisted sort (name/code/created_at, asc/desc), returning a page plus a total count. Frontend: `/platform-admin/organizations` restructured so the search/list grid is the primary view, with Create Organization and View Details as modal actions reusing BA-01's and BA-02's existing forms/hooks unchanged. No database migration and no new authorization tier — reused BA-01/BA-02's model, `require_platform_admin`, and response schema throughout. No ADR required.
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `source/frontend/src/features/organization/state/useSearchOrganizations.ts` | Search/filter/sort/pagination state hook |
+| `source/frontend/src/features/organization/components/OrganizationSearchGrid.tsx` | The primary grid: search, status filter, sortable columns, table, pagination, empty/loading/error states |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/repositories/organization_repository.py` | Added `search()` — whitelisted sort columns, ILIKE text match, status filter, offset/limit, count query |
+| `Backend/Services/AuthService/schemas/organization.py` | Added `OrganizationSortField`, `SortOrder` enums and `OrganizationListResponse` |
+| `Backend/Services/AuthService/services/organization_service.py` | Added `OrganizationService.search()` (thin pass-through to the repository, consistent with the existing Business Activity orchestration layer) |
+| `Backend/Services/AuthService/routers/organization.py` | Added `GET ""` (list/search) — coexists with the existing `POST ""` at the same path, differentiated by HTTP method; no route-ordering conflict with `GET /{organization_id}` since query params, not a path segment, carry the search criteria |
+| `Backend/Services/AuthService/organization-api.yaml` | Added the `GET /organizations` path and `OrganizationListResponse` schema |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | Added BA-03 unit tests |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Added BA-03 integration tests |
+| `Backend/Services/AuthService/README.md` | Updated Organization Management section for BA-03 |
+| `source/frontend/src/types/organization.ts` | Added `OrganizationSortField`, `SortOrder`, `SearchOrganizationsParams`, `OrganizationListResponse` |
+| `source/frontend/src/services/organization-api.ts` | Added `searchOrganizations()` |
+| `source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx` | Restructured: grid is now primary; Create and View Details became `Modal`-based actions (reusing `EstablishOrganizationForm` and `useViewOrganization`/`OrganizationDetailsList` unchanged); a second, independent `useViewOrganization` instance keeps the grid's View modal from leaking state into the standalone by-ID lookup section |
+
+### Files Removed
+
+| File | Reason |
+|---|---|
+| `source/frontend/src/features/organization/components/OrganizationResultPanel.tsx` | Became dead code once the Create modal stopped needing a result panel (the modal closes and the grid refreshes immediately on success — a "no results yet" panel was never actually visible); confirmed zero remaining imports before deletion |
+
+### Database
+
+- **Migration(s):** None — BA-03 required no schema change.
+- **Schema changes / Constraints / Indexes:** None. (`organization_code` already has a unique index from BA-00/BA-01, which also serves code-prefix searches reasonably; no new index added for the `ilike` name/code search since WP-01's data volumes don't yet warrant one — a candidate for a future performance pass, not this Business Activity.)
+
+### APIs
+
+- **Endpoint added:** `GET /organizations` (200/400/401/403/422).
+- **Query parameters:** `q` (optional, ≤255 chars), `status` (optional, `ACTIVE`/`SUSPENDED`), `skip` (≥0, default 0), `limit` (1-100, default 20), `sort_by` (`organization_name`/`organization_code`/`created_at`, default `organization_name`), `sort_order` (`asc`/`desc`, default `asc`) — all FastAPI/Pydantic-validated (422 on out-of-range or invalid enum values).
+- **Response model:** `OrganizationListResponse` (`items: OrganizationResponse[]`, `total`, `skip`, `limit`) — `items` reuses the existing `OrganizationResponse` unchanged.
+- **Authorization:** Same `require_platform_admin` dependency as BA-01/BA-02 — no new tier.
+- **OpenAPI:** `organization-api.yaml` updated with the new path, parameters, and `OrganizationListResponse` schema; validated.
+
+### Frontend
+
+- **Route:** `/platform-admin/organizations` (unchanged route, restructured content — grid is now primary).
+- **Screen:** `OrganizationSearchGrid` — search input, status filter buttons (All/Active/Suspended), sortable column headers (click to toggle field/direction), results table, Previous/Next pagination, "Create Organization" action, per-row "View Details" action, empty state (with a contextual "create the first organization" prompt when no filters are active), loading state (`Spinner`), error state (`FormBanner` with retry).
+- **Components:** `OrganizationSearchGrid` (new) — built entirely from existing `Table`/`TableHead`/`TableBody`/`TableRow`/`TableHeaderCell`/`TableCell`, `Card`, `Button`, `Input`, `StatusBadge`, `Spinner`, `FormBanner`. **No new DS-001 component was created** — sorting uses clickable table headers and status filtering uses a `Button` toggle group rather than introducing a `Select`/`Filter Bar`/`Pagination` primitive, since existing components fully covered BA-03's needs (per "do not create new DS-001 components unless absolutely required").
+- **Navigation:** No new route — Create and View Details are `Modal`-based actions on the existing route, consistent with "provide the Platform Administrator with the primary Organization Management screen" rather than spreading the capability across multiple routes.
+- **API integration:** `services/organization-api.ts`'s new `searchOrganizations()`, same `apiClient` pattern; `useSearchOrganizations.ts` re-fetches on every query-parameter change and exposes a `refresh()` used for error-state retry.
+
+### Testing
+
+- **Unit Tests:** 6 new (`test_organization_service.py`, 11 total in that file) — default paging, case-insensitive name match, code match, status filter, pagination correctness (page contents and total), descending sort.
+- **Integration Tests:** 10 new (`test_organization_api.py`, 24 total in that file) — list with total, text-query filter, status filter, pagination params end-to-end, limit>100 rejected (422), negative skip rejected (422), invalid sort_by rejected (422), missing/wrong-role auth (400/403), tenant-header exemption.
+- **API Tests:** covered by the integration suite above.
+- **UI Tests:** none added — same pre-existing gap as BA-01/BA-02 (no frontend test harness yet); verified via `tsc --noEmit` (0 errors).
+- **Overall test results:** 64/64 backend tests passing (16 new this BA, 0 regressions). Frontend: 0 TypeScript errors.
+
+### Manual Verification
+
+1. Seed a few organizations via the "Create Organization" modal.
+2. On `/platform-admin/organizations`, confirm they appear in the grid with correct name/code/type/status.
+3. Type a partial name or code into the search box → confirm the grid narrows to matches only.
+4. Click "Active"/"Suspended"/"All" → confirm the grid filters accordingly (all seeded orgs are `ACTIVE`, so "Suspended" should show the empty state).
+5. Click a sortable column header twice → confirm ascending then descending order; confirm the arrow indicator matches.
+6. With more than one page of results (`limit` default 20 — seed 21+ to exercise this, or verify via the API directly with a small `limit`), confirm Previous/Next and the "Showing X–Y of Z" text are correct, and that Previous is disabled on the first page / Next disabled on the last.
+7. Click "View Details" on a row → confirm the modal shows that organization's full details (via a real `GET /organizations/{id}` call, not just the row's already-loaded data).
+8. Click "Create Organization", submit a valid new organization → confirm the modal closes and the new organization appears in the grid without a manual refresh.
+9. Directly against the API: `GET /organizations?limit=101` → 422; `GET /organizations?skip=-1` → 422; `GET /organizations?sort_by=bogus` → 422; omit `Authorization` → 400; non-`PLATFORM_ADMIN` token → 403.
+
+### Known Limitations (intentionally deferred, per WP-01 scope)
+
+- Same authorization/lifecycle/schema-scope/RLS/frontend-test-harness limitations as BA-01/BA-02 (unchanged — see BA-01 section above); none are specific to BA-03.
+- No index added for the `ilike` name/code search — acceptable at WP-01's current data volume; a candidate for a future performance-focused pass if/when organization counts grow large, not part of this Business Activity's scope.
+- "View Details" from the grid makes a live API call rather than reusing the row's already-fetched data, by design (exercises the real BA-02 Business Activity uniformly regardless of entry point) — a deliberate consistency-over-micro-optimization choice, not an oversight.
+
+### Architecture Compliance
+
+- **ARCH-000:** No architecture redefinition; implementation only.
+- **IMP-001:** Read-side Business Activity — no audit record or domain event, same precedent as BA-02 (`get_details`) and Person's `recognize`.
+- **ERG-001:** Unaffected — no EnterpriseNode/Relationship/View concept touched.
+- **C-004 / ADR-004:** No new fields exposed; `OrganizationListResponse.items` reuses the existing, unchanged `OrganizationResponse`.
+- **URA-001:** Unaffected.
+- **Approved ADRs:** ADR-003, ADR-004, ADR-005 — all still honored; none re-litigated. No new ADR raised.
+
+### Implementation Status
+
+✅ IMPLEMENTATION COMPLETE
+
+### Independent Review
+
+**Independent Review: Accepted — ACCEPT WITH OBSERVATIONS** (2026-07-21, fresh-context subagent with no memory of the implementation session; ran the full backend test suite and `tsc --noEmit` independently, diffed the working tree itself, and traced the SQL sort-whitelisting/count-query/authorization logic by hand rather than trusting this report's claims).
+
+**Test results actually observed:** Backend `pytest -q` → **64 passed, 0 failed**. Confirmed via `grep -c` (not trusted from the report) that BA-03 added exactly 6 new unit tests (11 total in `test_organization_service.py`) and 10 new integration tests (24 total in `test_organization_api.py`) — unlike BA-02, this report's test-count claim was accurate on first read. Frontend `tsc --noEmit` → 0 errors.
+
+**Findings:** `sort_by` is whitelisted twice — once at the Pydantic `OrganizationSortField` enum (422 on any other value before the repository is reached) and again via the repository's `_SORTABLE_COLUMNS` dict lookup (never string-interpolated or resolved via `getattr()`); no SQL injection surface. The total-count query is built and filtered independently of the paginated `stmt` and is correctly unaffected by `.offset()/.limit()` — verified against `test_search_pagination_returns_correct_page_and_total`. ILIKE matching against both `organization_name` and `organization_code` is correctly case-insensitive. Authorization uses `require_platform_admin` unmodified from BA-01/BA-02 — no new tier. `OrganizationService.search()` is a genuine thin pass-through with no duplicated query logic. `middleware/tenant.py` has zero diff — BA-02's prefix-match exemption already covers `GET /organizations` without further changes. `models/organization.py` and `alembic/` show zero diff — no schema change, as claimed. `OrganizationResultPanel.tsx`'s only remaining string match repo-wide is a historical code comment, not an import — its deletion is safe. `OrganizationSearchGrid.tsx` and the restructured screen import only pre-existing DS-001 primitives (`Table*`, `Card`, `Button`, `Input`, `StatusBadge`, `Spinner`, `FormBanner`, `Modal` — `Modal` confirmed to predate BA-01, introduced in the DS-001 v1.0 release commit `18d0396`); no new component invented.
+
+**Defects found:** None.
+
+**Risks recorded (non-blocking):**
+1. `useSearchOrganizations.ts` fetches on every keystroke with no debounce and no `AbortController`/staleness guard — a slow, out-of-order network response could briefly overwrite the grid with stale results. Self-corrects on the next state change; a hardening candidate, not a defect.
+2. BA-02's carried-forward recommendation (a dedicated `TenantMiddleware` test asserting the `/organizations/*` prefix behavior directly) was not actioned in BA-03 either — re-carried forward below.
+3. The `SUSPENDED` status-filter tests (unit and integration) only assert an empty result, since no Activate/Suspend Business Activity exists yet to produce a `SUSPENDED` row — the filter's ACTIVE branch is proven, but true inclusion/exclusion against a mixed-status dataset is not yet provable. Expected to self-resolve once BA-05/BA-06 land.
+4. The grid fully remounts (`key={gridRefreshKey}`) after a successful create, resetting the user's active search/filter/sort/page to defaults rather than preserving them. Functionally correct; a UX nuance, not a defect against BA-03's stated scope.
+5. Backend tests require `JWT_SECRET_KEY` set out-of-band with no fixture/`.env.example` documenting it — pre-existing since BA-01, re-flagged so it doesn't keep tripping reviewers/CI.
+
+**Recommendations carried into BA-04:**
+- Add the dedicated `TenantMiddleware` prefix test (recommended after BA-02, still outstanding after BA-03).
+- Consider a debounce + request-cancellation/staleness guard for `useSearchOrganizations` before more interactive filters are added.
+- When BA-05/BA-06 land, add a true positive/negative status-filter test (an ACTIVE row that must not appear under a SUSPENDED filter and vice versa).
+- Continue the established pattern (thin service pass-through, repository owns query logic, schema-level enum whitelisting) — it held up cleanly through BA-03.
+
+### Certification
+
+Certification Status: Pending (WP-level activity, performed only after WP-01 completes, per CLAUDE.md §19.7)
+
+### Repository
+
+Committed as `<pending>` — working tree to be committed following acceptance of this independent review, per CLAUDE.md §19.7's completion-gate repository condition.
+
+---
+
+## Ready for Review — BA-03 Search & List Organizations
+
+**Summary of what was implemented:** `GET /organizations` — text search (name/code, case-insensitive), status filter, pagination (skip/limit, max 100/page), whitelisted sort (name/code/created_at, asc/desc), item count — reusing BA-01/BA-02's model, authorization dependency, and response schema unchanged. Frontend: `/platform-admin/organizations` restructured so `OrganizationSearchGrid` is the primary view, with Create and View Details as `Modal` actions reusing existing forms/hooks. `OrganizationResultPanel.tsx` removed as dead code once superseded.
+
+**Evidence available:**
+- 64/64 backend tests passing (16 new this BA — 6 unit, 10 integration), independently re-run by the reviewing subagent.
+- `tsc --noEmit` — 0 TypeScript errors, independently re-run.
+- `organization-api.yaml` updated and validated with the new path and `OrganizationListResponse` schema.
+- Independent review completed: **ACCEPT WITH OBSERVATIONS**, zero defects found.
+
+**Known issues:** None outside the Known Limitations and non-blocking risks listed above (all deliberate WP-01 scope deferrals or low-severity hardening candidates, not defects).
+
+**Recommended next Business Activity:** BA-04 Update Organization, per IRA-001's recommended sequence, once this Business Activity is committed per the §19.7 completion gate.
 
 ---
 

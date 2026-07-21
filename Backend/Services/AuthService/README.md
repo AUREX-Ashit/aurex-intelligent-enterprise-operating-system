@@ -172,19 +172,21 @@ feature_flags:
 
 ## 🏢 Organization Management (WP-01)
 
-BA-01 (Establish Organization) and BA-02 (View Organization Details) of C-004, per IRA-001
-and ADR-003/004/005.
+BA-01 (Establish Organization), BA-02 (View Organization Details), and BA-03 (Search & List
+Organizations) of C-004, per IRA-001 and ADR-003/004/005.
 
 - `POST /organizations` — requires `Authorization: Bearer <access_token>` for a caller holding
   the `PLATFORM_ADMIN` role. Rejects a duplicate `organization_code` with `409`.
 - `GET /organizations/{organization_id}` — same authorization; `404` if the id doesn't exist.
+- `GET /organizations` — same authorization; `q` (name/code substring), `status`, `skip`/`limit`
+  (pagination, max 100/page), `sort_by`/`sort_order` query params.
 
-Both are tenant-agnostic (no `X-Tenant-ID` required).
+All three are tenant-agnostic (no `X-Tenant-ID` required).
 
 Full contract: [`organization-api.yaml`](organization-api.yaml).
 
-Remaining Business Activities (Search/Listing, Update, Activate/Suspend, Configuration,
-Audit History) are later WP-01 phases — see IRA-001 §9 — and will extend this same contract file.
+Remaining Business Activities (Update, Activate/Suspend, Configuration, Audit History) are
+later WP-01 phases — see IRA-001 §9 — and will extend this same contract file.
 
 ---
 

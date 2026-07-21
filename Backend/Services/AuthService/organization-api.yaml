@@ -5,10 +5,10 @@ info:
     Organization Management (C-004, WP-01) endpoints for the CorpStage
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
     Lifecycle model: ADR-005. Currently covers BA-01 (Establish
-    Organization) and BA-02 (View Organization Details) —
-    Search, Update, Activate/Suspend, Configuration, and Audit History
-    land as WP-01's later phases (see IRA-001 §9) and extend this file,
-    not a new one.
+    Organization), BA-02 (View Organization Details), and BA-03
+    (Search & List Organizations) — Update, Activate/Suspend,
+    Configuration, and Audit History land as WP-01's later phases
+    (see IRA-001 §9) and extend this file, not a new one.
   version: 1.0.0
 paths:
   /organizations:
@@ -63,6 +63,88 @@ paths:
                 $ref: '#/components/schemas/HTTPExceptionResponse'
         '422':
           description: Invalid request (e.g., missing or empty required field).
+
+    get:
+      summary: Search and list organizations
+      description: >
+        WP-01 Business Activity 3: Search & List Organizations. Requires the
+        PLATFORM_ADMIN role, same interim gate as the other Organization
+        Management endpoints (IRA-001 §2.7). q matches organization_name
+        or organization_code, case-insensitive, substring. Tenant-agnostic,
+        same basis as Establish Organization.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          description: Search text against organization_name or organization_code.
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["ACTIVE", "SUSPENDED"]
+          description: Filter by lifecycle status.
+        - name: skip
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["organization_name", "organization_code", "created_at"]
+            default: "organization_name"
+        - name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "asc"
+      responses:
+        '200':
+          description: A page of matching organizations, with a total count for pagination.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationListResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: Invalid query parameters.
 
   /organizations/{organization_id}:
     get:
@@ -192,6 +274,26 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    OrganizationListResponse:
+      type: object
+      required:
+        - items
+        - total
+        - skip
+        - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationResponse'
+        total:
+          type: integer
+          description: Total organizations matching the query, independent of pagination.
+        skip:
+          type: integer
+        limit:
+          type: integer
 
     HTTPExceptionResponse:
       type: object

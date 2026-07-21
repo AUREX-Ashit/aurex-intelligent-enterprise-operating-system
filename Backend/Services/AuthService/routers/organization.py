@@ -1,13 +1,20 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import require_platform_admin
 from models.database import db_manager
+from models.organization import OrganizationStatus
 from repositories.organization_repository import OrganizationRepository
-from schemas.organization import EstablishOrganizationRequest, OrganizationResponse
+from schemas.organization import (
+    EstablishOrganizationRequest,
+    OrganizationListResponse,
+    OrganizationResponse,
+    OrganizationSortField,
+    SortOrder,
+)
 from services.organization_service import OrganizationService
 
 router = APIRouter()
@@ -68,6 +75,56 @@ async def establish_organization(
         request, actor_id=claims.get("person_id")
     )
     return OrganizationResponse.model_validate(organization)
+
+
+@router.get(
+    "",
+    response_model=OrganizationListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Search and list organizations",
+    description=(
+        "WP-01 Business Activity: Search & List Organizations (C-004) — BA-03. "
+        "Requires the PLATFORM_ADMIN role, same interim gate as the other "
+        "Organization Management endpoints (IRA-001 §2.7). q matches "
+        "organization_name or organization_code, case-insensitive, substring."
+    ),
+    responses={
+        200: {"description": "A page of matching organizations, with a total count for pagination."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        422: {"description": "Invalid query parameters."},
+    },
+)
+async def search_organizations(
+    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+    q: Annotated[str | None, Query(max_length=255, description="Search text against name or code")] = None,
+    status_filter: Annotated[OrganizationStatus | None, Query(alias="status", description="Filter by lifecycle status")] = None,
+    skip: Annotated[int, Query(ge=0, description="Rows to skip (pagination offset)")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max rows to return (1-100)")] = 20,
+    sort_by: Annotated[OrganizationSortField, Query(description="Field to sort by")] = OrganizationSortField.organization_name,
+    sort_order: Annotated[SortOrder, Query(description="Sort direction")] = SortOrder.asc,
+) -> OrganizationListResponse:
+    """
+    No tenant-scoping, same basis as the other Organization Management
+    endpoints — PLATFORM_ADMIN operates across every organization, so
+    listing is inherently a cross-tenant operation.
+    """
+    items, total = await organization_service.search(
+        query=q,
+        status_filter=status_filter.value if status_filter else None,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by.value,
+        sort_order=sort_order.value,
+    )
+    return OrganizationListResponse(
+        items=[OrganizationResponse.model_validate(item) for item in items],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.get(

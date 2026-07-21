@@ -230,3 +230,110 @@ def test_view_organization_does_not_require_tenant_header(client: TestClient) ->
     )
 
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Search & List Organizations
+# ---------------------------------------------------------------------------
+
+def _establish(client: TestClient, code: str, name: str) -> dict:
+    response = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": code, "organization_name": name, "organization_type": "CORPORATE"},
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
+def test_search_organizations_returns_a_page_with_total(client: TestClient) -> None:
+    _establish(client, "LIST-001", "List Org One")
+    _establish(client, "LIST-002", "List Org Two")
+
+    response = client.get("/organizations", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] >= 2
+    assert body["skip"] == 0
+    assert body["limit"] == 20
+    codes = {item["organization_code"] for item in body["items"]}
+    assert "LIST-001" in codes and "LIST-002" in codes
+
+
+def test_search_organizations_filters_by_query_text(client: TestClient) -> None:
+    _establish(client, "QRY-001", "Zephyr Industries")
+    _establish(client, "QRY-002", "Marble Holdings")
+
+    response = client.get("/organizations", headers=_auth_headers(), params={"q": "zephyr"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["organization_code"] == "QRY-001"
+
+
+def test_search_organizations_filters_by_status(client: TestClient) -> None:
+    _establish(client, "STAT-001", "Status Org")
+
+    response = client.get("/organizations", headers=_auth_headers(), params={"status": "SUSPENDED"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert all(item["status"] == "SUSPENDED" for item in body["items"])
+
+
+def test_search_organizations_respects_pagination_params(client: TestClient) -> None:
+    for i in range(3):
+        _establish(client, f"PG-{i:03d}", f"Pagination Org {i}")
+
+    response = client.get(
+        "/organizations",
+        headers=_auth_headers(),
+        params={"q": "Pagination Org", "skip": 1, "limit": 1, "sort_by": "organization_code", "sort_order": "asc"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 3
+    assert body["skip"] == 1
+    assert body["limit"] == 1
+    assert len(body["items"]) == 1
+    assert body["items"][0]["organization_code"] == "PG-001"
+
+
+def test_search_organizations_rejects_limit_over_100(client: TestClient) -> None:
+    response = client.get("/organizations", headers=_auth_headers(), params={"limit": 101})
+
+    assert response.status_code == 422
+
+
+def test_search_organizations_rejects_negative_skip(client: TestClient) -> None:
+    response = client.get("/organizations", headers=_auth_headers(), params={"skip": -1})
+
+    assert response.status_code == 422
+
+
+def test_search_organizations_rejects_invalid_sort_by(client: TestClient) -> None:
+    response = client.get("/organizations", headers=_auth_headers(), params={"sort_by": "not_a_real_field"})
+
+    assert response.status_code == 422
+
+
+def test_search_organizations_requires_authorization_header(client: TestClient) -> None:
+    response = client.get("/organizations")
+
+    assert response.status_code == 400
+
+
+def test_search_organizations_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.get("/organizations", headers=_auth_headers(role_code="ORG_ADMIN"))
+
+    assert response.status_code == 403
+
+
+def test_search_organizations_does_not_require_tenant_header(client: TestClient) -> None:
+    """GET /organizations (exact-match exemption, unchanged since BA-01) is tenant-agnostic."""
+    response = client.get("/organizations", headers=_auth_headers())
+
+    assert response.status_code == 200

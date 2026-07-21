@@ -111,3 +111,100 @@ async def test_get_details_raises_404_for_unknown_id(db_session: AsyncSession) -
         await service.get_details(uuid.uuid4())
 
     assert exc_info.value.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Search & List Organizations
+# ---------------------------------------------------------------------------
+
+async def _seed(service: OrganizationService, code: str, name: str, org_type: str = "CORPORATE") -> Organization:
+    return await service.establish(
+        EstablishOrganizationRequest(organization_code=code, organization_name=name, organization_type=org_type)
+    )
+
+
+async def test_search_returns_all_organizations_with_default_paging(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    await _seed(service, "SRCH-001", "Alpha Corp")
+    await _seed(service, "SRCH-002", "Beta Corp")
+    await _seed(service, "SRCH-003", "Gamma Corp")
+
+    items, total = await service.search(
+        query=None, status_filter=None, skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert total == 3
+    assert [i.organization_name for i in items] == ["Alpha Corp", "Beta Corp", "Gamma Corp"]
+
+
+async def test_search_matches_organization_name_case_insensitively(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    await _seed(service, "SRCH-010", "Northwind Traders")
+    await _seed(service, "SRCH-011", "Contoso Ltd")
+
+    items, total = await service.search(
+        query="north", status_filter=None, skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert total == 1
+    assert items[0].organization_code == "SRCH-010"
+
+
+async def test_search_matches_organization_code(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    await _seed(service, "UNIQUE-CODE-042", "Some Company")
+    await _seed(service, "OTHER-099", "Another Company")
+
+    items, total = await service.search(
+        query="unique-code", status_filter=None, skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert total == 1
+    assert items[0].organization_code == "UNIQUE-CODE-042"
+
+
+async def test_search_filters_by_status(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    await _seed(service, "SRCH-020", "Active One")
+    await _seed(service, "SRCH-021", "Active Two")
+
+    active_items, active_total = await service.search(
+        query=None, status_filter="ACTIVE", skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+    suspended_items, suspended_total = await service.search(
+        query=None, status_filter="SUSPENDED", skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert active_total == 2
+    assert suspended_total == 0
+    assert suspended_items == []
+
+
+async def test_search_pagination_returns_correct_page_and_total(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    for i in range(5):
+        await _seed(service, f"PAGE-{i:03d}", f"Page Org {i}")
+
+    page_1, total_1 = await service.search(
+        query=None, status_filter=None, skip=0, limit=2, sort_by="organization_code", sort_order="asc"
+    )
+    page_2, total_2 = await service.search(
+        query=None, status_filter=None, skip=2, limit=2, sort_by="organization_code", sort_order="asc"
+    )
+
+    assert total_1 == 5 and total_2 == 5
+    assert len(page_1) == 2 and len(page_2) == 2
+    assert [o.organization_code for o in page_1] == ["PAGE-000", "PAGE-001"]
+    assert [o.organization_code for o in page_2] == ["PAGE-002", "PAGE-003"]
+
+
+async def test_search_sort_order_descending(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    await _seed(service, "SORT-001", "Zeta Corp")
+    await _seed(service, "SORT-002", "Alpha Corp")
+
+    items, _total = await service.search(
+        query=None, status_filter=None, skip=0, limit=20, sort_by="organization_name", sort_order="desc"
+    )
+
+    assert [i.organization_name for i in items] == ["Zeta Corp", "Alpha Corp"]
