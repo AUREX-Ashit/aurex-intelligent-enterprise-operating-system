@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/layout/PlaceholderPage";
+import { OrganizationManagementScreen } from "@/features/organization/components/OrganizationManagementScreen";
 
 export default function OrganizationsPage() {
-  return <PlaceholderPage title="Organization Management" description="Tenant organizations across the platform." />;
+  return <OrganizationManagementScreen />;
 }

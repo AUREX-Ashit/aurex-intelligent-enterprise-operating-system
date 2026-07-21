@@ -1,0 +1,151 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Organization Management API
+  description: >
+    Organization Management (C-004, WP-01) endpoints for the CorpStage
+    AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
+    Lifecycle model: ADR-005. Currently covers Business Activity 1
+    (Establish Organization) only — Activate/Suspend, Profile Update,
+    Configuration, Search/Listing, and Audit History land as WP-01's
+    later phases (see IRA-001 §9) and extend this file, not a new one.
+  version: 1.0.0
+paths:
+  /organizations:
+    post:
+      summary: Establish a new organization
+      description: >
+        WP-01 Business Activity 1: Establish Organization. Requires the
+        PLATFORM_ADMIN role — IRA-001 §2.7 documents this as a deliberate
+        simplification pending the Role & Permission Management work
+        package's Domain Permission model. Rejects a duplicate
+        organization_code with 409. Tenant-agnostic: establishing a
+        brand-new organization has no existing tenant to scope the
+        request to (X-Tenant-ID is not required or read).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishOrganizationRequest'
+      responses:
+        '201':
+          description: Organization established.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '409':
+          description: An organization with this organization_code already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: Invalid request (e.g., missing or empty required field).
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AuthService access token (from POST /auth/login), carrying a role_code claim.
+
+  schemas:
+    EstablishOrganizationRequest:
+      type: object
+      required:
+        - organization_code
+        - organization_name
+        - organization_type
+      properties:
+        organization_code:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Unique organization code (platform-wide).
+          example: "ACME-CORP-001"
+        organization_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Acme Corporation"
+        organization_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "CORPORATE"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Global manufacturing conglomerate."
+
+    OrganizationResponse:
+      type: object
+      required:
+        - id
+        - organization_code
+        - organization_name
+        - organization_type
+        - status
+        - is_active
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_code:
+          type: string
+          example: "ACME-CORP-001"
+        organization_name:
+          type: string
+          example: "Acme Corporation"
+        organization_type:
+          type: string
+          example: "CORPORATE"
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: ["ACTIVE", "SUSPENDED"]
+          description: ADR-005 interim lifecycle state.
+          example: "ACTIVE"
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    HTTPExceptionResponse:
+      type: object
+      description: FastAPI's default HTTPException body shape (matches auth-api.yaml's schema of the same name).
+      properties:
+        detail:
+          type: string
+          example: "An organization with code 'ACME-CORP-001' already exists."

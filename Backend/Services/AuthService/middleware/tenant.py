@@ -20,11 +20,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # context requirement.
         # /ready (WP-00) is platform-scoped, not tenant-scoped, on the same basis as
         # /health: an orchestrator's readiness probe has no tenant context to supply.
+        # POST /organizations (WP-01, Establish Organization) is tenant-agnostic for
+        # the same reason as /person/establish: establishing a brand-new Organization
+        # has no existing tenant to scope the request to. Authorization is enforced
+        # separately by dependencies.require_platform_admin, not by tenant scoping.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
             "/person/recognize", "/person/establish",
+            "/organizations",
         ]:
             return await call_next(request)
 

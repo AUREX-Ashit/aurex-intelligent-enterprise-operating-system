@@ -26,6 +26,37 @@ _INVALID_CREDENTIALS = "Invalid email or password."
 _INVALID_TOKEN       = "Credentials verification failed."
 
 
+def decode_access_token(token: str) -> dict:
+    """
+    Verifies an access token's signature and expiry and returns its claims.
+
+    Module-level (not an AuthService instance method) because it needs no
+    repository — it's pure JWT verification, reusable by any router's
+    authorization dependency (see dependencies.py) without constructing a
+    full AuthService. Raises 401 on any signature/expiry/type failure,
+    mirroring refresh_session_token's own decode step exactly.
+    """
+    try:
+        claims = jwt.decode(
+            token,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=_INVALID_TOKEN,
+        )
+
+    if claims.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type.",
+        )
+
+    return claims
+
+
 class AuthService:
     """
     Business service layer for R-001 authentication.

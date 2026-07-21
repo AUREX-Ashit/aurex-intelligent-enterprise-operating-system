@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, person
+from routers import auth, health, organization, person
 from models.database import db_manager
 from config import settings
 
@@ -76,3 +76,4 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 app.include_router(health.router, prefix="", tags=["Health"])
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(person.router, prefix="/person", tags=["Person"])
+app.include_router(organization.router, prefix="/organizations", tags=["Organization"])

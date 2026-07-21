@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from sqlalchemy import String, DateTime, Boolean
@@ -9,6 +10,15 @@ from models.database import Base
 
 if TYPE_CHECKING:
     from models.membership import Membership
+
+
+class OrganizationStatus(str, Enum):
+    """
+    ADR-005 interim lifecycle model. Not metadata-driven (SD-002-051's
+    target architecture) — a plain, fixed enum pending the Metadata Runtime.
+    """
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
 
 
 class Organization(Base):
@@ -44,6 +54,22 @@ class Organization(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default=OrganizationStatus.ACTIVE.value,
+        server_default=OrganizationStatus.ACTIVE.value,
+    )
+    """
+    Interim lifecycle state ('ACTIVE' / 'SUSPENDED') per ADR-005 — a plain
+    column, not the metadata-driven state machine SD-002-051 ultimately
+    requires. This is the seam a future Metadata Runtime migration replaces.
+    """
+
+    description: Mapped[str | None] = mapped_column(
+        String(1000),
+        nullable=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(
