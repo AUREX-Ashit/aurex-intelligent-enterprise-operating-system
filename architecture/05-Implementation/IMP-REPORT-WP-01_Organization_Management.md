@@ -19,14 +19,14 @@
 - ✅ BA-03 Search Organizations
 - ✅ BA-04 Update Organization Profile
 - ✅ BA-05 Activate Organization
-- 🔄 BA-06 Suspend Organization (implementation complete, developer-validated, awaiting independent review)
+- ✅ BA-06 Suspend Organization
 - ⏳ BA-07 Organization Configuration
 - ⏳ BA-08 Audit History
 
 **Progress**
 
-- Completed: 5 / 8 (BA-06 implementation complete and developer-validated, pending independent review — not yet counted as done per §19.7)
-- Progress: 62.5% (75% once BA-06 clears independent review and is committed)
+- Completed: 6 / 8
+- Progress: 75%
 - Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; none of BA-02 through BA-06 required schema changes)
 - API endpoints delivered: 6 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`, `POST /organizations/{organization_id}/suspend`)
 - UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05/BA-06, both implemented backend-only per their explicit scope; see BA-05/BA-06 sections)
@@ -854,11 +854,35 @@ Performed by the implementing engineer against this Business Activity's own acce
 
 ### Independent Review
 
-Independent Review: Pending (not yet requested for BA-06)
+**Independent Review: Accepted — ACCEPTED WITH OBSERVATIONS** (2026-07-21, fresh-context subagent with no memory of the implementation session; ran the full backend test suite independently, diffed the actual working tree itself rather than trusting this report's claims, and cross-checked the Technical Debt Register against the code and tests it describes).
+
+**Review Result: ACCEPTED WITH OBSERVATIONS**
+
+**Test results actually observed:** `pytest -q` (with `JWT_SECRET_KEY`/`JWT_ALGORITHM` set) → **105 passed, 0 failed**, 12.45s. Test-count deltas verified against the last committed state (`HEAD`): `test_organization_service.py` 19→25 (+6), `test_organization_api.py` 40→49 (+9) — 15 new tests total, matching this report's claim exactly, with all test-file diffs additive-only.
+
+**Findings:** `git status`/`git diff` confirm the working tree touches exactly the files this report's Files Modified table lists (plus the pre-existing, unrelated `CLAUDE.md` change). Zero diff on `models/organization.py`, `dependencies.py`, `repositories/organization_repository.py`, `schemas/organization.py`, `middleware/tenant.py`, and all of `source/frontend/`. `suspend()` and `activate()` were read side by side and confirmed structurally and behaviorally symmetric: `get_by_id()` → 404 if missing (audit DENIED) → target-state check → 409 if already in that state (audit DENIED, confirmed to run strictly before any mutating call) → `BaseRepository.update()` with both `status` and `is_active` → `session.flush()` → `record_audit(SUCCESS)` → `publish_event(...)` → response. The modification to already-accepted `activate()` code was verified narrow and legitimate: `git diff` shows only a docstring addition and one dict key (`"is_active": True`) — its 404/409 logic, audit metadata, and event payload are byte-for-byte unchanged from BA-05's accepted version. `organization-api.yaml` parses cleanly and lists the new `/suspend` path with matching response codes. All 15 new tests were read in full and genuinely exercise what they claim — including the TD-008 mixed-status filter tests (real `suspend()` call seeding a genuine mixed dataset, asserting true inclusion and exclusion, not just "returns empty") and the TD-012 `is_active`/`status` round-trip tests at both service and API layers.
+
+**Defects found:** None that block acceptance.
+
+**Technical Debt Register verified:** TD-008 `Closed` with a resolution note naming the actual test functions — both exist and pass. TD-012 `Closed` with a resolution note describing the `is_active` sync — the code genuinely performs it (verified in the diff, not just claimed). TD-003 (optimistic concurrency) correctly remains `Open`, unmodified, not duplicated — the same TOCTOU race in `suspend()` is the same risk class already tracked there, not a new entry needed. No duplicate entries introduced.
+
+**Risks recorded (non-blocking):**
+1. The audit-before-event ordering discrepancy against IMP-001 §6.3's literal text is inherited from BA-01/BA-04/BA-05, not introduced or fixed by BA-06 — now spans 4+ Business Activities and is growing in surface area with each additional one that copies the pattern.
+2. The Action Center UI deferral reasoning (from BA-05) is weaker now that both Activate and Suspend exist — the original "only half the actions exist" justification no longer fully holds, though deferring is still defensible this review (no regression, no architecture invented). Should not be indefinitely re-deferred.
+3. `suspend()`/`activate()`'s copy-paste-with-reversal duplication is acceptable at two transitions; a shared `_transition()` helper is a reasonable candidate only if a third lifecycle transition is ever added — not required now.
+
+**Recommendations carried forward:**
+- Schedule a single reconciling decision for the audit/event ordering discrepancy (amend IMP-001 §6.3 or reorder the code) before WP-01 closure.
+- Schedule the Action Center UI (covering both Activate and Suspend) explicitly before WP-01 closure rather than continuing to implicitly re-defer it BA-by-BA.
+- Consider extracting a shared `_transition()` helper only if/when a third lifecycle transition is introduced.
 
 ### Certification
 
 Certification Status: Pending (WP-level activity, performed only after WP-01 completes, per CLAUDE.md §19.7)
+
+### Repository
+
+Committed as `a264b86` — "feat(auth-service): WP-01 BA-06 - Suspend Organization" (2026-07-21). This Independent Review outcome recorded in a separate documentation commit per §19.7's completion-gate repository condition.
 
 ---
 
