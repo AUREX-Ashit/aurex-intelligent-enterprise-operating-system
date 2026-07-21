@@ -2,7 +2,8 @@
 WP-01 — Organization Management (C-004).
 
 Business Activities implemented here: BA-01 Establish Organization,
-BA-02 View Organization Details, BA-03 Search & List Organizations.
+BA-02 View Organization Details, BA-03 Search & List Organizations,
+BA-04 Update Organization Profile.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -30,7 +31,7 @@ from fastapi import HTTPException, status
 
 from models.organization import Organization, OrganizationStatus
 from repositories.organization_repository import OrganizationRepository
-from schemas.organization import EstablishOrganizationRequest
+from schemas.organization import EstablishOrganizationRequest, UpdateOrganizationProfileRequest
 from observability import record_audit, publish_event, AuditStatus
 
 
@@ -128,6 +129,63 @@ class OrganizationService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No organization exists with id '{organization_id}'.",
             )
+        return organization
+
+    async def update_profile(
+        self,
+        organization_id: UUID,
+        request: UpdateOrganizationProfileRequest,
+        actor_id: str | None = None,
+    ) -> Organization:
+        """
+        Business Activity: Update Organization Profile (BA-04).
+
+        Preconditions: the organization must already exist (404 if not,
+        same basis as get_details). Business Object Update touches only
+        organization_name, organization_type, and description —
+        organization_code and status (lifecycle) are out of this
+        activity's scope (status belongs to the Activate/Suspend
+        Business Activities, ADR-005).
+        """
+        organization = await self.organization_repo.update(
+            organization_id,
+            {
+                "organization_name": request.organization_name,
+                "organization_type": request.organization_type,
+                "description": request.description,
+            },
+        )
+        if organization is None:
+            record_audit(
+                action="UPDATE_ORGANIZATION_PROFILE",
+                resource=f"organization:{organization_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        await self.organization_repo.session.flush()
+
+        record_audit(
+            action="UPDATE_ORGANIZATION_PROFILE",
+            resource=f"organization:{organization.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"organization_code": organization.organization_code},
+        )
+        publish_event(
+            "ORGANIZATION_PROFILE_UPDATED",
+            {
+                "organization_id": str(organization.id),
+                "organization_code": organization.organization_code,
+                "organization_name": organization.organization_name,
+                "organization_type": organization.organization_type,
+            },
+        )
         return organization
 
     async def search(

@@ -38,6 +38,19 @@ class BaseRepository(Generic[ModelType]):
         # Session commit is deferred to Unit of Work or Dependency context
         return db_obj
 
+    async def update(self, id: UUID, obj_in: dict[str, Any]) -> ModelType | None:
+        """
+        Updates an existing record's fields in place and returns it, or
+        None if no record exists for the given id. Session commit is
+        deferred to Unit of Work or Dependency context, same as create().
+        """
+        obj = await self.get_by_id(id)
+        if obj is None:
+            return None
+        for field, value in obj_in.items():
+            setattr(obj, field, value)
+        return obj
+
     async def delete(self, id: UUID) -> ModelType | None:
         """
         Removes a record from the database.

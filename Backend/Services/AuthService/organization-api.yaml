@@ -5,10 +5,11 @@ info:
     Organization Management (C-004, WP-01) endpoints for the CorpStage
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
     Lifecycle model: ADR-005. Currently covers BA-01 (Establish
-    Organization), BA-02 (View Organization Details), and BA-03
-    (Search & List Organizations) — Update, Activate/Suspend,
-    Configuration, and Audit History land as WP-01's later phases
-    (see IRA-001 §9) and extend this file, not a new one.
+    Organization), BA-02 (View Organization Details), BA-03
+    (Search & List Organizations), and BA-04 (Update Organization
+    Profile) — Activate/Suspend, Configuration, and Audit History land
+    as WP-01's later phases (see IRA-001 §9) and extend this file, not a
+    new one.
   version: 1.0.0
 paths:
   /organizations:
@@ -196,6 +197,65 @@ paths:
         '422':
           description: organization_id is not a valid UUID.
 
+    put:
+      summary: Update organization profile
+      description: >
+        WP-01 Business Activity 4: Update Organization Profile. Requires
+        the PLATFORM_ADMIN role, same interim gate as the other
+        Organization Management endpoints (IRA-001 §2.7). Updates
+        organization_name, organization_type, and description;
+        organization_code and lifecycle status are not part of this
+        Business Activity's scope. Tenant-agnostic, same basis as View
+        Organization Details.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrganizationProfileRequest'
+      responses:
+        '200':
+          description: Organization profile updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '404':
+          description: No organization exists with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: Invalid request (e.g., missing or empty required field).
+
 components:
   securitySchemes:
     bearerAuth:
@@ -218,6 +278,28 @@ components:
           maxLength: 50
           description: Unique organization code (platform-wide).
           example: "ACME-CORP-001"
+        organization_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Acme Corporation"
+        organization_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "CORPORATE"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Global manufacturing conglomerate."
+
+    UpdateOrganizationProfileRequest:
+      type: object
+      required:
+        - organization_name
+        - organization_type
+      properties:
         organization_name:
           type: string
           minLength: 1

@@ -11,6 +11,12 @@ export interface EstablishOrganizationRequest {
   description?: string | null;
 }
 
+export interface UpdateOrganizationProfileRequest {
+  organization_name: string;
+  organization_type: string;
+  description?: string | null;
+}
+
 export type OrganizationStatus = "ACTIVE" | "SUSPENDED";
 
 export interface OrganizationResponse {

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.organization import Organization, OrganizationStatus
 from repositories.organization_repository import OrganizationRepository
-from schemas.organization import EstablishOrganizationRequest
+from schemas.organization import EstablishOrganizationRequest, UpdateOrganizationProfileRequest
 from services.organization_service import OrganizationService
 
 
@@ -109,6 +109,98 @@ async def test_get_details_raises_404_for_unknown_id(db_session: AsyncSession) -
 
     with pytest.raises(HTTPException) as exc_info:
         await service.get_details(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# BA-04 — Update Organization Profile
+# ---------------------------------------------------------------------------
+
+async def test_update_profile_updates_name_type_and_description(db_session: AsyncSession) -> None:
+    """
+    Business Activity Contract: Update Organization Profile persists the
+    new organization_name, organization_type, and description.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="UPD-001",
+            organization_name="Original Name",
+            organization_type="CORPORATE",
+            description="Original description.",
+        )
+    )
+
+    updated = await service.update_profile(
+        created.id,
+        UpdateOrganizationProfileRequest(
+            organization_name="Renamed Corporation",
+            organization_type="SUBSIDIARY",
+            description="Updated description.",
+        ),
+        actor_id="platform-admin-1",
+    )
+
+    assert updated.id == created.id
+    assert updated.organization_name == "Renamed Corporation"
+    assert updated.organization_type == "SUBSIDIARY"
+    assert updated.description == "Updated description."
+
+
+async def test_update_profile_does_not_change_code_or_status(db_session: AsyncSession) -> None:
+    """
+    Business Rule: organization_code (immutable natural key) and status
+    (owned by the Activate/Suspend Business Activities, ADR-005) are not
+    touched by Update Organization Profile.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="UPD-002",
+            organization_name="Untouched Code Org",
+            organization_type="CORPORATE",
+        )
+    )
+
+    updated = await service.update_profile(
+        created.id,
+        UpdateOrganizationProfileRequest(organization_name="New Name", organization_type="CORPORATE"),
+    )
+
+    assert updated.organization_code == "UPD-002"
+    assert updated.status == OrganizationStatus.ACTIVE.value
+
+
+async def test_update_profile_allows_optional_description_to_be_cleared(db_session: AsyncSession) -> None:
+    """description is optional on Update, same as Establish — omitting it clears any existing value."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="UPD-003",
+            organization_name="Has Description",
+            organization_type="CORPORATE",
+            description="Will be cleared.",
+        )
+    )
+
+    updated = await service.update_profile(
+        created.id,
+        UpdateOrganizationProfileRequest(organization_name="Has Description", organization_type="CORPORATE"),
+    )
+
+    assert updated.description is None
+
+
+async def test_update_profile_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """A well-formed but non-existent id is a 404, not a 500 or a silent no-op, same as get_details."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.update_profile(
+            uuid.uuid4(),
+            UpdateOrganizationProfileRequest(organization_name="Ghost Org", organization_type="CORPORATE"),
+        )
 
     assert exc_info.value.status_code == 404
 

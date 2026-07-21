@@ -16,7 +16,7 @@
 - ✅ BA-01 Establish Organization
 - ✅ BA-02 View Organization
 - ✅ BA-03 Search Organizations
-- ⏳ BA-04 Update Organization
+- 🔄 BA-04 Update Organization Profile (independently reviewed — ACCEPTED — awaiting commit per §19.7)
 - ⏳ BA-05 Activate Organization
 - ⏳ BA-06 Suspend Organization
 - ⏳ BA-07 Organization Configuration
@@ -24,13 +24,13 @@
 
 **Progress**
 
-- Completed: 3 / 8
-- Progress: 37.5%
-- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; neither BA-02 nor BA-03 required schema changes)
-- API endpoints delivered: 3 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`)
-- UI screens delivered: 1 (`/platform-admin/organizations`, now the primary Search/List grid with Create and View Details as modal actions, plus the standalone by-ID lookup section)
-- Tests added: 35 (11 unit, 24 integration)
-- ADRs raised during implementation: 0 across BA-01, BA-02, and BA-03 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
+- Completed: 3 / 8 (BA-04 reviewed and accepted, pending repository commit — not yet counted as done per the §19.7 completion gate's three conditions)
+- Progress: 37.5% (50% once BA-04 is committed)
+- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; neither BA-02, BA-03, nor BA-04 required schema changes)
+- API endpoints delivered: 4 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`)
+- UI screens delivered: 1 (`/platform-admin/organizations`, now the primary Search/List grid with Create, View Details, and Edit as modal actions, plus the standalone by-ID lookup section)
+- Tests added: 48 (15 unit, 33 integration)
+- ADRs raised during implementation: 0 across BA-01 through BA-04 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
 
 ---
 
@@ -434,6 +434,138 @@ Committed as `95fd4fe` — "feat(auth-service): WP-01 BA-03 - Search & List Orga
 **Known issues:** None outside the Known Limitations and non-blocking risks listed above (all deliberate WP-01 scope deferrals or low-severity hardening candidates, not defects).
 
 **Recommended next Business Activity:** BA-04 Update Organization, per IRA-001's recommended sequence, once this Business Activity is committed per the §19.7 completion gate.
+
+---
+
+## Business Activity: BA-04 — Update Organization Profile
+
+**Date Completed:** 2026-07-21
+
+### Governing Canonical Assets Reviewed
+
+- `architecture/05-Implementation/IRA-001_WP-01_Organization_Management_Implementation_Readiness_Assessment.md` — §2.2 Business Activity Assessment (row: "Update Organization Profile | Update | Organization | `ORGANIZATION_PROFILE_UPDATED`"), §6 Backend Impact Matrix (flags `BaseRepository` as needing an `update()` method), §9 Implementation Plan (Phase 4).
+- `architecture/07-Decisions/ADR-004_Organization_Canonical_Schema_Scope_for_WP-01.md` — confirms Profile (name, code, type, descriptive fields) is in WP-01's approved subset; no schema change needed since these columns already exist.
+- `architecture/07-Decisions/ADR-003_*.md`, `ADR-005_*.md` — re-confirmed unaffected (ownership and lifecycle model untouched by this BA).
+- `architecture/03-Engineering/IMP-001_Implementation_Playbook.md` §6.3–6.7 — Business Activity Lifecycle (Request → Authorization → Business Validation → Business Rule Execution → Business Object Update → Domain Event Publication → Audit Recording → Response) and the mandatory BAC components.
+- Existing WP-01 source: `models/organization.py`, `repositories/organization_repository.py`, `repositories/base_repository.py`, `schemas/organization.py`, `services/organization_service.py`, `routers/organization.py`, `middleware/tenant.py`, and BA-01/BA-02/BA-03's frontend (`useEstablishOrganization.ts`, `EstablishOrganizationForm.tsx`, `OrganizationSearchGrid.tsx`, `OrganizationManagementScreen.tsx`) — reviewed to reuse established patterns, not invent new ones.
+
+### Gap Analysis
+
+- **Satisfied as-is (reused unchanged):** `Organization` model (`organization_name`, `organization_type`, `description` columns already exist from BA-01 — no migration needed); `require_platform_admin` authorization dependency; `OrganizationResponse` schema; `middleware/tenant.py`'s `/organizations/*` prefix exemption (path-based, method-agnostic — already covers a new `PUT` verb on the same path with zero changes); `observability.py`'s `record_audit`/`publish_event`; the Modal/Card/Input/Button/Spinner/FormBanner/FormField/FormLabel DS-001 primitives; the establish/get_details service-method shape as the template for a new `update_profile()` method.
+- **Required extension:** `BaseRepository` had no `update()` method (IRA-001 §6 flagged this explicitly as a needed extension) — added, mirroring `create()`'s shape (fetch, mutate in place, defer commit to the session's existing Unit-of-Work). `OrganizationService` needed a new `update_profile()` orchestration method; `routers/organization.py` needed a new `PUT /{organization_id}` route; `schemas/organization.py` needed a new `UpdateOrganizationProfileRequest`; frontend needed a new state hook and form component for this distinct Business Activity flow (state shape and validation differ from Establish's), plus an "Edit" action wired into the existing grid and screen.
+- **Missing architecture:** None. No new entity, table, column, service boundary, permission tier, or DS-001 component was required.
+- **Potential conflict considered:** whether `organization_code` should be part of this Business Activity's Update surface. ADR-004 groups "code" under the Profile subset generally, but `organization_code` is also the natural key BA-01's uniqueness rule and BA-03's search are built against. IRA-001 §2.2 names the activity "Update Organization Profile" without enumerating exact fields, and no canonical document requires code renaming. Making the code editable here would require re-implementing BA-01's duplicate-check/race-handling logic inside Update — a materially larger, undocumented business rule, not a mechanical field addition. **Decision:** `organization_code` and lifecycle `status` are excluded from `UpdateOrganizationProfileRequest`; only `organization_name`, `organization_type`, and `description` are updatable. This is an implementation-level scope judgment (same category as BA-02's "reads aren't audited" and BA-03's "no new DS-001 component" calls), not an architectural decision — no ADR raised. Recorded here explicitly for independent review to scrutinize, per CLAUDE.md §17's canonical-authority-resolution discipline.
+- **Why creation (not reuse) was necessary for the new files:** `useUpdateOrganization.ts` and `UpdateOrganizationForm.tsx` are new because Update Organization Profile is a distinct Business Activity Contract (different input shape, different state transitions — `updating`/`updated`/`error{isNotFound}` vs. Establish's `establishing`/`established`/`error{isConflict}`) that cannot be collapsed into `useEstablishOrganization`/`EstablishOrganizationForm` without conflating two different Business Activities' contracts into one component, which BA-02's `OrganizationDetailsList` extraction precedent already establishes as the wrong direction (extract shared *presentation*, keep distinct *business flows* separate).
+
+### Scope Delivered
+
+`PUT /organizations/{organization_id}` — Update Organization Profile. Updates `organization_name`, `organization_type`, and `description` on an existing organization; 404 if the id doesn't exist. Reuses BA-01/BA-02/BA-03's model, `require_platform_admin` authorization, `OrganizationResponse`, and `TenantMiddleware` exemption unchanged. Frontend: an "Edit" action added alongside each row's "View Details" action in `OrganizationSearchGrid`, opening a pre-filled `UpdateOrganizationForm` in a `Modal`; on success the modal closes and the grid refreshes, mirroring BA-01/BA-03's Create flow exactly. No database migration and no new authorization tier. No ADR required (see Gap Analysis above for the one scope judgment call made and its rationale).
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `source/frontend/src/features/organization/state/useUpdateOrganization.ts` | Update Organization Profile state hook |
+| `source/frontend/src/features/organization/components/UpdateOrganizationForm.tsx` | Pre-filled Edit form (name/type/description; code shown read-only) |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/repositories/base_repository.py` | Added `update()` — fetch by id, mutate in place, return `None` if not found; commit deferred, same as `create()` |
+| `Backend/Services/AuthService/schemas/organization.py` | Added `UpdateOrganizationProfileRequest` |
+| `Backend/Services/AuthService/services/organization_service.py` | Added `OrganizationService.update_profile()`; updated module docstring |
+| `Backend/Services/AuthService/routers/organization.py` | Added `PUT /{organization_id}` |
+| `Backend/Services/AuthService/organization-api.yaml` | Added the `PUT /organizations/{organization_id}` path and `UpdateOrganizationProfileRequest` schema |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | Added BA-04 unit tests |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Added BA-04 integration tests |
+| `Backend/Services/AuthService/README.md` | Updated Organization Management section for BA-04 |
+| `source/frontend/src/types/organization.ts` | Added `UpdateOrganizationProfileRequest` |
+| `source/frontend/src/services/organization-api.ts` | Added `updateOrganization()` |
+| `source/frontend/src/features/organization/components/OrganizationSearchGrid.tsx` | Added an `onEditOrganization` prop and a per-row "Edit" action |
+| `source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx` | Wired `useUpdateOrganization` + `UpdateOrganizationForm` into a new Edit `Modal`, refreshing the grid on success (same pattern as the Create modal) |
+
+### Database
+
+- **Migration(s):** None — `organization_name`, `organization_type`, and `description` already exist on `organizations` from BA-01.
+- **Schema changes / Constraints / Indexes:** None.
+
+### APIs
+
+- **Endpoint added:** `PUT /organizations/{organization_id}` (200/400/401/403/404/422).
+- **Request/Response models:** `UpdateOrganizationProfileRequest` (`organization_name`, `organization_type` required; `description` optional) → existing `OrganizationResponse` (no new response schema).
+- **Authorization:** Same `require_platform_admin` dependency as BA-01/02/03 — no new tier.
+- **OpenAPI:** `organization-api.yaml` updated with the new path and request schema; YAML-validated.
+
+### Frontend
+
+- **Route:** `/platform-admin/organizations` (unchanged route, extended content).
+- **Screen:** `OrganizationManagementScreen` now composes a third `Modal` (Edit) alongside Create and View Details.
+- **Components:** `UpdateOrganizationForm` (new) — built from the same `Card`/`Input`/`Button`/`Spinner`/`FormField`/`FormLabel`/`FormBanner` primitives as `EstablishOrganizationForm`; the `organization_code` field is rendered as a `disabled` `Input` for context, not submitted. **No new DS-001 component was created.**
+- **API integration:** `services/organization-api.ts`'s new `updateOrganization()`, same `apiClient.put` pattern already available in the shared client.
+
+### Testing
+
+- **Unit Tests:** 4 new (`test_organization_service.py`, 15 total in that file) — updates name/type/description; leaves `organization_code` and `status` untouched; allows `description` to be cleared by omission; 404 on unknown id.
+- **Integration Tests:** 9 new (`test_organization_api.py`, 33 total in that file) — success, 404, missing/wrong-role auth (400/403), missing/empty required field (422), invalid UUID (422), tenant-header exemption, and an explicit test proving a submitted `organization_code` field is silently ignored (Pydantic drops unknown fields by default) rather than applied.
+- **API Tests:** covered by the integration suite above.
+- **UI Tests:** none added — same pre-existing gap as BA-01/02/03 (no frontend test harness yet); verified via `tsc --noEmit` (0 errors).
+- **Overall test results:** 77/77 backend tests passing (13 new this BA, 0 regressions). Frontend: 0 TypeScript errors.
+
+### Manual Verification
+
+1. Using a `PLATFORM_ADMIN` access token, create an organization via `POST /organizations`, capture its `id`.
+2. `PUT /organizations/{id}` with new `organization_name`/`organization_type`/`description` → expect `200` with the updated fields; `organization_code` and `status` unchanged.
+3. `PUT /organizations/{random-uuid}` → expect `404`.
+4. Repeat without `Authorization` → `400`; with a non-`PLATFORM_ADMIN` token → `403`; with an empty `organization_name` → `422`.
+5. In the frontend, on `/platform-admin/organizations`, click "Edit" on a row → confirm the modal opens pre-filled with that organization's current values, the code field is visibly read-only, submitting valid changes closes the modal and the grid reflects the update without a manual refresh.
+
+### Known Limitations (intentionally deferred, per WP-01 scope)
+
+- Same authorization/lifecycle/schema-scope/RLS/frontend-test-harness limitations as BA-01/02/03 (unchanged — see BA-01 section above); none are specific to BA-04.
+- `organization_code` and lifecycle `status` are not updatable through this Business Activity (see Gap Analysis's scope-judgment rationale above) — status changes are BA-05/BA-06's scope (Activate/Suspend); a future code-rename capability, if ever required, would need its own Business Activity Contract addressing re-validated uniqueness, not a silent extension of this one.
+- No optimistic concurrency control (no version/`ETag` field) — a concurrent Update from two callers is last-write-wins, same implicit behavior as every other write path in WP-01 to date; not a regression introduced by this BA.
+- BA-02's carried-forward recommendation (a dedicated `TenantMiddleware` prefix test) remains outstanding — not actioned in BA-04 either, per this BA's "only introduce changes strictly required" scope instruction; re-carried forward below.
+
+### Architecture Compliance
+
+- **ARCH-000:** No architecture redefinition; implementation only.
+- **IMP-001:** Full Business Activity Lifecycle followed (§6.3) — precondition check (existence) → Business Object Update → Domain Event (`ORGANIZATION_PROFILE_UPDATED`) → Audit Recording → Response. Business Activity named and contracted, not raw CRUD (§1.7).
+- **ERG-001:** Unaffected — no EnterpriseNode/Relationship/View concept touched.
+- **C-004 / ADR-004:** No new fields exposed; `OrganizationResponse` reused unchanged; the fields touched (`organization_name`, `organization_type`, `description`) are already within ADR-004's approved Profile subset.
+- **URA-001:** Unaffected.
+- **Approved ADRs:** ADR-003, ADR-004, ADR-005 — all still honored; none re-litigated. No new ADR raised — the `organization_code`/`status` exclusion documented above is an implementation-level Business Activity scope decision, not an architectural one.
+
+### Implementation Status
+
+✅ IMPLEMENTATION COMPLETE
+
+### Independent Review
+
+**Independent Review: Accepted — ACCEPTED** (2026-07-21, fresh-context subagent with no memory of the implementation session; ran the full backend test suite and `tsc --noEmit` independently, validated `organization-api.yaml` by parsing it, verified Pydantic's default `extra="ignore"` behavior with a live interpreter check rather than assuming it, and diffed every changed file itself rather than trusting this report's claims).
+
+**Review Result: ACCEPTED**
+
+**Test results actually observed:** Backend `pytest -q` (with `JWT_SECRET_KEY`/`JWT_ALGORITHM` set) → **77 passed, 0 failed**. Test-count delta verified via `grep -c "def test_"` against `git show HEAD:...` (pre-BA-04 state): `test_organization_service.py` 11→15 (+4), `test_organization_api.py` 24→33 (+9) — 13 new tests total, matching this report's claim exactly, with only additive `+` diff lines in both test files (no existing test deleted or weakened). Frontend `tsc --noEmit` → 0 errors. `organization-api.yaml` parses cleanly via `yaml.safe_load`.
+
+**Findings:** `models/organization.py` has zero diff — no migration, no schema change, confirming the Database Impact claim. `BaseRepository.update()` fetches by id, returns `None` if missing, mutates via `setattr`, defers commit — mirrors `create()`'s existing shape. `OrganizationService.update_profile()` follows IMP-001 §6.3's lifecycle exactly: existence check → 404 (audit DENIED) or repository update → `session.flush()` → audit SUCCESS → `publish_event("ORGANIZATION_PROFILE_UPDATED", ...)` → response — matching BA-01's `establish()` precedent. **Code immutability verified, not assumed**: `UpdateOrganizationProfileRequest` has no `organization_code` field, and this codebase's Pydantic models default to `extra="ignore"` (no `model_config = {"extra": "forbid"}` found anywhere in `schemas/`) — confirmed live rather than inferred — so a submitted `organization_code` is silently dropped before reaching the service; `test_update_organization_does_not_accept_organization_code_change` genuinely proves this end-to-end. **Status immutability verified**: `status` appears nowhere in the request schema or the repository update dict; `test_update_profile_does_not_change_code_or_status` asserts it directly. Validation (`min_length=1` on required fields), 404 exception handling (no partial write, no silent no-op), and authorization (`require_platform_admin` reused unmodified, confirmed via zero diff on `dependencies.py`) all check out. Frontend `UpdateOrganizationForm.tsx` is a structural match to `EstablishOrganizationForm.tsx`, built from DS-001 primitives confirmed to predate this change; the `organization_code` field renders `disabled` and is never submitted; `useUpdateOrganization.ts` correctly distinguishes loading/success/not-found/network-error states; the Edit modal reuses the same `gridRefreshKey` refresh-on-success pattern as Create.
+
+**Defects found:** None. Specifically checked for race conditions (not applicable — no unique constraint on the fields this BA touches), silent data corruption (the service's explicit field whitelist prevents it), wrong HTTP status codes (all six responses correct and tested), and authorization bypass (tested with a non-admin role → 403).
+
+**Risks recorded (non-blocking):**
+1. Code/status immutability rests entirely on `OrganizationService.update_profile()`'s explicit whitelist dict — `BaseRepository.update()` itself will `setattr` whatever keys it's given. Correct today (dumb repository, smart service, same design as `create()`), but the guarantee is only as strong as future developers' discipline if this method is ever refactored to pass `request.model_dump()` directly instead of an explicit dict.
+2. No test asserts `updated_at` actually advances post-update. Not required by any governing document; a reasonable minor addition for a future BA.
+3. No optimistic concurrency control (no version/`ETag` field) — acknowledged as a pre-existing, WP-01-wide gap, not introduced by this BA.
+4. BA-02's carried-forward `TenantMiddleware` prefix test recommendation remains outstanding — correctly re-carried forward rather than silently dropped, for the third consecutive BA.
+
+**Recommendations carried into BA-05:**
+- Add the dedicated `TenantMiddleware` prefix test (recommended after BA-02 and BA-03, still outstanding).
+- Consider a test asserting `updated_at` changes post-update.
+- Continue the established pattern (thin service orchestration, explicit field whitelists for mutation, DS-001 primitive reuse) — it held up cleanly through BA-04.
+
+### Certification
+
+Certification Status: Pending (WP-level activity, performed only after WP-01 completes, per CLAUDE.md §19.7)
 
 ---
 

@@ -233,6 +233,160 @@ def test_view_organization_does_not_require_tenant_header(client: TestClient) ->
 
 
 # ---------------------------------------------------------------------------
+# BA-04 — Update Organization Profile
+# ---------------------------------------------------------------------------
+
+def test_update_organization_succeeds_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-008",
+            "organization_name": "Original Org",
+            "organization_type": "CORPORATE",
+            "description": "Before update.",
+        },
+    )
+    assert established.status_code == 201
+    organization_id = established.json()["id"]
+
+    response = client.put(
+        f"/organizations/{organization_id}",
+        headers=_auth_headers(),
+        json={
+            "organization_name": "Updated Org",
+            "organization_type": "SUBSIDIARY",
+            "description": "After update.",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_id
+    assert body["organization_code"] == "API-ORG-008"
+    assert body["organization_name"] == "Updated Org"
+    assert body["organization_type"] == "SUBSIDIARY"
+    assert body["description"] == "After update."
+    assert body["status"] == "ACTIVE"
+
+
+def test_update_organization_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.put(
+        f"/organizations/{uuid.uuid4()}",
+        headers=_auth_headers(),
+        json={"organization_name": "Ghost Org", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_organization_requires_authorization_header(client: TestClient) -> None:
+    response = client.put(
+        f"/organizations/{uuid.uuid4()}",
+        json={"organization_name": "Ghost Org", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_update_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.put(
+        f"/organizations/{uuid.uuid4()}",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+        json={"organization_name": "Ghost Org", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_update_organization_rejects_missing_required_field(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-009", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.put(
+        f"/organizations/{organization_id}",
+        headers=_auth_headers(),
+        json={"organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_organization_rejects_empty_required_field(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-010", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.put(
+        f"/organizations/{organization_id}",
+        headers=_auth_headers(),
+        json={"organization_name": "", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_organization_does_not_accept_organization_code_change(client: TestClient) -> None:
+    """
+    organization_code is not a field on UpdateOrganizationProfileRequest —
+    sending it is silently ignored by Pydantic (extra fields dropped by
+    default), proving the immutable natural key cannot be changed through
+    this endpoint.
+    """
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-011", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.put(
+        f"/organizations/{organization_id}",
+        headers=_auth_headers(),
+        json={"organization_code": "SHOULD-NOT-APPLY", "organization_name": "Renamed Org", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["organization_code"] == "API-ORG-011"
+
+
+def test_update_organization_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.put(
+        "/organizations/not-a-uuid",
+        headers=_auth_headers(),
+        json={"organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_organization_does_not_require_tenant_header(client: TestClient) -> None:
+    """PUT /organizations/{id} is covered by the same /organizations/* prefix exemption as GET."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-012", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.put(
+        f"/organizations/{organization_id}",
+        headers=_auth_headers(),
+        json={"organization_name": "Org Renamed", "organization_type": "CORPORATE"},
+    )
+
+    assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 

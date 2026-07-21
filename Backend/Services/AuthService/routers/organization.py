@@ -14,6 +14,7 @@ from schemas.organization import (
     OrganizationResponse,
     OrganizationSortField,
     SortOrder,
+    UpdateOrganizationProfileRequest,
 )
 from services.organization_service import OrganizationService
 
@@ -158,4 +159,43 @@ async def get_organization(
     middleware/tenant.py's exemption for the /organizations prefix.
     """
     organization = await organization_service.get_details(organization_id)
+    return OrganizationResponse.model_validate(organization)
+
+
+@router.put(
+    "/{organization_id}",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update organization profile",
+    description=(
+        "WP-01 Business Activity: Update Organization Profile (C-004) — BA-04. "
+        "Requires the PLATFORM_ADMIN role, same interim gate as the other "
+        "Organization Management endpoints (IRA-001 §2.7). Updates "
+        "organization_name, organization_type, and description; "
+        "organization_code and lifecycle status are not part of this "
+        "Business Activity's scope."
+    ),
+    responses={
+        200: {"description": "Organization profile updated."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No organization exists with this id."},
+        422: {"description": "Invalid request (e.g., missing required field)."},
+    },
+)
+async def update_organization(
+    organization_id: UUID,
+    request: UpdateOrganizationProfileRequest,
+    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> OrganizationResponse:
+    """
+    No tenant-scoping, same basis as get_organization above: PLATFORM_ADMIN
+    operates across organization boundaries — see middleware/tenant.py's
+    /organizations/* prefix exemption, already covering this path.
+    """
+    organization = await organization_service.update_profile(
+        organization_id, request, actor_id=claims.get("person_id")
+    )
     return OrganizationResponse.model_validate(organization)

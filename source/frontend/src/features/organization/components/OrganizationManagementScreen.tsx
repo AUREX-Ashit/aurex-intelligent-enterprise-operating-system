@@ -6,19 +6,22 @@ import { Spinner } from "@/components/ui/Spinner";
 import { FormBanner } from "@/components/ui/Form";
 import { useEstablishOrganization } from "@/features/organization/state/useEstablishOrganization";
 import { useViewOrganization } from "@/features/organization/state/useViewOrganization";
+import { useUpdateOrganization } from "@/features/organization/state/useUpdateOrganization";
 import { EstablishOrganizationForm } from "@/features/organization/components/EstablishOrganizationForm";
 import { OrganizationDetailsList } from "@/features/organization/components/OrganizationDetailsList";
 import { OrganizationSearchGrid } from "@/features/organization/components/OrganizationSearchGrid";
+import { UpdateOrganizationForm } from "@/features/organization/components/UpdateOrganizationForm";
 import { ViewOrganizationSection } from "@/features/organization/components/ViewOrganizationSection";
 import type { OrganizationResponse } from "@/types/organization";
 
 /**
  * WP-01 Business Activities implemented: BA-01 Establish Organization,
  * BA-02 View Organization Details, BA-03 Search & List Organizations
- * (the primary Organization Management screen — the grid below).
- * Remaining Business Activities (Update, Activate/Suspend,
- * Configuration, Audit History — IRA-001 §9) extend this screen as
- * they land; this is not a stand-in for the full capability.
+ * (the primary Organization Management screen — the grid below), BA-04
+ * Update Organization Profile. Remaining Business Activities
+ * (Activate/Suspend, Configuration, Audit History — IRA-001 §9) extend
+ * this screen as they land; this is not a stand-in for the full
+ * capability.
  */
 export function OrganizationManagementScreen() {
   const { state: establishState, establish, reset: resetEstablish } = useEstablishOrganization();
@@ -27,9 +30,11 @@ export function OrganizationManagementScreen() {
   // opening one would leak its result into the other's display.
   const { state: viewModalState, view: viewInModal, reset: resetViewModal } = useViewOrganization();
   const { state: standaloneViewState, view: viewStandalone } = useViewOrganization();
+  const { state: updateState, update, reset: resetUpdate } = useUpdateOrganization();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
+  const [editingOrganization, setEditingOrganization] = useState<OrganizationResponse | null>(null);
   const [gridRefreshKey, setGridRefreshKey] = useState(0);
 
   // Close the Create modal and refresh the grid once establish succeeds.
@@ -40,6 +45,14 @@ export function OrganizationManagementScreen() {
     }
   }, [establishState]);
 
+  // Close the Edit modal and refresh the grid once update succeeds.
+  useEffect(() => {
+    if (updateState.status === "updated") {
+      setEditingOrganization(null);
+      setGridRefreshKey((key) => key + 1);
+    }
+  }, [updateState]);
+
   function openCreateModal() {
     resetEstablish();
     setIsCreateOpen(true);
@@ -48,6 +61,11 @@ export function OrganizationManagementScreen() {
   function openViewModal(organization: OrganizationResponse) {
     setIsViewOpen(true);
     viewInModal(organization.id);
+  }
+
+  function openEditModal(organization: OrganizationResponse) {
+    resetUpdate();
+    setEditingOrganization(organization);
   }
 
   return (
@@ -63,6 +81,7 @@ export function OrganizationManagementScreen() {
         key={gridRefreshKey}
         onCreateOrganization={openCreateModal}
         onViewOrganization={openViewModal}
+        onEditOrganization={openEditModal}
       />
 
       <Modal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Establish Organization">
@@ -89,6 +108,20 @@ export function OrganizationManagementScreen() {
         {viewModalState.status === "not-found" && <FormBanner tone="warning">No organization exists with this ID.</FormBanner>}
         {viewModalState.status === "error" && <FormBanner tone="danger">{viewModalState.message}</FormBanner>}
         {viewModalState.status === "found" && <OrganizationDetailsList organization={viewModalState.organization} />}
+      </Modal>
+
+      <Modal
+        open={editingOrganization !== null}
+        onClose={() => setEditingOrganization(null)}
+        title="Update Organization Profile"
+      >
+        {editingOrganization && (
+          <UpdateOrganizationForm
+            organization={editingOrganization}
+            state={updateState}
+            onUpdate={(fields) => update(editingOrganization.id, fields)}
+          />
+        )}
       </Modal>
 
       <ViewOrganizationSection state={standaloneViewState} onView={viewStandalone} />

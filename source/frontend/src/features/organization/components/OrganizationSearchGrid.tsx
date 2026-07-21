@@ -25,16 +25,21 @@ const SORTABLE_COLUMNS: Array<{ label: string; field: OrganizationSortField }> =
 interface OrganizationSearchGridProps {
   onCreateOrganization: () => void;
   onViewOrganization: (organization: OrganizationResponse) => void;
+  onEditOrganization: (organization: OrganizationResponse) => void;
 }
 
 /**
- * BA-03: the primary Organization Management screen — search, status
- * filter, sortable columns, pagination, per-row View Details, and a
- * Create Organization action. Composed entirely from existing ui/
+ * BA-03/BA-04: the primary Organization Management screen — search, status
+ * filter, sortable columns, pagination, per-row View Details and Edit, and
+ * a Create Organization action. Composed entirely from existing ui/
  * primitives (Table, Card, Button, Input, StatusBadge, Spinner,
  * FormBanner) — no new DS-001 component invented.
  */
-export function OrganizationSearchGrid({ onCreateOrganization, onViewOrganization }: OrganizationSearchGridProps) {
+export function OrganizationSearchGrid({
+  onCreateOrganization,
+  onViewOrganization,
+  onEditOrganization,
+}: OrganizationSearchGridProps) {
   const { query, state, setSearchText, setStatusFilter, setSort, nextPage, previousPage, refresh } =
     useSearchOrganizations();
 
@@ -151,9 +156,14 @@ export function OrganizationSearchGrid({ onCreateOrganization, onViewOrganizatio
                     </StatusBadge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" onClick={() => onViewOrganization(organization)}>
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" onClick={() => onViewOrganization(organization)}>
+                        View Details
+                      </Button>
+                      <Button variant="ghost" onClick={() => onEditOrganization(organization)}>
+                        Edit
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

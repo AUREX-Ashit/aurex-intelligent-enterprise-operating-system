@@ -29,6 +29,33 @@ class EstablishOrganizationRequest(BaseModel):
     }
 
 
+class UpdateOrganizationProfileRequest(BaseModel):
+    """
+    Request body for Update Organization Profile (BA-04, WP-01 / C-004).
+    Covers the same descriptive Profile fields as
+    EstablishOrganizationRequest except organization_code, which is
+    intentionally excluded: it is the immutable natural key duplicate
+    detection and search are built against (see
+    OrganizationRepository.get_by_code()); renaming it is not part of
+    this Business Activity's scope (IRA-001 §2.2's "Update Organization
+    Profile" row) and would require its own uniqueness re-validation,
+    which no canonical document currently asks WP-01 to build.
+    """
+    organization_name: str = Field(..., min_length=1, max_length=255, description="Organization display name")
+    organization_type: str = Field(..., min_length=1, max_length=50, description="Organization type (e.g. CORPORATE, SUPPLIER)")
+    description: str | None = Field(None, max_length=1000, description="Optional profile description")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "organization_name": "Acme Corporation",
+                "organization_type": "CORPORATE",
+                "description": "Global manufacturing conglomerate.",
+            }
+        }
+    }
+
+
 class OrganizationResponse(BaseModel):
     """
     Establish Organization's success response, and the shape future

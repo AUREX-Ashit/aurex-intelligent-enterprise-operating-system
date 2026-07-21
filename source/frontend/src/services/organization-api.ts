@@ -14,6 +14,7 @@ import type {
   OrganizationListResponse,
   OrganizationResponse,
   SearchOrganizationsParams,
+  UpdateOrganizationProfileRequest,
 } from "@/types/organization";
 
 export function establishOrganization(
@@ -24,6 +25,13 @@ export function establishOrganization(
 
 export function getOrganization(organizationId: string): Promise<OrganizationResponse> {
   return apiClient.get<OrganizationResponse>(`/organizations/${organizationId}`);
+}
+
+export function updateOrganization(
+  organizationId: string,
+  request: UpdateOrganizationProfileRequest,
+): Promise<OrganizationResponse> {
+  return apiClient.put<OrganizationResponse>(`/organizations/${organizationId}`, request);
 }
 
 export function searchOrganizations(
