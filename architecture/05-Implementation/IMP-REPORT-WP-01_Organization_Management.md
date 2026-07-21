@@ -417,7 +417,7 @@ Certification Status: Pending (WP-level activity, performed only after WP-01 com
 
 ### Repository
 
-Committed as `<pending>` — working tree to be committed following acceptance of this independent review, per CLAUDE.md §19.7's completion-gate repository condition.
+Committed as `95fd4fe` — "feat(auth-service): WP-01 BA-03 - Search & List Organizations" (2026-07-21). Working tree clean at commit time; all three §19.7 completion-gate conditions satisfied.
 
 ---
 
