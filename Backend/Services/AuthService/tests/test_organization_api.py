@@ -3,8 +3,10 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
 from jose import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from models.organization import Organization
 
 
 def _access_token(role_code: str = "PLATFORM_ADMIN") -> str:
@@ -384,6 +386,97 @@ def test_update_organization_does_not_require_tenant_header(client: TestClient) 
     )
 
     assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# BA-05 — Activate Organization
+# ---------------------------------------------------------------------------
+
+async def test_activate_organization_succeeds_for_platform_admin(
+    client: TestClient, db_session: AsyncSession
+) -> None:
+    """
+    No Suspend Business Activity exists yet (BA-06), so the SUSPENDED
+    starting state is seeded directly via the shared test db_session
+    (the same session TestClient's dependency override uses — see
+    test_health.py's test_ready_reports_ready_after_bootstrap for the
+    existing precedent of mixing these two fixtures), not through a
+    public API endpoint.
+    """
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-013", "organization_name": "Suspended Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    organization = await db_session.get(Organization, uuid.UUID(organization_id))
+    organization.status = "SUSPENDED"
+    await db_session.flush()
+
+    response = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_id
+    assert body["status"] == "ACTIVE"
+
+
+def test_activate_organization_rejects_already_active(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-014", "organization_name": "Already Active Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
+
+    assert response.status_code == 409
+
+
+def test_activate_organization_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/activate", headers=_auth_headers())
+
+    assert response.status_code == 404
+
+
+def test_activate_organization_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/activate")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_activate_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.post(
+        f"/organizations/{uuid.uuid4()}/activate",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_activate_organization_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.post("/organizations/not-a-uuid/activate", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_activate_organization_does_not_require_tenant_header(client: TestClient) -> None:
+    """PUT/POST /organizations/{id}/* is covered by the same /organizations/* prefix exemption as GET."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-015", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    # Already ACTIVE -> 409, but a 409 (not 400) proves the request reached
+    # the handler rather than being blocked by the tenant-header check.
+    response = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
+
+    assert response.status_code == 409
 
 
 # ---------------------------------------------------------------------------

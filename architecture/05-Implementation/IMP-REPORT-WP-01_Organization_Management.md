@@ -18,20 +18,20 @@
 - ✅ BA-02 View Organization
 - ✅ BA-03 Search Organizations
 - ✅ BA-04 Update Organization Profile
-- ⏳ BA-05 Activate Organization
+- 🔄 BA-05 Activate Organization (implementation complete, self-certified, awaiting independent review)
 - ⏳ BA-06 Suspend Organization
 - ⏳ BA-07 Organization Configuration
 - ⏳ BA-08 Audit History
 
 **Progress**
 
-- Completed: 4 / 8
-- Progress: 50%
-- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; neither BA-02, BA-03, nor BA-04 required schema changes)
-- API endpoints delivered: 4 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`)
-- UI screens delivered: 1 (`/platform-admin/organizations`, now the primary Search/List grid with Create, View Details, and Edit as modal actions, plus the standalone by-ID lookup section)
-- Tests added: 48 (15 unit, 33 integration)
-- ADRs raised during implementation: 0 across BA-01 through BA-04 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
+- Completed: 4 / 8 (BA-05 implementation complete and self-certified, pending independent review — not yet counted as done per §19.7)
+- Progress: 50% (62.5% once BA-05 clears independent review — implementation and commit are already done; review is the outstanding gate)
+- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; none of BA-02 through BA-05 required schema changes)
+- API endpoints delivered: 5 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`)
+- UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05, which was implemented backend-only per its explicit scope; see BA-05 section)
+- Tests added: 61 (19 unit, 40 integration, 2 dedicated middleware) — see BA-05 section for the exact breakdown
+- ADRs raised during implementation: 0 across BA-01 through BA-05 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
 
 ---
 
@@ -571,6 +571,141 @@ Certification Status: Pending (WP-level activity, performed only after WP-01 com
 ### Repository
 
 Committed as `e7b77f9` — "feat(auth-service): WP-01 BA-04 - Update Organization Profile" (2026-07-21). Working tree clean at commit time; all three §19.7 completion-gate conditions satisfied.
+
+---
+
+## Business Activity: BA-05 — Activate Organization
+
+**Date Completed:** 2026-07-21
+
+### Governing Canonical Assets Reviewed
+
+- `architecture/05-Implementation/IRA-001_WP-01_Organization_Management_Implementation_Readiness_Assessment.md` — §2.2 (row: "Activate Organization | Update (state transition) | Organization | `ORGANIZATION_ACTIVATED`"), §9 Phase 3 ("Activate/Suspend Business Activities per ADR-005's interim model... audit-record verification tests").
+- `architecture/07-Decisions/ADR-005_Organization_Lifecycle_Interim_Model.md` — the interim `ACTIVE`/`SUSPENDED` status column, application-level transition logic, mandatory Domain Event + audit record per transition, explicit interim-marker self-documentation requirement.
+- `architecture/02-Constitutional/SD-002_Universal_Business_Object_Rules.md` — SD-002-054 (the audit trail's seven questions: Who, What, Why, When, How, Using Which Evidence, Under Which Policy) and SD-002-051/052 (target metadata-driven, event-driven lifecycle — confirmed still not built, ADR-005's interim model remains the correct implementation).
+- `architecture/03-Engineering/IMP-001_Implementation_Playbook.md` §6 (CBAIP) — Business Activity Lifecycle, mandatory BAC components, Activity Types table (this BA is type "Update" / state transition).
+- ADR-003, ADR-004 — re-confirmed unaffected (ownership and schema scope untouched).
+- Existing WP-01 source: `models/organization.py`, `repositories/organization_repository.py`, `repositories/base_repository.py`, `services/organization_service.py`, `routers/organization.py`, `middleware/tenant.py`, `observability.py` — reviewed to reuse established patterns.
+- `architecture/06-Reviews/TECH-DEBT.md` — TD-001 (`TenantMiddleware` prefix test, Planned Resolution: BA-05) and TD-008 (trivial `SUSPENDED` filter tests, Planned Resolution: BA-05/BA-06) reviewed for items due in this Business Activity.
+
+### Gap Analysis
+
+- **Satisfied as-is (reused unchanged):** `Organization` model's existing `status` column (no migration needed — BA-01 already added it); `require_platform_admin`; `OrganizationResponse`; `middleware/tenant.py`'s `/organizations/*` prefix exemption (already covers a new sub-path with zero changes — path-prefix, method-agnostic); `observability.py`'s `record_audit`/`publish_event`; `BaseRepository.update()` (added in BA-04, reused here verbatim — no repository change required for BA-05 at all); the establish/update_profile method shape as the template for `activate()`.
+- **Required extension:** `OrganizationService` needed a new `activate()` orchestration method; `routers/organization.py` needed a new `POST /{organization_id}/activate` route. No repository, model, or schema change was required — the entire Business Activity is additive at the service and router layers only.
+- **Missing architecture:** None. No new entity, table, column, service boundary, or permission tier.
+- **Business rule judgment call (documented for review scrutiny, no ADR raised — implementation-level, same category as BA-04's code-immutability decision):** ADR-005 defines the `ACTIVE`/`SUSPENDED` state pair but does not specify what happens when Activate is called on an organization that is already `ACTIVE`. Two options existed: (a) silently no-op and return 200, or (b) reject as an invalid transition. **Decision: reject with 409** ("Organization is already ACTIVE"), mirroring `establish()`'s existing precedent of using 409 for "this business rule doesn't apply given current state" rather than a silent success. Rationale: an explicit state machine with deterministic, fail-fast transitions (CLAUDE.md §10) is more defensible for a governed lifecycle than an implicit idempotent-success convention with no canonical basis; this also gives BA-06 Suspend a consistent precedent to follow (reject "already SUSPENDED" the same way).
+- **Scope boundary (backend-only, per this task's explicit instruction):** this Business Activity's requested scope enumerated backend/API/domain/service/repository/validation/authorization/audit/event/test/documentation items and did not include frontend work (unlike BA-01 through BA-04's requests, which explicitly asked for a UI vertical slice). IRA-001 §5's UI Impact Matrix names "Action Center" as the pattern for Activate/Suspend but explicitly flags it as "named, not yet built" — inventing it now, for Activate alone, ahead of Suspend (BA-06) needing the same pattern, risked exactly the kind of premature/unspecified component creation CLAUDE.md §19.1 prohibits ("Claude Code SHALL NEVER invent a component... If DS-001 does not define something a feature requires, Claude Code SHALL STOP"). No frontend files were created or modified by this Business Activity; the backend endpoint is fully usable via direct API calls today and is ready for a future Action Center-based UI once that component is built (naturally alongside BA-06, when both Activate and Suspend actions are needed together).
+- **Technical debt closed:** TD-001 (dedicated `TenantMiddleware` prefix test) had "Planned Resolution: BA-05" already recorded in the register — resolved in this Business Activity (`tests/test_tenant_middleware.py`) rather than left to go stale a fourth time.
+- **Technical debt introduced:** TD-012 — `Organization.is_active` (a WP-00 legacy boolean, never referenced by any business logic) is not touched by `activate()`; once BA-06 Suspend sets `status="SUSPENDED"`, `is_active` will keep reading `True`, a genuine (not hypothetical) two-column lifecycle inconsistency. Recorded in the Technical Debt Register with Planned Resolution: BA-06.
+
+### Scope Delivered
+
+`POST /organizations/{organization_id}/activate` — Activate Organization. Transitions an organization's `status` from `SUSPENDED` to `ACTIVE`; 404 if the id doesn't exist; 409 if already `ACTIVE`. Reuses BA-01–04's model, `require_platform_admin` authorization, `OrganizationResponse`, `BaseRepository.update()`, and `TenantMiddleware` exemption unchanged. No database migration, no new authorization tier, no new DS-001 component. Also closes out TD-001 (dedicated `TenantMiddleware` prefix test). No ADR required (see Gap Analysis for the one business-rule judgment call made and its rationale).
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `Backend/Services/AuthService/tests/test_tenant_middleware.py` | Dedicated `TenantMiddleware` prefix-exemption tests (closes TD-001) |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/services/organization_service.py` | Added `OrganizationService.activate()`; updated module docstring |
+| `Backend/Services/AuthService/routers/organization.py` | Added `POST /{organization_id}/activate` |
+| `Backend/Services/AuthService/organization-api.yaml` | Added the `POST /organizations/{organization_id}/activate` path |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | Added BA-05 unit tests |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Added BA-05 integration tests; added `Organization`/`AsyncSession` imports for direct DB seeding of a `SUSPENDED` starting state |
+| `Backend/Services/AuthService/README.md` | Updated Organization Management section for BA-05 |
+| `architecture/06-Reviews/TECH-DEBT.md` | Closed TD-001; added TD-012; updated TD-007's Planned Resolution to reflect BA-05's backend-only scope |
+
+### Database
+
+- **Migration(s):** None — `status` already exists on `organizations` from BA-01.
+- **Schema changes / Constraints / Indexes:** None.
+
+### APIs
+
+- **Endpoint added:** `POST /organizations/{organization_id}/activate` (200/400/401/403/404/409/422).
+- **Request/Response models:** No request body (the path parameter is the entire Input Contract, consistent with IMP-001 §6.4 — a minimal but legitimate contract, same basis as GET `/{organization_id}`) → existing `OrganizationResponse` (no new response schema).
+- **Authorization:** Same `require_platform_admin` dependency as BA-01–04 — no new tier.
+- **OpenAPI:** `organization-api.yaml` updated with the new path; YAML-validated.
+
+### Frontend
+
+Not in scope for this Business Activity (see Gap Analysis's "Scope boundary" note above). No frontend files created or modified.
+
+### Testing
+
+- **Unit Tests:** 4 new (`test_organization_service.py`, 19 total in that file) — SUSPENDED→ACTIVE transition; reject already-ACTIVE (409); 404 on unknown id; profile fields (name/type/description/code) unchanged after activation.
+- **Integration Tests:** 7 new (`test_organization_api.py`, 40 total in that file) — success (seeding SUSPENDED directly via the shared `db_session` fixture, since no Suspend Business Activity exists yet to produce one through the API — same precedent as `test_health.py`'s `test_ready_reports_ready_after_bootstrap`, which already mixes `client`+`db_session`), reject-already-ACTIVE (409), 404, missing/wrong-role auth (400/403), invalid UUID (422), tenant-header exemption.
+- **Dedicated Middleware Tests:** 2 new (`test_tenant_middleware.py`) — the `/organizations/*` prefix exemption asserted directly (including the new `/activate` sub-path) rather than only incidentally; a boundary test proving the prefix match doesn't over-match a similar-looking path (`/organizationsfoo` still requires `X-Tenant-ID`).
+- **API Tests:** covered by the integration suite above.
+- **UI Tests:** N/A — no frontend work in this Business Activity.
+- **Overall test results:** 90/90 backend tests passing (13 new this BA — 4 unit, 7 integration, 2 middleware — 0 regressions). Verified by running the full suite twice (once immediately after implementation, once again in this report's testing pass).
+
+### Manual Verification
+
+1. Using a `PLATFORM_ADMIN` access token, create an organization via `POST /organizations` (defaults to `ACTIVE`).
+2. Directly set its `status` to `SUSPENDED` (no Suspend endpoint exists yet — this step is a stand-in for BA-06).
+3. `POST /organizations/{id}/activate` → expect `200` with `status: "ACTIVE"`.
+4. Repeat the same call → expect `409` ("already ACTIVE").
+5. `POST /organizations/{random-uuid}/activate` → expect `404`.
+6. Repeat without `Authorization` → `400`; with a non-`PLATFORM_ADMIN` token → `403`; with a malformed id → `422`.
+7. `GET /organizations/{id}/activate` (wrong method, no `X-Tenant-ID`) → confirm the response body has a `detail` key (reached the app) rather than the middleware's `message` key — proving tenant exemption directly.
+
+### Known Limitations (intentionally deferred, per WP-01 scope)
+
+- Same authorization/lifecycle/schema-scope/RLS/frontend-test-harness limitations as BA-01–04 (unchanged — see BA-01 section above); none are specific to BA-05.
+- No frontend Activate action exists yet (see Gap Analysis's scope-boundary note) — deferred to land alongside BA-06 Suspend, when the Action Center UI pattern is built once for both actions rather than twice.
+- `Organization.is_active` is not synchronized with `status` by this Business Activity (TD-012, tracked in the register) — a real, not hypothetical, inconsistency that becomes externally observable once BA-06 Suspend exists.
+- No automated test asserts the audit record's payload literally answers all seven SD-002-054 questions (Who/What/Why/When/How/Evidence/Policy) — `record_audit()` is called with the same field mapping as BA-01/BA-04 (established, not newly invented, in this BA), and this gap is pre-existing across WP-00's bootstrap tests and every WP-01 Business Activity to date, not introduced or newly discovered by BA-05.
+
+### Architecture Compliance
+
+- **ARCH-000:** No architecture redefinition; implementation only.
+- **IMP-001:** Full Business Activity Lifecycle followed (§6.3) — precondition checks (existence, current status) → Business Object Update → Domain Event (`ORGANIZATION_ACTIVATED`) → Audit Recording → Response. Business Activity named and contracted as a state transition (§6.6's "Update" type), not raw CRUD (§1.7).
+- **ERG-001:** Unaffected — no EnterpriseNode/Relationship/View concept touched.
+- **C-004 / ADR-004:** No new fields exposed; `OrganizationResponse` reused unchanged.
+- **ADR-005:** Implemented exactly as recorded — interim `status` column, application-level transition logic, mandatory Domain Event + audit per transition, explicit interim-model docstring reference in `activate()`.
+- **URA-001:** Unaffected.
+- **Approved ADRs:** ADR-003, ADR-004, ADR-005 — all still honored; none re-litigated. No new ADR raised — the already-ACTIVE→409 rule is an implementation-level Business Activity decision, not an architectural one.
+
+### Implementation Status
+
+✅ IMPLEMENTATION COMPLETE
+
+### BA-Level Self-Certification
+
+Performed by the implementation agent against this Business Activity's own acceptance criteria (IMP-001 §6.4/§6.7, ADR-005, IRA-001 §2.2/§9). This is **self-certification, not Independent Review** — CLAUDE.md §19.7's Business Activity Completion Gate still requires a separate, independently-run review (as performed for BA-01 through BA-04 by a fresh-context subagent) before this Business Activity is considered fully complete; that review has not yet been requested for BA-05.
+
+| Acceptance Criterion | Status | Evidence |
+|---|---|---|
+| Business Intent defined | ✅ Met | Activate Organization: `SUSPENDED` → `ACTIVE` transition |
+| Input Contract | ✅ Met | `organization_id` path parameter (UUID, FastAPI-validated) |
+| Output Contract | ✅ Met | `OrganizationResponse`, reused unchanged |
+| Business Rules enforced | ✅ Met | Existence required (404); already-`ACTIVE` rejected (409) |
+| Validation Rules | ✅ Met | Invalid UUID → 422 (`test_activate_organization_rejects_invalid_uuid`) |
+| Authorization Rules | ✅ Met | `require_platform_admin` reused unmodified; 400/403 tested |
+| Domain Events | ✅ Met | `ORGANIZATION_ACTIVATED` published via `publish_event()` |
+| Audit Requirements | ✅ Met | `record_audit()` SUCCESS/DENIED, same field mapping as BA-01/BA-04 |
+| Error Handling | ✅ Met | 404/409/422/400/403 all explicit, no silent no-ops, no 500s |
+| No architecture change | ✅ Met | Zero diff on `models/organization.py`, no new migration, no new entity/permission tier |
+| Reuse over creation | ✅ Met | `BaseRepository.update()`, `OrganizationResponse`, `require_platform_admin`, `observability.py` all reused verbatim; only `activate()` (service) and one router function are new |
+| Tests (unit/integration/regression) | ✅ Met | 90/90 passing, 13 new, 0 regressions |
+| Documentation updated | ✅ Met | IMP-REPORT-WP-01 (this section), README.md, `organization-api.yaml` |
+| Technical debt recorded | ✅ Met | TD-012 added; TD-001 closed; TD-007 updated for accuracy |
+
+**Self-certification outcome: PASS.** All acceptance criteria met by the implementation agent's own assessment. Recommending this Business Activity for Independent Review.
+
+### Independent Review
+
+Independent Review: Pending (not yet requested for BA-05)
+
+### Certification
+
+Certification Status: Pending (WP-level activity, performed only after WP-01 completes, per CLAUDE.md §19.7)
 
 ---
 

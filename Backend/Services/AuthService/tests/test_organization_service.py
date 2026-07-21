@@ -206,6 +206,79 @@ async def test_update_profile_raises_404_for_unknown_id(db_session: AsyncSession
 
 
 # ---------------------------------------------------------------------------
+# BA-05 — Activate Organization
+# ---------------------------------------------------------------------------
+
+async def test_activate_transitions_suspended_organization_to_active(db_session: AsyncSession) -> None:
+    """
+    Business Activity Contract: activating a SUSPENDED organization
+    transitions its status to ACTIVE. No Suspend Business Activity
+    exists yet (BA-06), so the SUSPENDED starting state is seeded
+    directly through the repository, not a public Business Activity.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="ACT-001", organization_name="Suspended Org", organization_type="CORPORATE"
+        )
+    )
+    await service.organization_repo.update(created.id, {"status": OrganizationStatus.SUSPENDED.value})
+    await db_session.flush()
+
+    activated = await service.activate(created.id, actor_id="platform-admin-1")
+
+    assert activated.id == created.id
+    assert activated.status == OrganizationStatus.ACTIVE.value
+
+
+async def test_activate_rejects_already_active_organization(db_session: AsyncSession) -> None:
+    """Business Rule: activating an already-ACTIVE organization is a 409, not a silent no-op."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="ACT-002", organization_name="Already Active Org", organization_type="CORPORATE"
+        )
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate(created.id)
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_activate_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """A well-formed but non-existent id is a 404, same basis as get_details/update_profile."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
+
+
+async def test_activate_does_not_change_profile_fields(db_session: AsyncSession) -> None:
+    """Activate Organization touches only status — name, type, description, and code are untouched."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="ACT-003",
+            organization_name="Stable Profile Org",
+            organization_type="CORPORATE",
+            description="Should not change.",
+        )
+    )
+    await service.organization_repo.update(created.id, {"status": OrganizationStatus.SUSPENDED.value})
+    await db_session.flush()
+
+    activated = await service.activate(created.id)
+
+    assert activated.organization_code == "ACT-003"
+    assert activated.organization_name == "Stable Profile Org"
+    assert activated.organization_type == "CORPORATE"
+    assert activated.description == "Should not change."
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 

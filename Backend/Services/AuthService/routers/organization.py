@@ -199,3 +199,42 @@ async def update_organization(
         organization_id, request, actor_id=claims.get("person_id")
     )
     return OrganizationResponse.model_validate(organization)
+
+
+@router.post(
+    "/{organization_id}/activate",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Activate organization",
+    description=(
+        "WP-01 Business Activity: Activate Organization (C-004) — BA-05. "
+        "Requires the PLATFORM_ADMIN role, same interim gate as the other "
+        "Organization Management endpoints (IRA-001 §2.7). Transitions "
+        "status from SUSPENDED to ACTIVE per ADR-005's interim lifecycle "
+        "model. Rejects an already-ACTIVE organization with 409 rather "
+        "than a silent no-op."
+    ),
+    responses={
+        200: {"description": "Organization activated."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No organization exists with this id."},
+        409: {"description": "Organization is already ACTIVE."},
+        422: {"description": "organization_id is not a valid UUID."},
+    },
+)
+async def activate_organization(
+    organization_id: UUID,
+    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> OrganizationResponse:
+    """
+    No tenant-scoping, same basis as the other path-parameterized
+    Organization Management endpoints — see middleware/tenant.py's
+    /organizations/* prefix exemption, already covering this path.
+    """
+    organization = await organization_service.activate(
+        organization_id, actor_id=claims.get("person_id")
+    )
+    return OrganizationResponse.model_validate(organization)

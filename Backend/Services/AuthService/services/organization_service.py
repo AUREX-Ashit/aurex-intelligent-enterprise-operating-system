@@ -3,7 +3,7 @@ WP-01 — Organization Management (C-004).
 
 Business Activities implemented here: BA-01 Establish Organization,
 BA-02 View Organization Details, BA-03 Search & List Organizations,
-BA-04 Update Organization Profile.
+BA-04 Update Organization Profile, BA-05 Activate Organization.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -187,6 +187,77 @@ class OrganizationService:
             },
         )
         return organization
+
+    async def activate(self, organization_id: UUID, actor_id: str | None = None) -> Organization:
+        """
+        Business Activity: Activate Organization (BA-05).
+
+        Interim lifecycle model (ADR-005): a plain `status` transition,
+        not yet the metadata-driven state machine SD-002-051 ultimately
+        requires. Business Rule: only a SUSPENDED organization may be
+        activated. Activating an already-ACTIVE organization is rejected
+        with 409 rather than silently succeeding as a no-op — this keeps
+        the interim state machine's transitions explicit, mirroring
+        establish()'s duplicate-rejection precedent rather than inventing
+        a new idempotent-success convention with no canonical basis.
+
+        Does not touch organization_name/organization_type/description
+        (BA-04's scope) or organization_code (immutable natural key).
+        """
+        organization = await self.organization_repo.get_by_id(organization_id)
+        if organization is None:
+            record_audit(
+                action="ACTIVATE_ORGANIZATION",
+                resource=f"organization:{organization_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        if organization.status == OrganizationStatus.ACTIVE.value:
+            record_audit(
+                action="ACTIVATE_ORGANIZATION",
+                resource=f"organization:{organization.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization already ACTIVE", "organization_code": organization.organization_code},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Organization '{organization_id}' is already ACTIVE.",
+            )
+
+        previous_status = organization.status
+        updated = await self.organization_repo.update(
+            organization_id, {"status": OrganizationStatus.ACTIVE.value}
+        )
+        await self.organization_repo.session.flush()
+
+        record_audit(
+            action="ACTIVATE_ORGANIZATION",
+            resource=f"organization:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "new_status": updated.status,
+            },
+        )
+        publish_event(
+            "ORGANIZATION_ACTIVATED",
+            {
+                "organization_id": str(updated.id),
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "status": updated.status,
+            },
+        )
+        return updated
 
     async def search(
         self,
