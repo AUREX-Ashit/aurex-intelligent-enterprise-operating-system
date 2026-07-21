@@ -18,19 +18,19 @@
 - ✅ BA-02 View Organization
 - ✅ BA-03 Search Organizations
 - ✅ BA-04 Update Organization Profile
-- 🔄 BA-05 Activate Organization (implementation complete, self-certified, awaiting independent review)
+- ✅ BA-05 Activate Organization
 - ⏳ BA-06 Suspend Organization
 - ⏳ BA-07 Organization Configuration
 - ⏳ BA-08 Audit History
 
 **Progress**
 
-- Completed: 4 / 8 (BA-05 implementation complete and self-certified, pending independent review — not yet counted as done per §19.7)
-- Progress: 50% (62.5% once BA-05 clears independent review — implementation and commit are already done; review is the outstanding gate)
+- Completed: 5 / 8
+- Progress: 62.5%
 - Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; none of BA-02 through BA-05 required schema changes)
 - API endpoints delivered: 5 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`)
 - UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05, which was implemented backend-only per its explicit scope; see BA-05 section)
-- Tests added: 61 (19 unit, 40 integration, 2 dedicated middleware) — see BA-05 section for the exact breakdown
+- Tests (running totals, not a per-BA delta): 19 unit, 40 integration, 2 dedicated middleware — 61 total across `test_organization_service.py`/`test_organization_api.py`/`test_tenant_middleware.py`; BA-05 itself added 13 (4/7/2) — see BA-05 section for the exact breakdown
 - ADRs raised during implementation: 0 across BA-01 through BA-05 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
 
 ---
@@ -676,7 +676,7 @@ Not in scope for this Business Activity (see Gap Analysis's "Scope boundary" not
 
 ✅ IMPLEMENTATION COMPLETE
 
-### BA-Level Self-Certification
+### Developer Validation
 
 Performed by the implementation agent against this Business Activity's own acceptance criteria (IMP-001 §6.4/§6.7, ADR-005, IRA-001 §2.2/§9). This is **self-certification, not Independent Review** — CLAUDE.md §19.7's Business Activity Completion Gate still requires a separate, independently-run review (as performed for BA-01 through BA-04 by a fresh-context subagent) before this Business Activity is considered fully complete; that review has not yet been requested for BA-05.
 
@@ -701,7 +701,27 @@ Performed by the implementation agent against this Business Activity's own accep
 
 ### Independent Review
 
-Independent Review: Pending (not yet requested for BA-05)
+**Independent Review: Accepted — ACCEPTED WITH OBSERVATIONS** (2026-07-21, fresh-context subagent with no memory of the implementation session; ran the full backend test suite independently, diffed the actual commit `467d847` itself rather than trusting this report's claims, and cross-checked the Technical Debt Register against the code it describes).
+
+**Review Result: ACCEPTED WITH OBSERVATIONS**
+
+**Test results actually observed:** `pytest -q` (with `JWT_SECRET_KEY`/`JWT_ALGORITHM` set) → **90 passed, 0 failed**, 54.28s. Test-count deltas verified against the pre-BA-05 commit (`467d847^`): `test_organization_service.py` 15→19 (+4), `test_organization_api.py` 33→40 (+7), new `test_tenant_middleware.py` (+2) — 13 new tests total, matching this report's claim exactly, with all diffs to existing test files additive-only.
+
+**Findings:** `git show 467d847 --stat` confirms the diff touches exactly the 9 files this report's Files Created/Modified tables list, with zero frontend files — corroborating the backend-only scope claim. `models/organization.py`, `dependencies.py`, `repositories/organization_repository.py`, and `schemas/organization.py` all show empty diffs in this commit — no architecture, authorization, or repository-layer change. `activate()`'s lifecycle sequence was traced directly: existence check (404) → already-ACTIVE check (409, verified to run strictly before any mutating call) → `BaseRepository.update()` (reused verbatim, no new repository method) → `session.flush()` → `record_audit(SUCCESS)` → `publish_event("ORGANIZATION_ACTIVATED", ...)` → response. Audit fires on both DENIED paths (not-found, already-active) and the SUCCESS path with a metadata shape consistent with BA-01/BA-04. `test_tenant_middleware.py` was read in full and confirmed to genuinely exercise `middleware/tenant.py`'s actual prefix-match logic (not incidentally) — a regression to an exact-match list, or a broader/narrower prefix, would flip its assertions. The SUSPENDED-seeding techniques in both the unit tests (direct repository manipulation) and the integration test (the shared `db_session` fixture, verified sound against `conftest.py`'s dependency-override wiring) genuinely exercise the transition under test, not a shortcut around it. **Technical Debt Register verified line-by-line**: TD-001's `Status`/`Planned Resolution` correctly show `Closed`/resolved-by-`test_tenant_middleware.py`, and that file genuinely satisfies TD-001's original description. TD-012 is a new, distinct entry (not a duplicate of TD-004 or TD-011) with all columns filled consistently; its premise was independently confirmed — `grep is_active` in `organization_service.py` returns zero matches. TD-007's `Planned Resolution` was reasonably updated to reflect BA-05's confirmed backend-only scope.
+
+**Defects found:** None that block acceptance.
+
+**Risks recorded (non-blocking):**
+1. A concurrent-activation race (read-then-write on `status` with no row lock) exists in `activate()`, but this is the same class of risk already tracked as TD-003 (optimistic concurrency, open, Medium priority, WP-02) and is not a new or BA-05-specific regression — `establish()` and `update_profile()` already carry the same characteristic. No new tech-debt entry needed.
+2. TD-012 is real but currently latent — it becomes externally observable once BA-06 Suspend lands; correctly scoped to Medium priority.
+
+**Observations (non-blocking):**
+1. The dashboard's "Tests added: 61 (19 unit, 40 integration, 2 dedicated middleware)" line reads ambiguously as if 61 tests were added in BA-05, when 19/40/2 are running totals in those files (the actual BA-05 delta, 4/7/2=13, is correctly stated in this section). Clarified below.
+2. `record_audit()` is called before `publish_event()` in `activate()` (and in `establish()`/`update_profile()` before it), while IMP-001 §6.3 literally states the order as Business Object Update → Domain Event Publication → Audit Recording. This is inherited unchanged from already-accepted BA-01/BA-04 precedent, not introduced by BA-05, so it is not chargeable to this Business Activity — but the systemic divergence from the documented order is worth a single reconciling decision (amend IMP-001 to reflect the implemented order, or change the code) rather than continuing to carry it forward silently.
+
+**Recommendations carried forward:**
+- Resolve TD-012 when BA-06 Suspend is implemented, before further lifecycle transitions compound the `is_active`/`status` divergence.
+- Reconcile the audit-before-event ordering across all Business Activities against IMP-001 §6.3's literal text (single decision, not urgent).
 
 ### Certification
 
