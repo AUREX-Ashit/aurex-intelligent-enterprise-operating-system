@@ -16,7 +16,7 @@
 - ✅ BA-01 Establish Organization
 - ✅ BA-02 View Organization
 - ✅ BA-03 Search Organizations
-- 🔄 BA-04 Update Organization Profile (independently reviewed — ACCEPTED — awaiting commit per §19.7)
+- ✅ BA-04 Update Organization Profile
 - ⏳ BA-05 Activate Organization
 - ⏳ BA-06 Suspend Organization
 - ⏳ BA-07 Organization Configuration
@@ -24,8 +24,8 @@
 
 **Progress**
 
-- Completed: 3 / 8 (BA-04 reviewed and accepted, pending repository commit — not yet counted as done per the §19.7 completion gate's three conditions)
-- Progress: 37.5% (50% once BA-04 is committed)
+- Completed: 4 / 8
+- Progress: 50%
 - Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; neither BA-02, BA-03, nor BA-04 required schema changes)
 - API endpoints delivered: 4 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`)
 - UI screens delivered: 1 (`/platform-admin/organizations`, now the primary Search/List grid with Create, View Details, and Edit as modal actions, plus the standalone by-ID lookup section)
@@ -566,6 +566,10 @@ Committed as `95fd4fe` — "feat(auth-service): WP-01 BA-03 - Search & List Orga
 ### Certification
 
 Certification Status: Pending (WP-level activity, performed only after WP-01 completes, per CLAUDE.md §19.7)
+
+### Repository
+
+Committed as `e7b77f9` — "feat(auth-service): WP-01 BA-04 - Update Organization Profile" (2026-07-21). Working tree clean at commit time; all three §19.7 completion-gate conditions satisfied.
 
 ---
 
