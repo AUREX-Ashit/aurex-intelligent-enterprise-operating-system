@@ -38,23 +38,32 @@ Build a production-quality Enterprise Operating System that is:
 
 ``` text
 .
-├── .github/
-├── architecture/
-├── cil/
-├── decisions/
-├── docs/
-├── prompts/
+├── .github/            # CI workflows
+├── architecture/       # Governance, blueprint, constitutional models,
+│                       # engineering methodology, technical architecture,
+│                       # implementation specs, reviews, ADRs (07-Decisions/)
+├── Backend/
+│   ├── Services/       # AuthService, AIService, IngestionService,
+│   │                   # ReportingService, TenantService
+│   └── Shared/         # Cross-service framework (Config, Database,
+│                       # Events, Logging, Security)
+├── cil/                # Canonical Information Library (per-domain + industry packs)
+├── docs/                # Product documentation (PE-001 and capability specs)
+├── prompts/             # Reusable engineering prompts and templates
 ├── source/
-│   ├── backend/
-│   ├── frontend/
-│   ├── database/
-│   ├── infrastructure/
-│   ├── scripts/
-│   └── tests/
+│   └── frontend/        # Next.js/React/TypeScript application
+│                        # (backend/database/infrastructure/scripts/tests
+│                        # subdirectories are reserved, currently empty)
+├── API/, Config/, database/, Infrastructure/   # Platform-wide templates and
+│                                               # scaffolding, distinct from
+│                                               # each service's own config
 ├── ARCHITECTURE.md
 ├── CLAUDE.md
 └── README.md
 ```
+
+Architecture Decision Records live at `architecture/07-Decisions/`, not a
+top-level `decisions/` directory.
 
 ------------------------------------------------------------------------
 
@@ -130,7 +139,7 @@ cd <repository-folder>
 
 ``` bash
 docker compose up -d
-cd source/backend
+cd Backend/Services/<ServiceName>   # e.g. AuthService
 uvicorn main:app --reload
 ```
 
@@ -178,7 +187,7 @@ npm test
   --------------------------------- ---------------
   Enterprise Architecture           architecture/
   Canonical Information Libraries   cil/
-  Architecture Decisions            decisions/
+  Architecture Decisions            architecture/07-Decisions/
   Product Documentation             docs/
   AI Prompts                        prompts/
 

@@ -12,6 +12,10 @@ A production-grade, multi-tenant authentication microservice scaffold based on F
 - **Strict Multi-Tenancy**: Tenant context automatic isolation middleware extracting compliant header parameters (`X-Tenant-ID` is required as a valid UUID).
 - **Asynchronous Unit Testing**: Comprehensive test mocks using Pytest with SQLite in-memory overrides logic.
 - **Enterprise Docker Blueprint**: Best-practice multi-stage compiler builds and non-root execution profiles.
+- **Idempotent Platform Bootstrap (WP-00)**: automated, re-runnable seeding of canonical Roles, Permissions, the demonstration Organization, and the Platform Administrator identity — see [Platform Bootstrap](#-platform-bootstrap-wp-00) below.
+- **Feature Flags (WP-00)**: config-driven (YAML + environment override) rollout control, with fail-closed defaults for undeclared flags.
+- **Liveness/Readiness Split (WP-00)**: `/health` reports process/database liveness; `/ready` additionally reports whether bootstrap has completed.
+- **Correlation IDs (WP-00)**: every request is assigned or propagates an `X-Correlation-ID`, bound to audit/event/metric emissions for end-to-end tracing.
 
 ---
 
@@ -19,36 +23,48 @@ A production-grade, multi-tenant authentication microservice scaffold based on F
 
 ```text
 AuthService/
-├── middleware/          # Interceptor layers (Multi-tenant extraction, Trace logs)
+├── Config/               # platform-config.yaml (database, CORS, feature flags, bootstrap)
+├── docs/                 # Operational documentation (WP-00)
+│   ├── RUNBOOK_BOOTSTRAP.md
+│   └── OPERATIONAL_OWNERSHIP.md
+├── middleware/           # Interceptor layers (Multi-tenant extraction, Trace logs)
 │   ├── __init__.py
-│   ├── logging.py
-│   └── tenant.py        # ContextVar storage and headers sanitization
-├── models/              # SQLAlchemy 2.x Declarative Models
+│   ├── logging.py        # Request logging + correlation ID + duration metric (WP-00)
+│   └── tenant.py         # ContextVar storage and headers sanitization
+├── models/                # SQLAlchemy 2.x Declarative Models
 │   ├── __init__.py
-│   ├── database.py      # Async Engine manager and Async Session dependency
-│   └── user.py          # TentantModel & UserModel schemas
-├── repositories/        # Decoupled database data-access-object layers
+│   ├── database.py        # Async Engine manager and Async Session dependency
+│   └── ...                # Organization, Person, Identity, Membership, Role, Permission
+├── repositories/           # Decoupled database data-access-object layers
 │   ├── __init__.py
-│   ├── base_repository.py  # Generic async CRUD scaffold
-│   └── user_repository.py  # Specialized queries
-├── routers/             # FastAPI Endpoint Controller stubs
+│   └── base_repository.py  # Generic async CRUD scaffold
+├── routers/               # FastAPI Endpoint Controllers
 │   ├── __init__.py
-│   ├── auth.py          # /auth/login and /auth/refresh
-│   └── health.py        # Microservice health probe
-├── schemas/             # Pydantic v2 validation DTOs
+│   ├── auth.py             # /auth/login and /auth/refresh
+│   ├── person.py           # /person/recognize and /person/establish
+│   └── health.py           # /health (liveness) and /ready (readiness, WP-00)
+├── schemas/                # Pydantic v2 validation DTOs
+├── scripts/                 # Seed data + bootstrap CLI entrypoint (WP-00)
 │   ├── __init__.py
-│   └── auth.py          # LoginRequest and TokenResponse schemas
-├── services/            # Custom enterprise business logic orchestrators
+│   ├── bootstrap_data.py    # Canonical Role/Permission/Organization/Identity seed constants
+│   └── run_bootstrap.py     # `python -m scripts.run_bootstrap` pipeline entrypoint
+├── services/                 # Custom enterprise business logic orchestrators
 │   ├── __init__.py
-│   └── auth_service.py  # Password hashing, JWT credentials creation
-├── tests/               # Pytest testing suite
+│   ├── auth_service.py       # Password hashing, JWT credentials creation
+│   ├── bootstrap_service.py  # Idempotent platform bootstrap orchestration (WP-00)
+│   └── feature_flag_service.py  # Config-driven feature flag evaluation (WP-00)
+├── tests/                  # Pytest testing suite
 │   ├── __init__.py
-│   ├── conftest.py      # SQLAlchemy DB overrides and TestClient fixture state
-│   └── test_auth.py     # Endpoint integration and validations checks
-├── Dockerfile           # Optimized multi-stage Docker environment build
-├── README.md            # Service documentation
-├── main.py              # Application entrypoint
-└── requirements.txt     # Python production-grade packages catalog
+│   ├── conftest.py         # SQLAlchemy DB overrides and TestClient fixture state
+│   ├── test_auth.py        # Endpoint integration and validations checks
+│   ├── test_bootstrap_service.py  # WP-00
+│   ├── test_feature_flags.py      # WP-00
+│   └── test_health.py             # WP-00
+├── observability.py       # Local audit/event/metric/correlation substitute (WP-00; see module docstring)
+├── Dockerfile              # Optimized multi-stage Docker environment build
+├── README.md               # Service documentation
+├── main.py                 # Application entrypoint
+└── requirements.txt        # Python production-grade packages catalog
 ```
 
 ---
@@ -99,6 +115,48 @@ Execute analytical test suites asserting compliance across routers and middlewar
 
 ```bash
 pytest -v
+```
+
+---
+
+## 🌱 Platform Bootstrap (WP-00)
+
+A freshly-provisioned environment has no Roles, Permissions, or Platform Administrator
+until bootstrap runs. Bootstrap is idempotent — safe to run on every deployment,
+unconditionally:
+
+```bash
+export DATABASE_URL="postgresql+asyncpg://..."
+python -m scripts.run_bootstrap
+```
+
+Full procedure, credential reference, and rollback strategy: [`docs/RUNBOOK_BOOTSTRAP.md`](docs/RUNBOOK_BOOTSTRAP.md).
+Operational ownership: [`docs/OPERATIONAL_OWNERSHIP.md`](docs/OPERATIONAL_OWNERSHIP.md).
+
+**Production safeguard (IC-001 M1):** the built-in demo/Platform Administrator password
+hashes are public (visible in source). When `ENVIRONMENT=production`, bootstrap refuses
+to seed them and requires `BOOTSTRAP_ADMIN_PASSWORD_HASH` /
+`BOOTSTRAP_PLATFORM_ADMIN_PASSWORD_HASH` overrides — see the runbook.
+
+### Liveness vs. Readiness
+
+- `GET /health` — is the process alive and can it reach its database? Used by
+  orchestrators to decide whether to **restart** an instance.
+- `GET /ready` — is the process alive, reachable, **and** has bootstrap completed? Used
+  by orchestrators to decide whether to **route traffic** to an instance.
+
+### Feature Flags
+
+Declared in `Config/platform-config.yaml` under `feature_flags`, evaluated via
+`services.feature_flag_service.feature_flags`. Undeclared flags fail closed (`False`).
+Flags may be scoped to a list of organization IDs for staged rollout, and overridden per
+environment via `FF_<FLAG_NAME>=true|false`.
+
+```yaml
+feature_flags:
+  ff_platform_workspace_v1:
+    enabled: false
+    organizations: null   # null = platform-wide once enabled; or a list of org UUID strings
 ```
 
 ---

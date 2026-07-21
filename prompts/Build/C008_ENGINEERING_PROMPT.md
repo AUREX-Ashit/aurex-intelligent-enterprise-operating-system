@@ -74,7 +74,7 @@ CLAUDE.md
 
 ARCHITECTURE.md
 
-architecture/00-Governance/ARCH-000 — Enterprise Operating System Architecture Manifest.md
+architecture/00-Governance/ARCH-000 – Enterprise Operating System Architecture Manifest.md
 
 architecture/02-Constitutional/CAP-001_Enterprise_Capability_Registry.docx
 

@@ -20,3 +20,27 @@ auth:
   jwt_algorithm: "HS256"
   access_token_expiry_minutes: 60
   refresh_token_expiry_days: 7
+
+# WP-00 — interim, config-driven feature-flag mechanism for controlled
+# rollout (Aurex Platform Administrator Roadmap, Refinement 2). RTA-001
+# §9.5/9.11 defines Feature Flags as governed Metadata resolved through a
+# Metadata Runtime; no such runtime exists anywhere in this repository yet
+# (IC-001 certification, 2026-07-20). This YAML+env mechanism is a
+# placeholder pending that platform capability, not the canonical
+# long-term implementation — migrate callers when the Metadata Runtime
+# ships.
+# organizations: null means "every organization once enabled"; a list scopes
+# the flag to specific organization_id values only (staged rollout).
+feature_flags:
+  ff_identity_auth_v1:
+    enabled: true
+    organizations: null
+  ff_platform_workspace_v1:
+    enabled: false
+    organizations: null
+
+# WP-00 — idempotent seed-stage toggle (IMP-CICD-002). Disable only for
+# environments that must never auto-seed (e.g. a production restore target
+# under investigation).
+bootstrap:
+  enabled: true

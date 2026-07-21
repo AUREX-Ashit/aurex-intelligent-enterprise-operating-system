@@ -737,3 +737,83 @@ Code is NEVER the source of truth.
 
 The approved architecture and canonical documentation remain the
 single source of truth.
+
+-------------------------------------------------------------------------------
+19.7 Business Activity Completion Gate (Mandatory)
+-------------------------------------------------------------------------------
+
+Every Business Activity (BA) SHALL be completed through the full
+engineering lifecycle before implementation of the next Business
+Activity begins.
+
+A Business Activity SHALL be considered complete only when ALL of the
+following conditions have been satisfied.
+
+Implementation
+
+✓ Production-quality implementation is complete.
+
+✓ All required unit, integration and API tests pass.
+
+✓ The Work Package Implementation Report
+  (IMP-REPORT-WP-XX) has been updated.
+
+✓ Implementation Status is marked
+  "IMPLEMENTATION COMPLETE".
+
+Independent Review
+
+✓ The completed implementation has been submitted for
+  independent review.
+
+✓ Review observations (if any) have been addressed.
+
+✓ The implementation has been accepted through
+  independent review.
+
+Repository
+
+✓ The accepted implementation has been committed to the repository.
+
+Only after these completion gates have been satisfied may
+implementation of the next Business Activity begin.
+
+Claude Code SHALL NOT begin implementation of a new Business Activity
+while the current Business Activity:
+
+• is still under implementation
+
+• is awaiting review
+
+• requires remediation
+
+• has not been accepted
+
+• has not been committed
+
+This completion gate is mandatory for every Work Package.
+
+-------------------------------------------------------------------------------
+Implementation Reporting & Independent Certification
+-------------------------------------------------------------------------------
+
+Implementation Reports (IMP-REPORT-WP-XX) record the implementation
+progress, evidence, and status of each Business Activity throughout the
+Work Package.
+
+They are maintained by the implementation agent and form the
+implementation audit trail.
+
+Implementation Reports SHALL NOT be used as certification artifacts.
+
+Independent Certification (CERT-WP-XX) is a separate governance activity
+performed only after completion of the Work Package.
+
+The implementation agent SHALL NOT certify its own work.
+
+Certification SHALL be performed independently using the approved
+architecture, implementation reports, source code, tests, APIs,
+database migrations, and other implementation evidence.
+
+Only an independently certified Work Package shall be considered
+complete.

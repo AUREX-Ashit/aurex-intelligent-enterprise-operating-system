@@ -220,7 +220,7 @@ services:
   auth-service:
     build:
       context: ../../
-      dockerfile: ./corpstage/backend/services/AuthService/Dockerfile
+      dockerfile: ./Backend/Services/AuthService/Dockerfile
     image: corpstage/auth-service:latest
     container_name: corpstage-auth-service
     restart: unless-stopped
@@ -245,7 +245,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8001/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -257,7 +257,7 @@ services:
   tenant-service:
     build:
       context: ../../
-      dockerfile: ./corpstage/backend/services/TenantService/Dockerfile
+      dockerfile: ./Backend/Services/TenantService/Dockerfile
     image: corpstage/tenant-service:latest
     container_name: corpstage-tenant-service
     restart: unless-stopped
@@ -280,7 +280,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8002/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -292,7 +292,7 @@ services:
   ingestion-service:
     build:
       context: ../../
-      dockerfile: ./corpstage/backend/services/IngestionService/Dockerfile
+      dockerfile: ./Backend/Services/IngestionService/Dockerfile
     image: corpstage/ingestion-service:latest
     container_name: corpstage-ingestion-service
     restart: unless-stopped
@@ -320,7 +320,7 @@ services:
           cpus: '0.75'
           memory: 768M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8003/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8003/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -332,7 +332,7 @@ services:
   ai-service:
     build:
       context: ../../
-      dockerfile: ./corpstage/backend/services/AIService/Dockerfile
+      dockerfile: ./Backend/Services/AIService/Dockerfile
     image: corpstage/ai-service:latest
     container_name: corpstage-ai-service
     restart: unless-stopped
@@ -359,7 +359,7 @@ services:
           cpus: '1.0'
           memory: 1G
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8004/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8004/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -371,7 +371,7 @@ services:
   reporting-service:
     build:
       context: ../../
-      dockerfile: ./corpstage/backend/services/ReportingService/Dockerfile
+      dockerfile: ./Backend/Services/ReportingService/Dockerfile
     image: corpstage/reporting-service:latest
     container_name: corpstage-reporting-service
     restart: unless-stopped
@@ -394,7 +394,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8005/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8005/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

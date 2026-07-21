@@ -12,12 +12,15 @@ When working in the repository, always locate the appropriate authoritative sour
 
 ```
 /
-├── architecture/
+├── architecture/       # includes 07-Decisions/ (ADRs) — no separate decisions/ dir
+├── Backend/            # Services/ (AuthService, AIService, IngestionService,
+│                       # ReportingService, TenantService) + Shared/
 ├── cil/
-├── decisions/
 ├── docs/
 ├── prompts/
-├── source/
+├── source/             # frontend/ only; backend/database/infrastructure/
+│                       # scripts/tests are reserved, currently empty
+├── API/, Config/, database/, Infrastructure/   # platform-wide templates
 └── .github/
 ```
 
@@ -39,12 +42,11 @@ When working in the repository, always locate the appropriate authoritative sour
 | Industry-specific extensions | `cil/industry-packs/` |
 | Product documentation | `docs/` |
 | AI engineering prompts | `prompts/` |
-| Backend implementation | `source/backend/` |
+| Backend implementation | `Backend/Services/<ServiceName>/` |
+| Cross-service backend framework | `Backend/Shared/` |
 | Frontend implementation | `source/frontend/` |
-| Database | `source/database/` |
-| Infrastructure | `source/infrastructure/` |
-| Build & automation | `source/scripts/` |
-| Testing | `source/tests/` |
+| Database (per-service migrations) | `Backend/Services/<ServiceName>/alembic/` |
+| Infrastructure | `Infrastructure/` |
 
 ---
 

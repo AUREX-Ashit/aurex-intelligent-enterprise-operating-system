@@ -1,6 +1,9 @@
 # Python
 __pycache__/
 *.pyc
+*.db
+venv/
+.pytest_cache/
 
 # Node
 node_modules/
@@ -26,6 +29,12 @@ Desktop.ini
 # Build
 dist/
 build/
+# Windows git is case-insensitive by default, so the bare `build/` rule
+# above also matches prompts/Build/ (WP-00A engineering prompts, not a
+# build-output directory) — excluded explicitly rather than weakening
+# the build/ rule itself.
+!prompts/Build/
+!prompts/Build/**
 
 # Temporary
 tmp/

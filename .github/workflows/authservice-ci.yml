@@ -1,0 +1,91 @@
+name: AuthService CI
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Backend/Services/AuthService/**"
+      - ".github/workflows/authservice-ci.yml"
+  pull_request:
+    paths:
+      - "Backend/Services/AuthService/**"
+      - ".github/workflows/authservice-ci.yml"
+
+defaults:
+  run:
+    working-directory: Backend/Services/AuthService
+
+jobs:
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run test suite
+        env:
+          JWT_SECRET_KEY: ci-test-secret-key-not-for-production
+        run: python -m pytest tests/ -v
+
+  bootstrap:
+    name: Idempotent Bootstrap Verification
+    runs-on: ubuntu-latest
+    needs: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: authservice
+          POSTGRES_PASSWORD: authservice
+          POSTGRES_DB: authservice
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+asyncpg://authservice:authservice@localhost:5432/authservice
+      JWT_SECRET_KEY: ci-test-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply database migrations
+        run: alembic upgrade head
+
+      - name: Run bootstrap (first run — must seed the platform)
+        run: python -m scripts.run_bootstrap
+
+      - name: Run bootstrap again (second run — must be a true no-op)
+        run: python -m scripts.run_bootstrap
+
+      - name: Verify idempotency via readiness endpoint
+        run: |
+          python -m uvicorn main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8000/ready > /dev/null; then
+              echo "Service is ready."
+              kill $SERVER_PID
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Service did not become ready in time."
+          kill $SERVER_PID
+          exit 1

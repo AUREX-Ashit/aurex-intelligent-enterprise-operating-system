@@ -10,16 +10,20 @@ def test_health_check_endpoint(client: TestClient) -> None:
     assert response.json()["status"] == "healthy"
 
 
-def test_login_missing_tenant_header(client: TestClient) -> None:
+def test_login_without_tenant_header_falls_back_to_auto_discovery(client: TestClient) -> None:
     """
-    Asserts request is blocked with HTTP 400 when X-Tenant-ID header is missing.
+    WP-00A: X-Tenant-ID is optional on /auth/login by design (routers/auth.py's
+    own docstring — omitted means auto-select on a single membership, or an
+    OrganizationSelectionResponse on multiple). A nonexistent identity with no
+    header therefore resolves as 401 Invalid credentials, not 400 — this test
+    previously asserted the header was mandatory, which stopped matching
+    routers/auth.py once the auto-discovery flow was implemented.
     """
     response = client.post(
         "/auth/login",
         json={"email": "test@corpstage.com", "password": "superPassword123"}
     )
-    assert response.status_code == 400
-    assert "X-Tenant-ID" in response.json()["message"]
+    assert response.status_code == 401
 
 
 def test_login_invalid_tenant_uuid(client: TestClient) -> None:
@@ -33,7 +37,7 @@ def test_login_invalid_tenant_uuid(client: TestClient) -> None:
         json={"email": "test@corpstage.com", "password": "superPassword123"}
     )
     assert response.status_code == 400
-    assert "UUID" in response.json()["message"]
+    assert "UUID" in response.json()["detail"]
 
 
 def test_login_validation_failure(client: TestClient) -> None:

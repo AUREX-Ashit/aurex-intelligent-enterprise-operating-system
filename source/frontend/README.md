@@ -4,11 +4,12 @@ Canonical frontend foundation for the CorpStage Enterprise Operating
 System, at `source/frontend`. Next.js (App Router) + TypeScript + Tailwind
 CSS.
 
-This is a **foundation**, not a finished application: it establishes
-routing, layout, theming, the API client, and a shared UI component set.
-No Business Activity is implemented here — routes other than Health render
-an empty placeholder (`src/components/layout/PlaceholderPage.tsx`) until
-implemented separately.
+This started as a **foundation** (routing, layout, theming, the API client,
+a shared UI component set) and now also implements the Health, Auth
+(login), Person Management, and Platform Administrator Identity & Access
+Business Activities under `src/features/`. `/organization`, `/workspace`,
+and `/settings` remain unimplemented and render an empty placeholder
+(`src/components/layout/PlaceholderPage.tsx`).
 
 ## Getting Started
 
@@ -39,7 +40,7 @@ src/
   components/
     ui/         Shared, generic UI primitives (Button, Input, Card, Modal, Table, Form)
     layout/     Application-level layout (NavigationShell, PlaceholderPage)
-  features/     Reserved for future Business Activity feature modules (currently empty)
+  features/     Business Activity feature modules (auth, identity-access, person)
   hooks/        Generic, reusable React hooks (no Business Activity logic)
   lib/          Core infrastructure — config, logger, notifications, api-client, auth-storage, utils
   services/     Backend-domain API wrappers built on lib/api-client (e.g. health-service.ts)
@@ -54,8 +55,9 @@ Talks to AuthService (`NEXT_PUBLIC_AUTH_SERVICE_URL`, default
 layer and `src/lib/config.ts` for environment resolution.
 
 Authentication infrastructure (`src/lib/auth-storage.ts`, `src/types/auth.ts`,
-`setAuthTokenProvider` in `api-client.ts`) is prepared but not wired to any
-login flow — login is a separate, not-yet-implemented Business Activity.
+`setAuthTokenProvider` in `api-client.ts`) is wired to the Platform
+Administrator login flow at `/platform-admin/login`
+(`src/features/auth/`).
 
 ## Routes
 
@@ -63,7 +65,9 @@ login flow — login is a separate, not-yet-implemented Business Activity.
 |---|---|
 | `/` | Home |
 | `/health` | Live — calls AuthService `GET /health` |
-| `/person-management` | Placeholder |
+| `/person-management` | Live — `features/person` (recognize/establish) |
+| `/platform-admin/login` | Live — `features/auth` |
+| `/platform-admin/identity-access` | Live — `features/identity-access` |
 | `/organization` | Placeholder |
 | `/workspace` | Placeholder |
 | `/settings` | Placeholder |

@@ -18,9 +18,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # /auth/login: Person is independent of any company, role, license, or permission
         # (URA-001-15), and neither EX-C006-01 nor EX-C006-02 states an Organization/tenant
         # context requirement.
+        # /ready (WP-00) is platform-scoped, not tenant-scoped, on the same basis as
+        # /health: an orchestrator's readiness probe has no tenant context to supply.
         path = request.url.path
         if path in [
-            "/health", "/docs", "/redoc", "/openapi.json",
+            "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
             "/person/recognize", "/person/establish",
         ]:

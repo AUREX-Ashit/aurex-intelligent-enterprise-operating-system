@@ -22,6 +22,18 @@ class Settings:
         self.cors_methods: List[str] = ["*"]
         self.cors_headers: List[str] = ["*"]
 
+        # Feature flags (WP-00) — {flag_name: {"enabled": bool, "organizations": [str, ...] | None}}
+        self.feature_flags: Dict[str, Dict[str, Any]] = {}
+
+        # Bootstrap (WP-00) — enables/disables the idempotent seed stage
+        self.bootstrap_enabled: bool = True
+
+        # Environment (WP-00 remediation, IC-001 M1) — gates whether
+        # bootstrap may seed built-in demo credentials as-is. Defaults to
+        # "development"; only ENVIRONMENT=production (or "prod") is treated
+        # as production. See services/bootstrap_service.py.
+        self.environment: str = "development"
+
         # Parse from Config/platform-config.yaml
         self._load_from_yaml()
 
@@ -89,6 +101,16 @@ class Settings:
                     if "allow_headers" in cors_cfg:
                         self.cors_headers = cors_cfg["allow_headers"]
 
+                # Read Feature Flags Section (WP-00)
+                if "feature_flags" in config_data and config_data["feature_flags"]:
+                    self.feature_flags = dict(config_data["feature_flags"])
+
+                # Read Bootstrap Section (WP-00)
+                if "bootstrap" in config_data and config_data["bootstrap"]:
+                    bootstrap_cfg = config_data["bootstrap"]
+                    if "enabled" in bootstrap_cfg:
+                        self.bootstrap_enabled = bool(bootstrap_cfg["enabled"])
+
                 logger.info(f"Configurations parsed successfully from {resolved_path}")
         except Exception as e:
             logger.warning(f"Failed to read settings from {resolved_path}: {e}")
@@ -135,6 +157,22 @@ class Settings:
         env_headers = os.getenv("CORS_ALLOW_HEADERS")
         if env_headers:
             self.cors_headers = [h.strip() for h in env_headers.split(",") if h.strip()]
+
+        # Feature flag overrides: FF_<FLAG_NAME>=true|false, e.g. FF_IDENTITY_AUTH_V1=false.
+        # Only toggles the "enabled" bit for an already-declared flag; does not declare new ones.
+        for flag_name in list(self.feature_flags.keys()):
+            env_key = f"FF_{flag_name.upper()}"
+            env_value = os.getenv(env_key)
+            if env_value is not None:
+                self.feature_flags[flag_name]["enabled"] = env_value.lower() in ("true", "1", "yes", "on")
+
+        env_bootstrap = os.getenv("BOOTSTRAP_ENABLED")
+        if env_bootstrap is not None:
+            self.bootstrap_enabled = env_bootstrap.lower() in ("true", "1", "yes", "on")
+
+        env_environment = os.getenv("ENVIRONMENT")
+        if env_environment:
+            self.environment = env_environment.lower()
 
     @property
     def jwt_secret_key(self) -> str:

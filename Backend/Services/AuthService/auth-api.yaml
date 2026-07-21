@@ -7,12 +7,17 @@ paths:
   /auth/login:
     post:
       summary: User login
-      description: Authenticates a corporate user within a designated Tenant and issues cryptographically signed access and refresh keys.
+      description: >
+        Authenticates a user by email and password. X-Tenant-ID is optional:
+        supply it to log in directly to a specific organization; omit it to
+        auto-select when the person has exactly one active membership, or to
+        receive an OrganizationSelectionResponse (still HTTP 200) when the
+        person belongs to more than one organization and must choose.
       parameters:
         - name: X-Tenant-ID
           in: header
-          required: true
-          description: RFC 4122 compliant UUID representing the tenant scope
+          required: false
+          description: RFC 4122 compliant UUID representing the tenant scope. Optional — see description.
           schema:
             type: string
             format: uuid
@@ -25,41 +30,37 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Authentication succeeded.
+          description: Authenticated (TokenResponse), or organization selection required (OrganizationSelectionResponse) when X-Tenant-ID was omitted and multiple memberships exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/TokenResponse'
+                  - $ref: '#/components/schemas/OrganizationSelectionResponse'
         '400':
-          description: Invalid header configuration or credentials membership failure.
+          description: X-Tenant-ID header supplied but not a valid RFC 4122 UUID.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Invalid credentials.
+        '403':
+          description: No active membership.
         '422':
           description: Invalid JSON schema format validator failures.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationErrorResponse'
-        '501':
-          description: Endpoint under construction (Stub mode active).
         '500':
           description: Server internal exception error.
 
   /auth/refresh:
     post:
       summary: Regenerate access credentials
-      description: Issues a brand-new short-lived access credentials set using verified refresh token payload signatures.
+      description: Issues a new access token from a validated refresh token. Checks signature, expiry, revocation status, and current membership.
       parameters:
-        - name: X-Tenant-ID
-          in: header
-          required: true
-          description: RFC 4122 compliant UUID representing the tenant scope
-          schema:
-            type: string
-            format: uuid
-            example: "d3b07384-d113-4956-a5db-2ad99386e8a8"
         - name: Authorization
           in: header
           required: true
@@ -69,33 +70,55 @@ paths:
             example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
         '200':
-          description: Token renewal rotation succeeded.
+          description: Token renewal succeeded.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefreshTokenResponse'
         '400':
-          description: Missing block Authorization header format constraints.
+          description: Missing or malformed Authorization header.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '412':
-          description: Expired or invalidated security parameters.
+                $ref: '#/components/schemas/HTTPExceptionResponse'
         '401':
-          description: Cryptographic credentials validation checks failed.
+          description: Refresh token invalid, expired, or revoked.
 
   /health:
     get:
-      summary: Microservice health check
-      description: Executes readiness diagnostics on DB engines and cache pools.
+      summary: Liveness probe
+      description: Is the process itself up and able to reach its database? Used by orchestrators to decide whether to restart an instance.
       responses:
         '200':
-          description: Health check telemetry active and green.
+          description: Process alive, database reachable.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthStatusResponse'
+        '503':
+          description: Process alive but database unreachable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+
+  /ready:
+    get:
+      summary: Readiness probe (WP-00)
+      description: Is the process alive, reachable, and has platform bootstrap completed? Used by orchestrators to decide whether to route traffic to an instance.
+      responses:
+        '200':
+          description: Ready — bootstrap has completed; response includes resolved feature-flag state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyStatusResponse'
+        '503':
+          description: Not ready — database unreachable, or bootstrap has not yet applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotReadyResponse'
 
 components:
   schemas:
@@ -141,6 +164,21 @@ components:
           description: Durable refresh credentials key.
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
+    OrganizationSelectionResponse:
+      type: object
+      required:
+        - requires_organization_selection
+        - organizations
+      properties:
+        requires_organization_selection:
+          type: boolean
+          example: true
+        organizations:
+          type: array
+          items:
+            type: object
+            description: Organization available for selection (organization_id, organization_name, etc. — see schemas/auth.py OrganizationOption).
+
     RefreshTokenResponse:
       type: object
       required:
@@ -175,17 +213,50 @@ components:
           properties:
             database:
               type: string
-              example: "uninitialized"
-            cache:
-              type: string
-              example: "uninitialized"
+              example: "healthy"
+
+    ReadyStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ready"
+        service:
+          type: string
+          example: "CorpStage AuthService"
+        bootstrap:
+          type: string
+          example: "complete"
+        feature_flags:
+          type: object
+          additionalProperties: true
+          description: Resolved feature-flag state (flag_name -> {enabled, organizations}).
 
     ErrorResponse:
       type: object
+      description: Shape used by TenantMiddleware-originated errors. None of the endpoints documented in this file currently pass through that middleware (all are exempt) — kept for services/routes that do.
       properties:
         message:
           type: string
           example: "Header 'X-Tenant-ID' is required to route requests."
+
+    HTTPExceptionResponse:
+      type: object
+      description: FastAPI's default HTTPException body shape, used by routers/auth.py.
+      properties:
+        detail:
+          type: string
+          example: "Header 'X-Tenant-ID' must be a valid RFC 4122 UUID."
+
+    NotReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "not_ready"
+        reason:
+          type: string
+          example: "bootstrap_not_applied"
 
     ValidationErrorResponse:
       type: object
