@@ -4,6 +4,7 @@
 **Work Package:** WP-01 — Organization Management
 **Governing documents:** IRA-001 (`architecture/05-Implementation/IRA-001_WP-01_Organization_Management_Implementation_Readiness_Assessment.md`), ADR-003, ADR-004, ADR-005 (`architecture/07-Decisions/`)
 **Maintenance rule:** One report for all of WP-01. Append a new Business Activity section per completion; update the dashboard each time. Do not create per-Business-Activity report files.
+**Technical Debt:** Per CLAUDE.md §19.8, non-blocking Independent Review observations are tracked in `architecture/06-Reviews/TECH-DEBT.md`, not repeatedly re-stated in full across Business Activity sections. Historical BA-01 through BA-04 review sections below predate this register and are left as originally written (this is an audit trail, not rewritten history) — their carried-forward items are backfilled into the register as TD-001 through TD-011. From BA-05 onward, Independent Review sections reference the relevant `TD-NNN` ID instead of repeating an already-recorded observation.
 
 ---
 
