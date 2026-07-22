@@ -20,14 +20,14 @@
 - ✅ BA-04 Steward Organization Identity
 - ✅ BA-05 Reactivate Suspended Organization
 - ✅ BA-06 Suspend Organization
-- 🔄 BA-07 Retire Organization & Preserve Continuity (implementation complete, developer-validated, awaiting independent review)
+- ✅ BA-07 Retire Organization & Preserve Continuity
 
 **Progress**
 
 - Total Business Activities: 7 (revised from 8 — Configure Organization and Audit History removed; neither is a canonical C-004 Business Activity per PE-001-C004. See WP-01 Scope Reconciliation, below.)
-- Completed: 7 / 7 (all 7 Business Activities are implementation-complete; BA-07 specifically has Independent Review Pending — see its section below. WP-01 as a whole is not yet closed: Certification per CLAUDE.md §19.7 remains a separate, later WP-level activity.)
-- Remaining: 0 implementation items; BA-07's Independent Review and WP-01 Certification remain outstanding.
-- Progress: 100% (implementation); WP-01 Closure gate (§19.7) still pending BA-07's Independent Review and WP-level Certification.
+- Completed: 7 / 7 — all 7 Business Activities implementation-complete, developer-validated, and independently reviewed (ACCEPTED / ACCEPTED WITH OBSERVATIONS). WP-01 as a whole is not yet closed: Independent Certification per CLAUDE.md §19.7 remains a separate, later WP-level activity.
+- Remaining: 0 Business Activities. WP-01 Certification remains outstanding.
+- Progress: 100% (Business Activity implementation); WP-01 Closure gate (§19.7) still pending WP-level Independent Certification.
 - Database migrations completed: 2 (`b3f7a1c9d2e4` — `organizations.status`/`description`; `d2d840d224b6` — widens `ck_organizations_status` to include `RETIRED`, BA-07)
 - API endpoints delivered: 7 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`, `POST /organizations/{organization_id}/suspend`, `POST /organizations/{organization_id}/retire`)
 - UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05/BA-06/BA-07, all three implemented backend-only per their explicit scope; see their sections)
@@ -1052,11 +1052,36 @@ Performed by the implementing engineer against this Business Activity's own acce
 
 ### Independent Review
 
-Independent Review: Pending (not yet requested for BA-07)
+**Independent Review: Accepted — ACCEPTED WITH OBSERVATIONS** (2026-07-23, fresh-context subagent with no memory of the implementation session; extracted and read `PE-001-C004_Organization_Management.docx` in full itself rather than trusting this report's citations, ran the full backend test suite independently, and performed its own codebase-wide search for Organization/status consumers rather than accepting the Enterprise Lifecycle Consistency Check's findings at face value).
+
+**Review Result: ACCEPTED WITH OBSERVATIONS**
+
+**Test results actually observed:** `pytest -q` (with `JWT_SECRET_KEY`/`JWT_ALGORITHM` set) → **125 passed, 0 failed**, 12.73s. Test-count deltas verified against the last committed state (`HEAD`): `test_organization_service.py` 25→33 (+8), `test_organization_api.py` 49→61 (+12) — matching this report's claims exactly, with all test-file diffs additive-only.
+
+**Findings:** `retire()`'s Entry Context was checked against the extracted canonical text of PE-001-C004 §3.8 directly — confirmed to accept both `ACTIVE` and `SUSPENDED` as valid starting states (not only `SUSPENDED`), exactly matching "Authoritative Organization Context in ACTIVE or SUSPENDED state." Already-RETIRED correctly rejected with 409 (not a no-op, not a 500). The irreversibility guards added to `activate()`/`suspend()` were read line-by-line and confirmed to run strictly before any mutating repository call in both methods; the relevant tests were confirmed to assert the stronger invariant (409 **and** a follow-up fetch proving the status did not change), not merely "an exception was raised." Historical continuity confirmed via direct search: no `DELETE` endpoint or call to `BaseRepository.delete()` is wired to Organization anywhere; `get_details()`/`search()` remain status-agnostic reads. The Alembic migration (`d2d840d224b6`) was confirmed to only widen the existing CHECK constraint (no column added/dropped/renamed), with `models/organization.py`'s `__table_args__` declaration verified character-for-character identical to the migration's constraint text; `alembic heads` resolves to exactly one head. `organization-api.yaml` parses cleanly and the previously-stale `/activate`/`/suspend` documentation (both the router decorators and the YAML) was confirmed genuinely updated to mention RETIRED-rejection, via direct diff inspection showing comment/description-only changes. **The Consistency Check's TD-016 finding was independently re-derived, not just accepted**: `services/auth_service.py`'s `authenticate_user()` was read directly and confirmed to never reference `Organization` or any status field — only `Membership.membership_status`/`is_active` gates login, meaning a person with an active Membership can today authenticate into a `SUSPENDED` or `RETIRED` organization's context. TD-004/013/014/015/016 in the Technical Debt Register were all confirmed accurate, non-duplicate, and consistent with the register's existing schema; no previously-`Closed` row was altered.
+
+**Defects found:** None. No functional, security, or business-rule defect was found that would block acceptance.
+
+**Test-coverage gap found (new — not caught by the original Consistency Check, recorded as TD-017 below):** `OrganizationRepository.get_by_code()` has no status filter, so `establish()`'s duplicate-code check correctly rejects reusing a RETIRED organization's `organization_code` for a new organization — architecturally correct continuity behavior — but **no test exercises this scenario** in either test file. A coverage gap, not a functional defect.
+
+**Risks recorded (non-blocking):**
+1. TD-016 is a real, currently-exploitable gap (not hypothetical) — a person can authenticate into a SUSPENDED/RETIRED organization's context today. Correctly out of C-004's capability boundary to fix (requires touching AuthService's core login flow, a different capability, C-001/URA-001), consistent with the same class of judgment call as TD-012/TD-013's precedent — but should not linger indefinitely at Medium priority given it directly undermines the "SUSPENDED/RETIRED are not valid for new dependent activity" invariant PE-001-C004 establishes.
+2. TD-013 (`update_profile()` missing an ACTIVE-only status check) remains open for the same reasons as previously recorded — re-confirmed still correctly out of scope.
+3. The untested retired-code-reuse path (new finding, TD-017) — low risk since the code path itself is correct, but any future refactor of `get_by_code()`/`establish()` could silently reintroduce a reuse bug with no test to catch it.
+
+**Recommendations carried forward:**
+- Add a test for retired-organization-code-reuse rejection (e.g. `test_establish_rejects_reusing_a_retired_organizations_code`) at the next convenient touch point — recorded as TD-017.
+- Prioritize TD-016 as a near-term item for whatever work package next owns AuthService's login flow or Membership Management — the most consequential open item this review surfaced.
+- Consider whether TD-013 and TD-016 together warrant a dedicated cross-cutting hardening pass once Role & Permission / Membership Management work packages begin.
+- Nothing found in this review should block WP-01 Certification once BA-07 is committed.
 
 ### Certification
 
-Certification Status: Pending (WP-level activity, performed only after WP-01 completes and BA-07 clears Independent Review, per CLAUDE.md §19.7)
+Certification Status: Pending (WP-level activity, performed only after WP-01 completes and BA-07's commit, per CLAUDE.md §19.7)
+
+### Repository
+
+Committed as `a63c62c` — "feat(auth-service): WP-01 BA-07 - Retire Organization & Preserve Continuity" (2026-07-23), which also carried IRA-001's previously-uncommitted WP-01 Scope Reconciliation (§15). This Independent Review outcome recorded in a separate documentation commit per §19.7's completion-gate repository condition.
 
 ---
 
@@ -1092,8 +1117,39 @@ Certification Status: Pending (WP-level activity, performed only after WP-01 com
 
 **Regression verification:** Full backend suite re-run after every corrective change — **125/125 passing, 0 regressions**, throughout.
 
-**Outcome:** No functional or business-logic defects were found in BA-01 through BA-07's handling of `ACTIVE`/`SUSPENDED`/`RETIRED`. Three minor, in-scope documentation inconsistencies were corrected. One new, genuinely out-of-scope cross-service finding (TD-016) was recorded per the task's instructions, not implemented. BA-07's Implementation Status, Developer Validation, and Independent-Review-Pending status (above) are unchanged by this check — it found nothing requiring their revision.
+**Outcome:** No functional or business-logic defects were found in BA-01 through BA-07's handling of `ACTIVE`/`SUSPENDED`/`RETIRED`. Three minor, in-scope documentation inconsistencies were corrected. One new, genuinely out-of-scope cross-service finding (TD-016) was recorded per the task's instructions, not implemented. This check's findings were subsequently validated, not merely accepted, by BA-07's Independent Review (above), which independently re-derived TD-016 and found one additional test-coverage gap (TD-017).
 
 ---
 
-*(This is WP-01's final Business Activity. A Final WP-01 Summary is added once BA-07 clears Independent Review, is committed, and WP-level Certification is performed per CLAUDE.md §19.7.)*
+## WP-01 Implementation Freeze
+
+**Date:** 2026-07-23
+**Status:** All 7 Business Activities of WP-01 (per the canonical Business Activity list established by the WP-01 Scope Reconciliation, above) are now **implementation complete, developer-validated, independently reviewed, and committed**:
+
+| Business Activity | Implementation | Developer Validation | Independent Review | Committed |
+|---|---|---|---|---|
+| BA-01 Establish Organization Identity | ✅ | ✅ | ✅ Accepted | ✅ `145acfe` |
+| BA-02 Resolve Organization Details | ✅ | ✅ | ✅ Accepted with Observations | ✅ `4d5c52a` |
+| BA-03 Search & List Organizations | ✅ | ✅ | ✅ Accepted with Observations | ✅ `95fd4fe` |
+| BA-04 Steward Organization Identity | ✅ | ✅ | ✅ Accepted | ✅ `e7b77f9` |
+| BA-05 Reactivate Suspended Organization | ✅ | ✅ | ✅ Accepted with Observations | ✅ `467d847` |
+| BA-06 Suspend Organization | ✅ | ✅ | ✅ Accepted with Observations | ✅ `a264b86` |
+| BA-07 Retire Organization & Preserve Continuity | ✅ | ✅ | ✅ Accepted with Observations | ✅ `a63c62c` |
+
+**Implementation is now frozen.** No additional feature implementation shall occur within WP-01 beyond this point.
+
+From this point forward, changes to WP-01's Organization Management implementation are permitted **only** through:
+
+1. **Independent Certification findings** — the WP-level Certification (CLAUDE.md §19.7) that follows this freeze may identify items requiring remediation before WP-01 is considered formally complete.
+2. **Approved remediation** — any remediation explicitly directed in response to Certification findings.
+3. **Critical defect fixes** — a genuine, production-impacting defect discovered after this point, not a scope addition or enhancement.
+
+No new Business Activity, no configuration/audit-history-style scope addition, and none of the open Technical Debt items (TD-002, TD-003, TD-005, TD-006, TD-007, TD-009, TD-010, TD-011, TD-013, TD-014, TD-015, TD-016, TD-017, TD-018, TD-019, TD-020 — all still `Open` in `architecture/06-Reviews/TECH-DEBT.md`) shall be implemented under this freeze. They remain correctly recorded, non-blocking, and explicitly deferred to their stated `Planned Resolution` (a later Business Activity slot, WP-01 Closure, WP-02, or a dedicated future work package) — resolving them now would itself violate this freeze.
+
+**Register completeness audit (Step 3 of this task):** Before declaring the freeze, every Independent Review section in this report (BA-01 through BA-07) was re-read specifically to confirm no non-blocking observation exists only in review prose. Three were found to violate CLAUDE.md §19.8.2 this way, each carried across multiple reviews without ever being given its own entry: the audit-before-event ordering discrepancy (flagged at BA-05's and BA-06's reviews), the undelivered Action Center UI (flagged at the same two reviews), and a conditional refactoring recommendation (BA-06's review judged a shared `_transition()` helper warranted "only if a third lifecycle transition is ever added" — BA-07's `retire()` met that condition, but the recommendation was never revisited or registered). These are now **TD-018**, **TD-019**, and **TD-020**. All other carried-forward observations were confirmed already correctly registered (TD-001 through TD-017). The register is now complete: every outstanding non-blocking observation from every Independent Review to date has a `TD-NNN` entry.
+
+**Next step:** WP-01 Independent Certification (CLAUDE.md §19.7), a separate WP-level governance activity performed independently of this implementation session, not yet begun.
+
+---
+
+*(WP-01's Business Activity implementation is complete and frozen as of this entry. The next entry in this report will be either WP-01 Certification's outcome or a remediation record responding to it.)*
