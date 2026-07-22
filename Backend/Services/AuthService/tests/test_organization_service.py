@@ -367,6 +367,155 @@ async def test_suspend_and_activate_keep_is_active_in_sync_with_status(db_sessio
 
 
 # ---------------------------------------------------------------------------
+# BA-07 — Retire Organization & Preserve Continuity
+# ---------------------------------------------------------------------------
+
+async def test_retire_transitions_active_organization_to_retired(db_session: AsyncSession) -> None:
+    """ERB-C004-07 Entry Context: retirement may be entered directly from ACTIVE."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-001", organization_name="Active Org", organization_type="CORPORATE"
+        )
+    )
+
+    retired = await service.retire(created.id, actor_id="platform-admin-1")
+
+    assert retired.id == created.id
+    assert retired.status == OrganizationStatus.RETIRED.value
+    assert retired.is_active is False
+
+
+async def test_retire_transitions_suspended_organization_to_retired(db_session: AsyncSession) -> None:
+    """ERB-C004-07 Entry Context: retirement may also be entered from SUSPENDED, not only ACTIVE."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-002", organization_name="Suspended Org", organization_type="CORPORATE"
+        )
+    )
+    await service.suspend(created.id)
+
+    retired = await service.retire(created.id)
+
+    assert retired.status == OrganizationStatus.RETIRED.value
+    assert retired.is_active is False
+
+
+async def test_retire_rejects_already_retired_organization(db_session: AsyncSession) -> None:
+    """Business Rule: retiring an already-RETIRED organization is a 409, not a silent no-op."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-003", organization_name="Org", organization_type="CORPORATE"
+        )
+    )
+    await service.retire(created.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.retire(created.id)
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_retire_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """A well-formed but non-existent id is a 404, same basis as activate()/suspend()/get_details()."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.retire(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
+
+
+async def test_retire_preserves_identity_and_profile_fields(db_session: AsyncSession) -> None:
+    """
+    Continuity requirement (ERB-C004-07): retirement SHALL NOT physically
+    delete the Organization — code, name, type, and description all
+    remain intact and queryable after retirement.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-004",
+            organization_name="Preserved Org",
+            organization_type="CORPORATE",
+            description="Should survive retirement.",
+        )
+    )
+
+    retired = await service.retire(created.id)
+
+    assert retired.organization_code == "RET-004"
+    assert retired.organization_name == "Preserved Org"
+    assert retired.organization_type == "CORPORATE"
+    assert retired.description == "Should survive retirement."
+
+    fetched = await service.get_details(created.id)
+    assert fetched.status == OrganizationStatus.RETIRED.value
+    assert fetched.organization_code == "RET-004"
+
+
+async def test_retire_is_findable_by_status_filter(db_session: AsyncSession) -> None:
+    """A RETIRED organization is still discoverable via Search & List's status filter — not hidden or deleted."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-005", organization_name="Findable Retired Org", organization_type="CORPORATE"
+        )
+    )
+    await service.retire(created.id)
+
+    items, total = await service.search(
+        query=None, status_filter="RETIRED", skip=0, limit=20, sort_by="organization_name", sort_order="asc"
+    )
+
+    assert total == 1
+    assert items[0].organization_code == "RET-005"
+
+
+async def test_activate_rejects_retired_organization(db_session: AsyncSession) -> None:
+    """
+    Irreversibility invariant (PE-001-C004 §3.8): a RETIRED organization
+    can never be reactivated. activate() must reject it explicitly, not
+    silently succeed.
+    """
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-006", organization_name="Org", organization_type="CORPORATE"
+        )
+    )
+    await service.retire(created.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate(created.id)
+
+    assert exc_info.value.status_code == 409
+    # Confirm the organization did not silently flip back to ACTIVE.
+    fetched = await service.get_details(created.id)
+    assert fetched.status == OrganizationStatus.RETIRED.value
+
+
+async def test_suspend_rejects_retired_organization(db_session: AsyncSession) -> None:
+    """Same irreversibility invariant, exercised against suspend() instead of activate()."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationRequest(
+            organization_code="RET-007", organization_name="Org", organization_type="CORPORATE"
+        )
+    )
+    await service.retire(created.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.suspend(created.id)
+
+    assert exc_info.value.status_code == 409
+    fetched = await service.get_details(created.id)
+    assert fetched.status == OrganizationStatus.RETIRED.value
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 

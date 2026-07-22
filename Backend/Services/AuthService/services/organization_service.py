@@ -1,10 +1,13 @@
 """
 WP-01 — Organization Management (C-004).
 
-Business Activities implemented here: BA-01 Establish Organization,
-BA-02 View Organization Details, BA-03 Search & List Organizations,
-BA-04 Update Organization Profile, BA-05 Activate Organization,
-BA-06 Suspend Organization.
+Business Activities implemented here (renamed per the WP-01 Scope
+Reconciliation, IRA-001 §15, to align with PE-001-C004's canonical
+ERBs): BA-01 Establish Organization Identity, BA-02 Resolve Organization
+Details, BA-03 Search & List Organizations, BA-04 Steward Organization
+Identity, BA-05 Reactivate Suspended Organization, BA-06 Suspend
+Organization, BA-07 Retire Organization & Preserve Continuity — the
+final Business Activity of WP-01.
 
 Realizes CAP-001 C-004 per the ADR-003/ADR-004/ADR-005-scoped
 implementation approved in IRA-001. Follows IMP-001 §6.3's Business
@@ -145,8 +148,13 @@ class OrganizationService:
         same basis as get_details). Business Object Update touches only
         organization_name, organization_type, and description —
         organization_code and status (lifecycle) are out of this
-        activity's scope (status belongs to the Activate/Suspend
-        Business Activities, ADR-005).
+        activity's scope (status belongs to the Activate/Suspend/Retire
+        Business Activities, ADR-005). Note (TD-013, discovered during
+        BA-07): this method does not itself check status — PE-001-C004's
+        ERB-C004-05 restricts identity stewardship to ACTIVE organizations
+        only, which this implementation does not yet enforce. Tracked as
+        technical debt, not fixed here (would change this already-accepted
+        Business Activity's behavior).
         """
         organization = await self.organization_repo.update(
             organization_id,
@@ -209,6 +217,14 @@ class OrganizationService:
         boolean to `True` so it no longer silently diverges from
         `status` — see suspend()'s matching sync in the opposite
         direction.
+
+        BA-07 correctness fix: RETIRED (ERB-C004-07 per PE-001-C004) is a
+        terminal state — "no ERB, EX, or tenant-configured policy in this
+        specification permits reactivating a retired Organization." A
+        RETIRED organization must be rejected here explicitly; without
+        this check, introducing RETIRED as a new status value would
+        silently make it reactivatable via this already-shipped endpoint,
+        which is exactly the invariant PE-001-C004 forbids.
         """
         organization = await self.organization_repo.get_by_id(organization_id)
         if organization is None:
@@ -222,6 +238,19 @@ class OrganizationService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        if organization.status == OrganizationStatus.RETIRED.value:
+            record_audit(
+                action="ACTIVATE_ORGANIZATION",
+                resource=f"organization:{organization.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization is RETIRED and cannot be reactivated", "organization_code": organization.organization_code},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Organization '{organization_id}' is RETIRED and cannot be reactivated.",
             )
 
         if organization.status == OrganizationStatus.ACTIVE.value:
@@ -281,6 +310,12 @@ class OrganizationService:
         TD-012 resolution: also syncs the legacy `is_active` boolean to
         `False`, closing the divergence risk BA-05 flagged — `is_active`
         and `status` now always move together for both transitions.
+
+        BA-07 correctness fix: RETIRED (ERB-C004-07 per PE-001-C004) is
+        terminal — a RETIRED organization must be rejected here explicitly
+        for the same reason activate() rejects it (see that method's
+        docstring); without this check, RETIRED would be silently
+        reversible via this already-shipped endpoint.
         """
         organization = await self.organization_repo.get_by_id(organization_id)
         if organization is None:
@@ -294,6 +329,19 @@ class OrganizationService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        if organization.status == OrganizationStatus.RETIRED.value:
+            record_audit(
+                action="SUSPEND_ORGANIZATION",
+                resource=f"organization:{organization.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization is RETIRED and cannot be suspended", "organization_code": organization.organization_code},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Organization '{organization_id}' is RETIRED and cannot be suspended.",
             )
 
         if organization.status == OrganizationStatus.SUSPENDED.value:
@@ -328,6 +376,105 @@ class OrganizationService:
         )
         publish_event(
             "ORGANIZATION_SUSPENDED",
+            {
+                "organization_id": str(updated.id),
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "status": updated.status,
+            },
+        )
+        return updated
+
+    async def retire(self, organization_id: UUID, actor_id: str | None = None) -> Organization:
+        """
+        Business Activity: Retire Organization & Preserve Continuity (BA-07).
+
+        Realizes ERB-C004-07 (PE-001-C004): a terminal, irreversible
+        lifecycle transition, the final Business Activity of WP-01 per
+        the WP-01 Scope Reconciliation (IRA-001 §15 / this report's Scope
+        Reconciliation section).
+
+        Business Rule (Entry Context, PE-001-C004 §3.8): retirement may
+        be entered from ACTIVE **or** SUSPENDED — both are canonically
+        valid starting states, not only SUSPENDED. Only an already-RETIRED
+        organization is rejected (409), the same explicit-transition
+        precedent activate()/suspend() established.
+
+        Preserves continuity: no row is deleted. organization_code,
+        organization_name, organization_type, description, created_at,
+        and the full audit trail all remain intact and queryable via
+        get_details()/search() after retirement — only status (and the
+        synced is_active) changes. This satisfies PE-001-C004's "SHALL
+        NOT physically delete" requirement via the existing repository
+        layer as-is; no new repository method or deletion path was
+        introduced.
+
+        Irreversibility is enforced at the *other* transition methods:
+        activate() and suspend() both reject a RETIRED organization
+        (see their docstrings) — this method does not need to guard
+        against being reversed itself, since nothing transitions away
+        from RETIRED.
+
+        Known Limitation (documented, not implemented — deliberately out
+        of this Business Activity's minimal scope, consistent with
+        ADR-004's incremental-implementation philosophy; recorded as
+        TD-014): PE-001-C004 also describes an optional Organization
+        Continuity Context linking a retired Organization to a successor
+        (EX-C004-13) and a persisted retirement reason/responsible-
+        authority record. Neither is implemented here — no successor-
+        organization relationship exists anywhere in the current schema,
+        and no WP-01 consumer needs one yet. The reason/authority
+        requirement is satisfied at the same level of rigor as every
+        other lifecycle transition (BA-05/BA-06): captured in the audit
+        record's actor_id/metadata via the existing observability
+        mechanism, not a new persisted column.
+        """
+        organization = await self.organization_repo.get_by_id(organization_id)
+        if organization is None:
+            record_audit(
+                action="RETIRE_ORGANIZATION",
+                resource=f"organization:{organization_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization exists with id '{organization_id}'.",
+            )
+
+        if organization.status == OrganizationStatus.RETIRED.value:
+            record_audit(
+                action="RETIRE_ORGANIZATION",
+                resource=f"organization:{organization.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "organization already RETIRED", "organization_code": organization.organization_code},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Organization '{organization_id}' is already RETIRED.",
+            )
+
+        previous_status = organization.status
+        updated = await self.organization_repo.update(
+            organization_id, {"status": OrganizationStatus.RETIRED.value, "is_active": False}
+        )
+        await self.organization_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_ORGANIZATION",
+            resource=f"organization:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "organization_code": updated.organization_code,
+                "previous_status": previous_status,
+                "new_status": updated.status,
+            },
+        )
+        publish_event(
+            "ORGANIZATION_RETIRED",
             {
                 "organization_id": str(updated.id),
                 "organization_code": updated.organization_code,

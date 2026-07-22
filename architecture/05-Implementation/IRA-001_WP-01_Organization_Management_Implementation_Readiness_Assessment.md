@@ -4,9 +4,8 @@
 **Status:** Approved — WP-01 READY
 **Classification:** Implementation Readiness Assessment (canonical IRA template — see "Future Reuse" at the end of this document)
 **Work Package:** WP-01 — Organization Management (C-004)
-**Approved scope:** Organization lifecycle, CRUD, activation/suspension, profile, configuration, validation, search and listing, details, audit history, APIs, database model, Business Activities, UI, tests, documentation. Explicitly excludes Role & Permission Management, Membership Management, and Workspace Management (subsequent work packages).
-**Documents reviewed:** CLAUDE.md, ARCH-000, CAP-001 (§2 Registry, C-004 entry), ERG-001, URA-001 (§2, Organization-relevant principles), CMD-001 (§17 Enterprise Domain), Master Technical Architecture (Part A, `organization_master`/`organization_node`/`organization_hierarchy` DDL + RLS chapter), RTA-001 (§4.13, runtime execution chain), IMP-001 (§1.7, §6.3–6.7 Business Activity Lifecycle/Contract), SD-001 (§5 Layout Templates, §7 Screen Anatomy), SD-002 (§7 Event/Lifecycle/Audit Rules), DS-001 (Component Catalogue, Ch.13), GRC-001 (§ Scope/Audit cross-reference), WP-00 Certification Report, WP-00A Completion Report, current repository structure and git status, PE-001 Enterprise Experience Blueprint (Ch.13–15).
-**Not reviewed:** `PE-001-C004_Organization_Management.docx` — exists (73KB) but is `.docx`-only with no `.md` conversion; unreadable by available tooling. Tracked as a non-blocking implementation task (see §11).
+**Approved scope (revised per §15 WP-01 Scope Reconciliation):** Organization identity establishment, resolution, search/listing, identity stewardship, suspension/reactivation, and retirement — realizing PE-001-C004's seven canonical ERBs. Explicitly excludes Role & Permission Management, Membership Management, and Workspace Management (subsequent work packages). Configuration and Audit History are **removed** from WP-01's scope — see §15; they were never canonical C-004 Business Activities.
+**Documents reviewed:** CLAUDE.md, ARCH-000, CAP-001 (§2 Registry, C-004 entry), ERG-001, URA-001 (§2, Organization-relevant principles), CMD-001 (§17 Enterprise Domain), Master Technical Architecture (Part A, `organization_master`/`organization_node`/`organization_hierarchy` DDL + RLS chapter), RTA-001 (§4.13, runtime execution chain), IMP-001 (§1.7, §6.3–6.7 Business Activity Lifecycle/Contract), SD-001 (§5 Layout Templates, §7 Screen Anatomy), SD-002 (§7 Event/Lifecycle/Audit Rules), DS-001 (Component Catalogue, Ch.13), GRC-001 (§ Scope/Audit cross-reference), WP-00 Certification Report, WP-00A Completion Report, current repository structure and git status, PE-001 Enterprise Experience Blueprint (Ch.13–15), **`PE-001-C004_Organization_Management.docx` (extracted and reviewed in full — see §15; this is the authoritative Capability Experience Specification for C-004, previously unreadable, now the governing document for this IRA's Business Activity list).**
 
 ---
 
@@ -44,23 +43,26 @@ The following findings were identified during this assessment as requiring an ex
 
 Full ADR text and traceability: §12 and §13.
 
-### 2.2 Business Activity Assessment
+### 2.2 Business Activity Assessment (revised per §15 WP-01 Scope Reconciliation)
 Per IMP-001 §1.7 ("Business Activities Over CRUD"), none of the following may be exposed as raw REST CRUD — each needs a full Business Activity Contract (§6.7): Business Intent, Input/Output Contract, Business Rules, Validation Rules, Authorization Rules, Metadata Dependencies, Domain Events, Audit Requirements, Tests.
 
-| Business Activity | Type (§6.6 taxonomy) | Business Object | Domain Event |
-|---|---|---|---|
-| Establish Organization | Create | Organization | `ORGANIZATION_ESTABLISHED` |
-| Update Organization Profile | Update | Organization | `ORGANIZATION_PROFILE_UPDATED` |
-| Activate Organization | Update (state transition) | Organization | `ORGANIZATION_ACTIVATED` |
-| Suspend Organization | Update (state transition) | Organization | `ORGANIZATION_SUSPENDED` |
-| Configure Organization | Update | Organization (configuration) | `ORGANIZATION_CONFIGURATION_CHANGED` |
-| Search/List Organizations | Query (read-side) | Organization | none |
-| View Organization Details | Query | Organization | none (view may itself be an audited access under SD-002-054 depending on materiality) |
-| View Organization Audit History | Query | Organization (Audit Trail) | none |
+This table originally listed 8 Business Activities, including "Configure Organization" and "View Organization Audit History," proposed before `PE-001-C004` (the authoritative Capability Experience Specification for C-004) could be read. Now that it has been (§15), the table below is the corrected, canonical-ERB-mapped list of 7 Business Activities.
 
-None of these event names are canonically pre-defined anywhere (RTA-001 §4.13 gives examples like `EVIDENCE_VERIFIED`/`REPORT_PUBLISHED`, not Organization-specific ones) — they are proposed here for planning purposes only, consistent with SD-002-053 ("Event Types Are Tenant-Configurable Metadata... new event types require no application deployment, only a metadata record"), which again presumes the Metadata Runtime addressed by ADR-005.
+| Business Activity | Type (§6.6 taxonomy) | Business Object | Domain Event | Canonical ERB (PE-001-C004) | Status |
+|---|---|---|---|---|---|
+| BA-01 — Establish Organization Identity | Create | Organization | `ORGANIZATION_ESTABLISHED` | ERB-C004-01 | ✅ Complete |
+| BA-02 — Resolve Organization Details | Query | Organization | none | ERB-C004-04 | ✅ Complete |
+| BA-03 — Search & List Organizations | Query (read-side) | Organization | none | Platform Administrator operational capability (no direct ERB — reasonable admin tooling, not a canonical Enterprise Experience) | ✅ Complete |
+| BA-04 — Steward Organization Identity | Update | Organization | `ORGANIZATION_PROFILE_UPDATED` | ERB-C004-05 | ✅ Complete |
+| BA-05 — Reactivate Suspended Organization | Update (state transition) | Organization | `ORGANIZATION_ACTIVATED` | ERB-C004-06 / EX-C004-09 | ✅ Complete |
+| BA-06 — Suspend Organization | Update (state transition) | Organization | `ORGANIZATION_SUSPENDED` | ERB-C004-06 / EX-C004-08 | ✅ Complete |
+| BA-07 — Retire Organization & Preserve Continuity | Update (state transition, terminal) | Organization | `ORGANIZATION_RETIRED` | ERB-C004-07 | ⏳ Planned |
 
-**Business Rules / States / Lifecycle:** SD-002-051 mandates lifecycle be metadata-driven, tenant-configurable, version-controlled. No canonical lifecycle state machine for Organization exists in any canonical document — resolved by ADR-005 (interim model).
+**Removed** (never canonical C-004 Business Activities — see §15): ~~Configure Organization~~, ~~View Organization Audit History~~.
+
+None of the Domain Event names above are canonically pre-defined anywhere (RTA-001 §4.13 gives examples like `EVIDENCE_VERIFIED`/`REPORT_PUBLISHED`, not Organization-specific ones; PE-001-C004 itself records every Business Activity/EAC binding as "Pending Canonical Binding") — they are proposed here for planning purposes only, consistent with SD-002-053 ("Event Types Are Tenant-Configurable Metadata... new event types require no application deployment, only a metadata record"), which again presumes the Metadata Runtime addressed by ADR-005.
+
+**Business Rules / States / Lifecycle:** SD-002-051 mandates lifecycle be metadata-driven, tenant-configurable, version-controlled. No metadata-driven lifecycle state machine for Organization exists in any canonical document — resolved by ADR-005 (interim model). PE-001-C004 defines a **third lifecycle state, `RETIRED`** (terminal, irreversible), in addition to the `ACTIVE`/`SUSPENDED` pair ADR-005 already scoped as WP-01's interim model — `RETIRED` is BA-07's scope, not yet implemented.
 
 ### 2.3 Architecture Impact
 See Architecture Impact Matrix (§4).
@@ -136,9 +138,9 @@ See §9 (folded in — phase-level breakdown is more useful than a raw file/modu
 
 ## 4. Business Activity Matrix
 
-See §2.2 (Business Activities, Types, Events). Business Rules/Validation Rules per activity are not yet specified anywhere canonically (PE-001-C004 unread — §11) and must come from that document, not be invented here.
+See §2.2 (Business Activities, Types, Events, canonical ERB mapping). Business Rules/Validation Rules per activity are now traceable to `PE-001-C004`'s ERB/EX definitions (§15) rather than pending that document's review.
 
-## 5. UI Impact Matrix
+## 5. UI Impact Matrix (revised per §15 — Configuration and Audit History rows removed, never canonical)
 
 | Screen/Component | SD-001 Pattern | DS-001 Components (existing in `ui/`) | DS-001 Components (named, not yet built) |
 |---|---|---|---|
@@ -146,8 +148,7 @@ See §2.2 (Business Activities, Types, Events). Business Rules/Validation Rules 
 | Organization Detail | Master-Detail (detail side) + Progressive Disclosure | Card, StatusBadge, Modal | Action Center |
 | Establish Organization | Guided Completion | Form, Input, Button, Spinner | Select, Stepper |
 | Activate/Suspend | Action Center action | Modal, Button, StatusBadge | Action Center |
-| Configuration | Master-Detail (detail tab) | Form, Input, Card | Toggle/Switch, Select |
-| Audit History | Progressive Disclosure (4th level) | Table | Audit Trail Viewer |
+| Retire (BA-07, planned) | Action Center action (irreversible — requires explicit confirmation per PE-001-C004 §1.7 "Explainable governance") | Modal, Button, StatusBadge | Action Center |
 | Existing placeholder routes | — | `/organization` (App), `/platform-admin/organizations` (Admin) — two separate placeholder routes already exist; one to be selected (§11) |
 
 No DS-001 gap-escalation is required — missing components are named in DS-001's catalogue and buildable as shared `ui/` additions (per DS-001-230A, not capability-scoped), following the `features/person/` precedent exactly.
@@ -169,7 +170,7 @@ No DS-001 gap-escalation is required — missing components are named in DS-001'
 
 | Change | Notes |
 |---|---|
-| New columns on `organizations` | Scoped per ADR-004's approved subset (Lifecycle, CRUD, Profile, Configuration, Search, Validation) |
+| New columns on `organizations` | Scoped per ADR-004's approved subset (Lifecycle, CRUD, Profile, Search, Validation) — "Configuration" removed from ADR-004's originally-cited areas per §15; no Organization Configuration Business Activity is canonical |
 | Lifecycle/status column | Per ADR-005's interim `ACTIVE`/`SUSPENDED` model |
 | Index on searchable fields (name, code — code already indexed) | Additive, low-risk |
 | Constraints | Unique `organization_code` already exists; no new constraint conflicts identified |
@@ -183,35 +184,35 @@ No DS-001 gap-escalation is required — missing components are named in DS-001'
 | 1 | Building Organization CRUD in AuthService while TenantService's README/branding claims the same capability | Architecture | — | **Resolved by ADR (ADR-003).** |
 | 2 | Building against the current 7-column `organizations` table vs. the canonical 25-column `organization_master` shape | Architecture/Delivery | — | **Resolved by ADR (ADR-004).** |
 | 3 | Implementing "activation/suspension" as a bare boolean, silently contradicting SD-002-051's metadata-driven lifecycle mandate | Architecture/Compliance | — | **Resolved by ADR (ADR-005).** |
-| 4 | Designing UI/business rules without having read PE-001-C004 (capability-specific experience spec) | Delivery/Compliance | **Major** | Open — non-blocking implementation task |
+| 4 | Designing UI/business rules without having read PE-001-C004 (capability-specific experience spec) | Delivery/Compliance | **Major** | **Resolved.** PE-001-C004 read in full during the WP-01 Scope Reconciliation (§15); two Business Activities (Configure, Audit History) were found to have no canonical basis and were removed; one canonical ERB (Retire) was found unplanned and added as BA-07. |
 | 5 | RLS gap on the tenant-boundary-defining table itself, shipped without confirming whether that's intentional | Security | **Major** | Open — non-blocking implementation task |
 | 6 | Authorization simplification (PLATFORM_ADMIN-only gating) shipped without being flagged as a deliberate, temporary scope reduction | Security/Compliance | **Minor** | Open — mitigated by Implementation Guardrails (§12) |
 | 7 | Two existing placeholder routes (`/organization`, `/platform-admin/organizations`) both getting built out independently | Delivery | **Minor** | Open — non-blocking implementation task |
 | 8 | `middleware/tenant.py`'s dead-code exemption pattern (WP-00 finding) becomes live and untested for the first time in this same work package | Technical | **Minor** | Open — mitigated by testing strategy (§2.10) |
 
-## 9. Implementation Plan (phased, each phase a working vertical slice — no Big Bang)
+## 9. Implementation Plan (phased, each phase a working vertical slice — no Big Bang) — revised per §15
 
-**Phase 0 — Decisions (no code):** Complete. ADR-003, ADR-004, ADR-005 recorded.
+**Phase 0 — Decisions (no code):** ✅ Complete. ADR-003, ADR-004, ADR-005 recorded.
 
-**Phase 1 — Read-side vertical slice:** `GET /organizations` (list) + `GET /organizations/{id}` (detail), backed by the ADR-004-scoped schema, `organization_repository.py`, minimal `OrganizationResponse` schema, frontend List+Detail screens (Master-Detail), tests, observability. No writes yet — smallest possible slice that proves the schema/ownership decisions end-to-end.
+**Phase 1 — Read-side vertical slice:** ✅ Complete. BA-02 Resolve Organization Details, BA-03 Search & List Organizations.
 
-**Phase 2 — Establish Organization:** Create Business Activity (full BAC), Guided Completion UI, idempotency/validation tests — mirrors WP-00's `bootstrap_service.py` pattern for a single-entity creation flow.
+**Phase 2 — Establish Organization:** ✅ Complete. BA-01 Establish Organization Identity.
 
-**Phase 3 — Lifecycle:** Activate/Suspend Business Activities (per ADR-005's interim model), Action Center UI wiring, audit-record verification tests (SD-002-054's seven questions, explicitly asserted in tests as WP-00 did for bootstrap).
+**Phase 3 — Lifecycle:** ✅ Complete. BA-05 Reactivate Suspended Organization, BA-06 Suspend Organization (per ADR-005's interim model; audit and Domain Event on every transition, per the established `record_audit`/`publish_event` pattern).
 
-**Phase 4 — Profile & Configuration:** Update Business Activity, configuration fields, form UI.
+**Phase 4 — Identity Stewardship:** ✅ Complete. BA-04 Steward Organization Identity. ("Configuration" removed from this phase's original scope per §15 — never canonical.)
 
-**Phase 5 — Audit History & Search/Listing polish:** Audit Trail Viewer component, Filter Bar/Pagination/Saved View Selector (new shared `ui/` components), search endpoint.
+**Phase 5 — Retire:** ⏳ Planned. BA-07 Retire Organization & Preserve Continuity (ERB-C004-07) — the sole remaining Business Activity. ("Audit History & Search/Listing polish" removed from this phase's original scope per §15 — Search & Listing already delivered as BA-03 in Phase 1; Audit History was never canonical.)
 
 Each phase ships a demonstrable, tested, documented increment — consistent with CLAUDE.md §5 ("Never skip validation") and IMP-001's Business Activity Contract-per-activity structure.
 
-## 10. Recommended Implementation Sequence
+## 10. Recommended Implementation Sequence (revised per §15)
 
-1. Phase 1 (read-side) — proves the foundation.
-2. Phase 2 (Establish) — the only write path WP-00's bootstrap already partially depends on (a real `Establish Organization` activity should supersede bootstrap's raw insert for anything beyond the seeded demo org).
-3. Phase 3 (Lifecycle) — implements ADR-005's interim model.
-4. Phase 4 (Profile/Configuration).
-5. Phase 5 (Audit/Search polish) — naturally last, additive UI/read-path work with no new business-rule risk.
+1. Phase 1 (read-side) — ✅ complete, proved the foundation.
+2. Phase 2 (Establish) — ✅ complete.
+3. Phase 3 (Lifecycle: Suspend/Reactivate) — ✅ complete, implements ADR-005's interim model.
+4. Phase 4 (Identity Stewardship) — ✅ complete.
+5. Phase 5 (Retire) — ⏳ the sole remaining phase; BA-07 Retire Organization & Preserve Continuity, per PE-001-C004's ERB-C004-07.
 
 ## 11. Recorded Architectural Decisions
 
@@ -223,7 +224,7 @@ The following governance decisions have been approved. They are informational �
 
 ### Remaining non-blocking implementation tasks
 
-- Read `PE-001-C004_Organization_Management.docx` (convert to `.md`, matching CAP-001's precedent) before UI/business-rule design proceeds within WP-01 (Risk #4).
+- ~~Read `PE-001-C004_Organization_Management.docx`...~~ **Resolved** — read in full during the WP-01 Scope Reconciliation (§15); a `.md` conversion is still a reasonable follow-up (matching CAP-001's precedent) but no longer blocks anything (Risk #4 closed).
 - Confirm RLS intent on the Organization table before real data crosses environments beyond local dev (Risk #5).
 - Select one of the two existing placeholder routes (`/organization` vs. `/platform-admin/organizations`) as WP-01's UI target (Risk #7).
 
@@ -289,6 +290,34 @@ No architectural blockers remain. The assessment identified several architectura
 WP-01 may now proceed through the approved implementation lifecycle:
 
 Implementation Readiness Assessment → Implementation → Implementation Report → Independent Certification → Remediation → Re-Certification → Commit
+
+---
+
+## 15. WP-01 Scope Reconciliation
+
+**Date:** 2026-07-21
+**Trigger:** Before starting the originally-planned BA-07 (Configure Organization), a governing-canonical-asset review (CLAUDE.md §19.1) surfaced that `PE-001-C004_Organization_Management.docx` — flagged in this IRA's header as unreviewed, and in Risk #4 (§8) as a Major, Open risk — had never actually been read. It was `.docx`-only and unreadable by available file tools; its raw text was extracted directly from the archive and read in full (1461 paragraphs) before any further implementation proceeded.
+
+**Findings:**
+
+- `PE-001-C004` is the authoritative Capability Experience Specification for C-004 (Gold Standard, v1.1) and became the governing document for Organization Management's Business Activity scope once read.
+- It defines exactly seven Enterprise Experience Blueprints (ERB-C004-01 through -07) and a three-state lifecycle (`ACTIVE`/`SUSPENDED`/**`RETIRED`**) — not the two-state `ACTIVE`/`SUSPENDED` pair ADR-005 scoped as WP-01's interim model.
+- This IRA's original §2.2 Business Activity table (8 items) was drafted before `PE-001-C004` could be read and was self-labeled "proposed here for planning purposes only" — not itself a canonical source.
+- **Configuration** and **Audit History** — 2 of the original 8 planned Business Activities — have **no corresponding ERB, EX, or scope clause anywhere in `PE-001-C004`** (confirmed by full-text search of the extracted document). ADR-004 independently and separately already deferred every configuration-flavored canonical field (`reporting_framework_json`, `board_meeting_frequency`, `daily_brief_enabled_flag`, etc.) to future work packages pending an actual consumer — reinforcing that WP-01 never had a genuine need for Configuration. Audit History's underlying concern (auditability) is already satisfied cross-cuttingly by `observability.py`'s `record_audit()` calls in every implemented Business Activity, consistent with SD-002-054 and C-114 Audit & Assurance — a platform-wide concern, not a distinct C-004 Enterprise Experience.
+- **ERB-C004-07 (Retire Organization & Preserve Continuity)** — a real, fully-specified canonical ERB with its own `RETIRED` terminal lifecycle state — had **no corresponding Business Activity anywhere in this IRA's original plan**. This is the gap in the opposite direction: real canonical scope with no implementation plan.
+- Two Business Activities were renamed for precision against canonical terminology: "Activate Organization" → **"Reactivate Suspended Organization"** (it implements ERB-C004-06/EX-C004-09, a reversible reactivation of an already-established Organization — not ERB-C004-03/EX-C004-04's distinct "Activate Organization," which means completing first-time establishment); "Establish Organization" → "Establish Organization Identity" and "Update Organization Profile" → "Steward Organization Identity" and "View Organization Details" → "Resolve Organization Details," aligning naming with ERB-C004-01/05/04 respectively without changing any implemented behavior, API, or Domain Event name.
+
+**Resolution:**
+
+- IRA-001's §2.2 Business Activity table is corrected to 7 canonical-ERB-mapped Business Activities (§2.2, above).
+- Configuration and Audit History are removed — they were never canonical C-004 Business Activities.
+- BA-07 is now **Retire Organization & Preserve Continuity** (ERB-C004-07), replacing the two removed items — the sole remaining planned Business Activity.
+- **No architecture changed.** No entity, table, column, service boundary, or permission tier was added, removed, or redefined by this reconciliation.
+- **No implementation was discarded.** BA-01 through BA-06 are unchanged in the codebase; only their names and canonical cross-references in planning documents were corrected. No commit was reverted, no code was rewritten.
+- **No ADR was required.** This is not two canonical authorities in genuine conflict — it is a planning document's self-flagged, provisional content (this IRA's §2.2, explicitly written before `PE-001-C004` could be reviewed) being superseded by the actual canonical Capability Specification once read, exactly the outcome this IRA's own Risk #4 anticipated. There was no architectural tradeoff to adjudicate, only a plan to correct.
+- This is a **planning correction**, not an architectural change, per CLAUDE.md §16's canonical authority resolution: `PE-001-C004` (the governing Capability Specification) takes precedence over this IRA's provisional Business Activity list wherever they conflict.
+
+**Cross-reference:** The corresponding update to `IMP-REPORT-WP-01_Organization_Management.md` records the same reconciliation against the implementation report's dashboard and Business Activity sections.
 
 ---
 

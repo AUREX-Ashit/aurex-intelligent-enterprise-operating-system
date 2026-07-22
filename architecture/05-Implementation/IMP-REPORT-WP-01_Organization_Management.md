@@ -12,26 +12,27 @@
 
 **Overall Status:** 🟡 In Progress
 
-**Business Activities**
+**Business Activities** (revised per WP-01 Scope Reconciliation, below — 8 planned items corrected to 7, aligned with PE-001-C004's canonical ERBs)
 
-- ✅ BA-01 Establish Organization
-- ✅ BA-02 View Organization
-- ✅ BA-03 Search Organizations
-- ✅ BA-04 Update Organization Profile
-- ✅ BA-05 Activate Organization
+- ✅ BA-01 Establish Organization Identity
+- ✅ BA-02 Resolve Organization Details
+- ✅ BA-03 Search & List Organizations
+- ✅ BA-04 Steward Organization Identity
+- ✅ BA-05 Reactivate Suspended Organization
 - ✅ BA-06 Suspend Organization
-- ⏳ BA-07 Organization Configuration
-- ⏳ BA-08 Audit History
+- 🔄 BA-07 Retire Organization & Preserve Continuity (implementation complete, developer-validated, awaiting independent review)
 
 **Progress**
 
-- Completed: 6 / 8
-- Progress: 75%
-- Database migrations completed: 1 (`b3f7a1c9d2e4` — `organizations.status`/`description`; none of BA-02 through BA-06 required schema changes)
-- API endpoints delivered: 6 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`, `POST /organizations/{organization_id}/suspend`)
-- UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05/BA-06, both implemented backend-only per their explicit scope; see BA-05/BA-06 sections)
-- Tests (running totals, not a per-BA delta): 25 unit, 49 integration, 2 dedicated middleware — 76 total across `test_organization_service.py`/`test_organization_api.py`/`test_tenant_middleware.py`; BA-06 itself added 15 (6/9/0) — see BA-06 section for the exact breakdown
-- ADRs raised during implementation: 0 across BA-01 through BA-06 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001)
+- Total Business Activities: 7 (revised from 8 — Configure Organization and Audit History removed; neither is a canonical C-004 Business Activity per PE-001-C004. See WP-01 Scope Reconciliation, below.)
+- Completed: 7 / 7 (all 7 Business Activities are implementation-complete; BA-07 specifically has Independent Review Pending — see its section below. WP-01 as a whole is not yet closed: Certification per CLAUDE.md §19.7 remains a separate, later WP-level activity.)
+- Remaining: 0 implementation items; BA-07's Independent Review and WP-01 Certification remain outstanding.
+- Progress: 100% (implementation); WP-01 Closure gate (§19.7) still pending BA-07's Independent Review and WP-level Certification.
+- Database migrations completed: 2 (`b3f7a1c9d2e4` — `organizations.status`/`description`; `d2d840d224b6` — widens `ck_organizations_status` to include `RETIRED`, BA-07)
+- API endpoints delivered: 7 (`POST /organizations`, `GET /organizations/{organization_id}`, `GET /organizations`, `PUT /organizations/{organization_id}`, `POST /organizations/{organization_id}/activate`, `POST /organizations/{organization_id}/suspend`, `POST /organizations/{organization_id}/retire`)
+- UI screens delivered: 1 (`/platform-admin/organizations` — unchanged by BA-05/BA-06/BA-07, all three implemented backend-only per their explicit scope; see their sections)
+- Tests (running totals, not a per-BA delta): 33 unit, 61 integration, 2 dedicated middleware — 96 total across `test_organization_service.py`/`test_organization_api.py`/`test_tenant_middleware.py`; BA-07 itself added 20 (8/12/0) — see BA-07 section for the exact breakdown. Full repository suite: 125/125 passing.
+- ADRs raised during implementation: 0 across BA-01 through BA-07 (ADR-003, ADR-004, ADR-005 were recorded during the WP-01 readiness assessment, prior to implementation start — see IRA-001). No ADR was raised for the WP-01 Scope Reconciliation or for BA-07 either — see below.
 
 ---
 
@@ -574,7 +575,9 @@ Committed as `e7b77f9` — "feat(auth-service): WP-01 BA-04 - Update Organizatio
 
 ---
 
-## Business Activity: BA-05 — Activate Organization
+## Business Activity: BA-05 — Reactivate Suspended Organization
+
+**Renamed per the WP-01 Scope Reconciliation** (see below): originally recorded as "Activate Organization." PE-001-C004 (the canonical Capability Specification, read in full during the reconciliation) defines a *distinct* "Activate Organization" (ERB-C004-03/EX-C004-04 — completing an Organization's first-ever establishment) from what this Business Activity actually implements: reversibly restoring an already-established, currently-`SUSPENDED` Organization back to `ACTIVE` (ERB-C004-06/EX-C004-09, "Reactivate Suspended Organization"). This is a documentation-only rename — the `activate()` method, `POST /organizations/{organization_id}/activate` endpoint, `ORGANIZATION_ACTIVATED` Domain Event, and `ACTIVATE_ORGANIZATION` audit action name are all unchanged in the codebase; nothing below describing the actual implementation was rewritten.
 
 **Date Completed:** 2026-07-21
 
@@ -886,4 +889,211 @@ Committed as `a264b86` — "feat(auth-service): WP-01 BA-06 - Suspend Organizati
 
 ---
 
-*(Further Business Activity sections are appended below as WP-01 progresses. Dashboard above is updated with each entry. Final WP-01 Summary is added when BA-08 completes.)*
+## WP-01 Scope Reconciliation
+
+**Date:** 2026-07-21
+**Trigger:** Before starting the originally-planned BA-07 (Configure Organization), a governing-canonical-asset review (CLAUDE.md §19.1) surfaced that `PE-001-C004_Organization_Management.docx` — the authoritative Capability Experience Specification for C-004 — had never actually been read; IRA-001 had logged it as unreadable (`.docx`-only) and flagged the gap as Risk #4 (Major, Open). It was extracted directly from the archive (a `.docx` is a zip container) and read in full before any further implementation proceeded.
+
+**Findings:**
+
+- `PE-001-C004` (Gold Standard, v1.1) became the authoritative capability specification for C-004 once read, superseding IRA-001 §2.2's originally-drafted Business Activity list wherever they conflict, per CLAUDE.md §16.
+- IRA-001 originally contained 8 planned Business Activities, several self-labeled "proposed here for planning purposes only" — explicitly provisional, not themselves a canonical source.
+- **Configure Organization** and **Audit History** were removed: no ERB, EX, or scope clause anywhere in `PE-001-C004` defines either (confirmed by full-text search of the extracted spec). ADR-004 had already, independently, deferred every configuration-flavored canonical field to future work packages pending a real consumer; Audit History's underlying concern is already satisfied cross-cuttingly by `observability.py`'s `record_audit()` calls across every implemented Business Activity (SD-002-054 / C-114 — a platform-wide concern, not a distinct C-004 Enterprise Experience).
+- **ERB-C004-07 (Retire Organization & Preserve Continuity)** replaces the two removed Business Activities as the corrected **BA-07** — a real canonical ERB (with its own terminal `RETIRED` lifecycle state) that had no Business Activity anywhere in the original plan.
+- BA-05 was renamed **Reactivate Suspended Organization** (from "Activate Organization") to disambiguate it from PE-001-C004's distinct, different "Activate Organization" (ERB-C004-03/EX-C004-04, first-time establishment completion) — see the note at the top of BA-05's section, above. BA-01, BA-02, and BA-04 were similarly aligned to canonical ERB terminology in the dashboard and in IRA-001 (Establish Organization Identity / Resolve Organization Details / Steward Organization Identity) without any change to implemented behavior, APIs, or Domain Event names.
+
+**Resolution:**
+
+- **No architecture changed.** No entity, table, column, service boundary, or permission tier was added, removed, or redefined.
+- **No implementation was discarded.** BA-01 through BA-06 are unchanged in the codebase — same models, repositories, services, routers, endpoints, event names, and tests as already independently reviewed and committed. Only Business Activity names and canonical cross-references in planning/report documents were corrected.
+- **No ADR was required.** This was IRA-001's own self-flagged provisional content being superseded by the canonical Capability Specification once read — exactly the outcome IRA-001's own Risk #4 anticipated — not a genuine conflict between two canonical authorities requiring a governance tradeoff decision.
+- WP-01's total Business Activity count is corrected from 8 to **7**; 6 are complete, **1 remains: BA-07 Retire Organization & Preserve Continuity**.
+
+**Cross-reference:** `architecture/05-Implementation/IRA-001_WP-01_Organization_Management_Implementation_Readiness_Assessment.md` §15 records the same reconciliation from the readiness-assessment side, including the full Business Activity → canonical ERB mapping.
+
+---
+
+## Business Activity: BA-07 — Retire Organization & Preserve Continuity
+
+**Date Completed:** 2026-07-21
+**This is the final Business Activity of WP-01**, per the WP-01 Scope Reconciliation (above).
+
+### Governing Canonical Assets Reviewed
+
+- `docs/Product/PE-001/capabilities/C-004/PE-001-C004_Organization_Management.docx` — read in full during the WP-01 Scope Reconciliation. §3.8 (ERB-C004-07 "Retire Organization & Preserve Continuity"): Entry Context ("Authoritative Organization Context in ACTIVE or SUSPENDED state, with a stated retirement intent"), Exit Context (RETIRED, terminal, optionally with a successor link), Context Engineering (Preserved: "The full Authoritative Organization Context and its identity history, permanently, in RETIRED state"; Invalidated: "The Organization's validity for any new dependent activity... retirement itself is never invalidated or reversed"). §4.9–4.12 (EX-C004-10 through -13). The lifecycle-state paragraph ("Once activated, an Organization SHALL exist in exactly one of ACTIVE, SUSPENDED, or RETIRED state... RETIRED SHALL NOT be reversible to any other state under any circumstance").
+- `architecture/05-Implementation/IRA-001_WP-01_Organization_Management_Implementation_Readiness_Assessment.md` §2.2 (revised, per §15) and §15 (the Scope Reconciliation itself).
+- `architecture/07-Decisions/ADR-005_Organization_Lifecycle_Interim_Model.md` — the interim `status` column model this Business Activity extends with a third value, not replaces.
+- ADR-003, ADR-004 — re-confirmed unaffected.
+- Existing WP-01 source: `services/organization_service.py`'s `activate()`/`suspend()` (BA-05/BA-06 — the direct precedent `retire()` mirrors, and the two methods requiring a correctness update), `routers/organization.py`, `models/organization.py`, `repositories/base_repository.py`'s `update()`.
+- `architecture/06-Reviews/TECH-DEBT.md` — reviewed for items due in this Business Activity: **TD-004** (`ck_organizations_status` model/migration drift) was the only entry with a natural connection to this BA's own migration work.
+
+### Gap Analysis
+
+- **Satisfied as-is (reused unchanged):** `require_platform_admin`; `OrganizationResponse` (no new response schema); `middleware/tenant.py`'s `/organizations/*` prefix exemption (already covers the new sub-path with zero changes); `observability.py`'s `record_audit`/`publish_event`; `BaseRepository.update()` (no new repository method); `activate()`/`suspend()`'s method shape as the direct template for `retire()`.
+- **Required extension:** `OrganizationService` needed a new `retire()` method; `routers/organization.py` needed a new `POST /{organization_id}/retire` route; `models/organization.py`'s `OrganizationStatus` enum needed a third value (`RETIRED`); the `ck_organizations_status` CHECK constraint needed widening via a new Alembic migration (`d2d840d224b6`) — the one genuine, minimal, additive database change this Business Activity required, explicitly anticipated by the task's own lifecycle-model description (ACTIVE/SUSPENDED/RETIRED) and pre-authorized by ADR-004's "purely additive" extension pattern.
+- **Required correctness fix to already-accepted code (not scope creep — a necessary consequence of introducing RETIRED):** `activate()` and `suspend()` (BA-05/BA-06) had no RETIRED guard. Without adding one, introducing `RETIRED` as a new status value would have made a retired organization silently reactivatable or re-suspendable via the already-shipped `/activate`/`/suspend` endpoints — directly violating PE-001-C004's explicit, repeated invariant that retirement is never reversible "under any circumstance." Both methods now reject a RETIRED organization with 409 before any other check. This is the same category of narrow, necessary touch to already-committed code as BA-06's one-line addition to BA-05's `activate()` for the `is_active` sync.
+- **Business rule (canonical, not invented):** Entry Context explicitly permits retirement from **either** ACTIVE or SUSPENDED — not only from SUSPENDED. The task's own lifecycle diagram (ACTIVE → SUSPENDED → RETIRED) was read as illustrating state severity/ordering, not a mandatory sequential FSM requiring suspension first — PE-001-C004's Entry Context is the authoritative, explicit statement on this point and was followed literally rather than inferring a stricter constraint from an ASCII diagram. `retire()` therefore accepts both starting states and rejects only an already-RETIRED organization (409), mirroring `activate()`/`suspend()`'s already-in-target-state pattern.
+- **Missing architecture:** None beyond the one pre-authorized, minimal CHECK-constraint widening. No new entity, table, service boundary, or permission tier.
+- **Technical debt closed:** TD-004 (`ck_organizations_status` model/migration drift) — resolved by declaring the constraint on the ORM model (`__table_args__`) in the same change that widens it in the migration, so the two can no longer drift from each other going forward.
+- **Technical debt discovered and recorded (not fixed — out of this Business Activity's scope):**
+  - **TD-013**: `update_profile()` (BA-04, Steward Organization Identity) has no status check, but PE-001-C004's ERB-C004-05 Entry Context restricts identity stewardship to **ACTIVE** organizations only. Discovered while reading ERB-C004-05 for context while implementing ERB-C004-07; not fixed here because it would change BA-04's already-accepted, already-independently-reviewed behavior — a decision requiring its own review, not a side effect of BA-07.
+  - **TD-014**: PE-001-C004's optional Organization Continuity Context (successor-organization link, EX-C004-13) and a persisted retirement reason/authority record are not implemented — deliberately, consistent with ADR-004's incremental-implementation philosophy (no successor-organization concept exists anywhere in the schema; no current consumer needs one).
+  - **TD-015**: Frontend `OrganizationStatus`/`StatusBadge` don't recognize `RETIRED` yet (a retired org would render with the same tone as `SUSPENDED`) — consistent with BA-07 being scoped backend-only, same precedent as BA-05/BA-06.
+- **Scope boundary (backend-only, consistent with BA-05/BA-06):** no frontend files created or modified — same Action Center/premature-component rationale as the prior two lifecycle Business Activities.
+
+### Scope Delivered
+
+`POST /organizations/{organization_id}/retire` — Retire Organization & Preserve Continuity. Transitions `status` to `RETIRED` from either `ACTIVE` or `SUSPENDED` (and syncs `is_active` to `False`); 404 if the id doesn't exist; 409 if already `RETIRED`. `RETIRED` is terminal — `activate()`/`suspend()` were both updated to reject a RETIRED organization with 409, closing the reversibility gap that introducing the new state would otherwise have opened. Reuses BA-01–06's model, `require_platform_admin`, `OrganizationResponse`, `BaseRepository.update()`, and `TenantMiddleware` exemption unchanged. No row is ever deleted — `get_details()` and `search()` continue to return a retired organization's full data unchanged, satisfying PE-001-C004's continuity requirement via the existing repository layer as-is. Also closes TD-004. No ADR required (see Gap Analysis for the two judgment calls made — Entry Context's dual starting states, and the deliberate deferral of the continuity link/reason — and their rationale).
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `Backend/Services/AuthService/alembic/versions/2026_07_21_2100-d2d840d224b6_organization_retired_lifecycle_state.py` | Widens `ck_organizations_status` to include `'RETIRED'` |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/models/organization.py` | Added `OrganizationStatus.RETIRED`; declared `ck_organizations_status` on the model via `__table_args__` (closes TD-004) |
+| `Backend/Services/AuthService/services/organization_service.py` | Added `OrganizationService.retire()`; added a RETIRED guard to `activate()` and `suspend()` (409, correctness fix); updated module docstring |
+| `Backend/Services/AuthService/routers/organization.py` | Added `POST /{organization_id}/retire` |
+| `Backend/Services/AuthService/organization-api.yaml` | Added the `POST /organizations/{organization_id}/retire` path; widened the `status` enum (query param and `OrganizationResponse` schema) to include `RETIRED` |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | Added BA-07 unit tests |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Added BA-07 integration tests |
+| `Backend/Services/AuthService/README.md` | Updated Organization Management section for BA-07; corrected all Business Activity names per the Scope Reconciliation |
+| `architecture/06-Reviews/TECH-DEBT.md` | Closed TD-004; added TD-013, TD-014, TD-015 |
+
+### Database
+
+- **Migration:** `b3f7a1c9d2e4` → `d2d840d224b6`. Widens `ck_organizations_status` from `IN ('ACTIVE', 'SUSPENDED')` to `IN ('ACTIVE', 'SUSPENDED', 'RETIRED')`. No column added, renamed, or dropped — purely a constraint change.
+- **Schema changes:** None beyond the constraint widening above.
+- **Constraints:** `ck_organizations_status` widened; now also declared on the ORM model (TD-004 resolution).
+- **Indexes:** None added.
+
+### APIs
+
+- **Endpoint added:** `POST /organizations/{organization_id}/retire` (200/400/401/403/404/409/422).
+- **Endpoints modified (behavior only — same request/response contracts):** `POST /organizations/{organization_id}/activate` and `POST /organizations/{organization_id}/suspend` now additionally return 409 when the target organization is `RETIRED` (previously only checked the "already in target state" case).
+- **Request/Response models:** No request body (path parameter only, same basis as `/activate`/`/suspend`) → existing `OrganizationResponse` (status enum widened to include `RETIRED`, no new schema).
+- **Authorization:** Same `require_platform_admin` dependency as BA-01–06 — no new tier.
+- **OpenAPI:** `organization-api.yaml` updated with the new path and widened enums; YAML-validated.
+
+### Frontend
+
+Not in scope for this Business Activity (see Gap Analysis's "Scope boundary" note above; TD-015 records the resulting display gap). No frontend files created or modified.
+
+### Testing
+
+- **Unit Tests:** 8 new (`test_organization_service.py`, 33 total in that file) — ACTIVE→RETIRED transition; SUSPENDED→RETIRED transition (proving both canonical starting states); reject already-RETIRED (409); 404 on unknown id; profile-field/identity preservation (continuity); RETIRED organization still findable via `search()`'s status filter; `activate()` rejects a RETIRED organization (409, irreversibility); `suspend()` rejects a RETIRED organization (409, irreversibility).
+- **Integration Tests:** 12 new (`test_organization_api.py`, 61 total in that file) — success from ACTIVE, success from SUSPENDED, reject-already-RETIRED (409), 404, missing/wrong-role auth (400/403), invalid UUID (422), tenant-header exemption, `/activate` rejects RETIRED (409, via API), `/suspend` rejects RETIRED (409, via API), `GET` still returns full details for a retired organization (continuity, via API), `GET /organizations?status=RETIRED` finds a retired organization (via API).
+- **API Tests:** covered by the integration suite above.
+- **UI Tests:** N/A — no frontend work in this Business Activity.
+- **Overall test results:** 125/125 backend tests passing (20 new this BA — 8 unit, 12 integration — 0 regressions). Full suite run three times during implementation (after unit tests, after integration tests, and again before this report update).
+
+### Manual Verification
+
+1. Using a `PLATFORM_ADMIN` access token, create an organization via `POST /organizations` (defaults to `ACTIVE`).
+2. `POST /organizations/{id}/retire` → expect `200` with `status: "RETIRED"`, `is_active: false`.
+3. Repeat the same call → expect `409` ("already RETIRED").
+4. `POST /organizations/{id}/activate` on the retired organization → expect `409` ("RETIRED and cannot be reactivated"); confirm via `GET /organizations/{id}` that `status` is still `RETIRED`.
+5. `POST /organizations/{id}/suspend` on the retired organization → expect `409` ("RETIRED and cannot be suspended"); confirm status is still `RETIRED`.
+6. `GET /organizations/{id}` on the retired organization → expect `200` with all profile fields intact (continuity — no data lost).
+7. `GET /organizations?status=RETIRED` → confirm the retired organization appears.
+8. Create a second organization, `POST .../suspend` it, then `POST .../retire` it → expect `200` with `status: "RETIRED"` (proving retirement directly from SUSPENDED, not only ACTIVE).
+9. `POST /organizations/{random-uuid}/retire` → expect `404`.
+10. Repeat without `Authorization` → `400`; with a non-`PLATFORM_ADMIN` token → `403`; with a malformed id → `422`.
+
+### Known Limitations (intentionally deferred, per WP-01 scope)
+
+- Same authorization/schema-scope/RLS/frontend-test-harness limitations as BA-01–06 (unchanged — see BA-01 section above); none are specific to BA-07.
+- No Organization Continuity Context (successor-organization link, EX-C004-13) or persisted retirement reason/authority record — tracked as TD-014.
+- No frontend Retire action, and the frontend doesn't yet visually distinguish `RETIRED` from `SUSPENDED` — tracked as TD-015.
+- `update_profile()`'s missing ACTIVE-only status check (a pre-existing BA-04 gap, newly discovered while implementing this Business Activity's Entry Context) is not fixed here — tracked as TD-013.
+
+### Architecture Compliance
+
+- **ARCH-000:** No architecture redefinition; implementation only.
+- **IMP-001:** Full Business Activity Lifecycle followed (§6.3) — precondition checks (existence, current status) → Business Object Update → Domain Event (`ORGANIZATION_RETIRED`) → Audit Recording → Response. Business Activity named and contracted as a terminal state transition (§6.6's "Update" type), not raw CRUD.
+- **ERG-001:** Unaffected — no EnterpriseNode/Relationship/View concept touched.
+- **C-004 / PE-001-C004:** Directly realizes ERB-C004-07, the last of the seven canonical ERBs this work package implements. WP-01's Business Activity scope is now fully aligned with PE-001-C004 (see the Scope Reconciliation, above).
+- **ADR-005:** Extended, not violated — the interim `status` column now carries a third value, still a plain column with application-level transition logic, not the metadata-driven state machine SD-002-051 ultimately requires. The extension point ADR-005 anticipated ("a future Metadata Runtime migration replaces [this seam]") is unchanged.
+- **URA-001:** Unaffected.
+- **Approved ADRs:** ADR-003, ADR-004, ADR-005 — all still honored; none re-litigated. No new ADR raised — the CHECK-constraint widening is pre-authorized by ADR-004's additive-extension pattern, and the Entry Context / continuity-deferral decisions are implementation-level, not architectural.
+
+### Implementation Status
+
+✅ IMPLEMENTATION COMPLETE
+
+### Developer Validation
+
+Performed by the implementing engineer against this Business Activity's own acceptance criteria (IMP-001 §6.4/§6.7, ADR-005, PE-001-C004's ERB-C004-07), mirroring BA-05/BA-06's Developer Validation checklist.
+
+| Acceptance Criterion | Status | Evidence |
+|---|---|---|
+| Business Intent defined | ✅ Met | Retire Organization & Preserve Continuity: terminal `ACTIVE`/`SUSPENDED` → `RETIRED` transition |
+| Input Contract | ✅ Met | `organization_id` path parameter (UUID, FastAPI-validated) |
+| Output Contract | ✅ Met | `OrganizationResponse`, reused, enum widened |
+| Business Rules enforced | ✅ Met | Existence required (404); already-RETIRED rejected (409); valid from ACTIVE or SUSPENDED per canonical Entry Context |
+| Lifecycle transition rules (irreversibility) | ✅ Met | `activate()`/`suspend()` both reject a RETIRED organization (409) — tested at unit and integration layers |
+| Validation Rules | ✅ Met | Invalid UUID → 422 (`test_retire_organization_rejects_invalid_uuid`) |
+| Authorization Rules | ✅ Met | `require_platform_admin` reused unmodified; 400/403 tested |
+| Domain Events | ✅ Met | `ORGANIZATION_RETIRED` published via `publish_event()` |
+| Audit Requirements | ✅ Met | `record_audit()` SUCCESS/DENIED, same field mapping as BA-05/BA-06 |
+| Continuity preservation | ✅ Met | No row deleted; `get_details()`/`search()` return full data post-retirement — tested at unit and integration layers |
+| Error Handling | ✅ Met | 404/409/422/400/403 all explicit, no silent no-ops, no 500s |
+| No architecture change | ✅ Met | Only pre-authorized, additive CHECK-constraint widening; no new entity/table/permission tier |
+| Reuse over creation | ✅ Met | `BaseRepository.update()`, `OrganizationResponse`, `require_platform_admin`, `observability.py`, and `activate()`/`suspend()`'s method shape all reused; only `retire()` (service), one router function, and the necessary `activate()`/`suspend()` guard additions are new |
+| Tests (unit/integration/regression) | ✅ Met | 125/125 passing, 20 new, 0 regressions |
+| Documentation updated | ✅ Met | IMP-REPORT-WP-01 (this section), IRA-001 (already reconciled), README.md, `organization-api.yaml` |
+| Technical debt resolved/recorded | ✅ Met | TD-004 closed; TD-013/014/015 recorded; no duplicate entries |
+
+**Developer Validation outcome: PASS.** All acceptance criteria met by the implementing engineer's own assessment. This is developer validation, not Independent Review — CLAUDE.md §19.7's Business Activity Completion Gate still requires a separate, independently-run review before this Business Activity — and WP-01 as a whole — is considered fully complete; that review has not yet been requested for BA-07.
+
+### Independent Review
+
+Independent Review: Pending (not yet requested for BA-07)
+
+### Certification
+
+Certification Status: Pending (WP-level activity, performed only after WP-01 completes and BA-07 clears Independent Review, per CLAUDE.md §19.7)
+
+---
+
+## BA-07 — Enterprise Lifecycle Consistency Check
+
+**Date:** 2026-07-22
+**Trigger:** Before Independent Review, a full lifecycle consistency verification was performed across all BA-01 through BA-07 implementations to confirm that introducing the `RETIRED` state left no previously-implemented Business Activity in an inconsistent state. No redesign; no new functionality — verification only, per the task's explicit instructions.
+
+**Method:** Every reference to `status`/`ACTIVE`/`SUSPENDED`/`RETIRED`/`OrganizationStatus` was located across `models/`, `services/`, `routers/`, `repositories/`, and `schemas/` and individually reviewed. The search was then widened beyond the Organization Management module itself to `middleware/tenant.py`, `services/auth_service.py`, `services/bootstrap_service.py`, and `repositories/membership_repository.py` — every other consumer of Organization or its lifecycle state in the codebase — to check for consequences outside BA-01–07's own files.
+
+**Confirmed consistent (no defect):**
+
+- **RETIRED cannot re-enter the lifecycle:** `activate()` and `suspend()` both reject a RETIRED organization with 409 before any mutating call — verified in code and already covered by `test_activate_rejects_retired_organization`/`test_suspend_rejects_retired_organization` (unit) and their API-layer equivalents (integration).
+- **No physical-delete path exists:** `BaseRepository.delete()` is a generic, inherited method never wired to any Organization router or service method — retirement is the only "removal" concept exposed, and it never deletes a row.
+- **Read-only operations continue to function:** `get_details()` and `search()` are status-agnostic by construction and were already confirmed (BA-07's own tests) to return full data for RETIRED organizations.
+- **Search/List correctly exposes lifecycle state:** the status filter is a generic `Organization.status == status` comparison with no hardcoded two-value assumption; `RETIRED` flows through automatically (confirmed by `test_retire_is_findable_by_status_filter` and `test_search_organizations_can_filter_by_retired_status`).
+- **Validation rules remain internally consistent:** `schemas/organization.py` has no hardcoded ACTIVE/SUSPENDED enum or validator that would reject `RETIRED`; `OrganizationResponse.status` is a plain `str`.
+- **Domain Events remain consistent:** `ORGANIZATION_ESTABLISHED`/`_PROFILE_UPDATED`/`_ACTIVATED`/`_SUSPENDED`/`_RETIRED` all fire only on success, with a uniform payload shape (`organization_id`, `organization_code`, `previous_status` where applicable, `status`).
+- **Audit behaviour remains consistent:** `record_audit()` is called with `DENIED` on every rejection path (not-found, already-in-target-state, RETIRED-guard) and `SUCCESS` on every write, with the same metadata shape, across all five write-path Business Activities.
+- **WP-00's bootstrap seeding is unaffected:** `bootstrap_service.py` never sets `status` explicitly (relies on the model's `ACTIVE` default).
+- **`middleware/tenant.py`'s exemption is unaffected:** it matches on path prefix only, never on status.
+
+**Minor documentation defects found and corrected** (direct, narrow consequences of BA-07's own changes, corrected within BA-07's scope — no test or business-logic change required; regression suite re-run clean after each):
+
+1. `models/organization.py`'s `status` column docstring still read "('ACTIVE' / 'SUSPENDED')" after `RETIRED` was added earlier in this same Business Activity — corrected.
+2. `routers/organization.py`'s `/activate` and `/suspend` endpoint `description` and `409` response text documented only the "already in target state" rejection reason, omitting the RETIRED-rejection behavior BA-07 itself added to those two endpoints — corrected in both the route decorators and `organization-api.yaml` (all four locations).
+3. `update_profile()`'s docstring said status "belongs to the Activate/Suspend Business Activities" (pre-BA-07 wording) — corrected to "Activate/Suspend/Retire," with a note cross-referencing TD-013 added directly at the point in the code the gap applies to.
+
+**Broader finding, recorded as new technical debt, NOT implemented** (exceeds BA-07 scope, per the task's explicit instructions):
+
+- **TD-016** (new): `services/auth_service.py`'s `authenticate_user()` never checks `Organization.status` — only `Membership.is_active` is consulted, meaning a person with an active Membership can still select and authenticate into a `SUSPENDED` or `RETIRED` organization's context. This gap pre-dates BA-07 (equally true since `SUSPENDED` was introduced by BA-06) and was only surfaced by this consistency check, not newly created by `RETIRED`. It cross-cuts AuthService's login flow and Membership/Role & Permission Management — both explicitly excluded from WP-01's scope per IRA-001 — so it was recorded, not fixed. See `architecture/06-Reviews/TECH-DEBT.md`.
+- **TD-013** (recorded during BA-07's original implementation) was re-examined and re-confirmed correctly out of scope: it is a pre-existing gap since BA-04 (the ACTIVE-only Entry Context restriction canonically applies to SUSPENDED too, which predates BA-07), not a new consequence of `RETIRED` specifically, and fixing it would change BA-04's already-accepted, already-independently-reviewed behavior.
+
+**Regression verification:** Full backend suite re-run after every corrective change — **125/125 passing, 0 regressions**, throughout.
+
+**Outcome:** No functional or business-logic defects were found in BA-01 through BA-07's handling of `ACTIVE`/`SUSPENDED`/`RETIRED`. Three minor, in-scope documentation inconsistencies were corrected. One new, genuinely out-of-scope cross-service finding (TD-016) was recorded per the task's instructions, not implemented. BA-07's Implementation Status, Developer Validation, and Independent-Review-Pending status (above) are unchanged by this check — it found nothing requiring their revision.
+
+---
+
+*(This is WP-01's final Business Activity. A Final WP-01 Summary is added once BA-07 clears Independent Review, is committed, and WP-level Certification is performed per CLAUDE.md §19.7.)*

@@ -172,32 +172,44 @@ feature_flags:
 
 ## 🏢 Organization Management (WP-01)
 
-BA-01 (Establish Organization), BA-02 (View Organization Details), BA-03 (Search & List
-Organizations), BA-04 (Update Organization Profile), BA-05 (Activate Organization), and BA-06
-(Suspend Organization) of C-004, per IRA-001 and ADR-003/004/005.
+BA-01 (Establish Organization Identity), BA-02 (Resolve Organization Details), BA-03 (Search &
+List Organizations), BA-04 (Steward Organization Identity), BA-05 (Reactivate Suspended
+Organization), BA-06 (Suspend Organization), and BA-07 (Retire Organization & Preserve
+Continuity) of C-004, per IRA-001 (as revised by its §15 WP-01 Scope Reconciliation against the
+canonical `PE-001-C004` Capability Specification) and ADR-003/004/005. **BA-07 is WP-01's final
+Business Activity.**
 
 - `POST /organizations` — requires `Authorization: Bearer <access_token>` for a caller holding
   the `PLATFORM_ADMIN` role. Rejects a duplicate `organization_code` with `409`.
 - `GET /organizations/{organization_id}` — same authorization; `404` if the id doesn't exist.
-- `GET /organizations` — same authorization; `q` (name/code substring), `status`, `skip`/`limit`
-  (pagination, max 100/page), `sort_by`/`sort_order` query params.
+- `GET /organizations` — same authorization; `q` (name/code substring), `status`
+  (`ACTIVE`/`SUSPENDED`/`RETIRED`), `skip`/`limit` (pagination, max 100/page), `sort_by`/`sort_order`
+  query params.
 - `PUT /organizations/{organization_id}` — same authorization; `404` if the id doesn't exist.
   Updates `organization_name`, `organization_type`, `description`. `organization_code` and
   lifecycle `status` are immutable through this endpoint (code is the natural key; status is
-  owned by the Activate/Suspend Business Activities).
+  owned by the Reactivate/Suspend/Retire Business Activities).
 - `POST /organizations/{organization_id}/activate` — same authorization; `404` if the id doesn't
-  exist; `409` if already `ACTIVE`. Transitions `status` from `SUSPENDED` to `ACTIVE` (and syncs
-  the legacy `is_active` boolean to `True`).
+  exist; `409` if already `ACTIVE` or if `RETIRED` (terminal — never reactivatable). Transitions
+  `status` from `SUSPENDED` to `ACTIVE` (and syncs the legacy `is_active` boolean to `True`).
 - `POST /organizations/{organization_id}/suspend` — same authorization; `404` if the id doesn't
-  exist; `409` if already `SUSPENDED`. Transitions `status` from `ACTIVE` to `SUSPENDED` (and
-  syncs `is_active` to `False`).
+  exist; `409` if already `SUSPENDED` or if `RETIRED` (terminal — never reversible). Transitions
+  `status` from `ACTIVE` to `SUSPENDED` (and syncs `is_active` to `False`).
+- `POST /organizations/{organization_id}/retire` — same authorization; `404` if the id doesn't
+  exist; `409` if already `RETIRED`. Transitions `status` to `RETIRED` from either `ACTIVE` or
+  `SUSPENDED` (and syncs `is_active` to `False`). Terminal and irreversible — no endpoint
+  transitions a `RETIRED` organization to any other status. Preserves continuity: no row is
+  deleted; the organization's identity and full history remain queryable via `GET
+  /organizations/{organization_id}`.
 
-All six are tenant-agnostic (no `X-Tenant-ID` required).
+All seven are tenant-agnostic (no `X-Tenant-ID` required).
 
 Full contract: [`organization-api.yaml`](organization-api.yaml).
 
-Remaining Business Activities (Configuration, Audit History) are later WP-01 phases —
-see IRA-001 §9 — and will extend this same contract file.
+WP-01's Business Activity scope is complete as of BA-07 — see the WP-01 Scope Reconciliation in
+`IRA-001` §15 and `IMP-REPORT-WP-01`'s corresponding section for why "Configuration" and "Audit
+History" (originally planned as BA-07/BA-08) were removed: neither is a canonical C-004 Business
+Activity per `PE-001-C004`.
 
 ---
 

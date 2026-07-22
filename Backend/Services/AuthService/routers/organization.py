@@ -212,7 +212,9 @@ async def update_organization(
         "Organization Management endpoints (IRA-001 §2.7). Transitions "
         "status from SUSPENDED to ACTIVE per ADR-005's interim lifecycle "
         "model. Rejects an already-ACTIVE organization with 409 rather "
-        "than a silent no-op."
+        "than a silent no-op, and rejects a RETIRED organization with 409 "
+        "as well — RETIRED is terminal (BA-07, ERB-C004-07) and is never "
+        "reversible via this endpoint."
     ),
     responses={
         200: {"description": "Organization activated."},
@@ -220,7 +222,7 @@ async def update_organization(
         401: {"description": "Access token invalid or expired."},
         403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
         404: {"description": "No organization exists with this id."},
-        409: {"description": "Organization is already ACTIVE."},
+        409: {"description": "Organization is already ACTIVE, or is RETIRED and cannot be reactivated."},
         422: {"description": "organization_id is not a valid UUID."},
     },
 )
@@ -251,7 +253,9 @@ async def activate_organization(
         "Organization Management endpoints (IRA-001 §2.7). Transitions "
         "status from ACTIVE to SUSPENDED per ADR-005's interim lifecycle "
         "model. Rejects an already-SUSPENDED organization with 409 rather "
-        "than a silent no-op."
+        "than a silent no-op, and rejects a RETIRED organization with 409 "
+        "as well — RETIRED is terminal (BA-07, ERB-C004-07) and is never "
+        "reversible via this endpoint."
     ),
     responses={
         200: {"description": "Organization suspended."},
@@ -259,7 +263,7 @@ async def activate_organization(
         401: {"description": "Access token invalid or expired."},
         403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
         404: {"description": "No organization exists with this id."},
-        409: {"description": "Organization is already SUSPENDED."},
+        409: {"description": "Organization is already SUSPENDED, or is RETIRED and cannot be suspended."},
         422: {"description": "organization_id is not a valid UUID."},
     },
 )
@@ -274,6 +278,49 @@ async def suspend_organization(
     /organizations/* prefix exemption, already covering this path.
     """
     organization = await organization_service.suspend(
+        organization_id, actor_id=claims.get("person_id")
+    )
+    return OrganizationResponse.model_validate(organization)
+
+
+@router.post(
+    "/{organization_id}/retire",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retire organization",
+    description=(
+        "WP-01 Business Activity: Retire Organization & Preserve Continuity "
+        "(C-004) — BA-07, realizing ERB-C004-07 (PE-001-C004). Requires the "
+        "PLATFORM_ADMIN role, same interim gate as the other Organization "
+        "Management endpoints (IRA-001 §2.7). Transitions status to RETIRED "
+        "from either ACTIVE or SUSPENDED per ADR-005's interim lifecycle "
+        "model. RETIRED is terminal: rejects an already-RETIRED organization "
+        "with 409, and is never reversible (activate()/suspend() both reject "
+        "a RETIRED organization). Preserves continuity — no row is deleted; "
+        "the organization's identity and full history remain queryable via "
+        "GET /organizations/{organization_id}."
+    ),
+    responses={
+        200: {"description": "Organization retired."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No organization exists with this id."},
+        409: {"description": "Organization is already RETIRED."},
+        422: {"description": "organization_id is not a valid UUID."},
+    },
+)
+async def retire_organization(
+    organization_id: UUID,
+    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> OrganizationResponse:
+    """
+    No tenant-scoping, same basis as the other path-parameterized
+    Organization Management endpoints — see middleware/tenant.py's
+    /organizations/* prefix exemption, already covering this path.
+    """
+    organization = await organization_service.retire(
         organization_id, actor_id=claims.get("person_id")
     )
     return OrganizationResponse.model_validate(organization)

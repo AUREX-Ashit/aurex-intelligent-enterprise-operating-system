@@ -4,12 +4,14 @@ info:
   description: >
     Organization Management (C-004, WP-01) endpoints for the CorpStage
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
-    Lifecycle model: ADR-005. Currently covers BA-01 (Establish
-    Organization), BA-02 (View Organization Details), BA-03
-    (Search & List Organizations), BA-04 (Update Organization Profile),
-    BA-05 (Activate Organization), and BA-06 (Suspend Organization) —
-    Configuration and Audit History land as WP-01's later phases (see
-    IRA-001 §9) and extend this file, not a new one.
+    Lifecycle model: ADR-005, extended by BA-07 to a third, terminal
+    RETIRED state per ERB-C004-07 (PE-001-C004). Covers all 7 Business
+    Activities of WP-01's Scope Reconciliation (IRA-001 §15): BA-01
+    (Establish Organization Identity), BA-02 (Resolve Organization
+    Details), BA-03 (Search & List Organizations), BA-04 (Steward
+    Organization Identity), BA-05 (Reactivate Suspended Organization),
+    BA-06 (Suspend Organization), and BA-07 (Retire Organization &
+    Preserve Continuity) — the final Business Activity of WP-01.
   version: 1.0.0
 paths:
   /organizations:
@@ -88,7 +90,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: ["ACTIVE", "SUSPENDED"]
+            enum: ["ACTIVE", "SUSPENDED", "RETIRED"]
           description: Filter by lifecycle status.
         - name: skip
           in: query
@@ -265,7 +267,9 @@ paths:
         Management endpoints (IRA-001 §2.7). Transitions status from
         SUSPENDED to ACTIVE per ADR-005's interim lifecycle model.
         Rejects an already-ACTIVE organization with 409 rather than a
-        silent no-op. Tenant-agnostic, same basis as View Organization
+        silent no-op, and rejects a RETIRED organization with 409 as well
+        — RETIRED is terminal (BA-07, ERB-C004-07) and is never reversible
+        via this endpoint. Tenant-agnostic, same basis as View Organization
         Details.
       security:
         - bearerAuth: []
@@ -308,7 +312,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPExceptionResponse'
         '409':
-          description: Organization is already ACTIVE.
+          description: Organization is already ACTIVE, or is RETIRED and cannot be reactivated.
           content:
             application/json:
               schema:
@@ -325,7 +329,9 @@ paths:
         Management endpoints (IRA-001 §2.7). Transitions status from
         ACTIVE to SUSPENDED per ADR-005's interim lifecycle model.
         Rejects an already-SUSPENDED organization with 409 rather than a
-        silent no-op. Tenant-agnostic, same basis as Activate Organization.
+        silent no-op, and rejects a RETIRED organization with 409 as well
+        — RETIRED is terminal (BA-07, ERB-C004-07) and is never reversible
+        via this endpoint. Tenant-agnostic, same basis as Activate Organization.
       security:
         - bearerAuth: []
       parameters:
@@ -367,7 +373,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPExceptionResponse'
         '409':
-          description: Organization is already SUSPENDED.
+          description: Organization is already SUSPENDED, or is RETIRED and cannot be suspended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '422':
+          description: organization_id is not a valid UUID.
+
+  /organizations/{organization_id}/retire:
+    post:
+      summary: Retire organization
+      description: >
+        WP-01 Business Activity 7 (final): Retire Organization & Preserve
+        Continuity, realizing ERB-C004-07 (PE-001-C004). Requires the
+        PLATFORM_ADMIN role, same interim gate as the other Organization
+        Management endpoints (IRA-001 §2.7). Transitions status to
+        RETIRED from either ACTIVE or SUSPENDED. RETIRED is terminal:
+        rejects an already-RETIRED organization with 409, and is never
+        reversible — activate/suspend both reject a RETIRED organization.
+        Preserves continuity: no row is deleted; the organization's
+        identity and full history remain queryable via
+        GET /organizations/{organization_id}. Tenant-agnostic, same basis
+        as Activate/Suspend Organization.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organization_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Organization retired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '401':
+          description: Access token invalid or expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '404':
+          description: No organization exists with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPExceptionResponse'
+        '409':
+          description: Organization is already RETIRED.
           content:
             application/json:
               schema:
@@ -463,8 +533,8 @@ components:
           nullable: true
         status:
           type: string
-          enum: ["ACTIVE", "SUSPENDED"]
-          description: ADR-005 interim lifecycle state.
+          enum: ["ACTIVE", "SUSPENDED", "RETIRED"]
+          description: ADR-005 interim lifecycle state, extended by BA-07 (ERB-C004-07) to a third, terminal RETIRED state.
           example: "ACTIVE"
         is_active:
           type: boolean

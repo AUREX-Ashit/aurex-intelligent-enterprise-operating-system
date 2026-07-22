@@ -579,6 +579,183 @@ def test_suspend_then_activate_round_trip_keeps_is_active_in_sync(client: TestCl
 
 
 # ---------------------------------------------------------------------------
+# BA-07 — Retire Organization & Preserve Continuity
+# ---------------------------------------------------------------------------
+
+def test_retire_organization_succeeds_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-020", "organization_name": "Active Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_id
+    assert body["status"] == "RETIRED"
+    assert body["is_active"] is False
+
+
+def test_retire_organization_succeeds_from_suspended(client: TestClient) -> None:
+    """ERB-C004-07 Entry Context: retirement is also valid directly from SUSPENDED, not only ACTIVE."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-021", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    suspend_response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+    assert suspend_response.status_code == 200
+
+    response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "RETIRED"
+
+
+def test_retire_organization_rejects_already_retired(client: TestClient) -> None:
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-022", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    first = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+    assert first.status_code == 200
+
+    second = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+
+    assert second.status_code == 409
+
+
+def test_retire_organization_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/retire", headers=_auth_headers())
+
+    assert response.status_code == 404
+
+
+def test_retire_organization_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(f"/organizations/{uuid.uuid4()}/retire")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_retire_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.post(
+        f"/organizations/{uuid.uuid4()}/retire",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_retire_organization_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.post("/organizations/not-a-uuid/retire", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_retire_organization_does_not_require_tenant_header(client: TestClient) -> None:
+    """POST /organizations/{id}/retire is covered by the same /organizations/* prefix exemption as GET."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-023", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+
+    response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+
+    assert response.status_code == 200
+
+
+def test_activate_organization_rejects_retired_organization(client: TestClient) -> None:
+    """Irreversibility invariant (PE-001-C004 §3.8), exercised through the HTTP API."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-024", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+    assert retire_response.status_code == 200
+
+    response = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
+
+    assert response.status_code == 409
+    # Confirm the organization did not silently flip back to ACTIVE.
+    details = client.get(f"/organizations/{organization_id}", headers=_auth_headers())
+    assert details.json()["status"] == "RETIRED"
+
+
+def test_suspend_organization_rejects_retired_organization(client: TestClient) -> None:
+    """Same irreversibility invariant, exercised against /suspend instead of /activate."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-025", "organization_name": "Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+    assert retire_response.status_code == 200
+
+    response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
+
+    assert response.status_code == 409
+    details = client.get(f"/organizations/{organization_id}", headers=_auth_headers())
+    assert details.json()["status"] == "RETIRED"
+
+
+def test_view_organization_still_returns_retired_organization_details(client: TestClient) -> None:
+    """Continuity requirement: retirement SHALL NOT physically delete the Organization."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-026",
+            "organization_name": "Preserved Org",
+            "organization_type": "CORPORATE",
+            "description": "Should survive retirement.",
+        },
+    )
+    organization_id = established.json()["id"]
+    retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+    assert retire_response.status_code == 200
+
+    response = client.get(f"/organizations/{organization_id}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["organization_code"] == "API-ORG-026"
+    assert body["organization_name"] == "Preserved Org"
+    assert body["description"] == "Should survive retirement."
+    assert body["status"] == "RETIRED"
+
+
+def test_search_organizations_can_filter_by_retired_status(client: TestClient) -> None:
+    """A RETIRED organization is still discoverable via Search & List — not hidden or deleted."""
+    established = client.post(
+        "/organizations",
+        headers=_auth_headers(),
+        json={"organization_code": "API-ORG-027", "organization_name": "Findable Retired Org", "organization_type": "CORPORATE"},
+    )
+    organization_id = established.json()["id"]
+    retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
+    assert retire_response.status_code == 200
+
+    response = client.get("/organizations", headers=_auth_headers(), params={"status": "RETIRED", "q": "API-ORG-027"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["organization_code"] == "API-ORG-027"
+
+
+# ---------------------------------------------------------------------------
 # BA-03 — Search & List Organizations
 # ---------------------------------------------------------------------------
 
