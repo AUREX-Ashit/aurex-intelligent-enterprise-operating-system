@@ -242,7 +242,7 @@ AI Assistant, Autonomous Agent Persona, and AI Runtime Engine describe **the sam
 
 ---
 
-## 7c. Enterprise Intelligence & AI Governance Ownership Map *(formalized per ARP-001 WP-5)*
+## 7c. Enterprise Intelligence & AI Governance Ownership Map *(formalized per ARP-001 WP-5; corrected per ARM-001/AR-001, Architecture Audit Remediation)*
 
 Every AI governance dimension already has either a certified constitutional owner or an explicit, certified deferral. This section assigns ownership; it does not create new governance rules.
 
@@ -255,12 +255,14 @@ Every AI governance dimension already has either a certified constitutional owne
 | Human override | SD-003 §6 | Owned |
 | Auditability | SD-002 §7 (Event, Lifecycle & Audit Rules) | Owned |
 | AI policy boundaries | SD-003 §10 (AI Assistant & Human Interaction Laws) | Partially owned — interaction-level boundaries only |
-| Prompt governance | — | **Deferred.** EIA-001 Vol. I §8.4 explicitly reserves this for a future volume; not established here. |
-| Knowledge governance | — | **Deferred.** Same reservation. |
-| Memory governance | — | **Deferred.** Same reservation; also consistent with Enterprise Memory's mechanics being deliberately unbuilt (EIA-001 Vol. II). |
-| Model governance | — | **Deferred.** Same reservation. |
+| Prompt governance | RTA-001 §13.15 (AI Governance) | **Owned** — corrected per ARM-001/AR-001. RTA-001 §13.15 already states the AI Runtime shall support Prompt Governance operationally; this table previously recorded this dimension as Deferred, contradicting RTA-001. RTA-001 §13.15 is unmodified; this table is corrected to match it. |
+| Knowledge governance | — | **Deferred.** EIA-001 Vol. I §8.4 explicitly reserves this for a future volume; not established here. RTA-001 §13.15 makes no claim over this dimension, so no contradiction exists here. |
+| Memory governance | — | **Deferred.** Same reservation; also consistent with Enterprise Memory's mechanics being deliberately unbuilt (EIA-001 Vol. II). RTA-001 §13.15 makes no claim over this dimension, so no contradiction exists here. |
+| Model governance | RTA-001 §13.15 (AI Governance) | **Owned** — corrected per ARM-001/AR-001, same reasoning as Prompt Governance above. |
+| Explainability | SD-002-016 (Universal Explainability); SD-001 LAW-26 ("Explainability Is One Click Away") | **Owned** — added per ARM-001/AR-001. RTA-001 §13.15 lists Explainability among the AI Runtime's governance guarantees but is not itself the substantive source; SD-002-016 and SD-001 LAW-26 are the owning definitions this table now cites. |
+| Agent-specific governance (distinct from generic AI Governance) | RTA-001 §13.15 (AI Governance) | **Owned — subsumed.** Added per ARM-001/AR-001. No governance dimension distinct from the general AI Governance guarantee above exists for agents specifically; `agent_registry.governing_policy_id` reuses the platform's general governance/confidence mechanism rather than a separate agent-specific policy. This is a clarification of scope, not a new governance rule. |
 
-Deferred dimensions remain open Future Intelligence Capabilities. No placeholder owner has been assigned to any of them.
+Deferred dimensions remain open Future Intelligence Capabilities. No placeholder owner has been assigned to Knowledge Governance or Memory Governance.
 
 ---
 
