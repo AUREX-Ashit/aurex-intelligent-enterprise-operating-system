@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Domain Permission API
+  description: >
+    Domain Permission establishment (C-003, WP-02 BA-02). Covers
+    ERB-C003-01 / EX-C003-02 (Establish Domain Permission) only — see
+    IRA-002 for the full ten-Enterprise-Experience Business Activity
+    mapping. Authorization gate: PLATFORM_ADMIN (interim, mirroring
+    BA-01's IRA-002 §2.7 precedent — Domain Owner/Domain Admin authority
+    per URA-001-45/-46 is not yet implementable).
+  version: 1.0.0
+paths:
+  /domain-permissions:
+    post:
+      summary: Establish a new Domain Permission
+      description: >
+        WP-02 Business Activity: Establish Domain Permission, realizing
+        PE-001-C003's ERB-C003-01 / EX-C003-02. Independent of any
+        Business Role (BR-C003-02). Rejects an unknown Domain or
+        Membership with 404, and a duplicate active grant with 409.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishDomainPermissionRequest'
+      responses:
+        '201':
+          description: Domain Permission established.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainPermissionResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: The target Domain or Membership does not exist.
+        '409':
+          description: An active grant of this permission level already exists for this membership/domain pair.
+        '422':
+          description: Invalid request (e.g., permission_level not one of URA-001-47's eight values).
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EstablishDomainPermissionRequest:
+      type: object
+      required:
+        - membership_id
+        - domain_id
+        - permission_level
+      properties:
+        membership_id:
+          type: string
+          format: uuid
+        domain_id:
+          type: string
+          format: uuid
+        permission_level:
+          type: string
+          enum: [VIEW, ENTER, EDIT, REVIEW, APPROVE, ASSIGN, DELEGATE, ADMIN]
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+    DomainPermissionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        membership_id:
+          type: string
+          format: uuid
+        domain_id:
+          type: string
+          format: uuid
+        permission_level:
+          type: string
+        effective_from:
+          type: string
+          format: date-time
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true

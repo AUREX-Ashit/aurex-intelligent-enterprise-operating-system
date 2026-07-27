@@ -37,6 +37,19 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # and Domain rows are platform-seeded/global by default (organization_id
         # nullable), with any tenant-scoping expressed as an explicit query
         # parameter rather than the X-Tenant-ID header this middleware enforces.
+        # /domain-permissions (WP-02, BA-02 Establish Domain Permission) is
+        # tenant-agnostic, but for a narrower reason than /roles and /domains:
+        # a Domain Permission grant IS organization-scoped data in the
+        # canonical architecture (Master Technical Architecture's
+        # domain_permission_registry RLS policy scopes it one-hop via
+        # membership_id -> organization_id, unlike Role's/Domain's own
+        # genuinely-global-or-nullable org_id). This endpoint is exempted
+        # only because its sole caller today is PLATFORM_ADMIN (TD-022 — no
+        # Domain Owner/Domain Admin authority model exists yet to scope it
+        # more tightly), and PLATFORM_ADMIN already operates across every
+        # organization boundary elsewhere in this codebase. This exemption
+        # should be revisited once TD-022 is resolved and a real,
+        # Domain-scoped authority replaces PLATFORM_ADMIN here.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -44,7 +57,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/person/recognize", "/person/establish",
         ] or path == "/organizations" or path.startswith("/organizations/") \
           or path == "/roles" or path.startswith("/roles/") \
-          or path == "/domains" or path.startswith("/domains/"):
+          or path == "/domains" or path.startswith("/domains/") \
+          or path == "/domain-permissions" or path.startswith("/domain-permissions/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

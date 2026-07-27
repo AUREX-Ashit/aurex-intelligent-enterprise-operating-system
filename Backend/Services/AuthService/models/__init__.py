@@ -12,6 +12,7 @@ from .role_permission import RolePermission
 from .membership import Membership
 from .refresh_token import RefreshToken
 from .domain import Domain
+from .domain_permission import DomainPermission
 
 __all__ = [
     "Base",
@@ -25,4 +26,5 @@ __all__ = [
     "Membership",
     "RefreshToken",
     "Domain",
+    "DomainPermission",
 ]

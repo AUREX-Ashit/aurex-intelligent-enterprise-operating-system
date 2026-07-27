@@ -1,11 +1,13 @@
 # IMP-REPORT-WP-02 — Role & Permission Management (C-003)
 
 **Work Package:** WP-02 — Role & Permission Management (C-003)
-**Governing Readiness Assessment:** `IRA-002_WP-02_Role_Permission_Management_Implementation_Readiness_Assessment.md` (Approved — WP-02 READY, BA-01 only)
+**Governing Readiness Assessment:** `IRA-002_WP-02_Role_Permission_Management_Implementation_Readiness_Assessment.md` (Approved — WP-02 READY, BA-01 only; BA-02 assessed inline below per IRA-002 §2.2's own instruction that BA-02 onward each require a fresh gap analysis before implementation)
 **Governing Capability Specification:** `PE-001-C003_Role_Permission_Management.docx` v1.0 (three ERBs, ten Enterprise Experiences)
-**Scope of this report:** BA-01 only, per the Business Activity Completion Gate (CLAUDE.md §19.7). BA-02 through BA-10 (mapped in IRA-002 §2.2) are not started.
+**Scope of this report:** BA-01 and BA-02, per the Business Activity Completion Gate (CLAUDE.md §19.7), each completed and gated independently. BA-03 through BA-10 (mapped in IRA-002 §2.2) are not started.
 
 ---
+
+## BA-01 — Establish Business or System Role
 
 ## Business Activity Implemented
 
@@ -108,4 +110,107 @@ No database migration was required. No existing model, repository, service, or r
 
 ---
 
-*Per instruction: BA-02 has not been started. No Independent Review has been performed. Nothing has been committed. Awaiting explicit approval.*
+## BA-02 — Establish Domain Permission
+
+Realizing PE-001-C003's ERB-C003-01 (Define Authorization Policy Structure) / EX-C003-02 (Establish Domain Permission).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Establish a Domain Permission as standing authority within a Domain, independent of any Business Role (URA-001-47/48), per EX-C003-02's stated Business Goal ("grant permanent, domain-scoped access without tying it to a Business Role that may change independently").
+- **Input Contract:** `membership_id` (UUID, required — the Membership the grant is anchored to), `domain_id` (UUID, required — the target Domain, already established per AMD-014's `domain_registry`), `permission_level` (one of URA-001-47's eight values: VIEW/ENTER/EDIT/REVIEW/APPROVE/ASSIGN/DELEGATE/ADMIN), `effective_from`/`effective_to` (optional, URA-001-53).
+- **Output Contract:** The established Domain Permission (id, membership_id, domain_id, permission_level, effective_from, effective_to, created_at, updated_at), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-01 — established only where the target Domain exists (404), the target Membership exists (404), `permission_level` is one of the eight canonical values (422, enforced by `DomainPermissionLevel` before the service layer is reached), and no currently-active grant of the identical (membership, domain, permission_level) triple already exists (409).
+  - BR-C003-02 — a Domain Permission is never an implicit consequence of a Business Role (satisfied by construction: `DomainPermissionService.establish()` never reads or writes `roles`/`role_permissions`).
+  - EX-C003-02's Domain Owner/Domain Admin authority requirement (URA-001-45/46). **Scoped simplification, same class as BA-01's BR-C003-08 disposition (IRA-002 §2.7):** gated on the existing `PLATFORM_ADMIN` role. Unlike BA-01 (where the gap is ADR-002's pending resolution of an existing-but-mismatched catalog), here no Domain Owner/Domain Admin relationship exists anywhere in the schema at all — Domain (AMD-014) was deliberately implemented as ownership-free reference data, a decision this Business Activity does not reopen. Stated explicitly, not a silent gap; registered as TD-022.
+- **Validation Rules:** Domain existence and Membership existence checked before creation (404 each); duplicate-active-grant checked both at the service layer (pre-check, clean 409) and via `IntegrityError` handling for the concurrent-creation race, same pattern as `RoleService.establish()`/`OrganizationService.establish()`.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (see the Business Rules disposition above; TD-022).
+- **Domain Events:** `DOMAIN_PERMISSION_ESTABLISHED` (domain_permission_id, membership_id, domain_id, permission_level).
+- **Audit Requirements:** `record_audit("ESTABLISH_DOMAIN_PERMISSION", ...)` on success and on every denial path (unknown domain, unknown membership, duplicate grant), per SD-002-054's seven audit questions — same mechanism reused as-is.
+- **Tests:** `tests/test_domain_permission_service.py` (6 unit tests), `tests/test_domain_permission_api.py` (6 API/authorization tests) — 12 new tests, all passing; full suite (160 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-02)
+
+Reviewed: PE-001-C003 (ERB-C003-01, EX-C003-02, Chapter 5 Contracts 5.1/5.2/5.4/5.5, Chapter 7 Business Rules BR-C003-01/02/04, extracted and read directly from the docx's `word/document.xml`), URA-001 Section 4 (URA-001-43 through -56, Domain Ownership & Domain Permissions), `architecture/04-Technical/Master_Technical_Architecture.md` (`domain_permission_registry`, its FK completed by AMD-014, and `domain_registry` itself), IRA-002 (§2.1's live ADR-002 question — confirmed not applicable to BA-02, since Domain Permission does not touch the `roles`/`permissions` seed-catalog dispute at all; §2.2's BA-02 mapping and its explicit instruction that this Business Activity needs its own gap analysis before implementation), `IMP-REPORT-WP-02`'s own BA-01 precedent (duplicate-check-then-create, audit/event pattern, PLATFORM_ADMIN interim gate).
+
+**Key finding requiring disclosure:** EX-C003-02's Entry Context requires confirming the proposing Person's Domain Owner or Domain Admin authority (URA-001-45/46) for the specific target Domain. No such relationship exists anywhere in this codebase — a direct consequence of Domain (AMD-014) being deliberately built as ownership-free reference/master data, a decision this Business Activity does not reopen (Domain architecture is frozen). Disposition: BA-02 gates on the existing `PLATFORM_ADMIN` dependency, the same interim-simplification class BA-01 already established for BR-C003-08, disclosed explicitly rather than silently assumed, and registered as TD-022.
+
+---
+
+## Gap Analysis Summary (BA-02)
+
+- **Database:** New table required — `domain_permissions` did not exist anywhere in AuthService prior to this Business Activity (unlike BA-01's `roles`, which pre-existed from WP-00). This is not an architectural-impact escalation under CLAUDE.md §19.4: the schema shape is not invented here — it directly realizes Master Technical Architecture's own canonical `domain_permission_registry` (AMD-011, URA-001-47), whose FK to Domain was completed by the already-approved AMD-014 amendment. One new, purely additive migration (`e7f2b4a9c3d5`).
+- **Business Activities:** BA-02's mapping to ERB-C003-01/EX-C003-02 was already derived in IRA-002 §2.2; this report performs the fresh, BA-02-specific gap analysis IRA-002 §2.2 stated would be required before implementation.
+- **API Impact:** One new endpoint, `POST /domain-permissions`, mirroring `POST /roles`'s established shape (schema/repository/service/router layering, duplicate-check-then-create, audit/event emission), plus two existence-check dependencies (Domain, Membership) neither BA-01 nor WP-01 needed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01's own scope decision).
+- **Dependencies:** `domain_registry` (AMD-014, already committed) and `memberships` (WP-00-era) — both consumed as pre-existing, unaltered tables; BA-02 adds rows to a new table only, never alters either dependency's shape.
+- **Risks:** Domain Owner/Domain Admin authority gap (TD-022, above) — Low severity, same risk profile as TD-021, no privilege beyond what `PLATFORM_ADMIN` already holds platform-wide. Tenant-scoping: `/domain-permissions` is tenant-exempt (`middleware/tenant.py`), but for a narrower reason than `/roles`/`/domains` — a Domain Permission grant genuinely is organization-scoped data in the canonical architecture (`domain_permission_registry`'s own RLS policy scopes it via `membership_id -> organization_id`); the exemption holds only because `PLATFORM_ADMIN` is the sole caller today and already operates across every organization boundary elsewhere in this codebase, and should be revisited once TD-022 is resolved.
+- **Technical Debt registered:** TD-022 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-02)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-022 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_27_1400-e7f2b4a9c3d5_domain_permission_registry.py`
+- `Backend/Services/AuthService/models/domain_permission.py`
+- `Backend/Services/AuthService/repositories/domain_permission_repository.py`
+- `Backend/Services/AuthService/services/domain_permission_service.py`
+- `Backend/Services/AuthService/schemas/domain_permission.py`
+- `Backend/Services/AuthService/routers/domain_permission.py`
+- `Backend/Services/AuthService/domain-permission-api.yaml`
+- `Backend/Services/AuthService/tests/test_domain_permission_service.py`
+- `Backend/Services/AuthService/tests/test_domain_permission_api.py`
+
+**Implementation (modified, minimal):**
+- `Backend/Services/AuthService/main.py` — registered the new `domain_permission` router at `/domain-permissions`.
+- `Backend/Services/AuthService/models/__init__.py` — registered `DomainPermission`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/domain-permissions` to the tenant-exemption list, with the narrower rationale stated above (not the same basis as `/roles`/`/domains`).
+
+No existing model, repository, service, or router was modified beyond the registrations above.
+
+---
+
+## Validation (BA-02)
+
+- 12 new tests (6 unit, 6 API), all passing.
+- Full AuthService suite: **160 passed**, zero regressions.
+- Single, linear Alembic head confirmed (`e7f2b4a9c3d5`), purely additive migration.
+- `domain-permission-api.yaml` confirmed to parse cleanly via `yaml.safe_load`.
+- Confirmed `DomainPermissionService.establish()` never reads or writes `roles`/`role_permissions` (BR-C003-02, tested explicitly in `test_establish_never_touches_role_permissions`).
+- Confirmed unknown Domain and unknown Membership each independently produce 404 (`test_establish_rejects_unknown_domain`, `test_establish_rejects_unknown_membership`).
+- Confirmed a duplicate active (membership, domain, permission_level) grant is rejected with 409, while two distinct permission levels for the same pair both succeed (`test_establish_rejects_duplicate_active_grant`, `test_establish_allows_different_permission_levels_on_same_domain`).
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403 and an invalid `permission_level` receives 422 (`test_establish_domain_permission_rejects_non_platform_admin`, `test_establish_domain_permission_rejects_invalid_permission_level`).
+
+---
+
+## Independent Review (BA-02)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-ran the full test suite directly (160/160 passing), re-extracted PE-001-C003's docx independently, and traced BR-C003-01/BR-C003-02 through the actual `services/domain_permission_service.py` code rather than its docstring. Confirmed the Domain Owner/Domain Admin authority gap (URA-001-45/46) is genuine — no such relationship exists anywhere in the codebase — and judged the PLATFORM_ADMIN interim-gate disposition defensible, the same class as BA-01's own accepted TD-021 simplification. Confirmed the Alembic migration is single-headed and purely additive, and the OpenAPI contract parses and matches the implemented endpoint. Three findings were raised and are disposed of as follows:
+1. **(Resolved by this update)** This report had not yet been extended to cover BA-02 at the time of review, and no BA-02-specific gap analysis existed as a discoverable artifact — the reviewer correctly flagged that CLAUDE.md §19.7's Business Activity Completion Gate requires the implementation-report/gap-analysis artifact to exist, not only the code and tests. This section is that artifact.
+2. **(Resolved by this update)** TD-022 did not yet exist in `TECH-DEBT.md` at the time of review, despite the service docstring already citing it — added above, mirroring TD-021's detailed-entry format.
+3. **(Resolved by this update)** The original `middleware/tenant.py` comment claimed the same tenant-exemption basis as `/roles`/`/domains`; the reviewer correctly noted `domain_permission_registry` is canonically organization-scoped data (via `membership_id`), a narrower case than Role's/Domain's genuinely-global-or-nullable scoping. The comment has been corrected to state the actual, narrower rationale (PLATFORM_ADMIN-only caller, revisit at TD-022 resolution) rather than implying an equivalent precedent.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found. The three findings above are documentation/registration-hygiene gaps, all closed by this same update, consistent with how BA-01's own single Minor finding (TD-021's missing registration) was resolved.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-022, and this report section, is being committed together).
+
+**Current Repository Status:** BA-01 remains committed to `master` as previously recorded. BA-02's implementation (9 new files, 3 minimally-modified files), TECH-DEBT.md's TD-022 entry, and this report's BA-02 sections are new since BA-01's last commit and are being committed together as one unit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/04-Technical/Master_Technical_Architecture.md`'s other sections, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and are not part of this commit.
+
+---
+
+*Per instruction: BA-03 has not been started. Awaiting explicit approval before proceeding.*
