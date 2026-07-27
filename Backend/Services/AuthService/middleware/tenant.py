@@ -28,12 +28,17 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # introduced a path parameter (/organizations/{organization_id}); every future
         # WP-01 Business Activity's endpoint lives under this same prefix and is
         # covered by the same rationale, so it is not re-added per activity.
+        # /roles (WP-02, BA-01 Establish Business or System Role) is tenant-agnostic
+        # on the same basis: the Role model has no organization_id column — Roles are
+        # platform-global (URA-001 Section 3), not tenant-scoped, mirroring
+        # /organizations' own rationale exactly (IRA-002 §2.4).
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
             "/person/recognize", "/person/establish",
-        ] or path == "/organizations" or path.startswith("/organizations/"):
+        ] or path == "/organizations" or path.startswith("/organizations/") \
+          or path == "/roles" or path.startswith("/roles/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

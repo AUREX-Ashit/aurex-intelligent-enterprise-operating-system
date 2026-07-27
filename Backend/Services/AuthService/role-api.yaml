@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Role & Permission Management API
+  description: >
+    Role & Permission Management (C-003, WP-02) endpoints for the CorpStage
+    AuthService. Covers BA-01 (Establish Business or System Role) only —
+    see IRA-002 for the full ten-Enterprise-Experience Business Activity
+    mapping; BA-02 onward are not yet implemented. Authorization gate:
+    PLATFORM_ADMIN (IRA-002 §2.7 — persona-specific defining authority per
+    BR-C003-08 is deferred pending ADR-002's resolution of the canonical
+    role catalog).
+  version: 1.0.0
+paths:
+  /roles:
+    post:
+      summary: Establish a new Business or System Role
+      description: >
+        WP-02 Business Activity 1: Establish Business or System Role,
+        realizing PE-001-C003's ERB-C003-01 / EX-C003-01. Requires the
+        PLATFORM_ADMIN role. Establishing a Role never automatically
+        grants a Domain Permission, Approval Authority, or Runtime
+        Assignment (BR-C003-02). Rejects a duplicate role_code with 409.
+        Tenant-agnostic: Roles are platform-global (no organization_id),
+        so X-Tenant-ID is not required or read.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishRoleRequest'
+      responses:
+        '201':
+          description: Role established.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '409':
+          description: A role with this role_code already exists.
+        '422':
+          description: Invalid request (e.g., missing required field).
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EstablishRoleRequest:
+      type: object
+      required:
+        - role_code
+        - role_name
+      properties:
+        role_code:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: PLANT_HEAD
+        role_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Plant Head
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: Business Role for plant-level operational accountability.
+        is_system_role:
+          type: boolean
+          default: false
+          description: True for a System Role, False for a Business Role (URA-001 Section 3).
+    RoleResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        role_code:
+          type: string
+        role_name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        is_system_role:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
