@@ -1,5 +1,5 @@
 # Master Data Population Specification (MDP-001)
-### Version 1.1 — GOLD STANDARD (Supersedes v1.0)
+### Version 1.2 — GOLD STANDARD (Supersedes v1.1)
 
 **Status:** LOCKED
 **Purpose:** Execution-level instructions for Claude Code to populate CorpStage's platform-seed master data tables at build time, reading directly from the 23 Domain CILs, 7 Industry Extension Packs, and the locked architecture documents (SD-001 v2.0, SD-002 v2.0, SD-003 v2.0, URA-001 v2.1, ERG-001 v2.0).
@@ -11,6 +11,10 @@
 ## Changelog from v1.0
 
 v1.0's Critical Correction section checked only 9 of the 40 candidate tables, and used a single failure mode (NOT NULL constraint) that missed a second, equally real failure mode: tables whose schema is nullable but whose actual *purpose* is to record something that already happened (a decision, an anomaly, a scored relationship) — seeding these would fabricate events that never occurred. v1.1 re-checked all 40 tables individually against this two-part test, corrected one factual error from the prior pass (`executive_insight_registry` was wrongly read as having no `organization_id`; it has `NOT NULL`), and closed the arithmetic: 22 clean + 2 conditional + 16 excluded = 40. A second schema defect was also found while validating the BQ-CDE relationship: `kpi_metric_mapping.organization_id` is `NOT NULL`, blocking the one CIL relationship (`04_BQ_CDE_Mapping`) this document had not yet addressed. Both defects (this one and `role_view_configuration`'s deprecated FK) are flagged for a schema fix, not worked around at the data layer.
+
+## Changelog from v1.1
+
+AMD-014 (Master Technical Architecture v6.9) added `domain_registry` — a platform-seeded, tenant-extensible reference/master-data table for Domain (URA-001 §4), closing a completion gap that left `domain_permission_registry.domain_id` referencing no real table. Added as table #41 below (row 41, Critical Correction table) and Section B2a. Arithmetic updated: 23 clean + 2 conditional + 16 excluded = 41.
 
 ---
 
@@ -65,8 +69,9 @@ v1.0's Critical Correction section checked only 9 of the 40 candidate tables, an
 | 38 | `executive_insight_registry` | ❌ Excluded | `organization_id NOT NULL` |
 | 39 | `strategic_intent_registry` | ❌ Excluded | org_id nullable, but content is inherently one real company's board/CEO statement — no legitimate global row |
 | 40 | `decision_traceability_registry` | ❌ Excluded | `organization_id NOT NULL` |
+| 41 | `domain_registry` | ✅ Seed | org_id nullable, `NULL = platform-default` per AMD-014/URA-001-43, mirrors `business_role_registry`'s own convention |
 
-**Verified count: 22 tables cleanly seedable today, 2 conditionally seedable (`llm_prompt_registry` pending a content source, `role_view_configuration` pending the FK fix), 16 excluded. 22 + 2 + 16 = 40 — arithmetic closes.**
+**Verified count: 23 tables cleanly seedable today, 2 conditionally seedable (`llm_prompt_registry` pending a content source, `role_view_configuration` pending the FK fix), 16 excluded. 23 + 2 + 16 = 41 — arithmetic closes.**
 
 **A second schema defect, found while validating the BQ-CDE relationship (added as Section A2a below): `kpi_metric_mapping.organization_id` is `NOT NULL`.** This table is the junction between `kpi_registry` (BQs) and `metric_registry` (CDEs) — both of which are correctly global, seedable tables. But the mapping *between* them cannot be seeded as global rows, because the column forces a real organization. This means the CIL's canonical BQ→CDE relationships (e.g., "What was total cost of delivery?" mapping to Transportation/Packaging/Distribution Cost — true for every tenant, per One Truth Multiple Views) cannot be represented once, globally — every tenant would have to independently recreate the same universal mapping. **This is a schema-level fix required before Section A2a can execute, flagged the same way as the `role_view_configuration` FK block — not worked around at the data layer.**
 
@@ -136,6 +141,9 @@ Source: URA-001-29, verbatim. Exactly 5 rows: `CORPSTAGE_ADMIN`, `CORPORATE_ADMI
 
 ### B2. `business_role_registry` (global rows only)
 Source: URA-001-30's named examples (CEO, CFO, COO, CHRO, CSO, CISO, Company Secretary, Finance Manager, Plant Head, Board Member) — populate with `organization_id = NULL`. Tenant-specific custom roles (URA-001-38) are created during onboarding, not seeded here.
+
+### B2a. `domain_registry` (platform-default rows only)
+Source: URA-001-43, verbatim — 7 platform-default domains: Finance, HR, Risk, Supply Chain, Cyber Security, Legal, Business Resilience. Populate with `organization_id = NULL`, `parent_domain_id = NULL` (top-level rows only; URA-001-44's sub-domain examples — Accounting, Treasury, Taxation under Finance — are illustrative, not a fixed canonical set, so sub-domain rows are a tenant-configuration action, not seeded here). Tenant-added domains (URA-001-43's "organizations may add domains such as Innovation, Manufacturing Excellence, or Investor Relations") are created during onboarding/configuration, not seeded here.
 
 ### B3. `approval_authority_registry` (global templates only)
 Source: URA-001-41's named examples (Annual Report Approver, Financial Statement Approver, Board Resolution Approver, Policy Approver) with `organization_id = NULL`, `approval_strategy` defaulted per URA-001-42's stated norm for each (SEQUENTIAL for Annual Report Approver, per URA-001-67's worked example).
@@ -216,4 +224,4 @@ Populate only `organization_id = NULL` rows for internal platform services (e.g.
 
 ## Freeze Statement
 
-This specification governs the initial seed population of **22 cleanly-seedable platform-scoped tables**, verified individually against the actual locked schema (not the earlier unverified 40-table assumption), plus the fixed 5-row `system_role_registry` already counted within that 22. **Two tables are conditionally seedable pending a schema fix, not yet ready:** `role_view_configuration` (repoint `role_id` from deprecated `role_registry` to `business_role_registry`) and `kpi_metric_mapping` (make `organization_id` nullable, so the CIL's canonical BQ↔CDE relationships can be stored once, globally, rather than duplicated per tenant). `llm_prompt_registry` is schema-ready but has no content source yet — flagged for engineering, not fabricated here. Every field mapping above traces to a named CIL sheet, a named principle in SD-001/002/003/URA-001/ERG-001, or is explicitly flagged as needing an engineering-owned source rather than invented.
+This specification governs the initial seed population of **23 cleanly-seedable platform-scoped tables**, verified individually against the actual locked schema (not the earlier unverified 40-table assumption), plus the fixed 5-row `system_role_registry` already counted within that 23 (and, per AMD-014, the 7-row `domain_registry` also counted within that 23). **Two tables are conditionally seedable pending a schema fix, not yet ready:** `role_view_configuration` (repoint `role_id` from deprecated `role_registry` to `business_role_registry`) and `kpi_metric_mapping` (make `organization_id` nullable, so the CIL's canonical BQ↔CDE relationships can be stored once, globally, rather than duplicated per tenant). `llm_prompt_registry` is schema-ready but has no content source yet — flagged for engineering, not fabricated here. Every field mapping above traces to a named CIL sheet, a named principle in SD-001/002/003/URA-001/ERG-001, or is explicitly flagged as needing an engineering-owned source rather than invented.

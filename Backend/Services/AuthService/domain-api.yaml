@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Domain Reference Data API
+  description: >
+    Domain reference/master-data catalog (AMD-014, URA-001 §4). Supports
+    WP-02 BA-02's lookup requirement (PE-001-C003 EX-C003-02's Entry
+    Context: "the target Domain, already established") — this is not a
+    Business Activity API: Domain is reference data, platform-seeded
+    (MDP-001 §B2a) and tenant-extensible (URA-001-43), with no lifecycle
+    state machine and no write path exposed here. Authorization gate:
+    PLATFORM_ADMIN, consistent with WP-01/WP-02's interim gate.
+  version: 1.0.0
+paths:
+  /domains:
+    get:
+      summary: List the Domain reference catalog
+      description: >
+        Every platform-default Domain, plus the given organization's own
+        added domains if organization_id is supplied. Read-only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organization_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Include this organization's own added domains alongside the platform defaults.
+      responses:
+        '200':
+          description: Domain catalog page.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+  /domains/{domain_id}:
+    get:
+      summary: Resolve a single Domain by id
+      description: >
+        Realizes PE-001-C003's EX-C003-02 Entry Context precondition
+        ("the target Domain, already established"). Read-only.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: domain_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Domain resolved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No domain found with this id.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    DomainResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+          nullable: true
+        domain_name:
+          type: string
+        parent_domain_id:
+          type: string
+          format: uuid
+          nullable: true
+        active_flag:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time

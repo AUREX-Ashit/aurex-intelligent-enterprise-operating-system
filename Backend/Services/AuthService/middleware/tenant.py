@@ -32,13 +32,19 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # on the same basis: the Role model has no organization_id column — Roles are
         # platform-global (URA-001 Section 3), not tenant-scoped, mirroring
         # /organizations' own rationale exactly (IRA-002 §2.4).
+        # /domains (AMD-014, Domain reference/master-data lookup) is tenant-agnostic
+        # for the same reason as /roles: the read-only lookup is PLATFORM_ADMIN-gated
+        # and Domain rows are platform-seeded/global by default (organization_id
+        # nullable), with any tenant-scoping expressed as an explicit query
+        # parameter rather than the X-Tenant-ID header this middleware enforces.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
             "/person/recognize", "/person/establish",
         ] or path == "/organizations" or path.startswith("/organizations/") \
-          or path == "/roles" or path.startswith("/roles/"):
+          or path == "/roles" or path.startswith("/roles/") \
+          or path == "/domains" or path.startswith("/domains/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

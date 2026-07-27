@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, person, role
+from routers import auth, health, organization, person, role, domain
 from models.database import db_manager
 from config import settings
 
@@ -78,3 +78,4 @@ app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(person.router, prefix="/person", tags=["Person"])
 app.include_router(organization.router, prefix="/organizations", tags=["Organization"])
 app.include_router(role.router, prefix="/roles", tags=["Role"])
+app.include_router(domain.router, prefix="/domains", tags=["Domain"])

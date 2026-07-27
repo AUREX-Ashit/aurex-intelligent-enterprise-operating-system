@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.7)
+CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.8)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -110,6 +110,30 @@ DOCUMENT VERSION HISTORY
     removed.
     Final verified total: 147 distinct tables, 106 RLS policies — identical
     to v6.6, confirming this version introduced no schema change.
+  v6.8 (this version): architecture completion, closing AMD-014 (Domain
+    Business Object Architecture Completion). Prior to this version, Domain
+    (URA-001 §4, URA-001-43 through -56 — Finance, HR, Risk, Supply Chain,
+    Cyber Security, Legal, Business Resilience, and organization-added
+    equivalents) had no registry anywhere in this document, even though
+    every sibling object in the same URA-001 rule range already had one
+    (system_role_registry, business_role_registry, group_registry) and
+    domain_permission_registry's own domain_id column already referenced it
+    by comment ("references domain object") with no FK declared. Adds
+    domain_registry: a platform-seeded, tenant-extensible (URA-001-43),
+    hierarchical (URA-001-44, self-referencing parent_domain_id) reference/
+    master-data catalog describing the Domain only. Consistent with AMD-014
+    §4's stated intent, this closes only the completion gap AMD-014
+    identified: no lifecycle state machine is introduced (Domain is
+    reference data, not a governed Business Activity), and no Domain
+    Owner/Domain Admin relationship (URA-001-45/-46) is modeled on this
+    table — those remain open, not silently resolved, and are left for a
+    later, separately-scoped effort. Completes domain_permission_registry's
+    previously-unwired domain_id foreign key to domain_registry(domain_id).
+    Net addition: 1 new table, 1 new RLS policy (Category 1, nullable-OR,
+    identical in shape to business_role_registry's own policy), 1 FK
+    completed on an existing table, 0 tables altered otherwise.
+    Final verified total: 148 distinct tables, 107 RLS policies — net +1/+1
+    from v6.7.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -1081,17 +1105,45 @@ CREATE TABLE group_membership (
 );
 
 -- =========================================================================
+-- domain_registry
+-- PURPOSE: AMD-014. Reference/master-data catalog of Domain (Finance, HR,
+-- Risk, Supply Chain, Cyber Security, Legal, Business Resilience, and
+-- organization-added equivalents) per URA-001 §4 — the business-ownership
+-- classification domain_permission_registry (below) grants standing
+-- authority against. Platform-seeded, tenant-extensible (URA-001-43),
+-- hierarchical (URA-001-44). Describes the Domain only: no lifecycle state
+-- machine is modeled (this is reference data, not a governed Business
+-- Activity), and no Domain Owner/Domain Admin relationship is modeled here
+-- (URA-001-45/-46 remain open, not silently resolved — see AMD-014 §4/§6);
+-- a membership's standing ADMIN-level authority over a domain is already
+-- expressible via domain_permission_registry.permission_level, without a
+-- duplicate ownership column on this table.
+-- FK: organization_id -> organization_master (NULL = platform-default,
+--     tenant-extensible) | parent_domain_id -> domain_registry
+--     (self-referencing, URA-001-44)
+-- =========================================================================
+CREATE TABLE domain_registry (
+    domain_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID REFERENCES organization_master(organization_id), -- NULL = platform-default domain, tenant-extensible (URA-001-43)
+    domain_name VARCHAR(255) NOT NULL, -- Finance, HR, Risk, Supply Chain, Cyber Security, Legal, Business Resilience, or a tenant-added equivalent (URA-001-43)
+    parent_domain_id UUID REFERENCES domain_registry(domain_id), -- sub-domain hierarchy (URA-001-44)
+    active_flag BOOLEAN DEFAULT TRUE, -- reference-data flag, not a lifecycle state machine
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================================
 -- domain_permission_registry
 -- PURPOSE: The actual permission-level grant of a membership over a domain
 -- (Finance, HR, Risk, etc.) — the row that node_permission_assignment
 -- resolves to before URA-001-76's precedence chain evaluates.
--- FK: membership_id -> membership_registry
+-- FK: membership_id -> membership_registry | domain_id -> domain_registry
+--     (completed per AMD-014 — previously an unwired comment-only reference)
 -- -- URA-001-47: permission_level enumeration
 -- =========================================================================
 CREATE TABLE domain_permission_registry (
     domain_permission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     membership_id UUID REFERENCES membership_registry(membership_id),
-    domain_id UUID, -- references domain object (Finance, HR, Risk, etc.)
+    domain_id UUID REFERENCES domain_registry(domain_id), -- Finance, HR, Risk, etc. — FK completed per AMD-014
     permission_level VARCHAR(50), -- VIEW/ENTER/EDIT/REVIEW/APPROVE/ASSIGN/DELEGATE/ADMIN (URA-001-47)
     effective_from TIMESTAMP WITH TIME ZONE,
     effective_to TIMESTAMP WITH TIME ZONE
@@ -4262,6 +4314,11 @@ CREATE POLICY org_isolation ON business_role_registry
     USING (organization_id IS NULL  -- NULL = global role, visible to all tenants (URA-001-38)
            OR organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
 
+ALTER TABLE domain_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON domain_registry
+    USING (organization_id IS NULL  -- NULL = platform-default domain, visible to all tenants (URA-001-43)
+           OR organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
+
 ALTER TABLE group_registry ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON group_registry
     USING (organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
@@ -4436,7 +4493,8 @@ Tier 2 — Partial Pre-Seed (17 tables, platform seeds defaults, customer extend
   discovery_provider_registry (AMD-013 — platform ships default external/public providers, tenants add enterprise connections),
   agent_registry (AMD-013 — platform ships all 11 default agent types, tenants may register specialist-domain agents),
   reasoning_engine_registry (AMD-013 — platform ships default reasoning engines, tenants may add or restrict),
-  discovery_strategy_registry (AMD-013 — platform ships default strategies, tenants may customize).
+  discovery_strategy_registry (AMD-013 — platform ships default strategies, tenants may customize),
+  domain_registry (AMD-014 — platform ships 7 default domains per URA-001-43, tenants may add their own).
 
 Tier 3 — Customer-Created (80 tables, empty at onboarding):
   All remaining transactional tables — populated as customers use the platform.
