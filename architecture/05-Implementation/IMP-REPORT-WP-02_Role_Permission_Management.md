@@ -3,7 +3,7 @@
 **Work Package:** WP-02 — Role & Permission Management (C-003)
 **Governing Readiness Assessment:** `IRA-002_WP-02_Role_Permission_Management_Implementation_Readiness_Assessment.md` (Approved — WP-02 READY, BA-01 only; BA-02 assessed inline below per IRA-002 §2.2's own instruction that BA-02 onward each require a fresh gap analysis before implementation)
 **Governing Capability Specification:** `PE-001-C003_Role_Permission_Management.docx` v1.0 (three ERBs, ten Enterprise Experiences)
-**Scope of this report:** BA-01 and BA-02, per the Business Activity Completion Gate (CLAUDE.md §19.7), each completed and gated independently. BA-03 through BA-10 (mapped in IRA-002 §2.2) are not started.
+**Scope of this report:** BA-01, BA-02, and BA-03, per the Business Activity Completion Gate (CLAUDE.md §19.7), each completed and gated independently. BA-04 through BA-10 (mapped in IRA-002 §2.2) are not started.
 
 ---
 
@@ -209,8 +209,115 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 
 **BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-022, and this report section, is being committed together).
 
-**Current Repository Status:** BA-01 remains committed to `master` as previously recorded. BA-02's implementation (9 new files, 3 minimally-modified files), TECH-DEBT.md's TD-022 entry, and this report's BA-02 sections are new since BA-01's last commit and are being committed together as one unit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/04-Technical/Master_Technical_Architecture.md`'s other sections, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and are not part of this commit.
+**Current Repository Status:** BA-01 and BA-02 remain committed to `master` as previously recorded. BA-03's implementation, TECH-DEBT.md's TD-023 entry, and this report's BA-03 sections are new since BA-02's last commit and are being committed together as one unit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents, including the frozen ARM-002 diff sitting inside `Master_Technical_Architecture.md` at its own, separate version-history entry) remain outside WP-02's scope and are not part of this commit.
 
 ---
 
-*Per instruction: BA-03 has not been started. Awaiting explicit approval before proceeding.*
+## BA-03 — Establish Approval Authority
+
+Realizing PE-001-C003's ERB-C003-01 (Define Authorization Policy Structure) / EX-C003-03 (Establish Approval Authority).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Establish an Approval Authority as a first-class object independent of Business Role, declaring exactly one approval strategy and exactly one scope (URA-001-61/62), per EX-C003-03's stated Business Goal ("define who or what group must approve a class of decision, without conflating that authority with a business title").
+- **Input Contract:** `organization_id` (UUID, required — for every scope, including GLOBAL/COMPANY), `authority_name` (required, 1–255 chars), `approval_strategy` (one of ANY_ONE/ALL/MAJORITY/SEQUENTIAL, URA-001-42/62), `majority_threshold_pct` (optional, 0–100, URA-001-82), `scope_type` (one of GLOBAL/COMPANY/DOMAIN/OBJECT, URA-001-61), `domain_id` (required iff scope_type=DOMAIN), `object_type`/`object_id` (required iff scope_type=OBJECT).
+- **Output Contract:** The established Approval Authority (id, organization_id, authority_name, approval_strategy, majority_threshold_pct, scope_type, domain_id, object_type, object_id, created_at, updated_at), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-01 — established only where the target Organization exists (404), and where scope_type=DOMAIN, the target Domain exists (404); scope_type/domain_id/object_type/object_id's mutual consistency is validated before the service layer is ever reached (422).
+  - EX-C003-03's Corporate Admin/Domain Owner authority requirement (URA-001-32/45). **Scoped simplification, same class as BA-01/BA-02's disposition:** gated on the existing `PLATFORM_ADMIN` role, since neither authority exists as a distinct, enforceable claim today. Stated explicitly, not a silent gap; registered as TD-023.
+- **Validation Rules:** scope_type's anchor consistency enforced at three independent layers — Pydantic `model_validator` (422, `schemas/approval_authority.py`), a database CHECK constraint (`ck_approval_authorities_scope_consistency`), and existence checks for Organization/Domain (404). Exactly one of four combinations is ever valid: GLOBAL/COMPANY (organization_id only), DOMAIN (+ domain_id), OBJECT (+ object_type and object_id) — every other combination is rejected.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (see the Business Rules disposition above; TD-023).
+- **Domain Events:** `APPROVAL_AUTHORITY_ESTABLISHED` (approval_authority_id, organization_id, authority_name, approval_strategy, scope_type, domain_id, object_type, object_id).
+- **Audit Requirements:** `record_audit("ESTABLISH_APPROVAL_AUTHORITY", ...)` on success and on every denial path (unknown organization, unknown domain), per SD-002-054's seven audit questions — same mechanism reused as-is.
+- **Tests:** `tests/test_approval_authority_schema.py` (13 unit tests, scope-consistency matrix), `tests/test_approval_authority_service.py` (6 unit tests), `tests/test_approval_authority_api.py` (8 API/authorization tests) — 27 new tests, all passing; full suite (187 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-03)
+
+Reviewed: PE-001-C003 (ERB-C003-01, EX-C003-03, Chapter 7 BR-C003-01, extracted and read directly from the docx's `word/document.xml`), URA-001 Section 3 (URA-001-32, Corporate Admin) and Section 4 (URA-001-42, -45, -61, -62, -82), `architecture/04-Technical/Master_Technical_Architecture.md` (`approval_authority_registry`, already canonical from AMD-011), IRA-002 (§2.2's BA-03 mapping), `IMP-REPORT-WP-02`'s own BA-01/BA-02 precedent.
+
+**Key finding requiring disclosure, verified before any implementation:** `approval_authority_registry` as it existed prior to this Business Activity had no `scope_type` column and no Domain/Object anchor at all, despite URA-001-61 and EX-C003-03 both requiring an Approval Authority to declare exactly one of GLOBAL/COMPANY/DOMAIN/OBJECT scope as an explicit attribute ("declaring exactly one approval strategy and one scope"; Success Criteria: "never... without exactly one declared strategy and exactly one declared scope"). This was surfaced as a genuine stop condition (schema change requiring architectural approval) before any code was written, verified against the primary canonical text with the user, and explicitly approved: scope_type is stored, never inferred, because GLOBAL and COMPANY share an identical anchor pattern (organization_id set, every other anchor NULL) once organization_id is required for every scope — the two would be genuinely indistinguishable without their own discriminator. `architecture/04-Technical/Master_Technical_Architecture.md` was updated (v6.9) to add `scope_type`, `domain_id`, `object_type`, `object_id`, and a scope-consistency CHECK constraint to the existing canonical table — reusing `approval_strategy`'s own enum-column convention, `domain_permission_registry`'s own FK convention, `runtime_assignment_registry`'s own polymorphic-anchor convention, and `industry_taxonomy_registry`'s own conditional-CHECK-constraint convention. No new architectural style was introduced.
+
+---
+
+## Gap Analysis Summary (BA-03)
+
+- **Database:** New table required — `approval_authorities` did not exist anywhere in AuthService prior to this Business Activity. One new, purely additive migration (`b8d3f6a1c4e2`), plus the architecture completion above (four new columns + one CHECK constraint on the canonical `approval_authority_registry`, `organization_id` widened to NOT NULL — no existing table's data is affected, since no prior Business Activity had created any row in it).
+- **Business Activities:** BA-03's mapping to ERB-C003-01/EX-C003-03 was already derived in IRA-002 §2.2; this report performs the fresh, BA-03-specific gap analysis IRA-002 §2.2 stated would be required.
+- **API Impact:** One new endpoint, `POST /approval-authorities`, mirroring `POST /domain-permissions`'s established shape (schema/repository/service/router layering, existence-check-then-create, audit/event emission), plus request-layer scope-consistency validation as a new (but pattern-reusing) validation concern.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/BA-02's own scope decision).
+- **Dependencies:** `organizations` (WP-00-era) and `domains` (AMD-014) — both consumed as pre-existing, unaltered tables; BA-03 adds rows to a new table only.
+- **Risks:** Corporate Admin/Domain Owner authority gap (TD-023) — Low severity, same risk profile as TD-021/TD-022. Tenant-scoping: `/approval-authorities` is tenant-exempt (`middleware/tenant.py`), same narrower rationale as `/domain-permissions` — `organization_id` is genuinely required/real data, but `PLATFORM_ADMIN` is the sole caller today and already operates across every organization boundary elsewhere in this codebase.
+- **Latent defect found and fixed (not a new feature):** `main.py`'s `validation_exception_handler` failed with an unhandled `TypeError` when a Pydantic `@model_validator` raises a plain `ValueError` (a completely standard Pydantic idiom), because `exc.errors()` embeds the raw, non-JSON-serializable exception instance in each error's `ctx` field. This was a pre-existing bug in shared code, never triggered before because no prior schema used a custom `model_validator`. Fixed by stripping `ctx` from each error dict before serialization (the human-readable `msg` field is unaffected). Confirmed no existing test asserts on `ctx`'s presence in a 422 response body.
+- **Technical Debt registered:** TD-023 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-03)
+
+**Architecture:**
+- `architecture/04-Technical/Master_Technical_Architecture.md` (v6.8 → v6.9: `approval_authority_registry` scope completion)
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-023 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_27_1600-b8d3f6a1c4e2_approval_authority_registry.py`
+- `Backend/Services/AuthService/models/approval_authority.py`
+- `Backend/Services/AuthService/repositories/approval_authority_repository.py`
+- `Backend/Services/AuthService/services/approval_authority_service.py`
+- `Backend/Services/AuthService/schemas/approval_authority.py`
+- `Backend/Services/AuthService/routers/approval_authority.py`
+- `Backend/Services/AuthService/approval-authority-api.yaml`
+- `Backend/Services/AuthService/tests/test_approval_authority_schema.py`
+- `Backend/Services/AuthService/tests/test_approval_authority_service.py`
+- `Backend/Services/AuthService/tests/test_approval_authority_api.py`
+
+**Implementation (modified, minimal):**
+- `Backend/Services/AuthService/main.py` — registered the new `approval_authority` router at `/approval-authorities`; fixed the pre-existing `validation_exception_handler` `ctx`-serialization defect (see Gap Analysis above).
+- `Backend/Services/AuthService/models/__init__.py` — registered `ApprovalAuthority`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/approval-authorities` to the tenant-exemption list, same narrower rationale as `/domain-permissions`.
+
+No existing model, repository, service, or router was modified beyond the registrations and the one bug fix above.
+
+---
+
+## Validation (BA-03)
+
+- 27 new tests (13 schema, 6 service, 8 API), all passing.
+- Full AuthService suite: **187 passed**, zero regressions.
+- Single, linear Alembic head confirmed (`b8d3f6a1c4e2`), purely additive migration (creates one new table only).
+- `approval-authority-api.yaml` confirmed to parse cleanly.
+- Confirmed all four valid scope combinations (GLOBAL, COMPANY, DOMAIN, OBJECT) establish correctly (`test_establish_global_scope`, `test_establish_company_scope`, `test_establish_domain_scope`, `test_establish_object_scope`).
+- Confirmed every invalid combination is rejected: missing required anchor (DOMAIN without domain_id, OBJECT without object_type/object_id), and dual-stated/ambiguous anchors (GLOBAL or COMPANY with any anchor set, DOMAIN or OBJECT with the other scope's anchor also set) — all at the schema layer (422) and re-enforced by the database CHECK constraint.
+- Confirmed unknown Organization and unknown Domain (for DOMAIN scope) each independently produce 404.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403.
+
+---
+
+## Independent Review (BA-03)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-ran the full test suite directly (187/187 passing), re-extracted PE-001-C003's docx independently, and manually traced the `ck_approval_authorities_scope_consistency` CHECK constraint's boolean logic against all four scope_type values, confirming it is exhaustive (no combination falls through to satisfying none or multiple branches) and matches the Pydantic `model_validator` exactly. Independently re-derived the scope_type-must-be-explicit conclusion against EX-C003-03's own text and confirmed it holds. Confirmed the `main.py` ctx-stripping fix addresses a real, pre-existing latent bug, with no existing test depending on `ctx`'s presence. Confirmed no Corporate Admin/Domain Owner authority model exists anywhere in the codebase, and the PLATFORM_ADMIN interim gate is disclosed, not silent. Three findings were raised and are disposed of as follows:
+1. **(Resolved by this update)** A leftover scratch docx-extraction file (`_pe001c003_scope_check.txt`) was left in the working tree, contrary to this repository's own scratch-file-cleanup convention — deleted.
+2. **(Resolved by this update)** The scope_type rationale, as originally worded in three places (`models/approval_authority.py`, the migration docstring, and Master Technical Architecture's v6.9 entry), overstated the source of ambiguity — it attributed it to "a Domain-scoped authority still belongs to one organization_id," when DOMAIN is in fact trivially distinguishable from GLOBAL/COMPANY by `domain_id`'s own presence. The genuine ambiguity is GLOBAL vs. COMPANY specifically, which share an identical anchor pattern once `organization_id` is required for every scope. The conclusion (explicit `scope_type` column required) was correct throughout; only the stated reasoning was imprecise. Corrected in all three locations.
+3. **(Informational, not actioned)** `majority_threshold_pct` has no conditional tie to `approval_strategy == MAJORITY` — a pre-existing gap in the canonical registry that predates this Business Activity and is outside its purely-additive scope; not registered as new technical debt, consistent with the instruction to register only genuine debt this Business Activity itself introduces or discovers as blocking, not speculative future enhancements.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all findings resolved). Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings resolved in this same update — see above). Repository Commit: Pending (implementation and documentation being committed separately, per instruction).
+
+**Current Repository Status:** BA-01 and BA-02 remain committed to `master`. BA-03's implementation (10 new files, 3 minimally-modified files, one architecture completion to `Master_Technical_Architecture.md`), TECH-DEBT.md's TD-023 entry, and this report's BA-03 sections are new since BA-02's last commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, the frozen Enterprise-AI-Audit-remediation documents, and the frozen ARM-002 diff sitting inside `Master_Technical_Architecture.md` at its own separate version-history entry) remain outside WP-02's scope and are not part of this commit.
+
+---
+
+*Per instruction: BA-04 has not been started. Awaiting explicit approval before proceeding.*

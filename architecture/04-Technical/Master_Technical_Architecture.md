@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.8)
+CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.9)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -134,6 +134,40 @@ DOCUMENT VERSION HISTORY
     completed on an existing table, 0 tables altered otherwise.
     Final verified total: 148 distinct tables, 107 RLS policies — net +1/+1
     from v6.7.
+  v6.9 (this version): architecture completion, closing a structural gap
+    found during WP-02 BA-03 (Establish Approval Authority) readiness
+    verification. URA-001-61 requires an Approval Authority to declare
+    exactly one of four scopes (GLOBAL, COMPANY, DOMAIN, OBJECT) as an
+    explicit, stored attribute — PE-001-C003's EX-C003-03 states this
+    requirement in the same breath as approval_strategy ("declaring
+    exactly one approval strategy and one scope") and its own Success
+    Criteria forbids "a vague or dual-stated" scope. Prior to this
+    version, approval_authority_registry had no scope_type column and no
+    Domain/Object anchor at all. DOMAIN and OBJECT scopes are each
+    distinguishable by their own anchor column, but GLOBAL and COMPANY
+    share an identical anchor pattern (organization_id set, every other
+    anchor NULL) now that organization_id is required for every scope —
+    the two would be genuinely indistinguishable without their own stored
+    discriminator, exactly the "dual-stated" condition the specification
+    forbids. Adds scope_type (GLOBAL/COMPANY/DOMAIN/OBJECT,
+    mirroring approval_strategy's own existing enum-column convention),
+    domain_id (nullable FK to domain_registry, mirroring
+    domain_permission_registry's own FK), and object_type/object_id
+    (nullable polymorphic pair, mirroring runtime_assignment_registry's
+    own anchor pattern) to approval_authority_registry, plus a
+    scope-consistency CHECK constraint (mirroring
+    industry_taxonomy_registry's own conditional-CHECK-constraint
+    convention) enforcing exactly one scope's anchors are populated for
+    each scope_type. organization_id is widened to NOT NULL, since every
+    scope (including GLOBAL and COMPANY) requires it. No new architectural
+    style is introduced — every element reuses an existing, already-
+    established pattern from elsewhere in this same document.
+    Net addition: 4 new columns, 1 new CHECK constraint, 1 existing column
+    (organization_id) tightened to NOT NULL, 0 new tables, 0 new RLS
+    policies (approval_authority_registry's existing org_isolation policy
+    is unaffected by this change).
+    Final verified total: 148 distinct tables, 107 RLS policies — unchanged
+    from v6.8, confirming this version added columns/constraints only.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -1050,18 +1084,42 @@ CREATE TABLE membership_business_role (
 -- PURPOSE: Named approval authorities (e.g. Annual Report Approver),
 -- deliberately independent of business_role_registry — an approval
 -- authority is not a role, and a role does not automatically carry one.
--- FK: organization_id -> organization_master
+-- SCOPE (completed per WP-02 BA-03 verification): URA-001-61 requires an
+-- Approval Authority to declare exactly one of GLOBAL/COMPANY/DOMAIN/OBJECT
+-- scope as an explicit, stored attribute, never inferred from which
+-- anchor column happens to be populated. DOMAIN and OBJECT are each
+-- distinguishable by their own anchor column, but GLOBAL and COMPANY
+-- share an identical anchor pattern (organization_id set, every other
+-- anchor NULL) now that organization_id is required for every scope —
+-- the two would be genuinely indistinguishable without their own stored
+-- discriminator (PE-001-C003 EX-C003-03's own "never a vague or
+-- dual-stated one"). scope_type is the authoritative discriminator; domain_id and
+-- object_type/object_id are populated only per scope_type, enforced by
+-- this table's own CHECK constraint below.
+-- FK: organization_id -> organization_master (required for every scope)
+--     | domain_id -> domain_registry (DOMAIN scope only)
 -- -- URA-001-04: independent of business_role_registry
 -- -- URA-001-41: authority_name examples
 -- -- URA-001-42: approval_strategy (ANY_ONE/ALL/MAJORITY/SEQUENTIAL)
+-- -- URA-001-61: scope_type (GLOBAL/COMPANY/DOMAIN/OBJECT)
 -- -- URA-001-82: majority_threshold_pct is configurable
 -- =========================================================================
 CREATE TABLE approval_authority_registry (
     approval_authority_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID REFERENCES organization_master(organization_id),
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id), -- required for every scope, including GLOBAL/COMPANY
     authority_name VARCHAR(255), -- Annual Report Approver, Financial Statement Approver (URA-001-41)
     approval_strategy VARCHAR(50), -- ANY_ONE / ALL / MAJORITY / SEQUENTIAL (URA-001-42)
-    majority_threshold_pct INT -- configurable, e.g. 50/66/75/100 (URA-001-82)
+    majority_threshold_pct INT, -- configurable, e.g. 50/66/75/100 (URA-001-82)
+    scope_type VARCHAR(50) NOT NULL, -- GLOBAL / COMPANY / DOMAIN / OBJECT (URA-001-61)
+    domain_id UUID REFERENCES domain_registry(domain_id), -- populated only when scope_type = 'DOMAIN'
+    object_type VARCHAR(100), -- populated only when scope_type = 'OBJECT' (mirrors runtime_assignment_registry's own anchor pattern)
+    object_id UUID, -- populated only when scope_type = 'OBJECT' (polymorphic — no FK, same basis as runtime_assignment_registry.object_id)
+    CONSTRAINT chk_approval_authority_scope_type CHECK (scope_type IN ('GLOBAL', 'COMPANY', 'DOMAIN', 'OBJECT')),
+    CONSTRAINT chk_approval_authority_scope_consistency CHECK (
+        (scope_type IN ('GLOBAL', 'COMPANY') AND domain_id IS NULL AND object_type IS NULL AND object_id IS NULL) OR
+        (scope_type = 'DOMAIN' AND domain_id IS NOT NULL AND object_type IS NULL AND object_id IS NULL) OR
+        (scope_type = 'OBJECT' AND domain_id IS NULL AND object_type IS NOT NULL AND object_id IS NOT NULL)
+    )
 );
 
 -- =========================================================================
