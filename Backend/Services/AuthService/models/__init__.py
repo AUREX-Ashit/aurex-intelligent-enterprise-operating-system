@@ -14,6 +14,7 @@ from .refresh_token import RefreshToken
 from .domain import Domain
 from .domain_permission import DomainPermission
 from .approval_authority import ApprovalAuthority
+from .delegation_policy import DelegationPolicy
 
 __all__ = [
     "Base",
@@ -29,4 +30,5 @@ __all__ = [
     "Domain",
     "DomainPermission",
     "ApprovalAuthority",
+    "DelegationPolicy",
 ]

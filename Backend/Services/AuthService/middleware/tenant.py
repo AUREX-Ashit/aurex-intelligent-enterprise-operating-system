@@ -57,6 +57,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # organization-scoped data. Exempted only because PLATFORM_ADMIN is
         # the sole caller today (TD-023 — no Corporate Admin/Domain Owner
         # authority model exists yet), the same disposition as TD-022.
+        # /delegation-policies (WP-02, BA-04 Establish Delegation Policy) is
+        # tenant-agnostic for the identical narrower reason as
+        # /approval-authorities: delegation_policy_registry.organization_id
+        # is required for every scope (including ORGANIZATION), so this
+        # genuinely is organization-scoped data. Exempted only because
+        # PLATFORM_ADMIN is the sole caller today (TD-024 — no Corporate
+        # Admin/Domain Owner authority model exists yet), the same
+        # disposition as TD-022/TD-023.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -66,7 +74,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/roles" or path.startswith("/roles/") \
           or path == "/domains" or path.startswith("/domains/") \
           or path == "/domain-permissions" or path.startswith("/domain-permissions/") \
-          or path == "/approval-authorities" or path.startswith("/approval-authorities/"):
+          or path == "/approval-authorities" or path.startswith("/approval-authorities/") \
+          or path == "/delegation-policies" or path.startswith("/delegation-policies/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

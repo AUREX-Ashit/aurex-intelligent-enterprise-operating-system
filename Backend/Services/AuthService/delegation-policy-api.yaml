@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Delegation Policy API
+  description: >
+    Delegation Policy establishment (C-003, WP-02 BA-04). Covers
+    ERB-C003-01 / EX-C003-04 (Establish Delegation Policy) only — see
+    IRA-002 for the full ten-Enterprise-Experience Business Activity
+    mapping. Establishes the governed, reusable rule only — never a
+    specific delegation instance (delegator, delegatee, reason, concrete
+    date window), which remains outside this capability's boundary.
+    Authorization gate: PLATFORM_ADMIN (interim, mirroring BA-01/BA-02/
+    BA-03's precedent — Corporate Admin/Domain Owner authority per
+    URA-001-32/45 is not yet implementable).
+  version: 1.0.0
+paths:
+  /delegation-policies:
+    post:
+      summary: Establish a new Delegation Policy
+      description: >
+        WP-02 Business Activity: Establish Delegation Policy, realizing
+        PE-001-C003's ERB-C003-01 / EX-C003-04. Declares exactly one
+        delegation_type and exactly one scope_type (ORGANIZATION/DOMAIN/
+        OBJECT/EVENT, URA-001-89) — an ambiguous, dual-stated, or
+        incomplete scope is rejected with 422. Rejects an unknown
+        Organization or Domain with 404.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishDelegationPolicyRequest'
+      responses:
+        '201':
+          description: Delegation Policy established.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DelegationPolicyResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: The target Organization or Domain does not exist.
+        '422':
+          description: Invalid request — scope_type's required anchor missing, or an anchor supplied for the wrong scope_type.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EstablishDelegationPolicyRequest:
+      type: object
+      required:
+        - organization_id
+        - policy_name
+        - delegation_type
+        - scope_type
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+        policy_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        delegation_type:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Standard types are TEMPORARY/OUT_OF_OFFICE/EMERGENCY/ACTING_ROLE/PROJECT_BASED; organizations may define custom types.
+        scope_type:
+          type: string
+          enum: [ORGANIZATION, DOMAIN, OBJECT, EVENT]
+        sub_delegation_allowed:
+          type: boolean
+          default: false
+        domain_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Required if, and only if, scope_type is DOMAIN.
+        object_type:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Required if, and only if, scope_type is OBJECT.
+        object_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Required if, and only if, scope_type is OBJECT.
+        event_code:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Required if, and only if, scope_type is EVENT.
+    DelegationPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        policy_name:
+          type: string
+        delegation_type:
+          type: string
+        scope_type:
+          type: string
+        sub_delegation_allowed:
+          type: boolean
+        domain_id:
+          type: string
+          format: uuid
+          nullable: true
+        object_type:
+          type: string
+          nullable: true
+        object_id:
+          type: string
+          format: uuid
+          nullable: true
+        event_code:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
