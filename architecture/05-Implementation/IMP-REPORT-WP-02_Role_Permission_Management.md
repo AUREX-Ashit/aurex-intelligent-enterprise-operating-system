@@ -320,4 +320,117 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 
 ---
 
-*Per instruction: BA-04 has not been started. Awaiting explicit approval before proceeding.*
+## BA-04 — Establish Delegation Policy
+
+Realizing PE-001-C003's ERB-C003-01 (Define Authorization Policy Structure) / EX-C003-04 (Establish Delegation Policy).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Establish a Delegation Policy as a governed, reusable rule under which future delegation instances may occur — declaring exactly one `delegation_type`, one scope, and a sub-delegation rule (URA-001-88/89/90/92) — explicitly distinct from a delegation instance, per EX-C003-04's own Context Produced ("the specific act of a Person delegating under this policy remains an operational act outside this capability").
+- **Input Contract:** `organization_id` (UUID, required — for every scope, including ORGANIZATION), `policy_name` (required, 1–255 chars), `delegation_type` (open-ended string, 1–100 chars, URA-001-90), `scope_type` (one of ORGANIZATION/DOMAIN/OBJECT/EVENT, URA-001-89), `sub_delegation_allowed` (boolean, defaults False, URA-001-92), `domain_id` (required iff scope_type=DOMAIN), `object_type`/`object_id` (required iff scope_type=OBJECT), `event_code` (required iff scope_type=EVENT).
+- **Output Contract:** The established Delegation Policy (id, organization_id, policy_name, delegation_type, scope_type, sub_delegation_allowed, domain_id, object_type, object_id, event_code, created_at, updated_at), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-01 — established only where the target Organization exists (404), and where scope_type=DOMAIN, the target Domain exists (404); scope_type/domain_id/object_type/object_id/event_code's mutual consistency is validated before the service layer is ever reached (422).
+  - Contract 5.2 (Object Distinctness) — a Delegation Policy is never conflated with a delegation instance (satisfied by construction: `DelegationPolicyService.establish()` and `models/delegation_policy.py` never hold a delegator, delegatee, reason, or concrete date window — those remain exclusively out of this capability's boundary, in the not-yet-implemented `delegation_registry` instance table).
+  - EX-C003-04's Corporate Admin/Domain Owner authority requirement (URA-001-32/45). **Scoped simplification, same class as BA-01/BA-02/BA-03's disposition:** gated on the existing `PLATFORM_ADMIN` role, since neither authority exists as a distinct, enforceable claim today — the same two already-tracked root causes as TD-021 (ADR-002) and TD-022 (Domain-is-ownership-free). Stated explicitly, not a silent gap; registered as TD-024.
+- **Validation Rules:** scope_type's anchor consistency enforced at three independent layers — Pydantic `model_validator` (422, `schemas/delegation_policy.py`), a database CHECK constraint (`ck_delegation_policies_scope_consistency`), and existence checks for Organization/Domain (404). Exactly one of four combinations is ever valid: ORGANIZATION (organization_id only), DOMAIN (+ domain_id), OBJECT (+ object_type and object_id), EVENT (+ event_code) — every other combination is rejected.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (see the Business Rules disposition above; TD-024).
+- **Domain Events:** `DELEGATION_POLICY_ESTABLISHED` (delegation_policy_id, organization_id, policy_name, delegation_type, scope_type, sub_delegation_allowed, domain_id, object_type, object_id, event_code).
+- **Audit Requirements:** `record_audit("ESTABLISH_DELEGATION_POLICY", ...)` on success and on every denial path (unknown organization, unknown domain), per SD-002-054's seven audit questions — same mechanism reused as-is.
+- **Tests:** `tests/test_delegation_policy_schema.py` (14 unit tests, scope-consistency matrix), `tests/test_delegation_policy_service.py` (6 unit tests), `tests/test_delegation_policy_api.py` (8 API/authorization tests) — 28 new tests, all passing; full suite (215 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-04)
+
+Reviewed: PE-001-C003 (ERB-C003-01, EX-C003-04, Chapter 5 Contract 5.2 Object Distinctness, Chapter 7 BR-C003-01, extracted and read directly from the docx's `word/document.xml`), URA-001 Section 7 (URA-001-88 through -92, Delegation/Escalation/Exception Management) and Section 3/4 (URA-001-32 Corporate Admin, URA-001-45 Domain Owner), `architecture/04-Technical/Master_Technical_Architecture.md` (`delegation_policy_registry`, already canonical from this Business Activity's own architecture completion — see finding below), IRA-002 (§2.2's BA-04 mapping), `IMP-REPORT-WP-02`'s own BA-01/BA-02/BA-03 precedent.
+
+**Key finding requiring disclosure, verified before any implementation:** prior to this Business Activity, `Master_Technical_Architecture.md` had no `delegation_policy_registry` table at all — only `delegation_registry`, which models the operational delegation *instance* (delegator/delegatee membership, mandatory reason, mandatory concrete date window), not the reusable governed rule EX-C003-04 requires. Using `delegation_registry` for BA-04 would have conflated Policy with Instance, which Contract 5.2 (Object Distinctness) forbids. This was surfaced as a genuine stop condition (schema change requiring architectural approval) before any code was written, verified against the primary canonical text, and explicitly approved: `Master_Technical_Architecture.md` was updated (v6.9 → v7.0) to add `delegation_policy_registry` — reusing `approval_authority_registry`'s own `scope_type` discriminator pattern (widened by one value, per URA-001-89's four delegation-specific scopes), `domain_registry`'s FK convention, `runtime_assignment_registry`'s polymorphic-anchor and `event_code` cross-registry-reference conventions, and `industry_taxonomy_registry`'s conditional-CHECK-constraint convention. `delegation_registry` was extended with a required `delegation_policy_id` FK so every future delegation instance traces to exactly one governing policy. No new architectural style was introduced.
+
+---
+
+## Gap Analysis Summary (BA-04)
+
+- **Database:** New table required — `delegation_policies` did not exist anywhere in AuthService prior to this Business Activity. One new, purely additive migration (`f2a7c9e4b6d1`, chained onto BA-03's `b8d3f6a1c4e2` head), plus the architecture completion above (one new canonical table + one new FK column on the existing, not-yet-AuthService-implemented `delegation_registry` — no existing AuthService table's data is affected).
+- **Business Activities:** BA-04's mapping to ERB-C003-01/EX-C003-04 was already derived in IRA-002 §2.2; this report performs the fresh, BA-04-specific gap analysis IRA-002 §2.2 stated would be required before implementation.
+- **API Impact:** One new endpoint, `POST /delegation-policies`, mirroring `POST /approval-authorities`'s established shape (schema/repository/service/router layering, existence-check-then-create, audit/event emission, request-layer scope-consistency validation).
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/BA-02/BA-03's own scope decision).
+- **Dependencies:** `organizations` (WP-00-era) and `domains` (AMD-014) — both consumed as pre-existing, unaltered tables; BA-04 adds rows to a new table only.
+- **Risks:** Corporate Admin/Domain Owner authority gap (TD-024) — Low severity, same risk profile as TD-021/TD-022/TD-023, the same two already-tracked root causes, not a new gap. Tenant-scoping: `/delegation-policies` is tenant-exempt (`middleware/tenant.py`), same narrower rationale as `/approval-authorities` — `organization_id` is genuinely required/real data, but `PLATFORM_ADMIN` is the sole caller today.
+- **Technical Debt registered:** TD-024 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-04)
+
+**Architecture:**
+- `architecture/04-Technical/Master_Technical_Architecture.md` (v6.9 → v7.0: `delegation_policy_registry` architecture completion)
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-024 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_27_1800-f2a7c9e4b6d1_delegation_policy_registry.py`
+- `Backend/Services/AuthService/models/delegation_policy.py`
+- `Backend/Services/AuthService/repositories/delegation_policy_repository.py`
+- `Backend/Services/AuthService/services/delegation_policy_service.py`
+- `Backend/Services/AuthService/schemas/delegation_policy.py`
+- `Backend/Services/AuthService/routers/delegation_policy.py`
+- `Backend/Services/AuthService/delegation-policy-api.yaml`
+- `Backend/Services/AuthService/tests/test_delegation_policy_schema.py`
+- `Backend/Services/AuthService/tests/test_delegation_policy_service.py`
+- `Backend/Services/AuthService/tests/test_delegation_policy_api.py`
+
+**Implementation (modified, minimal):**
+- `Backend/Services/AuthService/main.py` — registered the new `delegation_policy` router at `/delegation-policies`.
+- `Backend/Services/AuthService/models/__init__.py` — registered `DelegationPolicy`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/delegation-policies` to the tenant-exemption list, same narrower rationale as `/approval-authorities`.
+
+No existing model, repository, service, or router was modified beyond the registrations above.
+
+---
+
+## Developer Validation (BA-04)
+
+Performed directly against the working `venv` (`Backend/Services/AuthService/venv`) — the repository's own local virtual environment, previously undiscovered until this validation pass.
+
+- **Environment note:** The full suite initially failed 84/215 with `RuntimeError: JWT_SECRET_KEY environment variable is not defined` on every API-layer test across every router (`test_organization_api.py`, `test_role_api.py`, `test_domain_api.py`, `test_domain_permission_api.py`, `test_approval_authority_api.py`, and `test_delegation_policy_api.py` alike) — a pre-existing environment-setup gap already tracked as **TD-010**, not a BA-04-specific defect (schema- and service-layer tests, which don't require a JWT, passed cleanly on the first run). Setting `JWT_SECRET_KEY` (any non-empty value) in the environment resolved all 84 failures with zero code changes.
+- With `JWT_SECRET_KEY` set: **215 passed, 0 failed** (32.26s) — 187 prior (BA-01/02/03 + pre-WP-02 baseline) + 28 new BA-04 tests (14 schema, 6 service, 8 API), zero regressions.
+- Single, linear Alembic head confirmed (`f2a7c9e4b6d1`, `alembic heads`), chained onto BA-03's `b8d3f6a1c4e2`, purely additive.
+- `delegation-policy-api.yaml` confirmed to parse cleanly via `yaml.safe_load`.
+- Confirmed `DelegationPolicyService.establish()` never reads or writes delegator/delegatee/reason/date-window fields (Contract 5.2, tested implicitly by the model's own column set — `models/delegation_policy.py` has no such columns to write).
+- Confirmed unknown Organization and unknown Domain (for DOMAIN scope) each independently produce 404 (`test_establish_rejects_unknown_organization`, `test_establish_rejects_unknown_domain_for_domain_scope`).
+- Confirmed all four valid scope combinations (ORGANIZATION, DOMAIN, OBJECT, EVENT) establish correctly, and every invalid combination (missing required anchor, dual-stated anchor) is rejected at both the schema layer (422) and re-enforced by the database CHECK constraint.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403 and a missing Authorization header receives 400.
+
+---
+
+## Independent Review (BA-04)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-extracted `PE-001-C003_Role_Permission_Management.docx` (`word/document.xml`) directly and read EX-C003-04, ERB-C003-01, BR-C003-01/02/03, and Contracts 5.1/5.2/5.5 independently. The reviewer traced BR-C003-01's existence checks and Contract 5.2's Object Distinctness through the actual `DelegationPolicyService.establish()` code and confirmed the model never holds a delegator, delegatee, reason, or date-window field. The reviewer independently re-derived the four-way `scope_type` exhaustiveness at both the Pydantic layer and the database CHECK constraint and confirmed all four branches are mutually exclusive and jointly exhaustive. URA-001-89 (four delegation scopes) and URA-001-90 (open-ended `delegation_type`) were confirmed directly against the canonical URA-001 text. The reviewer confirmed the `PLATFORM_ADMIN`-only gate is real and, by full-codebase grep, confirmed no Corporate Admin or Domain Owner authority model exists anywhere in AuthService — TD-024's premise is factually true. TD-024's register row and detailed entry were compared against TD-021/022/023's format and content and found structurally identical and accurate (the fourth Business Activity to hit the same two pre-existing root causes, not a new gap). The reviewer ran `alembic heads` directly (single head, `f2a7c9e4b6d1`, purely additive) and compared Master Technical Architecture's `delegation_policy_registry` DDL column-by-column against the actual model and migration, finding full agreement. The reviewer **re-ran the full test suite independently** (`JWT_SECRET_KEY=... venv/Scripts/python.exe -m pytest tests/ -q`) and personally observed **215 passed, 0 failed**, and read all three new test files in full, confirming each test exercises genuinely distinct behavior with no padding or duplication. Via `git diff`, the reviewer confirmed BA-01/02/03 code was not modified beyond the three documented minimal registrations, and confirmed no BA-05+ (WP-02/C-003) code exists anywhere in the repository.
+
+One finding was raised and is disposed of as follows:
+1. **(Resolved by this update)** At the time of the reviewer's pass, this report had not yet been extended with the BA-04 section — the reviewer correctly flagged (as **BLOCKING**) that CLAUDE.md §19.7's Business Activity Completion Gate requires the implementation-report artifact to exist as a discoverable document, not only the code and tests. This section is that artifact; the blocking condition is closed by this same update.
+
+One additional observation was raised as **non-blocking/informational, not actioned**: `models/delegation_policy.py`'s `sub_delegation_allowed` column has a Python-side `default=False` but no `server_default`, while the Alembic migration sets `server_default=sa.text('false')` at the database level — a minor model/migration asymmetry, harmless today since the repository always supplies the value explicitly and is the sole write path. Not registered as new technical debt, consistent with registering only genuine, currently-material gaps rather than speculative hardening.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found. No architecture, business rule, or contract violation was found in the implementation itself.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all findings resolved). Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings resolved). Committed (`65a8310`, `4ba8f99`).
+
+**BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Developer Validation COMPLETE (215/215 passing, zero regressions). Independent Review APPROVED WITH OBSERVATIONS (sole blocking finding resolved by this update). Repository Commit: implementation committed (`a347b00`); documentation commit (this report, `Master_Technical_Architecture.md` v7.0, `TECH-DEBT.md` TD-024) pending, to be committed separately per the established two-commit pattern.
+
+**Current Repository Status:** BA-01, BA-02, and BA-03 remain committed to `master`. BA-04's implementation (10 new files, 3 minimally-modified files) is committed as `a347b00`. The `Master_Technical_Architecture.md` v7.0 architecture completion, `TECH-DEBT.md`'s TD-024 entry, and this report's BA-04 sections remain uncommitted pending the documentation commit that follows this update, mirroring BA-03's own commit split exactly. Unrelated pre-existing working-tree changes (`CLAUDE.md`'s §19.8 addition and `architecture/06-Reviews/ARM-001_Implementation_Report.md`'s commit-metadata addition, plus the untracked, frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and are not part of either commit.
+
+---
+
+*Per instruction: BA-05 has not been started. Awaiting explicit approval before proceeding.*

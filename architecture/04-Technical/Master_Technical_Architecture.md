@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v6.9)
+CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.0)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -168,6 +168,59 @@ DOCUMENT VERSION HISTORY
     is unaffected by this change).
     Final verified total: 148 distinct tables, 107 RLS policies — unchanged
     from v6.8, confirming this version added columns/constraints only.
+  v7.0 (this version): architecture completion, closing a missing-object
+    gap found during WP-02 BA-04 (Establish Delegation Policy) readiness
+    verification. PE-001-C003's ERB-C003-01/EX-C003-04 establishes
+    Delegation Policy as its own governed business object — declaring
+    exactly one delegation_type, one scope, and a sub-delegation rule —
+    explicitly distinct from a delegation instance (Contract 5.2, Object
+    Distinctness: "none SHALL be treated as synonymous with, or a special
+    case of, another"; EX-C003-04's own Context Produced: "the specific
+    act of a Person delegating under this policy remains an operational
+    act outside this capability"). Prior to this version, the only
+    existing registry (delegation_registry) modeled the operational
+    instance (delegator/delegatee membership, mandatory reason, mandatory
+    concrete date window) with no representation of the reusable governed
+    rule at all — using it for BA-04 would have conflated Policy with
+    Instance, which Contract 5.2 forbids. Verified against the primary
+    canonical text (PE-001-C003 ERB-C003-01/02/03, URA-001 §7) before this
+    change: ERB-C003-02 (version/retire) and ERB-C003-03 (dependency/
+    conflict) both apply generically to "any of the six" authorization
+    policy object types, Delegation Policy included, with no textual
+    carve-out anywhere.
+    Adds delegation_policy_registry: organization_id (NOT NULL, required
+    for every scope), policy_name, delegation_type (open-ended per
+    URA-001-90's "custom types" allowance — no CHECK constraint, mirrors
+    business_role_registry's own open-text convention), scope_type
+    (ORGANIZATION/DOMAIN/OBJECT/EVENT per URA-001-89 — mirrors
+    approval_authority_registry's own scope_type discriminator pattern
+    exactly, widened by one value), domain_id (nullable FK to
+    domain_registry, DOMAIN scope), object_type/object_id (nullable
+    polymorphic pair, OBJECT scope, mirrors runtime_assignment_registry's
+    own anchor pattern), event_code (nullable, EVENT scope, mirrors
+    runtime_assignment_registry's own event_code cross-registry-reference
+    convention — no FK, links to workflow_event_registry), and a
+    scope-consistency CHECK constraint (same conditional-CHECK convention
+    as approval_authority_registry/industry_taxonomy_registry). No
+    effective_from/effective_to on the policy itself: URA-001-88's
+    "always temporary" invariant continues to apply to the operational
+    instance, not the reusable rule.
+    Extends the existing delegation_registry with delegation_policy_id
+    (NOT NULL FK to delegation_policy_registry) so every delegation
+    instance traces to exactly one governing policy, preserving complete
+    governance traceability between the two now-explicitly-separate
+    concepts — delegation_registry's own instance-level columns
+    (delegator/delegatee membership, reason, effective dates) are
+    otherwise unchanged.
+    No new architectural style is introduced — every element reuses an
+    existing, already-established pattern from elsewhere in this same
+    document.
+    Net addition: 1 new table, 1 new RLS policy (identical in shape to
+    approval_authority_registry's own policy), 1 new FK column on an
+    existing table (delegation_registry.delegation_policy_id), 0 other
+    tables altered.
+    Final verified total: 149 distinct tables, 108 RLS policies — net
+    +1/+1 from v6.9.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -1232,10 +1285,78 @@ CREATE TABLE runtime_assignment_registry (
 );
 
 -- =========================================================================
+-- delegation_policy_registry
+-- PURPOSE: WP-02 BA-04. The governed, reusable rule under which future
+-- delegation instances (delegation_registry, below) may occur — declaring
+-- exactly one delegation_type, one scope, and a sub-delegation rule
+-- (PE-001-C003 ERB-C003-01/EX-C003-04). Explicitly distinct from a
+-- delegation instance (Contract 5.2, Object Distinctness): this table
+-- never holds a specific delegator/delegatee pairing, reason, or concrete
+-- date window — those belong exclusively to delegation_registry, the
+-- out-of-capability operational act EX-C003-04 itself declares "outside
+-- this capability." A Delegation Policy is never established as
+-- permanent in the sense of lacking a bounding rule (URA-001-88), but its
+-- own definition is not itself a time-bound instance, so it carries no
+-- effective_from/effective_to of its own — that invariant is enforced on
+-- delegation_registry's instance rows, which already require both NOT
+-- NULL.
+-- SCOPE: mirrors approval_authority_registry's own scope_type pattern
+-- exactly, widened to URA-001-89's four delegation-specific scopes
+-- (ORGANIZATION/DOMAIN/OBJECT/EVENT, one value more than Approval
+-- Authority's GLOBAL/COMPANY/DOMAIN/OBJECT). DOMAIN reuses
+-- domain_registry's FK pattern; OBJECT reuses runtime_assignment_registry's
+-- polymorphic object_type/object_id anchor; EVENT reuses
+-- runtime_assignment_registry's own event_code cross-registry-reference
+-- convention (event_code links to workflow_event_registry, no FK
+-- declared, same basis as that table's existing comment). scope_type is
+-- the authoritative discriminator, never inferred from anchor presence,
+-- for the same reason established at BA-03: ORGANIZATION scope shares an
+-- identical (empty) anchor pattern with no other scope, and would be
+-- ambiguous without its own stored value if any other scope also had all
+-- anchors empty.
+-- FK: organization_id -> organization_master (required for every scope)
+--     | domain_id -> domain_registry (DOMAIN scope only)
+-- -- URA-001-89: scope_type | URA-001-90: delegation_type (open-ended —
+--    organizations may define custom types, no CHECK constraint, mirrors
+--    business_role_registry's own open-text convention)
+-- -- URA-001-92: sub_delegation_allowed
+-- =========================================================================
+CREATE TABLE delegation_policy_registry (
+    delegation_policy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id), -- required for every scope
+    policy_name VARCHAR(255) NOT NULL, -- mirrors approval_authority_registry.authority_name
+    delegation_type VARCHAR(100) NOT NULL, -- TEMPORARY/OUT_OF_OFFICE/EMERGENCY/ACTING_ROLE/PROJECT_BASED, or a tenant-defined custom type (URA-001-90)
+    scope_type VARCHAR(50) NOT NULL, -- ORGANIZATION/DOMAIN/OBJECT/EVENT (URA-001-89)
+    domain_id UUID REFERENCES domain_registry(domain_id), -- populated only when scope_type = 'DOMAIN'
+    object_type VARCHAR(100), -- populated only when scope_type = 'OBJECT' (mirrors runtime_assignment_registry's own anchor pattern)
+    object_id UUID, -- populated only when scope_type = 'OBJECT' (polymorphic — no FK, same basis as runtime_assignment_registry.object_id)
+    event_code VARCHAR(100), -- populated only when scope_type = 'EVENT' (links to workflow_event_registry, no FK — same cross-registry-reference basis as runtime_assignment_registry.event_code)
+    sub_delegation_allowed BOOLEAN NOT NULL DEFAULT FALSE, -- URA-001-92
+    CONSTRAINT chk_delegation_policy_scope_type CHECK (scope_type IN ('ORGANIZATION', 'DOMAIN', 'OBJECT', 'EVENT')),
+    CONSTRAINT chk_delegation_policy_scope_consistency CHECK (
+        (scope_type = 'ORGANIZATION' AND domain_id IS NULL AND object_type IS NULL AND object_id IS NULL AND event_code IS NULL) OR
+        (scope_type = 'DOMAIN' AND domain_id IS NOT NULL AND object_type IS NULL AND object_id IS NULL AND event_code IS NULL) OR
+        (scope_type = 'OBJECT' AND domain_id IS NULL AND object_type IS NOT NULL AND object_id IS NOT NULL AND event_code IS NULL) OR
+        (scope_type = 'EVENT' AND domain_id IS NULL AND object_type IS NULL AND object_id IS NULL AND event_code IS NOT NULL)
+    )
+);
+
+-- =========================================================================
 -- delegation_registry
--- PURPOSE: A temporary handoff of authority from one membership to another.
--- Delegations are always temporary and always require a stated reason.
+-- PURPOSE: A temporary handoff of authority from one membership to another —
+-- the runtime/operational delegation instance PE-001-C003 EX-C003-04
+-- explicitly places outside C-003's own capability boundary ("the specific
+-- act of a Person delegating under this policy remains an operational act
+-- outside this capability"). Delegations are always temporary and always
+-- require a stated reason.
+-- TRACEABILITY (WP-02 BA-04): every delegation instance SHALL reference
+-- exactly one governing Delegation Policy — delegation_policy_id is
+-- required so an instance can never exist without the governed rule it
+-- was created under, preserving complete governance traceability between
+-- the reusable policy (delegation_policy_registry, above) and the
+-- specific act (this table).
 -- FK: delegator_membership_id -> membership_registry | delegatee_membership_id -> membership_registry
+--     | delegation_policy_id -> delegation_policy_registry (required, WP-02 BA-04)
 -- -- URA-001-89: scope_type | URA-001-90: delegation_type
 -- -- URA-001-92: sub_delegation_allowed | URA-001-88: reason is mandatory
 -- =========================================================================
@@ -1243,6 +1364,7 @@ CREATE TABLE delegation_registry (
     delegation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     delegator_membership_id UUID REFERENCES membership_registry(membership_id),
     delegatee_membership_id UUID REFERENCES membership_registry(membership_id),
+    delegation_policy_id UUID NOT NULL REFERENCES delegation_policy_registry(delegation_policy_id), -- WP-02 BA-04: every instance traces to exactly one governing policy
     scope_type VARCHAR(50), -- ORGANIZATION/DOMAIN/OBJECT/EVENT (URA-001-89)
     delegation_type VARCHAR(50), -- TEMPORARY/OUT_OF_OFFICE/EMERGENCY/ACTING_ROLE/PROJECT_BASED (URA-001-90)
     sub_delegation_allowed BOOLEAN DEFAULT FALSE, -- (URA-001-92)
@@ -4383,6 +4505,10 @@ CREATE POLICY org_isolation ON group_registry
 
 ALTER TABLE approval_authority_registry ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON approval_authority_registry
+    USING (organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
+
+ALTER TABLE delegation_policy_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON delegation_policy_registry
     USING (organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
 
 ALTER TABLE escalation_policy_registry ENABLE ROW LEVEL SECURITY;
