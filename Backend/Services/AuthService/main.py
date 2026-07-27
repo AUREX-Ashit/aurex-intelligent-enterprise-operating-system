@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, person, role, domain, domain_permission
+from routers import auth, health, organization, person, role, domain, domain_permission, approval_authority
 from models.database import db_manager
 from config import settings
 
@@ -55,11 +55,16 @@ app.add_middleware(LoggingMiddleware)
 # General Exception Handlers
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    logger.error(f"Validation error on {request.url.path}: {exc.errors()}")
+    # Pydantic's raw error dicts embed the original exception instance in
+    # ctx.error for any validator that raises a plain ValueError (e.g. a
+    # @model_validator) — not JSON-serializable, and unnecessary here since
+    # ctx.error's text is already duplicated in the error's own "msg" field.
+    errors = [{k: v for k, v in error.items() if k != "ctx"} for error in exc.errors()]
+    logger.error(f"Validation error on {request.url.path}: {errors}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
-            "detail": exc.errors(),
+            "detail": errors,
             "message": "Validation failed for request data."
         }
     )
@@ -80,3 +85,4 @@ app.include_router(organization.router, prefix="/organizations", tags=["Organiza
 app.include_router(role.router, prefix="/roles", tags=["Role"])
 app.include_router(domain.router, prefix="/domains", tags=["Domain"])
 app.include_router(domain_permission.router, prefix="/domain-permissions", tags=["Domain Permission"])
+app.include_router(approval_authority.router, prefix="/approval-authorities", tags=["Approval Authority"])
