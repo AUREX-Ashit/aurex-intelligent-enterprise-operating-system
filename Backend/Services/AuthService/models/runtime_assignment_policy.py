@@ -51,7 +51,7 @@ class RuntimeAssignmentPolicy(Base):
     """
     Runtime Assignment Policy — a governed, reusable rule under which
     future Runtime Assignment instances may occur (WP-02 BA-05,
-    ERB-C003-01/EX-C003-04 per PE-001-C003).
+    ERB-C003-01/EX-C003-05 per PE-001-C003).
 
     Explicitly distinct from a Runtime Assignment instance (Contract 5.2,
     Object Distinctness — "a Runtime Assignment grants a new,
