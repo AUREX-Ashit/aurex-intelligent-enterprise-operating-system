@@ -3,13 +3,17 @@ info:
   title: CorpStage Membership Management API
   description: >
     Membership Management (C-007, WP-03) endpoints for the CorpStage
-    AuthService. Covers BA-01 (Establish Membership Context) and BA-02
-    (Understand Membership Context) only — see IRA-003 for the full
-    six-ERB/thirteen-EX Business Activity mapping; BA-03 onward are not
-    yet implemented. Authorization gate: PLATFORM_ADMIN (persona-specific
-    defining authority per EX-C007-02's Membership Steward/Sponsor
-    personas is deferred, tracked as TD-031; EX-C007-03's Sponsor/
-    Steward/Downstream Capability Consumer/Executive personas, TD-034).
+    AuthService. Covers BA-01 (Establish Membership Context), BA-02
+    (Understand Membership Context), and BA-03 (Maintain Membership
+    Terms — EX-C007-04/05 only; EX-C007-06 Reconfirm Home-Node
+    Structural Congruence is out of scope, see IMP-REPORT-WP-03) — see
+    IRA-003 for the full six-ERB/thirteen-EX Business Activity mapping;
+    BA-04 onward are not yet implemented. Authorization gate:
+    PLATFORM_ADMIN (persona-specific defining authority per EX-C007-02's
+    Membership Steward/Sponsor personas is deferred, tracked as TD-031;
+    EX-C007-03's Sponsor/Steward/Downstream Capability Consumer/
+    Executive personas, TD-034; EX-C007-04/05's Steward/Sponsor
+    personas, TD-035).
   version: 1.0.0
 paths:
   /memberships/{membership_id}:
@@ -49,6 +53,53 @@ paths:
           description: No Membership exists with this id.
         '422':
           description: membership_id is not a valid UUID.
+  /memberships/{membership_id}/terms:
+    post:
+      summary: Maintain a Membership's terms
+      description: >
+        WP-03 Business Activity: Maintain Membership Terms, realizing
+        PE-001-C007's ERB-C007-03 / EX-C007-04 (Resolve Conflicting
+        Membership Terms) + EX-C007-05 (Change Membership Terms).
+        Requires the PLATFORM_ADMIN role. At least one supplied field
+        must genuinely differ from the Membership's current value, or
+        the request is classified erroneous and rejected with 409
+        (BR-C007-003). The prior value of every changed field is
+        preserved in the audit trail (BR-C007-004). EX-C007-06
+        (Reconfirm Home-Node Structural Congruence) is out of scope.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: membership_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeMembershipTermsRequest'
+      responses:
+        '200':
+          description: Terms changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No Membership exists with this id, or the supplied home_node_id does not exist.
+        '409':
+          description: Requested terms match the Membership's current terms, or the supplied home_node_id is not active.
+        '422':
+          description: No term field was supplied.
   /memberships:
     post:
       summary: Establish a new Membership Context
@@ -176,6 +227,35 @@ components:
         updated_at:
           type: string
           format: date-time
+          nullable: true
+    ChangeMembershipTermsRequest:
+      type: object
+      description: >
+        All fields optional (only-supplied-fields semantics). At least
+        one supplied field must differ from the Membership's current
+        value (BR-C007-003).
+      properties:
+        membership_type:
+          type: string
+          enum: [INTERNAL, EXTERNAL]
+        license_type:
+          type: string
+          enum: [FULL, LIGHT]
+        home_node_id:
+          type: string
+          format: uuid
+          nullable: true
+        effective_from:
+          type: string
+          format: date-time
+          nullable: true
+        effective_to:
+          type: string
+          format: date-time
+          nullable: true
+        reason:
+          type: string
+          maxLength: 500
           nullable: true
     MembershipUnderstandingResponse:
       allOf:

@@ -1,8 +1,9 @@
 """
-WP-03 BA-01/BA-02 — Establish + Understand Membership Context
-(ERB-C007-01 / EX-C007-01 + EX-C007-02, and ERB-C007-02 / EX-C007-03,
-per PE-001-C007). API-layer tests for POST /memberships and
-GET /memberships/{membership_id}.
+WP-03 BA-01/BA-02/BA-03 — Establish + Understand + Maintain Membership
+Terms (ERB-C007-01 / EX-C007-01 + EX-C007-02, ERB-C007-02 / EX-C007-03,
+and ERB-C007-03 / EX-C007-04 + EX-C007-05, per PE-001-C007). API-layer
+tests for POST /memberships, GET /memberships/{membership_id}, and
+POST /memberships/{membership_id}/terms.
 """
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -223,4 +224,179 @@ def test_understand_membership_rejects_non_platform_admin(
 
 def test_understand_membership_requires_authorization_header(client: TestClient) -> None:
     response = client.get(f"/memberships/{uuid.uuid4()}")
+    assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Maintain Membership Terms (ERB-C007-03/EX-C007-04+05)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+async def seeded_inactive_organization_node(db_session: AsyncSession) -> str:
+    node = OrganizationNode(node_code="NODE-API-INACTIVE", node_name="Inactive API Test Node", node_type="entity", active_flag=False)
+    db_session.add(node)
+    await db_session.commit()
+    return str(node.id)
+
+
+def test_change_terms_succeeds_for_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms",
+        headers=_auth_headers(),
+        json={"license_type": "LIGHT", "reason": "Downgraded per subscription change"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["license_type"] == "LIGHT"
+    assert body["membership_type"] == "INTERNAL"  # untouched field unchanged
+
+
+def test_change_terms_rejects_no_actual_change(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """BR-C007-003: every supplied term already matches the current value — classified erroneous, not a genuine change."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms",
+        headers=_auth_headers(),
+        json={"license_type": "FULL", "membership_type": "INTERNAL"},
+    )
+
+    assert response.status_code == 409
+
+
+def test_change_terms_rejects_empty_request(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={})
+
+    assert response.status_code == 422
+
+
+def test_change_terms_rejects_unknown_membership_id(client: TestClient) -> None:
+    response = client.post(
+        f"/memberships/{uuid.uuid4()}/terms", headers=_auth_headers(), json={"license_type": "LIGHT"},
+    )
+    assert response.status_code == 404
+
+
+def test_change_terms_with_valid_home_node(
+    client: TestClient, seeded_person_organization_role, seeded_organization_node
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    node_id = seeded_organization_node
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={"home_node_id": node_id},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["home_node_id"] == node_id
+
+
+def test_change_terms_rejects_unknown_home_node(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms",
+        headers=_auth_headers(),
+        json={"home_node_id": str(uuid.uuid4())},
+    )
+
+    assert response.status_code == 404
+
+
+def test_change_terms_rejects_inactive_home_node(
+    client: TestClient, seeded_person_organization_role, seeded_inactive_organization_node
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    node_id = seeded_inactive_organization_node
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={"home_node_id": node_id},
+    )
+
+    assert response.status_code == 409
+
+
+def test_change_terms_leaves_membership_status_unaffected(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """BR-C007-006: Membership terms and standing are governed independently — a term change never touches membership_status."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+    assert established["membership_status"] == "ACTIVE"
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={"license_type": "LIGHT"},
+    )
+
+    assert response.json()["membership_status"] == "ACTIVE"
+
+
+def test_change_terms_rejects_non_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/terms",
+        headers=_auth_headers(role_code="ESG_MANAGER"),
+        json={"license_type": "LIGHT"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_change_terms_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(f"/memberships/{uuid.uuid4()}/terms", json={"license_type": "LIGHT"})
     assert response.status_code == 400

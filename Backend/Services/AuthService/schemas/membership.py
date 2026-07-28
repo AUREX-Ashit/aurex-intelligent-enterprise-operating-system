@@ -86,6 +86,37 @@ class MembershipAuthorityConsequence(str, Enum):
     NOT_ACTIVE = "NOT_ACTIVE"
 
 
+class ChangeMembershipTermsRequest(BaseModel):
+    """
+    Request body for Maintain Membership Terms (WP-03 BA-03, C-007,
+    realizing ERB-C007-03 / EX-C007-04 Resolve Conflicting Membership
+    Terms + EX-C007-05 Change Membership Terms).
+
+    All fields optional (PATCH-style, only-supplied-fields semantics —
+    the service layer distinguishes "not supplied" from "supplied,
+    equal to current" via model_dump(exclude_unset=True)). BR-C007-003
+    requires the conflict/change to be classified before it is
+    resolved: at least one supplied field must genuinely differ from
+    the Membership's current value, or the request is classified
+    erroneous and rejected (409, EX-C007-04's own "reject" outcome)
+    rather than applied.
+
+    EX-C007-06 (Reconfirm Home-Node Structural Congruence) is
+    deliberately NOT reachable from this endpoint — see BA-03's own
+    gap analysis in IMP-REPORT-WP-03: no C-005/ERG-001 structural-
+    change signal exists anywhere in this codebase to trigger it.
+    home_node_id here is EX-C007-05's own intentional-change path only
+    (its Business Value text names "home node" as one of the terms it
+    changes), validated identically to BA-01 (BR-C007-002/007).
+    """
+    membership_type: MembershipType | None = Field(None, description="URA-001-106.")
+    license_type: LicenseType | None = Field(None, description="URA-001-111.")
+    home_node_id: UUID | None = Field(None, description="New home-node anchor (BR-C007-002/007) — validated identically to BA-01.")
+    effective_from: datetime | None = Field(None, description="New effective-from date.")
+    effective_to: datetime | None = Field(None, description="New effective-to date.")
+    reason: str | None = Field(None, max_length=500, description="Business reason for the change (Term Change Context's own 'reason' field). Not validated against a real approval record — same disclosed class as TD-026.")
+
+
 class MembershipUnderstandingResponse(MembershipResponse):
     """
     Understand Membership Context's response (WP-03 BA-02). Extends

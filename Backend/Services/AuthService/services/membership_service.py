@@ -8,6 +8,14 @@ Business Activities implemented here:
 - BA-02 Understand Membership Context, realizing ERB-C007-02 /
   EX-C007-03 — a pure read, computing but never storing the
   Membership's current authority consequence (BR-C007-013).
+- BA-03 Maintain Membership Terms, realizing ERB-C007-03 /
+  EX-C007-04 (Resolve Conflicting Membership Terms) + EX-C007-05
+  (Change Membership Terms). EX-C007-06 (Reconfirm Home-Node
+  Structural Congruence) is explicitly out of BA-03's scope — its own
+  Trigger requires a structural-change signal from C-005/ERG-001,
+  and no such signal producer exists anywhere in this codebase
+  (Enterprise Structure Management/C-005 has no IRA). See
+  IMP-REPORT-WP-03's BA-03 gap analysis for the full disposition.
 See IRA-003 for the full ERB/EX -> Business Activity mapping and
 BA-01's own Architecture Validation (§9).
 
@@ -39,6 +47,7 @@ authority model.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -50,8 +59,19 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import EstablishMembershipRequest, MembershipAuthorityConsequence
+from schemas.membership import ChangeMembershipTermsRequest, EstablishMembershipRequest, MembershipAuthorityConsequence
 from observability import record_audit, publish_event, AuditStatus
+
+CHANGEABLE_TERM_FIELDS = ("membership_type", "license_type", "home_node_id", "effective_from", "effective_to")
+
+
+def _audit_value(value: Any) -> Any:
+    """JSON-safe serialization for record_audit()'s metadata (UUID/datetime aren't natively json.dumps-able)."""
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
 
 
 def compute_membership_authority_consequence(
@@ -308,3 +328,143 @@ class MembershipService:
                 detail=f"No Membership exists with id '{membership_id}'.",
             )
         return membership
+
+    async def change_terms(
+        self, membership_id: UUID, request: ChangeMembershipTermsRequest, actor_id: str | None = None
+    ) -> Membership:
+        """
+        Business Activity: Maintain Membership Terms (BA-03,
+        ERB-C007-03 / EX-C007-04 Resolve Conflicting Membership Terms +
+        EX-C007-05 Change Membership Terms).
+
+        BR-C007-003 (classify before resolving): a supplied field equal
+        to the Membership's current value is not a change for that
+        field; if every supplied field is unchanged, the whole request
+        is classified erroneous and rejected (409) — EX-C007-04's own
+        "reject" outcome. At least one genuine difference classifies
+        the request as a real change need and applies it — EX-C007-05.
+
+        BR-C007-004 (preserve pre-change value): captured in
+        record_audit()'s own previous_<field>/new_<field> metadata, the
+        same traceability mechanism OrganizationService.activate()/
+        suspend()/retire() already use for previous_status — no new
+        versioning table, per IRA-003 §10's own Category B
+        classification for this Business Activity.
+
+        BR-C007-006 (terms independent of standing): satisfied by
+        construction — membership_status is never read or written here.
+
+        home_node_id, when supplied and changed, is validated exactly
+        as BA-01's establish() validates it (404 unknown, 409 inactive)
+        — BR-C007-002/007. EX-C007-06 (structural-signal-triggered
+        reconfirmation) is out of scope; see this method's own module
+        docstring / IMP-REPORT-WP-03's BA-03 gap analysis for why.
+
+        effective_from/effective_to are normalized via _as_utc() before
+        comparison — the same BA-02 fresh-session-round-trip fix reused
+        here, since a Membership fetched via get_by_id() in a genuinely
+        new request/session returns these fields offset-naive under
+        SQLite's DateTime(timezone=True) dialect limitation; comparing
+        a naive current_value against an offset-aware supplied value
+        with `!=` never signals equality, which would misclassify a
+        resupplied-identical value as a genuine change (BR-C007-003).
+        """
+        membership = await self.membership_repo.get_by_id(membership_id)
+        if membership is None:
+            record_audit(
+                action="CHANGE_MEMBERSHIP_TERMS",
+                resource=f"membership:{membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "membership not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No Membership exists with id '{membership_id}'.",
+            )
+
+        supplied = request.model_dump(exclude_unset=True, exclude={"reason"})
+        if not supplied:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="At least one term field (membership_type, license_type, home_node_id, effective_from, effective_to) must be supplied.",
+            )
+
+        changes: dict[str, tuple[Any, Any]] = {}
+        for field, new_value in supplied.items():
+            if field in ("membership_type", "license_type") and new_value is not None:
+                new_value = new_value.value if hasattr(new_value, "value") else new_value
+            current_value = getattr(membership, field)
+            if field in ("effective_from", "effective_to"):
+                current_value = _as_utc(current_value)
+                new_value = _as_utc(new_value)
+            if new_value != current_value:
+                changes[field] = (current_value, new_value)
+
+        if not changes:
+            # BR-C007-003: every supplied term already matches the current value — classified erroneous (EX-C007-04's own "reject" outcome).
+            record_audit(
+                action="CHANGE_MEMBERSHIP_TERMS",
+                resource=f"membership:{membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "requested terms match the membership's current terms; classified as an erroneous request, not a genuine change need"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Requested terms match the Membership's current terms; nothing to change.",
+            )
+
+        if "home_node_id" in changes:
+            new_home_node_id = changes["home_node_id"][1]
+            if new_home_node_id is not None:
+                home_node = await self.organization_node_repo.get_by_id(new_home_node_id)
+                if home_node is None:
+                    record_audit(
+                        action="CHANGE_MEMBERSHIP_TERMS",
+                        resource=f"organization_node:{new_home_node_id}",
+                        status=AuditStatus.DENIED,
+                        actor_id=actor_id or "SYSTEM",
+                        metadata={"reason": "candidate home node does not exist"},
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"No organization node found with id '{new_home_node_id}'.",
+                    )
+                if not home_node.active_flag:
+                    record_audit(
+                        action="CHANGE_MEMBERSHIP_TERMS",
+                        resource=f"organization_node:{new_home_node_id}",
+                        status=AuditStatus.DENIED,
+                        actor_id=actor_id or "SYSTEM",
+                        metadata={"reason": "candidate home node is not active"},
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail=f"Organization node '{new_home_node_id}' is not active and cannot anchor this Membership.",
+                    )
+
+        update_kwargs = {field: new for field, (_old, new) in changes.items()}
+        updated = await self.membership_repo.update(membership_id, update_kwargs)
+        await self.membership_repo.session.flush()
+
+        record_audit(
+            action="CHANGE_MEMBERSHIP_TERMS",
+            resource=f"membership:{membership_id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "changed_fields": list(changes.keys()),
+                **{f"previous_{field}": _audit_value(old) for field, (old, _new) in changes.items()},
+                **{f"new_{field}": _audit_value(new) for field, (_old, new) in changes.items()},
+                "reason": request.reason,
+            },
+        )
+        publish_event(
+            "MEMBERSHIP_TERMS_CHANGED",
+            {
+                "membership_id": str(membership_id),
+                "changed_fields": list(changes.keys()),
+            },
+        )
+        return updated

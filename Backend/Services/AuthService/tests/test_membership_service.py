@@ -1,12 +1,15 @@
 """
-WP-03 BA-01/BA-02 — Establish + Understand Membership Context
-(ERB-C007-01 / EX-C007-01 + EX-C007-02, and ERB-C007-02 / EX-C007-03,
-per PE-001-C007). Service-layer tests for MembershipService.establish()
-(BR-C007-001 recognition-before-establishment, BR-C007-002/007
-home-node candidate validity, referenced-object existence checks) and
-MembershipService.understand() / compute_membership_authority_consequence()
-(BR-C007-013: ACTIVE standing never implies current authority on its
-own).
+WP-03 BA-01/BA-02/BA-03 — Establish + Understand + Maintain Membership
+Terms (ERB-C007-01 / EX-C007-01 + EX-C007-02, ERB-C007-02 / EX-C007-03,
+and ERB-C007-03 / EX-C007-04 + EX-C007-05, per PE-001-C007).
+Service-layer tests for MembershipService.establish() (BR-C007-001
+recognition-before-establishment, BR-C007-002/007 home-node candidate
+validity, referenced-object existence checks), MembershipService.
+understand() / compute_membership_authority_consequence() (BR-C007-013:
+ACTIVE standing never implies current authority on its own), and
+MembershipService.change_terms() (BR-C007-003 classify-before-resolve,
+BR-C007-004 preserve pre-change value, BR-C007-006 terms/standing
+independence).
 """
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -15,7 +18,7 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.membership import Membership
+from models.membership import LicenseType, Membership, MembershipType
 from models.organization import Organization
 from models.organization_node import OrganizationNode
 from models.person import Person
@@ -25,7 +28,7 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import EstablishMembershipRequest, MembershipAuthorityConsequence
+from schemas.membership import ChangeMembershipTermsRequest, EstablishMembershipRequest, MembershipAuthorityConsequence
 from services.membership_service import MembershipService, compute_membership_authority_consequence
 
 
@@ -288,3 +291,146 @@ async def test_understand_rejects_unknown_membership_id(db_session: AsyncSession
     with pytest.raises(HTTPException) as exc_info:
         await service.understand(uuid.uuid4())
     assert exc_info.value.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Maintain Membership Terms (ERB-C007-03/EX-C007-04+05)
+# ---------------------------------------------------------------------------
+
+async def test_change_terms_applies_genuine_change_and_preserves_prior_value_in_audit(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-004: the pre-change value is preserved (via record_audit's previous_/new_ metadata), not silently overwritten."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    assert established.license_type == "FULL"
+
+    changed = await service.change_terms(
+        established.id, ChangeMembershipTermsRequest(license_type=LicenseType.LIGHT, reason="Subscription downgrade")
+    )
+
+    assert changed.license_type == "LIGHT"
+    assert changed.membership_type == "INTERNAL"  # untouched field unaffected
+
+
+async def test_change_terms_rejects_request_with_no_genuine_difference(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-003: a conflict SHALL be classified before it is resolved — every supplied field equal to current is classified erroneous (409), not applied."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.change_terms(
+            established.id, ChangeMembershipTermsRequest(license_type=LicenseType.FULL, membership_type=MembershipType.INTERNAL)
+        )
+    assert exc_info.value.status_code == 409
+
+
+async def test_change_terms_rejects_empty_request(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.change_terms(established.id, ChangeMembershipTermsRequest())
+    assert exc_info.value.status_code == 422
+
+
+async def test_change_terms_rejects_unknown_membership_id(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.change_terms(uuid.uuid4(), ChangeMembershipTermsRequest(license_type=LicenseType.LIGHT))
+    assert exc_info.value.status_code == 404
+
+
+async def test_change_terms_validates_new_home_node_like_establish(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-002/007: a supplied home_node_id is validated identically to BA-01's establish() — real, active node required."""
+    person, organization, role = seeded_person_organization_role
+    node = OrganizationNode(node_code="NODE-SVC-TERMS", node_name="Service Terms Test Node", node_type="entity")
+    db_session.add(node)
+    await db_session.flush()
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    changed = await service.change_terms(established.id, ChangeMembershipTermsRequest(home_node_id=node.id))
+
+    assert changed.home_node_id == node.id
+
+
+async def test_change_terms_rejects_inactive_home_node(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    node = OrganizationNode(node_code="NODE-SVC-INACTIVE", node_name="Inactive Service Test Node", node_type="entity", active_flag=False)
+    db_session.add(node)
+    await db_session.flush()
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.change_terms(established.id, ChangeMembershipTermsRequest(home_node_id=node.id))
+    assert exc_info.value.status_code == 409
+
+
+async def test_change_terms_never_touches_membership_status(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-006: Membership terms SHALL remain unaffected by a standing transition, and standing SHALL remain unaffected by a term change."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    assert established.membership_status == "ACTIVE"
+
+    changed = await service.change_terms(
+        established.id, ChangeMembershipTermsRequest(effective_to=datetime.now(timezone.utc) + timedelta(days=90))
+    )
+
+    assert changed.membership_status == "ACTIVE"
+
+
+async def test_change_terms_detects_no_change_for_effective_to_across_a_fresh_fetch(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """
+    BR-C007-003, same defect class as BA-02's own naive/aware datetime
+    finding: a Membership re-fetched after a commit (db_session.refresh(),
+    simulating a genuinely separate request/session) returns
+    effective_to as offset-naive under SQLite's DateTime(timezone=True)
+    dialect limitation. Re-supplying the exact same effective_to value
+    must still be classified as no genuine change (409), not silently
+    treated as a change because of the naive/aware mismatch.
+    """
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    effective_to = datetime.now(timezone.utc) + timedelta(days=90)
+    established = await service.establish(
+        EstablishMembershipRequest(
+            person_id=person.id, organization_id=organization.id, role_id=role.id, effective_to=effective_to
+        )
+    )
+    await db_session.commit()
+    await db_session.refresh(established)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.change_terms(established.id, ChangeMembershipTermsRequest(effective_to=effective_to))
+    assert exc_info.value.status_code == 409
