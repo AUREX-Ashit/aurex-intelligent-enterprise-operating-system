@@ -457,6 +457,93 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-07 — Surface Multi-Organization Membership Awareness
+
+Realizing PE-001-C007's ERB-C007-05 (Preserve Multi-Organization Membership Context) / EX-C007-09 (Surface Multi-Organization Membership Awareness During Establishment). IRA-003 §10/§14 pre-classified BA-07/BA-08 together as **Category B** ("`get_person_memberships()` is a direct starting point"); this section performs BA-07's own fresh gap analysis and confirms IRA-003 §4's own open BA-08 disposition question.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Surface, to an establishing Organization, an existence-only signal that a Person already holds Memberships elsewhere — never which Organizations, on what terms, or under what standing (CAP-001's C-007 Business Intent, scoped to cross-tenant-safe awareness only).
+- **Input Contract:** `person_id` (UUID, query parameter, required); `organization_id` (UUID, query parameter, required — the requesting/establishing Organization, excluded from its own "other" count).
+- **Output Contract:** `MultiOrganizationAwarenessResponse` — a single boolean, `has_memberships_in_other_organizations`. No Organization identifier, name, Membership id, or any other cross-tenant detail is ever included.
+- **Business Rules:**
+  - BR-C007-008 — an Organization SHALL receive, at most, an existence-only signal of a Person's Memberships elsewhere, absent an explicit cross-tenant sharing agreement. Satisfied by construction: the response schema has exactly one field, a boolean; the service method never returns or logs which other Organization(s) a Membership exists in.
+- **Validation Rules:** Person existence checked (404) via `PersonRepository.get_by_id()`; Organization existence checked (404) via `OrganizationRepository.get_by_id()` — both reused as-is.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required. **Scoped simplification, same class as TD-031/034/035/036:** EX-C007-09 names Membership Sponsor/Steward/Platform Oversight Participant as its Participating Personas; none exists as an enforceable claim today. Disclosed explicitly, recorded as **TD-039**.
+- **Domain Events:** None — a pure read produces no domain event, the same disposition BA-02's own `understand()` already established for a read-side Business Activity.
+- **Audit Requirements:** `record_audit("SURFACE_MULTI_ORGANIZATION_AWARENESS", ...)` on every path — unknown person, unknown organization, and success — a deliberate departure from BA-02's own "only a write path audits" precedent: this Business Activity crosses a cross-tenant data-isolation boundary (BR-C007-008/URA-001-17a), a materially different sensitivity class than a same-organization single-Membership read, and is audited accordingly. The audit metadata itself never carries the other Organization's identity — only the boolean result and the requesting `organization_id` (already known to the caller) — preserving BR-C007-008 even within the audit trail.
+- **Tests:** `tests/test_membership_service.py` (5 new unit tests), `tests/test_membership_api.py` (6 new API/authorization tests) — 11 new tests, all passing; full AuthService suite (395 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-07)
+
+Reviewed: PE-001-C007 (ERB-C007-05, EX-C007-09's own Trigger/Purpose/Success Criteria/Experience Completion text, Chapter 5.4 Multiple Membership & Cross-Tenant Visibility Contract, Chapter 6.3's "Multiple Memberships across Organizations" exception entry), URA-001-17a (verbatim: "an organization may never see that same Person's roles, permissions, or memberships at any other organization they belong to, absent an explicit, named, audited cross-tenant sharing agreement... Organization A knowing that a shared Person is 'also CFO somewhere else' without knowing where is the correct default"), IRA-003 §10/§14 (Category B classification), `repositories/membership_repository.py` (`get_person_memberships()` — already ACTIVE-only, cross-organization, eagerly loading `organization` — confirming no new repository method is required).
+
+**BA-08 disposition (resolved, per IRA-003 §4's own instruction to confirm at this gap analysis):** EX-C007-10 (Present Person's Own Cross-Organization Membership View, BA-08's own candidate scope) is **not** absorbed into BA-07 and is **not** implemented by it. EX-C007-09 and EX-C007-10 have genuinely distinct triggers (an establishing Organization's own establishment/recognition flow, versus the Membership Subject's own direct portfolio request), distinct personas (Membership Sponsor/Steward/Platform Oversight Participant versus Membership Subject), and — critically — opposite visibility postures (EX-C007-09 is existence-only per BR-C007-008; EX-C007-10 is full-detail per BR-C007-009, "a Membership Subject SHALL be able to see the complete detail of their own Membership portfolio"). Collapsing them would risk conflating a restricted view with an unrestricted one. BA-08 therefore remains a distinct, not-started Business Activity — the same disposition discipline BA-03/BA-04's own collapse question and BA-05/BA-06's own shared-root-cause question already established.
+
+**Cross-tenant sharing agreement mechanism:** Contract 5.4 and URA-001-17a both describe an "explicit, named, audited cross-tenant sharing agreement" as the sole exception path to existence-only visibility. No such mechanism — registry, table, or model — exists anywhere in this repository. This does not block BA-07: the default, most-restrictive behavior (existence-only, boolean) is exactly and completely what BR-C007-008 requires in the absence of such an agreement, so BA-07 is fully and correctly implementable today. The absence is disclosed as **TD-040**, a known future extension point, not a defect.
+
+---
+
+## Gap Analysis Summary (BA-07)
+
+- **Database:** No migration. `surface_multi_organization_awareness()` performs a pure read via the existing `get_person_memberships()` query; nothing is stored. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-07's mapping to ERB-C007-05/EX-C007-09 was already derived in IRA-003 §3/§4; this section performs the BA-07-specific gap analysis IRA-003 §1/§4 stated would be required, and resolves IRA-003 §4's own open BA-08 disposition question (above).
+- **API Impact:** One new endpoint, `GET /memberships/multi-organization-awareness`, added to `membership-api.yaml`. Registered before `GET /memberships/{membership_id}` in `routers/membership.py` since Starlette matches routes in registration order and the dynamic route would otherwise capture this literal path — confirmed empirically via the FastAPI app's own route table and a passing end-to-end test, not assumed from documentation alone. No existing endpoint's shape changed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/02/03/06's own scope decision).
+- **Dependencies:** `MembershipRepository.get_person_memberships()` (existing, WP-00-era, ACTIVE-only) — reused unchanged, no new repository method. `PersonRepository.get_by_id()`/`OrganizationRepository.get_by_id()` (both existing, reused from BA-01).
+- **Risks:** TD-039 (interim PLATFORM_ADMIN gate) — Low severity, same risk profile as TD-031/034/035/036. TD-040 (no cross-tenant sharing agreement mechanism exists) — Low severity, a disclosed future extension point, not a defect since the correct default is already fully implemented.
+- **Technical Debt registered:** TD-039, TD-040 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-07)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-039, TD-040 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-07 implemented and independently reviewed)
+
+**Implementation (modified, no new files):**
+- `Backend/Services/AuthService/schemas/membership.py` — added `MultiOrganizationAwarenessResponse` schema.
+- `Backend/Services/AuthService/services/membership_service.py` — added `MembershipService.surface_multi_organization_awareness()`.
+- `Backend/Services/AuthService/routers/membership.py` — added `GET /memberships/multi-organization-awareness` (registered before the dynamic `/{membership_id}` route).
+- `Backend/Services/AuthService/membership-api.yaml` — added the `GET /memberships/multi-organization-awareness` path and `MultiOrganizationAwarenessResponse` schema.
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 5 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 6 new tests.
+
+No new model, repository, migration, or router file was required — confirming IRA-003 §10/§14's own Category B classification.
+
+---
+
+## Validation (BA-07)
+
+- 11 new tests (5 unit, 6 API), all passing.
+- Full AuthService suite: **395 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-07 introduces no migration.
+- Confirmed the FastAPI app's own generated OpenAPI schema and route table register `GET /memberships/multi-organization-awareness` ahead of `GET /memberships/{membership_id}`; the standalone `membership-api.yaml` parses as valid YAML with the matching path and schema.
+- Confirmed BR-C007-008: a Person with a Membership in only the requesting Organization yields `has_memberships_in_other_organizations = false`; a Person with an additional ACTIVE Membership in a different Organization yields `true`; a non-ACTIVE Membership in a different Organization is correctly excluded (reusing `get_person_memberships()`'s own existing ACTIVE-only filter).
+- Confirmed unknown `person_id`/`organization_id` each return 404; non-`PLATFORM_ADMIN` callers receive 403; missing/malformed Authorization header returns 400.
+- Confirmed the audit trail (`record_audit()` calls, read directly) never carries any other Organization's identity — only the boolean result and the requesting `organization_id` — preserving BR-C007-008 even in the log itself, not merely in the API response.
+
+---
+
+## Independent Review (BA-07)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-07's independent review, re-deriving repository state directly from Git and re-running the full suite directly. `MembershipService.surface_multi_organization_awareness()` was read in full and confirmed to compute `has_other` via a simple `organization_id` comparison over `get_person_memberships()`'s own existing result set, with no path that returns or logs any other Organization's identifier — a genuine risk area for a cross-tenant-awareness feature, checked directly by reading the method and its `record_audit()` calls, not assumed from the docstring. Route-registration order (a real risk for this specific endpoint shape — a literal path sibling to a dynamic `{membership_id}` route) was verified two ways: reading FastAPI's own generated route table directly, and a passing end-to-end test exercising the literal path. Two findings were identified, both disclosed as Technical Debt rather than blocking:
+
+1. TD-039 (interim PLATFORM_ADMIN gate) — same class as TD-031/034/035/036, non-blocking by existing precedent.
+2. TD-040 (no cross-tenant sharing agreement mechanism exists anywhere in this repository) — not a defect; the existence-only default is the complete, correct implementation of BR-C007-008 for the only case that exists today (no agreement), disclosed as a known future extension point.
+
+Additionally confirmed: BA-08's own EX-C007-10 scope was not silently absorbed into BA-07 — the Governing Architecture Review section above explicitly resolves IRA-003 §4's own open collapse question, on the basis of EX-C007-09/EX-C007-10's distinct triggers, personas, and opposite visibility postures (existence-only versus full-detail). No security, tenant-isolation, or data-integrity defect was found.
+
+**Non-blocking observation (not a Technical Debt item — not reproducible):** one full-suite run during this review showed a single failure, `test_change_terms_leaves_membership_status_unaffected` (BA-03's own test, untouched by BA-07). Re-run in isolation and re-run as part of two subsequent full-suite passes, it passed both times (395/395 each time) — a one-off flake, not a reproducible defect, and the failing test does not exercise any BA-07 code path. Per CLAUDE.md §19.8.5, a genuinely failing test cannot be deferred as Technical Debt, but this is not established as a genuinely, reproducibly failing test; it is recorded here for transparency rather than silently omitted.
+
+---
+
 ## Status (Combined)
 
 **BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
@@ -475,10 +562,12 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **Commit Date (BA-06):** 2026-07-29 (both commits)
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), and BA-06 (`c5b6383`, `0f2efa3`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-06.
+**BA-07 — Surface Multi-Organization Membership Awareness:** Implementation COMPLETE (395/395 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-039, TD-040, neither blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-06's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), and BA-06 (`c5b6383`, `0f2efa3`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-07 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-07.
 
 ---
 
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, and now BA-06 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** **BA-07 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, and now BA-07 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** BA-08's own EX-C007-10 scope was confirmed NOT collapsed into BA-07 and remains not started. **BA-08 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
