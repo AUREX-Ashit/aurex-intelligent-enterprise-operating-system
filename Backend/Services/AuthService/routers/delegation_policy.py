@@ -10,6 +10,7 @@ from repositories.delegation_policy_repository import DelegationPolicyRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
 from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
+from schemas.authorization_policy_handoff import HandoffRejectionOutcome, ReportHandoffRejectionRequest
 from schemas.delegation_policy import EstablishDelegationPolicyRequest, DelegationPolicyResponse, VersionDelegationPolicyRequest
 from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 from services.delegation_policy_service import DelegationPolicyService
@@ -254,3 +255,35 @@ async def resolve_delegation_policy_dependency(
     if policy is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No delegation policy found with id '{delegation_policy_id}'.")
     return await conflict_service.resolve_conflict("delegation_policy", policy, delegation_policy_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.post(
+    "/{delegation_policy_id}/handoff-rejection",
+    response_model=HandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve a Dependent Capability Hand-off Rejection for a Delegation Policy",
+    description=(
+        "WP-02 Business Activity: Resolve Dependent Capability "
+        "Authorization Policy Hand-off Rejection (C-003) — BA-10, "
+        "realizing PE-001-C003's ERB-C003-03 / EX-C003-10. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Hand-off rejection classified."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Delegation Policy does not exist."},
+    },
+)
+async def report_delegation_policy_handoff_rejection(
+    delegation_policy_id: UUID,
+    request: ReportHandoffRejectionRequest,
+    delegation_policy_repo: Annotated[DelegationPolicyRepository, Depends(get_delegation_policy_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> HandoffRejectionOutcome:
+    policy = await delegation_policy_repo.get_by_id(delegation_policy_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No delegation policy found with id '{delegation_policy_id}'.")
+    return await conflict_service.classify_handoff_rejection("delegation_policy", policy, delegation_policy_repo, request, actor_id=claims.get("person_id"))

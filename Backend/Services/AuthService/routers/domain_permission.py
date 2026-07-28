@@ -11,6 +11,7 @@ from repositories.domain_repository import DomainRepository
 from repositories.membership_repository import MembershipRepository
 from repositories.organization_repository import OrganizationRepository
 from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
+from schemas.authorization_policy_handoff import HandoffRejectionOutcome, ReportHandoffRejectionRequest
 from schemas.domain_permission import EstablishDomainPermissionRequest, DomainPermissionResponse, VersionDomainPermissionRequest
 from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 from services.domain_permission_service import DomainPermissionService
@@ -259,3 +260,35 @@ async def resolve_domain_permission_dependency(
     if grant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No domain permission found with id '{domain_permission_id}'.")
     return await conflict_service.resolve_conflict("domain_permission", grant, domain_permission_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.post(
+    "/{domain_permission_id}/handoff-rejection",
+    response_model=HandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve a Dependent Capability Hand-off Rejection for a Domain Permission",
+    description=(
+        "WP-02 Business Activity: Resolve Dependent Capability "
+        "Authorization Policy Hand-off Rejection (C-003) — BA-10, "
+        "realizing PE-001-C003's ERB-C003-03 / EX-C003-10. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Hand-off rejection classified."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Domain Permission does not exist."},
+    },
+)
+async def report_domain_permission_handoff_rejection(
+    domain_permission_id: UUID,
+    request: ReportHandoffRejectionRequest,
+    domain_permission_repo: Annotated[DomainPermissionRepository, Depends(get_domain_permission_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> HandoffRejectionOutcome:
+    grant = await domain_permission_repo.get_by_id(domain_permission_id)
+    if grant is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No domain permission found with id '{domain_permission_id}'.")
+    return await conflict_service.classify_handoff_rejection("domain_permission", grant, domain_permission_repo, request, actor_id=claims.get("person_id"))

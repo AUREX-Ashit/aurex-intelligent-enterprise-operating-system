@@ -10,6 +10,7 @@ from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.role_repository import RoleRepository
 from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
+from schemas.authorization_policy_handoff import HandoffRejectionOutcome, ReportHandoffRejectionRequest
 from schemas.role import EstablishRoleRequest, RoleResponse, VersionRoleRequest
 from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 from services.role_service import RoleService
@@ -265,3 +266,41 @@ async def resolve_role_dependency(
     if role is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No role found with id '{role_id}'.")
     return await conflict_service.resolve_conflict("role", role, role_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.post(
+    "/{role_id}/handoff-rejection",
+    response_model=HandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve a Dependent Capability Hand-off Rejection for a Role",
+    description=(
+        "WP-02 Business Activity: Resolve Dependent Capability "
+        "Authorization Policy Hand-off Rejection (C-003) — BA-10, "
+        "realizing PE-001-C003's ERB-C003-03 / EX-C003-10. Classifies a "
+        "reported rejection (e.g. from C-002 Access Management) as "
+        "CAPABILITY_SCOPED_INSUFFICIENCY (object preserved unchanged) "
+        "or INTEGRITY_SIGNAL (routed for correction), computed entirely "
+        "from this Role's own status and BA-09's dependency check — "
+        "never from the reporting capability's stated reason alone "
+        "(Contract 5.7 — a signal, not an authority). Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Hand-off rejection classified."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Role does not exist."},
+    },
+)
+async def report_role_handoff_rejection(
+    role_id: UUID,
+    request: ReportHandoffRejectionRequest,
+    role_repo: Annotated[RoleRepository, Depends(get_role_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> HandoffRejectionOutcome:
+    role = await role_repo.get_by_id(role_id)
+    if role is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No role found with id '{role_id}'.")
+    return await conflict_service.classify_handoff_rejection("role", role, role_repo, request, actor_id=claims.get("person_id"))

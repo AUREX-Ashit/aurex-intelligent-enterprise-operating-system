@@ -11,6 +11,7 @@ from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
 from schemas.approval_authority import EstablishApprovalAuthorityRequest, ApprovalAuthorityResponse, VersionApprovalAuthorityRequest
 from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
+from schemas.authorization_policy_handoff import HandoffRejectionOutcome, ReportHandoffRejectionRequest
 from services.approval_authority_service import ApprovalAuthorityService
 from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 
@@ -252,3 +253,35 @@ async def resolve_approval_authority_dependency(
     if authority is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No approval authority found with id '{approval_authority_id}'.")
     return await conflict_service.resolve_conflict("approval_authority", authority, approval_authority_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.post(
+    "/{approval_authority_id}/handoff-rejection",
+    response_model=HandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve a Dependent Capability Hand-off Rejection for an Approval Authority",
+    description=(
+        "WP-02 Business Activity: Resolve Dependent Capability "
+        "Authorization Policy Hand-off Rejection (C-003) — BA-10, "
+        "realizing PE-001-C003's ERB-C003-03 / EX-C003-10. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Hand-off rejection classified."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Approval Authority does not exist."},
+    },
+)
+async def report_approval_authority_handoff_rejection(
+    approval_authority_id: UUID,
+    request: ReportHandoffRejectionRequest,
+    approval_authority_repo: Annotated[ApprovalAuthorityRepository, Depends(get_approval_authority_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> HandoffRejectionOutcome:
+    authority = await approval_authority_repo.get_by_id(approval_authority_id)
+    if authority is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No approval authority found with id '{approval_authority_id}'.")
+    return await conflict_service.classify_handoff_rejection("approval_authority", authority, approval_authority_repo, request, actor_id=claims.get("person_id"))

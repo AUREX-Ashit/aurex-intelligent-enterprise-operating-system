@@ -10,6 +10,7 @@ from repositories.runtime_assignment_policy_repository import RuntimeAssignmentP
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
 from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
+from schemas.authorization_policy_handoff import HandoffRejectionOutcome, ReportHandoffRejectionRequest
 from schemas.runtime_assignment_policy import (
     EstablishRuntimeAssignmentPolicyRequest,
     RuntimeAssignmentPolicyResponse,
@@ -262,3 +263,35 @@ async def resolve_runtime_assignment_policy_dependency(
     if policy is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No runtime assignment policy found with id '{runtime_assignment_policy_id}'.")
     return await conflict_service.resolve_conflict("runtime_assignment_policy", policy, runtime_assignment_policy_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.post(
+    "/{runtime_assignment_policy_id}/handoff-rejection",
+    response_model=HandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve a Dependent Capability Hand-off Rejection for a Runtime Assignment Policy",
+    description=(
+        "WP-02 Business Activity: Resolve Dependent Capability "
+        "Authorization Policy Hand-off Rejection (C-003) — BA-10, "
+        "realizing PE-001-C003's ERB-C003-03 / EX-C003-10. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Hand-off rejection classified."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Runtime Assignment Policy does not exist."},
+    },
+)
+async def report_runtime_assignment_policy_handoff_rejection(
+    runtime_assignment_policy_id: UUID,
+    request: ReportHandoffRejectionRequest,
+    runtime_assignment_policy_repo: Annotated[RuntimeAssignmentPolicyRepository, Depends(get_runtime_assignment_policy_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> HandoffRejectionOutcome:
+    policy = await runtime_assignment_policy_repo.get_by_id(runtime_assignment_policy_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No runtime assignment policy found with id '{runtime_assignment_policy_id}'.")
+    return await conflict_service.classify_handoff_rejection("runtime_assignment_policy", policy, runtime_assignment_policy_repo, request, actor_id=claims.get("person_id"))

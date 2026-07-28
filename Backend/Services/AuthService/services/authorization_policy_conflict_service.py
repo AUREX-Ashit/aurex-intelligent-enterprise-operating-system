@@ -28,14 +28,21 @@ capability's concern, consumed as an already-resolved input the next
 time detect_conflicts() is run.
 
 Scope boundary (this Business Activity's own instruction): this service
-determines whether a change is safe. It never itself deprecates,
-retires (BA-08's own, already-implemented, untouched capability), or
-performs a cross-capability hand-off rejection (BA-10, not started).
+determines whether a change is safe. It never itself deprecates or
+retires (BA-08's own, already-implemented, untouched capability).
 
 Reuses BR-C003-04's dependency check exactly as BA-08 already
 implemented it (each repository's get_active_dependents(), which
 has_active_dependents() itself now composes from, per WP-02 BA-09's own
 refactor) — never a duplicate query.
+
+Business Activity implemented here (added, additive only): BA-10
+Resolve Dependent Capability Authorization Policy Hand-off Rejection,
+realizing ERB-C003-03 / EX-C003-10. classify_handoff_rejection()
+orchestrates BA-08's own status field and BA-09's own detect_conflicts()
+— it introduces no new detection logic, per this Business Activity's
+own instruction not to duplicate conflict detection or dependency
+analysis, or create another dependency engine.
 """
 
 from __future__ import annotations
@@ -53,15 +60,21 @@ from schemas.authorization_policy_conflict import (
     ResolutionType,
     ResolveDependencyConflictRequest,
 )
+from schemas.authorization_policy_handoff import (
+    HandoffRejectionClassification,
+    HandoffRejectionOutcome,
+    ReportHandoffRejectionRequest,
+)
 from observability import record_audit, publish_event, AuditStatus
 
 
 class AuthorizationPolicyConflictService:
     """
     Business Activity orchestrator for Dependency Conflict Detection and
-    Resolution (WP-02 BA-09). One instance, shared across every WP-02
-    router that needs it — each call receives the already-loaded object
-    and its own repository, never re-deriving either.
+    Resolution (WP-02 BA-09) and Dependent Capability Hand-off Rejection
+    Classification (WP-02 BA-10). One instance, shared across every
+    WP-02 router that needs it — each call receives the already-loaded
+    object and its own repository, never re-deriving either.
     """
 
     def __init__(
@@ -307,4 +320,101 @@ class AuthorizationPolicyConflictService:
             status=AuditStatus.DENIED,
             actor_id=actor_id or "SYSTEM",
             metadata={"reason": reason},
+        )
+
+    async def classify_handoff_rejection(
+        self,
+        object_type: str,
+        obj: Any,
+        repo: Any,
+        request: ReportHandoffRejectionRequest,
+        actor_id: str | None = None,
+    ) -> HandoffRejectionOutcome:
+        """
+        Business Activity: Resolve Dependent Capability Authorization
+        Policy Hand-off Rejection (BA-10).
+
+        Classifies a dependent capability's stated rejection as either
+        CAPABILITY_SCOPED_INSUFFICIENCY (the object is preserved,
+        unchanged, and the rejection is scoped to that capability's own
+        attempted use only) or INTEGRITY_SIGNAL (the object's own
+        definition is genuinely in question), per BR-C003-06/Contract
+        5.7. The classification is computed entirely from this
+        capability's own already-established signals — BA-08's status
+        field and BA-09's detect_conflicts() — never from
+        request.stated_reason, which is recorded for traceability only:
+        Contract 5.7's own text is explicit that "the dependent
+        capability's stated rejection reason is a signal, not an
+        authority," and that C-003 "SHALL NOT treat [the reporting
+        capability's] report as an adjudication of the object's
+        definition without independent classification."
+
+        Never mutates the object (no status transition performed here —
+        that remains BA-08's own capability, untouched); never itself
+        determines whether a specific request is currently permitted
+        (Contract 5.3 — that determination and its enforcement remain
+        exclusively RTA-001's Authorization Engine and C-002's own
+        concern, which consume this classification as an input).
+        """
+        now = datetime.now(timezone.utc)
+
+        if getattr(obj, "status", None) in ("DEPRECATED", "RETIRED", "SUPERSEDED"):
+            classification = HandoffRejectionClassification.INTEGRITY_SIGNAL
+            explanation = (
+                f"The object's own status is {obj.status} — it is not the object's current, in-force "
+                "version and is no longer available for consumption (BR-C003-04/EX-C003-08), independent "
+                "of the reporting capability's stated reason."
+            )
+            conflict_report = await self.detect_conflicts(object_type, obj, repo)
+        else:
+            conflict_report = await self.detect_conflicts(object_type, obj, repo)
+            if conflict_report.has_conflicts:
+                classification = HandoffRejectionClassification.INTEGRITY_SIGNAL
+                explanation = (
+                    "BA-09's own dependency/outbound/temporal/version-chain check found genuine violations — "
+                    "the object's own definition is in question, not merely this capability's use of it."
+                )
+            else:
+                classification = HandoffRejectionClassification.CAPABILITY_SCOPED_INSUFFICIENCY
+                explanation = (
+                    "The object is the current ACTIVE version and passes every BA-09 integrity check; the "
+                    "reported rejection is scoped to the reporting capability's own attempted use only "
+                    "(Contract 5.7 — the object is preserved unchanged)."
+                )
+
+        object_preserved = classification == HandoffRejectionClassification.CAPABILITY_SCOPED_INSUFFICIENCY
+        routed_to = None if object_preserved else "ERB-C003-01/ERB-C003-02 (Establish/Version/Deprecate/Retire — routed for correction, never auto-corrected here per Contract 5.8)"
+
+        record_audit(
+            action=f"REPORT_HANDOFF_REJECTION_{object_type.upper()}",
+            resource=f"{object_type}:{obj.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "reporting_capability": request.reporting_capability,
+                "stated_reason": request.stated_reason,
+                "classification": classification.value,
+                "object_preserved": object_preserved,
+            },
+        )
+        publish_event(
+            "AUTHORIZATION_POLICY_HANDOFF_REJECTION_CLASSIFIED",
+            {
+                "object_type": object_type,
+                "object_id": str(obj.id),
+                "reporting_capability": request.reporting_capability,
+                "classification": classification.value,
+                "object_preserved": object_preserved,
+            },
+        )
+
+        return HandoffRejectionOutcome(
+            object_type=object_type,
+            object_id=obj.id,
+            classification=classification,
+            object_preserved=object_preserved,
+            explanation=explanation,
+            routed_to=routed_to,
+            conflict_report=conflict_report,
+            checked_at=now,
         )
