@@ -1,11 +1,15 @@
 """
 WP-03 — Membership Management (C-007).
 
-Business Activity implemented here: BA-01 Establish Membership Context,
-realizing PE-001-C007's ERB-C007-01 (Establish Membership Context) /
-EX-C007-01 (Recognize Existing Membership) + EX-C007-02 (Establish New
-Membership). See IRA-003 for the full ERB/EX -> Business Activity
-mapping and this Business Activity's own Architecture Validation (§9).
+Business Activities implemented here:
+- BA-01 Establish Membership Context, realizing PE-001-C007's
+  ERB-C007-01 / EX-C007-01 (Recognize Existing Membership) +
+  EX-C007-02 (Establish New Membership).
+- BA-02 Understand Membership Context, realizing ERB-C007-02 /
+  EX-C007-03 — a pure read, computing but never storing the
+  Membership's current authority consequence (BR-C007-013).
+See IRA-003 for the full ERB/EX -> Business Activity mapping and
+BA-01's own Architecture Validation (§9).
 
 Follows RoleService.establish()/DomainPermissionService.establish()'s
 exact pattern (WP-01/WP-02): existence checks on every referenced
@@ -35,6 +39,7 @@ authority model.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
@@ -45,8 +50,52 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import EstablishMembershipRequest
+from schemas.membership import EstablishMembershipRequest, MembershipAuthorityConsequence
 from observability import record_audit, publish_event, AuditStatus
+
+
+def compute_membership_authority_consequence(
+    membership: Membership, now: datetime | None = None
+) -> tuple[bool, MembershipAuthorityConsequence]:
+    """
+    WP-03 BA-02 (Understand Membership Context, ERB-C007-02/EX-C007-03).
+
+    Pure function, no I/O: derives whether a Membership currently
+    carries authority from Standing Context (membership_status) and
+    Effective Validity Context (effective_from/effective_to) together,
+    per BR-C007-013 and Contract 5.1/5.3 — never from standing alone.
+    Mirrors the same ACTIVE-but-effective_to-passed comparison
+    `authorization_policy_conflict_service.py`'s own dependency check
+    already uses (WP-02 BA-09), extended with the symmetric
+    not-yet-effective case URA-001-21's own example ("Board Member
+    2027-2029") implies. Never called from a write path; this
+    computation is deliberately not persisted anywhere (BR-C007-013:
+    "SHALL produce only a recomputed... Context").
+    """
+    now = now or datetime.now(timezone.utc)
+    effective_from = _as_utc(membership.effective_from)
+    effective_to = _as_utc(membership.effective_to)
+    if membership.membership_status != "ACTIVE":
+        return False, MembershipAuthorityConsequence.NOT_ACTIVE
+    if effective_from is not None and now < effective_from:
+        return False, MembershipAuthorityConsequence.ACTIVE_NOT_YET_EFFECTIVE
+    if effective_to is not None and now >= effective_to:
+        return False, MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED
+    return True, MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+
+
+def _as_utc(value: datetime | None) -> datetime | None:
+    """
+    Every effective_from/effective_to is always written as UTC-aware
+    (models/membership.py's own `datetime.now(timezone.utc)` default),
+    but SQLite's DateTime(timezone=True) does not preserve tzinfo on a
+    fresh-session round trip (a documented SQLAlchemy/SQLite dialect
+    limitation, not a Postgres behavior) — a value read back naive is
+    still UTC, just missing its tzinfo, so it is safe to attach.
+    """
+    if value is not None and value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
 
 
 class MembershipService:
@@ -234,4 +283,28 @@ class MembershipService:
                 "organization_id": str(membership.organization_id),
             },
         )
+        return membership
+
+    async def understand(self, membership_id: UUID) -> Membership:
+        """
+        Business Activity: Understand Membership Context (BA-02,
+        ERB-C007-02/EX-C007-03).
+
+        Read-only — no audit record or domain event, the same basis
+        already established for Organization's own read-side Business
+        Activity (`OrganizationService.get_details()`: only a write
+        path audits). Reuses `BaseRepository.get_by_id()` via
+        `MembershipRepository` as-is — no new repository method
+        required. The caller (router) is responsible for computing
+        the Membership Authority Consequence via
+        `compute_membership_authority_consequence()` above; this method
+        never mutates the returned Membership and never computes or
+        caches that consequence itself.
+        """
+        membership = await self.membership_repo.get_by_id(membership_id)
+        if membership is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No Membership exists with id '{membership_id}'.",
+            )
         return membership

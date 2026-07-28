@@ -1,6 +1,8 @@
 """
-WP-03 BA-01 — Establish Membership Context (ERB-C007-01 / EX-C007-01 +
-EX-C007-02 per PE-001-C007). API-layer tests for POST /memberships.
+WP-03 BA-01/BA-02 — Establish + Understand Membership Context
+(ERB-C007-01 / EX-C007-01 + EX-C007-02, and ERB-C007-02 / EX-C007-03,
+per PE-001-C007). API-layer tests for POST /memberships and
+GET /memberships/{membership_id}.
 """
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -150,3 +152,75 @@ def test_establish_membership_requires_role_id(
         json={"person_id": person_id, "organization_id": organization_id},
     )
     assert response.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — Understand Membership Context (ERB-C007-02/EX-C007-03)
+# ---------------------------------------------------------------------------
+
+def test_understand_membership_succeeds_for_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.get(f"/memberships/{established['id']}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == established["id"]
+    assert body["membership_status"] == "ACTIVE"
+    assert body["currently_effective"] is True
+    assert body["authority_consequence"] == "ACTIVE_AND_EFFECTIVE"
+
+
+def test_understand_membership_reports_lapsed_membership_as_not_currently_effective(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """BR-C007-013: an ACTIVE Membership whose effective_to has already passed is never presented as currently effective."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={
+            "person_id": person_id, "organization_id": organization_id, "role_id": role_id,
+            "effective_to": past,
+        },
+    ).json()
+
+    response = client.get(f"/memberships/{established['id']}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["membership_status"] == "ACTIVE"
+    assert body["currently_effective"] is False
+    assert body["authority_consequence"] == "ACTIVE_BUT_LAPSED"
+
+
+def test_understand_membership_rejects_unknown_id(client: TestClient) -> None:
+    response = client.get(f"/memberships/{uuid.uuid4()}", headers=_auth_headers())
+    assert response.status_code == 404
+
+
+def test_understand_membership_rejects_non_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.get(f"/memberships/{established['id']}", headers=_auth_headers(role_code="ESG_MANAGER"))
+    assert response.status_code == 403
+
+
+def test_understand_membership_requires_authorization_header(client: TestClient) -> None:
+    response = client.get(f"/memberships/{uuid.uuid4()}")
+    assert response.status_code == 400

@@ -1,16 +1,21 @@
 """
-WP-03 BA-01 — Establish Membership Context (ERB-C007-01 / EX-C007-01 +
-EX-C007-02 per PE-001-C007). Service-layer tests for
-MembershipService.establish(), covering BR-C007-001 (recognition
-before establishment), BR-C007-002/007 (home-node candidate validity),
-and the referenced-object existence checks (Person/Organization/Role).
+WP-03 BA-01/BA-02 — Establish + Understand Membership Context
+(ERB-C007-01 / EX-C007-01 + EX-C007-02, and ERB-C007-02 / EX-C007-03,
+per PE-001-C007). Service-layer tests for MembershipService.establish()
+(BR-C007-001 recognition-before-establishment, BR-C007-002/007
+home-node candidate validity, referenced-object existence checks) and
+MembershipService.understand() / compute_membership_authority_consequence()
+(BR-C007-013: ACTIVE standing never implies current authority on its
+own).
 """
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.membership import Membership
 from models.organization import Organization
 from models.organization_node import OrganizationNode
 from models.person import Person
@@ -20,8 +25,8 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import EstablishMembershipRequest
-from services.membership_service import MembershipService
+from schemas.membership import EstablishMembershipRequest, MembershipAuthorityConsequence
+from services.membership_service import MembershipService, compute_membership_authority_consequence
 
 
 @pytest.fixture
@@ -176,3 +181,110 @@ async def test_establish_accepts_explicit_membership_and_license_type(
 
     assert membership.membership_type == "EXTERNAL"
     assert membership.license_type == "LIGHT"
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — Understand Membership Context (ERB-C007-02/EX-C007-03)
+# ---------------------------------------------------------------------------
+
+def _membership(status_: str = "ACTIVE", effective_from=None, effective_to=None) -> Membership:
+    """An unpersisted Membership instance — compute_membership_authority_consequence() is pure and needs no session."""
+    return Membership(
+        person_id=uuid.uuid4(),
+        organization_id=uuid.uuid4(),
+        role_id=uuid.uuid4(),
+        membership_status=status_,
+        effective_from=effective_from,
+        effective_to=effective_to,
+    )
+
+
+def test_compute_authority_consequence_active_open_ended() -> None:
+    """BR-C007-013: ACTIVE, effective_from in the past, no effective_to — currently effective."""
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(effective_from=now - timedelta(days=30), effective_to=None)
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is True
+    assert consequence == MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+
+
+def test_compute_authority_consequence_active_within_window() -> None:
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(effective_from=now - timedelta(days=30), effective_to=now + timedelta(days=30))
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is True
+    assert consequence == MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+
+
+def test_compute_authority_consequence_active_not_yet_effective() -> None:
+    """URA-001-21's own example ('Board Member 2027-2029'): a future-dated window is not yet in effect."""
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(effective_from=now + timedelta(days=30), effective_to=None)
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is False
+    assert consequence == MembershipAuthorityConsequence.ACTIVE_NOT_YET_EFFECTIVE
+
+
+def test_compute_authority_consequence_active_but_lapsed() -> None:
+    """BR-C007-013 / Contract 5.1's central rule: ACTIVE standing past effective_to is never presented as currently effective."""
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(effective_from=now - timedelta(days=60), effective_to=now - timedelta(days=1))
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is False
+    assert consequence == MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED
+
+
+def test_compute_authority_consequence_lapsed_at_exact_boundary() -> None:
+    """effective_to == now is treated as lapsed (half-open window), not effective."""
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(effective_from=now - timedelta(days=60), effective_to=now)
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is False
+    assert consequence == MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED
+
+
+def test_compute_authority_consequence_not_active_regardless_of_dates() -> None:
+    """Non-ACTIVE standing is NOT_ACTIVE even when the effective-date window would otherwise be open — standing and validity are independent facts (Contract 5.3), but standing gates first."""
+    now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    membership = _membership(
+        status_="SUSPENDED", effective_from=now - timedelta(days=30), effective_to=now + timedelta(days=30),
+    )
+
+    currently_effective, consequence = compute_membership_authority_consequence(membership, now=now)
+
+    assert currently_effective is False
+    assert consequence == MembershipAuthorityConsequence.NOT_ACTIVE
+
+
+async def test_understand_returns_existing_membership(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    understood = await service.understand(established.id)
+
+    assert understood.id == established.id
+    assert understood.person_id == person.id
+    assert understood.membership_status == "ACTIVE"
+
+
+async def test_understand_rejects_unknown_membership_id(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.understand(uuid.uuid4())
+    assert exc_info.value.status_code == 404

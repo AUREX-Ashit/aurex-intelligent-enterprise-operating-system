@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +11,8 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import EstablishMembershipRequest, MembershipResponse
-from services.membership_service import MembershipService
+from schemas.membership import EstablishMembershipRequest, MembershipResponse, MembershipUnderstandingResponse
+from services.membership_service import MembershipService, compute_membership_authority_consequence
 
 router = APIRouter()
 
@@ -98,3 +99,42 @@ async def establish_membership(
 ) -> MembershipResponse:
     membership = await membership_service.establish(request, actor_id=claims.get("person_id"))
     return MembershipResponse.model_validate(membership)
+
+
+@router.get(
+    "/{membership_id}",
+    response_model=MembershipUnderstandingResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Understand a Membership's authoritative context",
+    description=(
+        "WP-03 Business Activity: Understand Membership Context (C-007), "
+        "realizing PE-001-C007's ERB-C007-02 / EX-C007-03. Requires the "
+        "PLATFORM_ADMIN role (interim gate — EX-C007-03's own Membership "
+        "Sponsor/Steward/Downstream Capability Consumer/Executive personas "
+        "are not yet implementable claims, tracked as TD-034). Presents the "
+        "Membership's stored terms/standing/home-node fields unchanged, "
+        "plus a freshly computed authority_consequence/currently_effective "
+        "pair — an ACTIVE Membership past its effective_to is never "
+        "presented as currently effective (BR-C007-013)."
+    ),
+    responses={
+        200: {"description": "Membership found; authority consequence freshly computed."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No Membership exists with this id."},
+        422: {"description": "membership_id is not a valid UUID."},
+    },
+)
+async def understand_membership(
+    membership_id: UUID,
+    membership_service: Annotated[MembershipService, Depends(get_membership_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> MembershipUnderstandingResponse:
+    membership = await membership_service.understand(membership_id)
+    currently_effective, authority_consequence = compute_membership_authority_consequence(membership)
+    return MembershipUnderstandingResponse(
+        **MembershipResponse.model_validate(membership).model_dump(),
+        currently_effective=currently_effective,
+        authority_consequence=authority_consequence,
+    )

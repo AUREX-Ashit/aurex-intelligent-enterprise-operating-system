@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -64,3 +65,43 @@ class MembershipResponse(BaseModel):
     updated_at: datetime | None
 
     model_config = {"from_attributes": True}
+
+
+class MembershipAuthorityConsequence(str, Enum):
+    """
+    WP-03 BA-02 (Understand Membership Context, ERB-C007-02/EX-C007-03).
+
+    PE-001-C007's own Contract 5.1/5.3 and §6.3 ("Active standing with
+    lapsed effective validity") state this rule four separate times: a
+    Membership's recorded standing being ACTIVE SHALL NOT be presented
+    or consumed as implying current authority — authority SHALL always
+    be derived from Standing Context and Effective Validity Context
+    together (BR-C007-013), recomputed live, never stored or cached.
+    This enum is that computed result's own value set; it has no
+    corresponding database column.
+    """
+    ACTIVE_AND_EFFECTIVE = "ACTIVE_AND_EFFECTIVE"
+    ACTIVE_NOT_YET_EFFECTIVE = "ACTIVE_NOT_YET_EFFECTIVE"
+    ACTIVE_BUT_LAPSED = "ACTIVE_BUT_LAPSED"
+    NOT_ACTIVE = "NOT_ACTIVE"
+
+
+class MembershipUnderstandingResponse(MembershipResponse):
+    """
+    Understand Membership Context's response (WP-03 BA-02). Extends
+    MembershipResponse with the Membership Understanding Context's own
+    computed fields — the Membership's stored terms/standing/home-node
+    fields are unchanged and presented as-is; only these two fields are
+    freshly derived on every call, never persisted.
+    """
+    currently_effective: bool = Field(
+        ...,
+        description=(
+            "True only when membership_status is ACTIVE and now falls within "
+            "[effective_from, effective_to). BR-C007-013: an ACTIVE Membership "
+            "past its effective_to is never presented as currently effective."
+        ),
+    )
+    authority_consequence: MembershipAuthorityConsequence = Field(
+        ..., description="The reasoned classification behind currently_effective."
+    )
