@@ -16,6 +16,7 @@ from schemas.membership import (
     EstablishMembershipRequest,
     MembershipResponse,
     MembershipUnderstandingResponse,
+    MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
 from services.membership_service import MembershipService, compute_membership_authority_consequence
@@ -105,6 +106,45 @@ async def establish_membership(
 ) -> MembershipResponse:
     membership = await membership_service.establish(request, actor_id=claims.get("person_id"))
     return MembershipResponse.model_validate(membership)
+
+
+# Registered before GET /{membership_id} below: Starlette matches routes in
+# registration order, and this literal path would otherwise be captured by
+# the dynamic membership_id route.
+@router.get(
+    "/multi-organization-awareness",
+    response_model=MultiOrganizationAwarenessResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Surface multi-organization Membership awareness",
+    description=(
+        "WP-03 Business Activity: Surface Multi-Organization Membership "
+        "Awareness During Establishment (C-007), realizing PE-001-C007's "
+        "ERB-C007-05 / EX-C007-09. Requires the PLATFORM_ADMIN role "
+        "(interim gate — EX-C007-09's own Membership Sponsor/Steward/"
+        "Platform Oversight Participant personas are not yet implementable "
+        "claims, tracked as TD-039). Per BR-C007-008/Contract 5.4, returns "
+        "at most an existence-only signal that the Person holds an ACTIVE "
+        "Membership in an Organization other than the one supplied — "
+        "never which Organization, on what terms, or under what standing "
+        "(URA-001-17a)."
+    ),
+    responses={
+        200: {"description": "Existence-only awareness signal computed."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No Person or Organization exists with the supplied id."},
+    },
+)
+async def surface_multi_organization_awareness(
+    person_id: UUID,
+    organization_id: UUID,
+    membership_service: Annotated[MembershipService, Depends(get_membership_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> MultiOrganizationAwarenessResponse:
+    return await membership_service.surface_multi_organization_awareness(
+        person_id, organization_id, actor_id=claims.get("person_id")
+    )
 
 
 @router.get(

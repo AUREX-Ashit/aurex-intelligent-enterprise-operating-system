@@ -117,6 +117,29 @@ class ChangeMembershipTermsRequest(BaseModel):
     reason: str | None = Field(None, max_length=500, description="Business reason for the change (Term Change Context's own 'reason' field). Not validated against a real approval record — same disclosed class as TD-026.")
 
 
+class MultiOrganizationAwarenessResponse(BaseModel):
+    """
+    Response for Surface Multi-Organization Membership Awareness (WP-03
+    BA-07, C-007, realizing ERB-C007-05 / EX-C007-09).
+
+    Per BR-C007-008 and Contract 5.4: an establishing Organization SHALL
+    receive, at most, an existence-only signal that a Person holds other
+    Memberships — never which Organizations, on what terms, or under
+    what standing (URA-001-17a). This is the entire response; no
+    Organization name, Membership id, or other detail is ever included,
+    absent an explicit, named, audited cross-tenant sharing agreement
+    (none exists anywhere in this codebase today — see TD-040).
+    """
+    has_memberships_in_other_organizations: bool = Field(
+        ...,
+        description=(
+            "True only if the Person holds at least one ACTIVE Membership in an "
+            "Organization other than the one supplied. Existence-only — never "
+            "which Organization(s), on what terms, or under what standing (BR-C007-008)."
+        ),
+    )
+
+
 class ReactivateMembershipRequest(BaseModel):
     """
     Request body for Reactivate Membership (WP-03 BA-06, C-007,

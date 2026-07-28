@@ -63,6 +63,7 @@ from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
     MembershipAuthorityConsequence,
+    MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
 from observability import record_audit, publish_event, AuditStatus
@@ -553,3 +554,73 @@ class MembershipService:
                 "(Pending Canonical Binding, TD-037)."
             ),
         )
+
+    async def surface_multi_organization_awareness(
+        self, person_id: UUID, organization_id: UUID, actor_id: str | None = None
+    ) -> MultiOrganizationAwarenessResponse:
+        """
+        Business Activity: Surface Multi-Organization Membership
+        Awareness During Establishment (BA-07, ERB-C007-05 /
+        EX-C007-09).
+
+        BR-C007-008 / Contract 5.4: an establishing Organization SHALL
+        receive, at most, an existence-only signal that a Person holds
+        other Memberships — never which Organizations, on what terms,
+        or under what standing (URA-001-17a's cross-tenant restriction).
+        Reuses MembershipRepository.get_person_memberships() as-is (the
+        same ACTIVE-only, cross-organization query WP-00's own login
+        flow already relies on) — no new repository method required,
+        confirming IRA-003 §10/§14's own Category B classification.
+
+        Unlike BA-02's own pure-read precedent ("only a write path
+        audits"), every call here is audited — success and denial
+        alike — because this crosses a cross-tenant data-isolation
+        boundary (BR-C007-008/URA-001-17a), a materially different
+        sensitivity class than a same-organization single-Membership
+        read. No explicit, named, audited cross-tenant sharing
+        agreement mechanism exists anywhere in this codebase (see
+        TD-040); the existence-only default below is therefore always
+        what is returned.
+        """
+        person = await self.person_repo.get_by_id(person_id)
+        if person is None:
+            record_audit(
+                action="SURFACE_MULTI_ORGANIZATION_AWARENESS",
+                resource=f"person:{person_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target person does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No person found with id '{person_id}'.",
+            )
+
+        organization = await self.organization_repo.get_by_id(organization_id)
+        if organization is None:
+            record_audit(
+                action="SURFACE_MULTI_ORGANIZATION_AWARENESS",
+                resource=f"organization:{organization_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "requesting organization does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization found with id '{organization_id}'.",
+            )
+
+        memberships = await self.membership_repo.get_person_memberships(person_id)
+        has_other = any(m.organization_id != organization_id for m in memberships)
+
+        record_audit(
+            action="SURFACE_MULTI_ORGANIZATION_AWARENESS",
+            resource=f"person:{person_id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "requesting_organization_id": str(organization_id),
+                "has_memberships_in_other_organizations": has_other,
+            },
+        )
+        return MultiOrganizationAwarenessResponse(has_memberships_in_other_organizations=has_other)

@@ -32,6 +32,7 @@ from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
     MembershipAuthorityConsequence,
+    MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
 from services.membership_service import MembershipService, compute_membership_authority_consequence
@@ -516,3 +517,92 @@ async def test_reactivate_preserves_existing_membership_context_unchanged(
     assert established.membership_status == "SUSPENDED"
     assert established.license_type == "FULL"
     assert established.membership_type == "INTERNAL"
+
+
+# ---------------------------------------------------------------------------
+# BA-07 — Surface Multi-Organization Membership Awareness (ERB-C007-05/EX-C007-09)
+# ---------------------------------------------------------------------------
+
+async def test_multi_organization_awareness_rejects_unknown_person(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    _person, organization, _role = seeded_person_organization_role
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.surface_multi_organization_awareness(uuid.uuid4(), organization.id)
+    assert exc_info.value.status_code == 404
+
+
+async def test_multi_organization_awareness_rejects_unknown_organization(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, _organization, _role = seeded_person_organization_role
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.surface_multi_organization_awareness(person.id, uuid.uuid4())
+    assert exc_info.value.status_code == 404
+
+
+async def test_multi_organization_awareness_returns_false_when_no_other_memberships(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    result = await service.surface_multi_organization_awareness(person.id, organization.id)
+
+    assert isinstance(result, MultiOrganizationAwarenessResponse)
+    assert result.has_memberships_in_other_organizations is False
+
+
+async def test_multi_organization_awareness_returns_true_when_other_memberships_exist(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-008: the establishing Organization learns only that other Memberships exist, never which."""
+    person, organization, role = seeded_person_organization_role
+    other_organization = Organization(
+        organization_code="MEM_TEST_ORG_OTHER", organization_name="Other Membership Test Org", organization_type="CORPORATE",
+    )
+    db_session.add(other_organization)
+    await db_session.flush()
+    service = _service(db_session)
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=other_organization.id, role_id=role.id)
+    )
+
+    result = await service.surface_multi_organization_awareness(person.id, organization.id)
+
+    assert result.has_memberships_in_other_organizations is True
+
+
+async def test_multi_organization_awareness_ignores_non_active_memberships_elsewhere(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """get_person_memberships() (reused as-is) already filters to ACTIVE only - a non-active Membership elsewhere does not count."""
+    person, organization, role = seeded_person_organization_role
+    other_organization = Organization(
+        organization_code="MEM_TEST_ORG_INACTIVE_ELSEWHERE", organization_name="Inactive Elsewhere Org", organization_type="CORPORATE",
+    )
+    db_session.add(other_organization)
+    await db_session.flush()
+    service = _service(db_session)
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    other_membership = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=other_organization.id, role_id=role.id)
+    )
+    other_membership.membership_status = "SUSPENDED"
+    await db_session.flush()
+
+    result = await service.surface_multi_organization_awareness(person.id, organization.id)
+
+    assert result.has_memberships_in_other_organizations is False

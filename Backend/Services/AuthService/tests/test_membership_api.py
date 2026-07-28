@@ -497,3 +497,114 @@ def test_reactivate_membership_rejects_non_platform_admin(
 def test_reactivate_membership_requires_authorization_header(client: TestClient) -> None:
     response = client.post(f"/memberships/{uuid.uuid4()}/reactivate", json={})
     assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-07 — Surface Multi-Organization Membership Awareness (ERB-C007-05/EX-C007-09)
+# ---------------------------------------------------------------------------
+
+def test_multi_organization_awareness_rejects_unknown_person(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    _person_id, organization_id, _role_id = seeded_person_organization_role
+
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        headers=_auth_headers(),
+        params={"person_id": str(uuid.uuid4()), "organization_id": organization_id},
+    )
+
+    assert response.status_code == 404
+
+
+def test_multi_organization_awareness_rejects_unknown_organization(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, _organization_id, _role_id = seeded_person_organization_role
+
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        headers=_auth_headers(),
+        params={"person_id": person_id, "organization_id": str(uuid.uuid4())},
+    )
+
+    assert response.status_code == 404
+
+
+def test_multi_organization_awareness_returns_false_when_no_other_memberships(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    )
+
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        headers=_auth_headers(),
+        params={"person_id": person_id, "organization_id": organization_id},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["has_memberships_in_other_organizations"] is False
+
+
+@pytest.fixture
+async def seeded_other_organization(db_session: AsyncSession) -> str:
+    other_organization = Organization(
+        organization_code="MEM_API_TEST_ORG_OTHER", organization_name="Other API Test Org", organization_type="CORPORATE",
+    )
+    db_session.add(other_organization)
+    await db_session.commit()
+    return str(other_organization.id)
+
+
+def test_multi_organization_awareness_returns_true_when_other_memberships_exist(
+    client: TestClient, seeded_person_organization_role, seeded_other_organization
+) -> None:
+    """BR-C007-008: the establishing Organization learns only that other Memberships exist, never which."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    other_organization_id = seeded_other_organization
+    client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    )
+    client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": other_organization_id, "role_id": role_id},
+    )
+
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        headers=_auth_headers(),
+        params={"person_id": person_id, "organization_id": organization_id},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["has_memberships_in_other_organizations"] is True
+
+
+def test_multi_organization_awareness_rejects_non_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, _role_id = seeded_person_organization_role
+
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        headers=_auth_headers(role_code="ESG_MANAGER"),
+        params={"person_id": person_id, "organization_id": organization_id},
+    )
+
+    assert response.status_code == 403
+
+
+def test_multi_organization_awareness_requires_authorization_header(client: TestClient) -> None:
+    response = client.get(
+        "/memberships/multi-organization-awareness",
+        params={"person_id": str(uuid.uuid4()), "organization_id": str(uuid.uuid4())},
+    )
+    assert response.status_code == 400

@@ -6,20 +6,66 @@ info:
     AuthService. Covers BA-01 (Establish Membership Context), BA-02
     (Understand Membership Context), BA-03 (Maintain Membership
     Terms — EX-C007-04/05 only; EX-C007-06 Reconfirm Home-Node
-    Structural Congruence is out of scope, see IMP-REPORT-WP-03), and
+    Structural Congruence is out of scope, see IMP-REPORT-WP-03),
     BA-06 (Reactivate Membership, EX-C007-08 — every call currently
     rejected with 409 per BR-C007-014/Contract 5.3, no canonical
     authority establishing a permitted transition to ACTIVE exists;
-    see TD-037). BA-04 and BA-05 are formally BLOCKED (see
-    IMP-REPORT-WP-03); see IRA-003 for the full six-ERB/thirteen-EX
-    Business Activity mapping. Authorization gate: PLATFORM_ADMIN
-    (persona-specific defining authority per EX-C007-02's Membership
-    Steward/Sponsor personas is deferred, tracked as TD-031;
-    EX-C007-03's Sponsor/Steward/Downstream Capability Consumer/
-    Executive personas, TD-034; EX-C007-04/05's Steward/Sponsor
-    personas, TD-035; EX-C007-08's Steward/Sponsor personas, TD-036).
+    see TD-037), and BA-07 (Surface Multi-Organization Membership
+    Awareness, EX-C007-09 — existence-only signal per BR-C007-008/
+    Contract 5.4, never cross-tenant detail, see TD-040). BA-04 and
+    BA-05 are formally BLOCKED (see IMP-REPORT-WP-03); see IRA-003 for
+    the full six-ERB/thirteen-EX Business Activity mapping.
+    Authorization gate: PLATFORM_ADMIN (persona-specific defining
+    authority per EX-C007-02's Membership Steward/Sponsor personas is
+    deferred, tracked as TD-031; EX-C007-03's Sponsor/Steward/
+    Downstream Capability Consumer/Executive personas, TD-034;
+    EX-C007-04/05's Steward/Sponsor personas, TD-035; EX-C007-08's
+    Steward/Sponsor personas, TD-036; EX-C007-09's Sponsor/Steward/
+    Platform Oversight Participant personas, TD-039).
   version: 1.0.0
 paths:
+  /memberships/multi-organization-awareness:
+    get:
+      summary: Surface multi-organization Membership awareness
+      description: >
+        WP-03 Business Activity: Surface Multi-Organization Membership
+        Awareness During Establishment, realizing PE-001-C007's
+        ERB-C007-05 / EX-C007-09. Requires the PLATFORM_ADMIN role. Per
+        BR-C007-008/Contract 5.4, returns at most an existence-only
+        signal that the Person holds an ACTIVE Membership in an
+        Organization other than the one supplied — never which
+        Organization, on what terms, or under what standing
+        (URA-001-17a). See TD-040.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: person_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: organization_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Existence-only awareness signal computed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiOrganizationAwarenessResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No Person or Organization exists with the supplied id.
   /memberships/{membership_id}:
     get:
       summary: Understand a Membership's authoritative context
@@ -318,6 +364,17 @@ components:
           type: string
           maxLength: 500
           nullable: true
+    MultiOrganizationAwarenessResponse:
+      type: object
+      description: >
+        Per BR-C007-008/Contract 5.4, existence-only — never which
+        Organization, on what terms, or under what standing
+        (URA-001-17a).
+      properties:
+        has_memberships_in_other_organizations:
+          type: boolean
+      required:
+        - has_memberships_in_other_organizations
     MembershipUnderstandingResponse:
       allOf:
         - $ref: '#/components/schemas/MembershipResponse'
