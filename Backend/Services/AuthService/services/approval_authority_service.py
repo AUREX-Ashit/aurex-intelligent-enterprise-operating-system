@@ -225,3 +225,174 @@ class ApprovalAuthorityService:
             },
         )
         return new_version
+
+    async def deprecate(self, approval_authority_id, actor_id: str | None = None) -> ApprovalAuthority:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Approval Authority — Deprecate (Hide)
+        branch. Mirrors RoleService.deprecate()'s exact shape, plus an
+        organization-ownership existence check (Approval Authority has
+        its own organization_id, unlike Role) — defensive, since
+        organizations are never hard-deleted, but the check this
+        service's own organization_repo dependency already exists to
+        perform, per BA-08's Validation Requirements.
+        """
+        authority = await self.approval_authority_repo.get_by_id(approval_authority_id)
+        if authority is None:
+            record_audit(
+                action="DEPRECATE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{approval_authority_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "approval authority not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No approval authority found with id '{approval_authority_id}'.",
+            )
+
+        if authority.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="DEPRECATE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "approval authority is not the current ACTIVE version", "current_status": authority.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Approval authority '{approval_authority_id}' is not the current ACTIVE version (status: {authority.status}); only an ACTIVE version may be deprecated.",
+            )
+
+        organization = await self.organization_repo.get_by_id(authority.organization_id)
+        if organization is None:
+            record_audit(
+                action="DEPRECATE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Approval authority '{approval_authority_id}' has no resolvable owning organization.",
+            )
+
+        if await self.approval_authority_repo.has_active_dependents(authority.id):
+            record_audit(
+                action="DEPRECATE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Approval authority '{approval_authority_id}' has an active dependency "
+                    "remaining unresolved; deprecation SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = authority.status
+        now = datetime.now(timezone.utc)
+        updated = await self.approval_authority_repo.update(
+            approval_authority_id, {"status": VersionStatus.DEPRECATED.value, "effective_to": now}
+        )
+        await self.approval_authority_repo.session.flush()
+
+        record_audit(
+            action="DEPRECATE_APPROVAL_AUTHORITY",
+            resource=f"approval_authority:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "APPROVAL_AUTHORITY_DEPRECATED",
+            {"approval_authority_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated
+
+    async def retire(self, approval_authority_id, actor_id: str | None = None) -> ApprovalAuthority:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Approval Authority — Retire (Archive)
+        branch, terminal. Mirrors deprecate()'s exact shape above.
+        """
+        authority = await self.approval_authority_repo.get_by_id(approval_authority_id)
+        if authority is None:
+            record_audit(
+                action="RETIRE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{approval_authority_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "approval authority not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No approval authority found with id '{approval_authority_id}'.",
+            )
+
+        if authority.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="RETIRE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "approval authority is not the current ACTIVE version", "current_status": authority.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Approval authority '{approval_authority_id}' is not the current ACTIVE version (status: {authority.status}); only an ACTIVE version may be retired.",
+            )
+
+        organization = await self.organization_repo.get_by_id(authority.organization_id)
+        if organization is None:
+            record_audit(
+                action="RETIRE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Approval authority '{approval_authority_id}' has no resolvable owning organization.",
+            )
+
+        if await self.approval_authority_repo.has_active_dependents(authority.id):
+            record_audit(
+                action="RETIRE_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{authority.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Approval authority '{approval_authority_id}' has an active dependency "
+                    "remaining unresolved; retirement SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = authority.status
+        now = datetime.now(timezone.utc)
+        updated = await self.approval_authority_repo.update(
+            approval_authority_id, {"status": VersionStatus.RETIRED.value, "effective_to": now}
+        )
+        await self.approval_authority_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_APPROVAL_AUTHORITY",
+            resource=f"approval_authority:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "APPROVAL_AUTHORITY_RETIRED",
+            {"approval_authority_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated

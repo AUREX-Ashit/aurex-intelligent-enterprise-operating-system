@@ -15,15 +15,22 @@ if TYPE_CHECKING:
 
 class VersionStatus(str, Enum):
     """
-    SD-002-011's Canonical Temporal Model Status property (WP-02 BA-07,
-    ERB-C003-02/EX-C003-07). ACTIVE is the object's current, in-force
-    version; SUPERSEDED is a preserved prior version (BR-C003-05 — never
-    invalidated, deprecated, or retired by being superseded). Deprecated/
-    Retired states belong to a future Business Activity (EX-C003-08) and
-    are not added here.
+    SD-002-011's Canonical Temporal Model Status property (WP-02
+    BA-07/BA-08, ERB-C003-02/EX-C003-07/EX-C003-08). ACTIVE is the
+    object's current, in-force version; SUPERSEDED is a preserved prior
+    version (BR-C003-05 — never invalidated, deprecated, or retired by
+    being superseded). DEPRECATED and RETIRED (BA-08) realize URA-001-127's
+    Hide/Archive distinction respectively — DEPRECATED is Hidden
+    (invisible, restorable in a future Business Activity; not
+    reactivated here), RETIRED is Archived (inactive, historically
+    accessible, terminal — no code path transitions away from it, the
+    same discipline WP-01's Organization.activate()/suspend() already
+    established for its own RETIRED state).
     """
     ACTIVE = "ACTIVE"
     SUPERSEDED = "SUPERSEDED"
+    DEPRECATED = "DEPRECATED"
+    RETIRED = "RETIRED"
 
 
 class DomainPermissionLevel(str, Enum):
@@ -57,7 +64,7 @@ class DomainPermission(Base):
             name="ck_domain_permissions_permission_level",
         ),
         CheckConstraint(
-            "status IN ('ACTIVE', 'SUPERSEDED')",
+            "status IN ('ACTIVE', 'SUPERSEDED', 'DEPRECATED', 'RETIRED')",
             name="ck_domain_permissions_status",
         ),
     )

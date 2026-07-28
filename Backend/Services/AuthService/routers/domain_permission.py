@@ -118,3 +118,63 @@ async def version_domain_permission(
         domain_permission_id, request, actor_id=claims.get("person_id")
     )
     return DomainPermissionResponse.model_validate(domain_permission)
+
+
+@router.post(
+    "/{domain_permission_id}/deprecate",
+    response_model=DomainPermissionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Deprecate (Hide) a Domain Permission",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to DEPRECATED (Hidden, URA-001-127) in place. "
+        "Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Domain permission deprecated."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Domain Permission does not exist."},
+        409: {"description": "The target Domain Permission is not the current ACTIVE version, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def deprecate_domain_permission(
+    domain_permission_id: UUID,
+    domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DomainPermissionResponse:
+    domain_permission = await domain_permission_service.deprecate(domain_permission_id, actor_id=claims.get("person_id"))
+    return DomainPermissionResponse.model_validate(domain_permission)
+
+
+@router.post(
+    "/{domain_permission_id}/retire",
+    response_model=DomainPermissionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retire (Archive) a Domain Permission",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to RETIRED (Archived, URA-001-127) in place — terminal, "
+        "never reversible. Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Domain permission retired."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Domain Permission does not exist."},
+        409: {"description": "The target Domain Permission is not the current ACTIVE version, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def retire_domain_permission(
+    domain_permission_id: UUID,
+    domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DomainPermissionResponse:
+    domain_permission = await domain_permission_service.retire(domain_permission_id, actor_id=claims.get("person_id"))
+    return DomainPermissionResponse.model_validate(domain_permission)

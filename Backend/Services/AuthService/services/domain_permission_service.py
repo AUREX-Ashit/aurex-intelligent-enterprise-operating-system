@@ -256,3 +256,146 @@ class DomainPermissionService:
             },
         )
         return new_version
+
+    async def deprecate(self, domain_permission_id, actor_id: str | None = None) -> DomainPermission:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Domain Permission — Deprecate (Hide)
+        branch. Mirrors RoleService.deprecate()'s exact shape.
+
+        No organization-ownership check: Domain Permission has no
+        organization_id column of its own (it is anchored to a
+        Membership, itself anchored to an Organization) — the same basis
+        BA-02's own schema already established, not reopened here.
+        """
+        grant = await self.domain_permission_repo.get_by_id(domain_permission_id)
+        if grant is None:
+            record_audit(
+                action="DEPRECATE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{domain_permission_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "domain permission not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No domain permission found with id '{domain_permission_id}'.",
+            )
+
+        if grant.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="DEPRECATE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{grant.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "domain permission is not the current ACTIVE version", "current_status": grant.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Domain permission '{domain_permission_id}' is not the current ACTIVE version (status: {grant.status}); only an ACTIVE version may be deprecated.",
+            )
+
+        if await self.domain_permission_repo.has_active_dependents(grant.id):
+            record_audit(
+                action="DEPRECATE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{grant.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Domain permission '{domain_permission_id}' has an active dependency "
+                    "remaining unresolved; deprecation SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = grant.status
+        now = datetime.now(timezone.utc)
+        updated = await self.domain_permission_repo.update(
+            domain_permission_id, {"status": VersionStatus.DEPRECATED.value, "effective_to": now}
+        )
+        await self.domain_permission_repo.session.flush()
+
+        record_audit(
+            action="DEPRECATE_DOMAIN_PERMISSION",
+            resource=f"domain_permission:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "DOMAIN_PERMISSION_DEPRECATED",
+            {"domain_permission_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated
+
+    async def retire(self, domain_permission_id, actor_id: str | None = None) -> DomainPermission:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Domain Permission — Retire (Archive)
+        branch, terminal. Mirrors RoleService.retire()'s exact shape.
+        """
+        grant = await self.domain_permission_repo.get_by_id(domain_permission_id)
+        if grant is None:
+            record_audit(
+                action="RETIRE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{domain_permission_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "domain permission not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No domain permission found with id '{domain_permission_id}'.",
+            )
+
+        if grant.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="RETIRE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{grant.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "domain permission is not the current ACTIVE version", "current_status": grant.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Domain permission '{domain_permission_id}' is not the current ACTIVE version (status: {grant.status}); only an ACTIVE version may be retired.",
+            )
+
+        if await self.domain_permission_repo.has_active_dependents(grant.id):
+            record_audit(
+                action="RETIRE_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{grant.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Domain permission '{domain_permission_id}' has an active dependency "
+                    "remaining unresolved; retirement SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = grant.status
+        now = datetime.now(timezone.utc)
+        updated = await self.domain_permission_repo.update(
+            domain_permission_id, {"status": VersionStatus.RETIRED.value, "effective_to": now}
+        )
+        await self.domain_permission_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_DOMAIN_PERMISSION",
+            resource=f"domain_permission:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "DOMAIN_PERMISSION_RETIRED",
+            {"domain_permission_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated

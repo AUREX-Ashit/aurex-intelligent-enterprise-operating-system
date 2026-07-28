@@ -117,3 +117,67 @@ async def version_runtime_assignment_policy(
         runtime_assignment_policy_id, request, actor_id=claims.get("person_id")
     )
     return RuntimeAssignmentPolicyResponse.model_validate(runtime_assignment_policy)
+
+
+@router.post(
+    "/{runtime_assignment_policy_id}/deprecate",
+    response_model=RuntimeAssignmentPolicyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Deprecate (Hide) a Runtime Assignment Policy",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to DEPRECATED (Hidden, URA-001-127) in place. "
+        "Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Runtime assignment policy deprecated."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Runtime Assignment Policy does not exist."},
+        409: {"description": "The target Runtime Assignment Policy is not the current ACTIVE version, has no resolvable owning organization, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def deprecate_runtime_assignment_policy(
+    runtime_assignment_policy_id: UUID,
+    runtime_assignment_policy_service: Annotated[RuntimeAssignmentPolicyService, Depends(get_runtime_assignment_policy_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> RuntimeAssignmentPolicyResponse:
+    runtime_assignment_policy = await runtime_assignment_policy_service.deprecate(
+        runtime_assignment_policy_id, actor_id=claims.get("person_id")
+    )
+    return RuntimeAssignmentPolicyResponse.model_validate(runtime_assignment_policy)
+
+
+@router.post(
+    "/{runtime_assignment_policy_id}/retire",
+    response_model=RuntimeAssignmentPolicyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retire (Archive) a Runtime Assignment Policy",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to RETIRED (Archived, URA-001-127) in place — terminal, "
+        "never reversible. Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Runtime assignment policy retired."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Runtime Assignment Policy does not exist."},
+        409: {"description": "The target Runtime Assignment Policy is not the current ACTIVE version, has no resolvable owning organization, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def retire_runtime_assignment_policy(
+    runtime_assignment_policy_id: UUID,
+    runtime_assignment_policy_service: Annotated[RuntimeAssignmentPolicyService, Depends(get_runtime_assignment_policy_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> RuntimeAssignmentPolicyResponse:
+    runtime_assignment_policy = await runtime_assignment_policy_service.retire(
+        runtime_assignment_policy_id, actor_id=claims.get("person_id")
+    )
+    return RuntimeAssignmentPolicyResponse.model_validate(runtime_assignment_policy)

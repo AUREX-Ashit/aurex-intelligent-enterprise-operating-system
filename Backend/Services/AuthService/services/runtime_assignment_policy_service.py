@@ -216,3 +216,172 @@ class RuntimeAssignmentPolicyService:
             },
         )
         return new_version
+
+    async def deprecate(self, runtime_assignment_policy_id, actor_id: str | None = None) -> RuntimeAssignmentPolicy:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Runtime Assignment Policy —
+        Deprecate (Hide) branch. Mirrors
+        ApprovalAuthorityService.deprecate()'s exact shape, including
+        the same organization-ownership existence check.
+        """
+        policy = await self.runtime_assignment_policy_repo.get_by_id(runtime_assignment_policy_id)
+        if policy is None:
+            record_audit(
+                action="DEPRECATE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{runtime_assignment_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "runtime assignment policy not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No runtime assignment policy found with id '{runtime_assignment_policy_id}'.",
+            )
+
+        if policy.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="DEPRECATE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "runtime assignment policy is not the current ACTIVE version", "current_status": policy.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Runtime assignment policy '{runtime_assignment_policy_id}' is not the current ACTIVE version (status: {policy.status}); only an ACTIVE version may be deprecated.",
+            )
+
+        organization = await self.organization_repo.get_by_id(policy.organization_id)
+        if organization is None:
+            record_audit(
+                action="DEPRECATE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Runtime assignment policy '{runtime_assignment_policy_id}' has no resolvable owning organization.",
+            )
+
+        if await self.runtime_assignment_policy_repo.has_active_dependents(policy.id):
+            record_audit(
+                action="DEPRECATE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Runtime assignment policy '{runtime_assignment_policy_id}' has an active "
+                    "dependency remaining unresolved; deprecation SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = policy.status
+        now = datetime.now(timezone.utc)
+        updated = await self.runtime_assignment_policy_repo.update(
+            runtime_assignment_policy_id, {"status": VersionStatus.DEPRECATED.value, "effective_to": now}
+        )
+        await self.runtime_assignment_policy_repo.session.flush()
+
+        record_audit(
+            action="DEPRECATE_RUNTIME_ASSIGNMENT_POLICY",
+            resource=f"runtime_assignment_policy:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "RUNTIME_ASSIGNMENT_POLICY_DEPRECATED",
+            {"runtime_assignment_policy_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated
+
+    async def retire(self, runtime_assignment_policy_id, actor_id: str | None = None) -> RuntimeAssignmentPolicy:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Runtime Assignment Policy — Retire
+        (Archive) branch, terminal. Mirrors deprecate()'s exact shape
+        above.
+        """
+        policy = await self.runtime_assignment_policy_repo.get_by_id(runtime_assignment_policy_id)
+        if policy is None:
+            record_audit(
+                action="RETIRE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{runtime_assignment_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "runtime assignment policy not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No runtime assignment policy found with id '{runtime_assignment_policy_id}'.",
+            )
+
+        if policy.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="RETIRE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "runtime assignment policy is not the current ACTIVE version", "current_status": policy.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Runtime assignment policy '{runtime_assignment_policy_id}' is not the current ACTIVE version (status: {policy.status}); only an ACTIVE version may be retired.",
+            )
+
+        organization = await self.organization_repo.get_by_id(policy.organization_id)
+        if organization is None:
+            record_audit(
+                action="RETIRE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Runtime assignment policy '{runtime_assignment_policy_id}' has no resolvable owning organization.",
+            )
+
+        if await self.runtime_assignment_policy_repo.has_active_dependents(policy.id):
+            record_audit(
+                action="RETIRE_RUNTIME_ASSIGNMENT_POLICY",
+                resource=f"runtime_assignment_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Runtime assignment policy '{runtime_assignment_policy_id}' has an active "
+                    "dependency remaining unresolved; retirement SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = policy.status
+        now = datetime.now(timezone.utc)
+        updated = await self.runtime_assignment_policy_repo.update(
+            runtime_assignment_policy_id, {"status": VersionStatus.RETIRED.value, "effective_to": now}
+        )
+        await self.runtime_assignment_policy_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_RUNTIME_ASSIGNMENT_POLICY",
+            resource=f"runtime_assignment_policy:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "RUNTIME_ASSIGNMENT_POLICY_RETIRED",
+            {"runtime_assignment_policy_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated

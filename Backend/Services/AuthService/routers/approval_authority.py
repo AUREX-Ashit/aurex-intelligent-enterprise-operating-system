@@ -118,3 +118,63 @@ async def version_approval_authority(
         approval_authority_id, request, actor_id=claims.get("person_id")
     )
     return ApprovalAuthorityResponse.model_validate(approval_authority)
+
+
+@router.post(
+    "/{approval_authority_id}/deprecate",
+    response_model=ApprovalAuthorityResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Deprecate (Hide) an Approval Authority",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to DEPRECATED (Hidden, URA-001-127) in place. "
+        "Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Approval authority deprecated."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Approval Authority does not exist."},
+        409: {"description": "The target Approval Authority is not the current ACTIVE version, has no resolvable owning organization, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def deprecate_approval_authority(
+    approval_authority_id: UUID,
+    approval_authority_service: Annotated[ApprovalAuthorityService, Depends(get_approval_authority_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> ApprovalAuthorityResponse:
+    approval_authority = await approval_authority_service.deprecate(approval_authority_id, actor_id=claims.get("person_id"))
+    return ApprovalAuthorityResponse.model_validate(approval_authority)
+
+
+@router.post(
+    "/{approval_authority_id}/retire",
+    response_model=ApprovalAuthorityResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retire (Archive) an Approval Authority",
+    description=(
+        "WP-02 Business Activity: Deprecate or Retire Authorization "
+        "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
+        "version to RETIRED (Archived, URA-001-127) in place — terminal, "
+        "never reversible. Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Approval authority retired."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Approval Authority does not exist."},
+        409: {"description": "The target Approval Authority is not the current ACTIVE version, has no resolvable owning organization, or has an active dependency remaining unresolved (BR-C003-04)."},
+    },
+)
+async def retire_approval_authority(
+    approval_authority_id: UUID,
+    approval_authority_service: Annotated[ApprovalAuthorityService, Depends(get_approval_authority_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> ApprovalAuthorityResponse:
+    approval_authority = await approval_authority_service.retire(approval_authority_id, actor_id=claims.get("person_id"))
+    return ApprovalAuthorityResponse.model_validate(approval_authority)

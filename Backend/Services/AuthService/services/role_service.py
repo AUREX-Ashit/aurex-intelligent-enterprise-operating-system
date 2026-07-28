@@ -215,3 +215,176 @@ class RoleService:
             },
         )
         return new_version
+
+    async def deprecate(self, role_id, actor_id: str | None = None) -> Role:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Role — the Deprecate (Hide) branch.
+
+        Mirrors OrganizationService.suspend()'s exact shape (WP-01
+        BA-06): a plain, in-place status transition on the current row,
+        never a new version row (that remains create_new_version()'s own
+        mechanism, reused, not duplicated, per IMP-001 §13.17's
+        governing rule that lifecycle/governance discipline is shared
+        across specializations, not reinvented per type).
+
+        Business Rules (BR-C003-04, EX-C003-08 Purpose):
+        - Only the current ACTIVE version may be deprecated (404 if the
+          Role does not exist; 409 if it is not ACTIVE — already
+          SUPERSEDED, DEPRECATED, or RETIRED).
+        - Deprecation is rejected (409, naming BR-C003-04 exactly) where
+          any active dependent remains unresolved — for Role, a
+          currently-ACTIVE Membership assigned this Role
+          (RoleRepository.has_active_dependents()).
+        """
+        role = await self.role_repo.get_by_id(role_id)
+        if role is None:
+            record_audit(
+                action="DEPRECATE_ROLE",
+                resource=f"role:{role_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "role not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No role found with id '{role_id}'.",
+            )
+
+        if role.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="DEPRECATE_ROLE",
+                resource=f"role:{role.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "role is not the current ACTIVE version", "current_status": role.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Role '{role_id}' is not the current ACTIVE version (status: {role.status}); only an ACTIVE version may be deprecated.",
+            )
+
+        if await self.role_repo.has_active_dependents(role.id):
+            record_audit(
+                action="DEPRECATE_ROLE",
+                resource=f"role:{role.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency (Membership) remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Role '{role_id}' has at least one active Membership still "
+                    "assigned to it; deprecation SHALL occur only once no active dependency remains unresolved."
+                ),
+            )
+
+        previous_status = role.status
+        now = datetime.now(timezone.utc)
+        updated = await self.role_repo.update(
+            role_id, {"status": VersionStatus.DEPRECATED.value, "effective_to": now}
+        )
+        await self.role_repo.session.flush()
+
+        record_audit(
+            action="DEPRECATE_ROLE",
+            resource=f"role:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"role_code": updated.role_code, "previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "ROLE_DEPRECATED",
+            {
+                "role_id": str(updated.id),
+                "role_code": updated.role_code,
+                "previous_status": previous_status,
+                "status": updated.status,
+            },
+        )
+        return updated
+
+    async def retire(self, role_id, actor_id: str | None = None) -> Role:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Role — the Retire (Archive) branch.
+
+        Same shape as deprecate() above; RETIRED is terminal (no code
+        path transitions away from it), the same discipline
+        OrganizationService.activate()/suspend() already established for
+        Organization's own RETIRED state (WP-01 BA-07).
+
+        Business Rules (BR-C003-04, EX-C003-08 Purpose):
+        - Only the current ACTIVE version may be retired (404 if the
+          Role does not exist; 409 if it is not ACTIVE).
+        - Retirement is rejected (409, naming BR-C003-04 exactly) where
+          any active dependent remains unresolved.
+        """
+        role = await self.role_repo.get_by_id(role_id)
+        if role is None:
+            record_audit(
+                action="RETIRE_ROLE",
+                resource=f"role:{role_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "role not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No role found with id '{role_id}'.",
+            )
+
+        if role.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="RETIRE_ROLE",
+                resource=f"role:{role.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "role is not the current ACTIVE version", "current_status": role.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Role '{role_id}' is not the current ACTIVE version (status: {role.status}); only an ACTIVE version may be retired.",
+            )
+
+        if await self.role_repo.has_active_dependents(role.id):
+            record_audit(
+                action="RETIRE_ROLE",
+                resource=f"role:{role.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency (Membership) remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Role '{role_id}' has at least one active Membership still "
+                    "assigned to it; retirement SHALL occur only once no active dependency remains unresolved."
+                ),
+            )
+
+        previous_status = role.status
+        now = datetime.now(timezone.utc)
+        updated = await self.role_repo.update(
+            role_id, {"status": VersionStatus.RETIRED.value, "effective_to": now}
+        )
+        await self.role_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_ROLE",
+            resource=f"role:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"role_code": updated.role_code, "previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "ROLE_RETIRED",
+            {
+                "role_id": str(updated.id),
+                "role_code": updated.role_code,
+                "previous_status": previous_status,
+                "status": updated.status,
+            },
+        )
+        return updated

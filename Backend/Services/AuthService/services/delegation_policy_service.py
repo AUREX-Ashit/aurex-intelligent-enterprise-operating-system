@@ -236,3 +236,171 @@ class DelegationPolicyService:
             },
         )
         return new_version
+
+    async def deprecate(self, delegation_policy_id, actor_id: str | None = None) -> DelegationPolicy:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Delegation Policy — Deprecate (Hide)
+        branch. Mirrors ApprovalAuthorityService.deprecate()'s exact
+        shape, including the same organization-ownership existence
+        check.
+        """
+        policy = await self.delegation_policy_repo.get_by_id(delegation_policy_id)
+        if policy is None:
+            record_audit(
+                action="DEPRECATE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{delegation_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "delegation policy not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No delegation policy found with id '{delegation_policy_id}'.",
+            )
+
+        if policy.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="DEPRECATE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "delegation policy is not the current ACTIVE version", "current_status": policy.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Delegation policy '{delegation_policy_id}' is not the current ACTIVE version (status: {policy.status}); only an ACTIVE version may be deprecated.",
+            )
+
+        organization = await self.organization_repo.get_by_id(policy.organization_id)
+        if organization is None:
+            record_audit(
+                action="DEPRECATE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Delegation policy '{delegation_policy_id}' has no resolvable owning organization.",
+            )
+
+        if await self.delegation_policy_repo.has_active_dependents(policy.id):
+            record_audit(
+                action="DEPRECATE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Delegation policy '{delegation_policy_id}' has an active dependency "
+                    "remaining unresolved; deprecation SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = policy.status
+        now = datetime.now(timezone.utc)
+        updated = await self.delegation_policy_repo.update(
+            delegation_policy_id, {"status": VersionStatus.DEPRECATED.value, "effective_to": now}
+        )
+        await self.delegation_policy_repo.session.flush()
+
+        record_audit(
+            action="DEPRECATE_DELEGATION_POLICY",
+            resource=f"delegation_policy:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "DELEGATION_POLICY_DEPRECATED",
+            {"delegation_policy_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated
+
+    async def retire(self, delegation_policy_id, actor_id: str | None = None) -> DelegationPolicy:
+        """
+        Business Activity: Deprecate or Retire Authorization Policy
+        Object (BA-08), applied to Delegation Policy — Retire (Archive)
+        branch, terminal. Mirrors deprecate()'s exact shape above.
+        """
+        policy = await self.delegation_policy_repo.get_by_id(delegation_policy_id)
+        if policy is None:
+            record_audit(
+                action="RETIRE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{delegation_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "delegation policy not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No delegation policy found with id '{delegation_policy_id}'.",
+            )
+
+        if policy.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="RETIRE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "delegation policy is not the current ACTIVE version", "current_status": policy.status},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Delegation policy '{delegation_policy_id}' is not the current ACTIVE version (status: {policy.status}); only an ACTIVE version may be retired.",
+            )
+
+        organization = await self.organization_repo.get_by_id(policy.organization_id)
+        if organization is None:
+            record_audit(
+                action="RETIRE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "owning organization no longer exists"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Delegation policy '{delegation_policy_id}' has no resolvable owning organization.",
+            )
+
+        if await self.delegation_policy_repo.has_active_dependents(policy.id):
+            record_audit(
+                action="RETIRE_DELEGATION_POLICY",
+                resource=f"delegation_policy:{policy.id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "BR-C003-04: active dependency remains unresolved"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"BR-C003-04 violated: Delegation policy '{delegation_policy_id}' has an active dependency "
+                    "remaining unresolved; retirement SHALL occur only once none remains."
+                ),
+            )
+
+        previous_status = policy.status
+        now = datetime.now(timezone.utc)
+        updated = await self.delegation_policy_repo.update(
+            delegation_policy_id, {"status": VersionStatus.RETIRED.value, "effective_to": now}
+        )
+        await self.delegation_policy_repo.session.flush()
+
+        record_audit(
+            action="RETIRE_DELEGATION_POLICY",
+            resource=f"delegation_policy:{updated.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"previous_status": previous_status, "new_status": updated.status},
+        )
+        publish_event(
+            "DELEGATION_POLICY_RETIRED",
+            {"delegation_policy_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
+        )
+        return updated
