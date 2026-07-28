@@ -560,3 +560,120 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 **Commit Date:** 2026-07-28 (both commits).
 
 **Current Repository Status:** BA-01 through BA-05 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-05 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+
+---
+
+## BA-07 — Version and Re-effective-Date Authorization Policy Object
+
+Realizing PE-001-C003's ERB-C003-02 (Govern Authorization Policy Lifecycle) / EX-C003-07 (Version and Re-effective-Date Authorization Policy Object). BA-06 (Produce Rejected/Unresolved Definition Outcome) is realized inline within BA-01–05, per IRA-002 §2.9, and was not separately implemented, consistent with WP-02's own precedent.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Produce a new version of an already-established authorization policy object, preserving its prior version as a superseded historical record, for an amended effective-date window or a non-structural metadata change — never a change to the object's fundamental type or structural rule conformance (EX-C003-07's own Trigger scope).
+- **Input Contract:** the target object's id (path parameter) plus a type-specific amendment payload — see Gap Analysis below for each object type's amendable-field boundary — plus optional `effective_from`/`effective_to`/`approval_reference`.
+- **Output Contract:** The new, current version of the object (all fields, including `version`, `status`, `effective_from`, `effective_to`, `approval_reference`, `supersedes_id`), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-05 — every version amendment preserves the object's immediately prior version as an inspectable historical record; superseding is never conflated with invalidating, deprecating, or retiring (satisfied by construction: the prior row is never deleted, only closed via `effective_to`/`status`, and a new row is created).
+  - BR-C003-01 — structural rule conformance is preserved by construction: each object type's own amendable-field list excludes every field validated by that type's own `model_validator`/CHECK constraint (scope_type, delegation_type, approval_strategy, assignment_target_type, membership_id/domain_id/permission_level, role_code/is_system_role).
+  - Contract 5.4 (Authorization Policy Lifecycle and Governance) — realizes SD-002-011's Canonical Temporal Model (Effective From, Effective To, Version, Status, Approval Reference) uniformly across all five WP-02 object types, per IMP-001 §13.17's governing rule that one mechanism, not type-specific variants, realizes a shared Enterprise Engineering artifact.
+- **Validation Rules:** the target object must exist (404) and must currently be the ACTIVE version (409 if the given id already names a SUPERSEDED, historical row — only the current version may be versioned again).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (same interim gate as BA-01–05; no new technical debt — this is the same already-tracked TD-021/022/023/024/025 gap, not a sixth instance of it, since versioning the same object type reuses that same type's own existing gate).
+- **Domain Events:** `ROLE_VERSIONED`, `DOMAIN_PERMISSION_VERSIONED`, `APPROVAL_AUTHORITY_VERSIONED`, `DELEGATION_POLICY_VERSIONED`, `RUNTIME_ASSIGNMENT_POLICY_VERSIONED`.
+- **Audit Requirements:** `record_audit("VERSION_<TYPE>", ...)` on success and on every denial path, per SD-002-054's seven audit questions — same mechanism reused as-is.
+- **Tests:** `tests/test_authorization_policy_versioning_service.py` (12 unit tests, all five object types), `tests/test_authorization_policy_versioning_api.py` (9 API/authorization tests) — 21 new tests, all passing; full suite (260 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-07)
+
+Reviewed: PE-001-C003 (ERB-C003-02, EX-C003-07, BR-C003-04/05, Contract 5.2/5.4/5.5/5.6, extracted directly from the docx), URA-001 (§§2–7, URA-001-13/28/38/39/53/58/69/70/86/127), SD-002 (§2 Universal Business Object Model — SD-002-004 through -020, particularly SD-002-010/011's Canonical Temporal Model), IMP-001 (§6.7 BAC, §6.22 BAR, §6.23 Versioning, and the newly-extended §13.17-13.25 Runtime Component Engineering specialization — reviewed for consistency, not touched by BA-07 itself), RTA-001 (§9 Metadata Runtime, §11 Authorization Runtime, §11.16), ARCH-000 (§3 layering, §6 ownership), CAP-001, PE-001, CLAUDE.md §19.7, and the existing schema/implementation for all five WP-02 object types.
+
+**Key findings requiring disclosure, each verified before implementation, spanning several preceding governance turns:**
+
+1. **A Lifecycle Coverage Assessment** (performed before this implementation) found that none of the five authorization policy objects had any of Version, Status, Effective From, Effective To, Supersedes, or Superseded By — only `domain_permissions` had Effective From/To, from BA-02. This confirmed a genuine SHALL-level gap against Contract 5.4/BR-C003-05/SD-002-010/011, not a missing convenience.
+2. **A repository-wide search** confirmed no Metadata Runtime, Temporal Runtime, or any platform implementation of SD-002-011's Canonical Temporal Model exists anywhere — the gap is architecture-wide (ADR-005 already flags the identical absence for Organization/C-004), not C-003-specific, and no Work Package, Capability, or ADR currently owns building it.
+3. **A governance determination** (this repository's own IMP-001 §13, its EIA-001/RTA-001 precedent, and ARCH-000's unqualified "Enterprise Engineering" ownership grant) concluded Runtime Component Engineering is a specialization of Enterprise Engineering belonging inside IMP-001, not a separate discipline or new canonical document — resulting in IMP-001 §13.17-13.25 (approved and committed separately, prior to this implementation).
+4. **The resulting architectural decision for BA-07 itself:** implement SD-002-011's Canonical Temporal Model as a plain-column, non-metadata-driven interim model — mirroring ADR-005's own precedent exactly (Organization's `status` column) — applied identically across all five WP-02 object types in this single Business Activity, rather than waiting for an unscoped future platform runtime.
+5. **A genuine, unavoidable schema contradiction was discovered during implementation, not before it:** `roles.role_code` carried a plain, whole-table `UNIQUE` constraint from WP-00 (`uq_roles_role_code`/`ix_roles_role_code`), predating versioning. BR-C003-05 requires a SUPERSEDED row to legitimately share `role_code` with its current ACTIVE successor — the plain constraint rejected every Role version amendment outright (caught by the first version-amendment test run, not by inspection). This was not a design fork requiring escalation — a partial unique index scoped to `status = 'ACTIVE'` is the single, mechanically-implied correct fix, made in the same migration, and disclosed here rather than silently patched.
+
+---
+
+## Gap Analysis (BA-07)
+
+- **Database:** New columns on all five existing tables — no new table. Four tables (`roles`, `approval_authorities`, `delegation_policies`, `runtime_assignment_policies`) gain the full five-property set (`version`, `status`, `effective_from`, `effective_to`, `approval_reference`, plus `supersedes_id`); `domain_permissions` gains only the four it was missing, reusing its existing `effective_from`/`effective_to` from BA-02. One purely additive migration (`b7d4f2a8e1c6`), plus the necessary `roles.role_code` uniqueness-scoping correction described above (also in this same migration, since it is mechanically required by the same change, not a separate concern).
+- **Amendable-field boundary per object type** (BR-C003-01's own structural fields excluded from every one, per EX-C003-07's non-breaking scope):
+  - Role: `role_name`, `description`. Excluded: `role_code`, `is_system_role`.
+  - Domain Permission: effective-date window only — no metadata field exists on this object distinct from its structural grant. Excluded: `membership_id`, `domain_id`, `permission_level`.
+  - Approval Authority: `authority_name`, `majority_threshold_pct`. Excluded: `approval_strategy`, `scope_type`/`domain_id`/`object_type`/`object_id`.
+  - Delegation Policy: `policy_name`, `sub_delegation_allowed`. Excluded: `delegation_type`, `scope_type`/`domain_id`/`object_type`/`object_id`/`event_code`.
+  - Runtime Assignment Policy: `policy_name`, `configured_lifecycle_states`, `escalation_policy_id`. Excluded: `assignment_target_type`.
+- **API Impact:** Five new endpoints, `POST /{resource}/{id}/versions`, one per existing establish-endpoint, each delegating to a new `create_new_version()` service method following the identical supersede-and-clone mechanics.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–05's own scope decision).
+- **Dependencies:** None blocking. Each type's own existing establish()/model is extended, never altered in its established behavior; BA-01–05's own `establish()` methods are untouched.
+- **Risks:** TD-026 (Approval Reference is free-text, not validated against a real Approval Authority workflow — Low severity, disclosed, and a direct consequence of Contract 5.3's own boundary, not an oversight). TD-027 (no concurrent-double-amendment race protection for four of the five object types — found by Independent Review; Role's own equivalent race is closed via its `role_code`-scoped partial unique index, addressed in this same update). Residual scoping note, not a defect: a *breaking* version amendment (Contract 5.6) has no Business Activity mapped to it yet in IRA-002 — EX-C003-07 explicitly excludes it; noted for future BA mapping, not resolved here.
+- **Technical Debt registered:** TD-026, TD-027 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-07)
+
+**Architecture:**
+- `architecture/03-Engineering/IMP-001_Implementation_Playbook.md` (§13.17-13.25 Runtime Component Engineering specialization — approved as its own governance decision prior to this Business Activity; committed separately, as its own governance commit, not part of this Business Activity's implementation or documentation commit)
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-026 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_29_0900-b7d4f2a8e1c6_authorization_policy_object_versioning.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_versioning_service.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_versioning_api.py`
+
+**Implementation (modified):**
+- `models/role.py`, `models/domain_permission.py`, `models/approval_authority.py`, `models/delegation_policy.py`, `models/runtime_assignment_policy.py` — each gains `VersionStatus`, the new temporal/versioning columns, and a `supersedes` relationship (Role additionally has its `role_code` uniqueness rescoped, per the discovered contradiction above).
+- `schemas/role.py`, `schemas/domain_permission.py`, `schemas/approval_authority.py`, `schemas/delegation_policy.py`, `schemas/runtime_assignment_policy.py` — each gains a `Version<Type>Request` schema and the new response fields.
+- `services/role_service.py`, `services/domain_permission_service.py`, `services/approval_authority_service.py`, `services/delegation_policy_service.py`, `services/runtime_assignment_policy_service.py` — each gains `create_new_version()`.
+- `routers/role.py`, `routers/domain_permission.py`, `routers/approval_authority.py`, `routers/delegation_policy.py`, `routers/runtime_assignment_policy.py` — each gains `POST /{resource}/{id}/versions`.
+
+No `establish()` method, existing endpoint, or previously-shipped test was modified beyond the additive model/schema fields required for the new columns to round-trip.
+
+---
+
+## Developer Validation (BA-07)
+
+- With `JWT_SECRET_KEY`/`JWT_ALGORITHM` set: **260 passed, 0 failed** (63.76s) — 239 prior (BA-01–05 + pre-WP-02 baseline) + 21 new BA-07 tests (12 service, 9 API), zero regressions.
+- Single, linear Alembic head confirmed (`b7d4f2a8e1c6`, `alembic heads`), chained onto BA-05's `a4c8e1f6d9b3`.
+- Confirmed, for every one of the five object types: a version amendment creates a new row (`version = prior + 1`, `status = ACTIVE`, `supersedes_id = prior.id`) and closes the prior row (`status = SUPERSEDED`, `effective_to` set) without deleting it. `test_role_version_omitting_a_field_leaves_it_unchanged` and `test_role_version_preserves_prior_version_as_superseded` additionally fetch the prior row post-supersession and assert its own business field (`role_name`) is unchanged; the Domain Permission test asserts the prior row's `status` only. The Approval Authority, Delegation Policy, and Runtime Assignment Policy tests do not re-fetch the prior row at all — the underlying mechanism is identical across all five types (Independent Review confirmed this by reading every `create_new_version()` method directly), but per-type post-fetch assertions are not yet uniform across the two test files.
+- Confirmed a second version-amendment attempt against an already-SUPERSEDED id is rejected with 409, and an unknown id with 404, for Role at both the service and API layers (representative; identical service logic underlies all five).
+- Confirmed each type's excluded structural fields are never accepted by that type's `Version<Type>Request` schema (they simply have no field to carry such a value — enforced by omission, not by an explicit rejection test per field, consistent with how the amendable-field boundary was designed).
+
+---
+
+## Independent Review (BA-07)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-extracted `PE-001-C003_Role_Permission_Management.docx` (`word/document.xml`) directly and confirmed EX-C003-07, BR-C003-01, BR-C003-05, and Contract 5.4's own text word-for-word against the report's quotations — every quotation matches the source exactly, with no paraphrase presented as a direct quote. SD-002-011's Canonical Temporal Model was independently confirmed in `SD-002_Universal_Business_Object_Rules.md`. The reviewer read all five modified models, all five modified services' `create_new_version()` methods in full, all five modified schemas, all five modified routers, and the Alembic migration's `upgrade()`/`downgrade()` in full. Each type's amendable-field list was checked against that type's own structural validator/CHECK constraint and found correctly excluded in every case — no structural field was found amendable in any of the five types. Every `create_new_version()` correctly closes the prior row via `status`/`effective_to` only and correctly copies forward every non-amended field. The `roles.role_code` uniqueness rescoping was verified coherent: the migration's `upgrade()`/`downgrade()` are true inverses of each other and of the original WP-00 DDL, and the change is model-migration consistent. The reviewer independently re-ran the full suite (`260 passed, 0 failed`) and `alembic heads` (single head, `b7d4f2a8e1c6`), matching the report exactly. `git diff` across all twenty changed AuthService files showed 1,129 insertions against only 29 deletions, and every deleted line was either an import-statement widening or the disclosed `role_code` `unique=True` removal — no `establish()` method's logic was altered in any of the five services, confirming BA-01–05 remain behaviorally untouched. TD-026 was confirmed genuinely registered and its Contract 5.3 rationale holds up against the primary text.
+
+Three findings were raised and are disposed of as follows:
+1. **(Resolved by this update)** `create_new_version()` had no protection against a concurrent double-amendment race for any of the five object types (Role's own race would have surfaced as an unhandled 500, not a clean 409, despite the partial unique index existing to catch it at the database level). Role's `create_new_version()` now catches `IntegrityError` and returns a clean 409, mirroring `establish()`'s own concurrent-duplicate-handling pattern exactly. The remaining four types have no comparable natural-key constraint to catch the same race at all — registered as TD-027, the same non-blocking class as TD-003's own accepted Organization concurrency simplification, given every write path here is `PLATFORM_ADMIN`-gated and administrative.
+2. **(Resolved by this update)** The Developer Validation section's claim that every type's test confirms the prior row's business fields are left untouched ("`test_role_version_omitting_a_field_leaves_it_unchanged` and equivalents") overstated coverage — only the Role test actually re-fetches and asserts this; Domain Permission asserts status only; the other three never re-fetch the prior row. Corrected to state precisely what each test file actually asserts.
+3. **(Informational, not actioned)** Several `Version<Type>Request` optional fields use `None` for both "omit — leave unchanged" and "explicit null," meaning none can be cleared via the versioning endpoint once set. A pre-existing REST/PATCH-semantics limitation, not required by any reviewed canonical document, and not a BA-07-specific defect.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found. No architecture, business rule, or contract violation was found in the implementation itself.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`65a8310`, `4ba8f99`).
+
+**BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`a347b00`, `5f61520`, `4632a30`).
+
+**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`cddacc6`, `c07a67a`, `e8ce080`).
+
+**BA-07 — Version and Re-effective-Date Authorization Policy Object:** Implementation COMPLETE (260/260 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (both substantive findings resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-026/TD-027, and this report, is being committed next).
+
+**Current Repository Status:** BA-01 through BA-05 remain committed to `master`. IMP-001's §13.17-13.25 extension was already committed separately (`4970e54`), as its own governance update, prior to this Business Activity. BA-07's implementation (migration, 5 modified models, 5 modified schemas, 5 modified services, 5 modified routers, 2 new test files), `TECH-DEBT.md`'s TD-026/TD-027 entries, and this report's BA-07 sections are new since BA-05's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. **BA-07 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
