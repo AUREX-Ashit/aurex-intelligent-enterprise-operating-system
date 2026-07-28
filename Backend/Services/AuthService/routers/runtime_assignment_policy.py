@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +8,11 @@ from dependencies import require_platform_admin
 from models.database import db_manager
 from repositories.runtime_assignment_policy_repository import RuntimeAssignmentPolicyRepository
 from repositories.organization_repository import OrganizationRepository
-from schemas.runtime_assignment_policy import EstablishRuntimeAssignmentPolicyRequest, RuntimeAssignmentPolicyResponse
+from schemas.runtime_assignment_policy import (
+    EstablishRuntimeAssignmentPolicyRequest,
+    RuntimeAssignmentPolicyResponse,
+    VersionRuntimeAssignmentPolicyRequest,
+)
 from services.runtime_assignment_policy_service import RuntimeAssignmentPolicyService
 
 router = APIRouter()
@@ -73,4 +78,42 @@ async def establish_runtime_assignment_policy(
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> RuntimeAssignmentPolicyResponse:
     runtime_assignment_policy = await runtime_assignment_policy_service.establish(request, actor_id=claims.get("person_id"))
+    return RuntimeAssignmentPolicyResponse.model_validate(runtime_assignment_policy)
+
+
+@router.post(
+    "/{runtime_assignment_policy_id}/versions",
+    response_model=RuntimeAssignmentPolicyResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Version and re-effective-date a Runtime Assignment Policy",
+    description=(
+        "WP-02 Business Activity: Version and Re-effective-Date "
+        "Authorization Policy Object (C-003), realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-07. Amends policy_name/"
+        "configured_lifecycle_states/escalation_policy_id and/or the "
+        "effective-date window without changing assignment_target_type "
+        "(outside this Business Activity's non-breaking scope). "
+        "Preserves the prior version as an inspectable, SUPERSEDED "
+        "historical record (BR-C003-05). Requires the PLATFORM_ADMIN "
+        "role (same interim gate as BA-05)."
+    ),
+    responses={
+        201: {"description": "New version established; prior version preserved as SUPERSEDED."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Runtime Assignment Policy does not exist."},
+        409: {"description": "The target Runtime Assignment Policy id does not name the current ACTIVE version."},
+        422: {"description": "Invalid request."},
+    },
+)
+async def version_runtime_assignment_policy(
+    runtime_assignment_policy_id: UUID,
+    request: VersionRuntimeAssignmentPolicyRequest,
+    runtime_assignment_policy_service: Annotated[RuntimeAssignmentPolicyService, Depends(get_runtime_assignment_policy_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> RuntimeAssignmentPolicyResponse:
+    runtime_assignment_policy = await runtime_assignment_policy_service.create_new_version(
+        runtime_assignment_policy_id, request, actor_id=claims.get("person_id")
+    )
     return RuntimeAssignmentPolicyResponse.model_validate(runtime_assignment_policy)

@@ -30,13 +30,15 @@ disclosed here as a stated simplification and recorded as technical debt
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
 
-from models.approval_authority import ApprovalAuthority, ApprovalScopeType
+from models.approval_authority import ApprovalAuthority, ApprovalScopeType, VersionStatus
 from repositories.approval_authority_repository import ApprovalAuthorityRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
-from schemas.approval_authority import EstablishApprovalAuthorityRequest
+from schemas.approval_authority import EstablishApprovalAuthorityRequest, VersionApprovalAuthorityRequest
 from observability import record_audit, publish_event, AuditStatus
 
 
@@ -138,3 +140,88 @@ class ApprovalAuthorityService:
             },
         )
         return approval_authority
+
+    async def create_new_version(
+        self, approval_authority_id, request: VersionApprovalAuthorityRequest, actor_id: str | None = None
+    ) -> ApprovalAuthority:
+        """
+        Business Activity: Version and Re-effective-Date Authorization
+        Policy Object (BA-07), applied to Approval Authority.
+
+        Structural rules (BR-C003-05, EX-C003-07 Context Required):
+        - The target Approval Authority must already exist and currently
+          be ACTIVE (404 if it does not exist; 409 if the given id
+          already names a SUPERSEDED, historical version).
+        - The prior version is preserved, never mutated in place.
+        - approval_strategy and scope_type/domain_id/object_type/
+          object_id are never amended here (structural rule conformance
+          is outside EX-C003-07's own scope).
+        """
+        current = await self.approval_authority_repo.get_by_id(approval_authority_id)
+        if current is None:
+            record_audit(
+                action="VERSION_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{approval_authority_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target approval authority does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No approval authority found with id '{approval_authority_id}'.",
+            )
+
+        if current.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="VERSION_APPROVAL_AUTHORITY",
+                resource=f"approval_authority:{approval_authority_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target approval authority is not the current ACTIVE version"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Approval authority '{approval_authority_id}' is not the current ACTIVE version; version its current version instead.",
+            )
+
+        now = datetime.now(timezone.utc)
+        current.status = VersionStatus.SUPERSEDED.value
+        current.effective_to = now
+
+        new_version = await self.approval_authority_repo.create(
+            {
+                "organization_id": current.organization_id,
+                "authority_name": request.authority_name if request.authority_name is not None else current.authority_name,
+                "approval_strategy": current.approval_strategy,
+                "majority_threshold_pct": request.majority_threshold_pct if request.majority_threshold_pct is not None else current.majority_threshold_pct,
+                "scope_type": current.scope_type,
+                "domain_id": current.domain_id,
+                "object_type": current.object_type,
+                "object_id": current.object_id,
+                "version": current.version + 1,
+                "status": VersionStatus.ACTIVE.value,
+                "effective_from": request.effective_from or now,
+                "effective_to": request.effective_to,
+                "approval_reference": request.approval_reference,
+                "supersedes_id": current.id,
+            }
+        )
+        await self.approval_authority_repo.session.flush()
+
+        record_audit(
+            action="VERSION_APPROVAL_AUTHORITY",
+            resource=f"approval_authority:{new_version.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"supersedes_id": str(current.id), "version": new_version.version},
+        )
+        publish_event(
+            "APPROVAL_AUTHORITY_VERSIONED",
+            {
+                "approval_authority_id": str(new_version.id),
+                "supersedes_id": str(current.id),
+                "version": new_version.version,
+                "authority_name": new_version.authority_name,
+            },
+        )
+        return new_version

@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from models.database import db_manager
 from repositories.delegation_policy_repository import DelegationPolicyRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
-from schemas.delegation_policy import EstablishDelegationPolicyRequest, DelegationPolicyResponse
+from schemas.delegation_policy import EstablishDelegationPolicyRequest, DelegationPolicyResponse, VersionDelegationPolicyRequest
 from services.delegation_policy_service import DelegationPolicyService
 
 router = APIRouter()
@@ -81,4 +82,41 @@ async def establish_delegation_policy(
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> DelegationPolicyResponse:
     delegation_policy = await delegation_policy_service.establish(request, actor_id=claims.get("person_id"))
+    return DelegationPolicyResponse.model_validate(delegation_policy)
+
+
+@router.post(
+    "/{delegation_policy_id}/versions",
+    response_model=DelegationPolicyResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Version and re-effective-date a Delegation Policy",
+    description=(
+        "WP-02 Business Activity: Version and Re-effective-Date "
+        "Authorization Policy Object (C-003), realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-07. Amends policy_name/"
+        "sub_delegation_allowed and/or the effective-date window without "
+        "changing delegation_type or scope (outside this Business "
+        "Activity's non-breaking scope). Preserves the prior version as "
+        "an inspectable, SUPERSEDED historical record (BR-C003-05). "
+        "Requires the PLATFORM_ADMIN role (same interim gate as BA-04)."
+    ),
+    responses={
+        201: {"description": "New version established; prior version preserved as SUPERSEDED."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Delegation Policy does not exist."},
+        409: {"description": "The target Delegation Policy id does not name the current ACTIVE version."},
+        422: {"description": "Invalid request."},
+    },
+)
+async def version_delegation_policy(
+    delegation_policy_id: UUID,
+    request: VersionDelegationPolicyRequest,
+    delegation_policy_service: Annotated[DelegationPolicyService, Depends(get_delegation_policy_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DelegationPolicyResponse:
+    delegation_policy = await delegation_policy_service.create_new_version(
+        delegation_policy_id, request, actor_id=claims.get("person_id")
+    )
     return DelegationPolicyResponse.model_validate(delegation_policy)

@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import require_platform_admin
 from models.database import db_manager
 from repositories.role_repository import RoleRepository
-from schemas.role import EstablishRoleRequest, RoleResponse
+from schemas.role import EstablishRoleRequest, RoleResponse, VersionRoleRequest
 from services.role_service import RoleService
 
 router = APIRouter()
@@ -67,4 +68,40 @@ async def establish_role(
     middleware/tenant.py's exemption list, which this path is added to.
     """
     role = await role_service.establish(request, actor_id=claims.get("person_id"))
+    return RoleResponse.model_validate(role)
+
+
+@router.post(
+    "/{role_id}/versions",
+    response_model=RoleResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Version and re-effective-date a Role",
+    description=(
+        "WP-02 Business Activity: Version and Re-effective-Date "
+        "Authorization Policy Object (C-003), realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-07. Amends role_name/description and/or "
+        "the effective-date window without changing role_code or "
+        "is_system_role (outside this Business Activity's non-breaking "
+        "scope). Preserves the prior version as an inspectable, "
+        "SUPERSEDED historical record (BR-C003-05) — never mutated in "
+        "place. Requires the PLATFORM_ADMIN role (same interim gate as "
+        "BA-01)."
+    ),
+    responses={
+        201: {"description": "New version established; prior version preserved as SUPERSEDED."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Role does not exist."},
+        409: {"description": "The target Role id does not name the current ACTIVE version."},
+        422: {"description": "Invalid request."},
+    },
+)
+async def version_role(
+    role_id: UUID,
+    request: VersionRoleRequest,
+    role_service: Annotated[RoleService, Depends(get_role_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> RoleResponse:
+    role = await role_service.create_new_version(role_id, request, actor_id=claims.get("person_id"))
     return RoleResponse.model_validate(role)

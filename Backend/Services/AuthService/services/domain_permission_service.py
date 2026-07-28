@@ -29,14 +29,16 @@ separately-scoped Domain Owner/Admin authority model.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from models.domain_permission import DomainPermission
+from models.domain_permission import DomainPermission, VersionStatus
 from repositories.domain_permission_repository import DomainPermissionRepository
 from repositories.domain_repository import DomainRepository
 from repositories.membership_repository import MembershipRepository
-from schemas.domain_permission import EstablishDomainPermissionRequest
+from schemas.domain_permission import EstablishDomainPermissionRequest, VersionDomainPermissionRequest
 from observability import record_audit, publish_event, AuditStatus
 
 
@@ -173,3 +175,84 @@ class DomainPermissionService:
             },
         )
         return domain_permission
+
+    async def create_new_version(
+        self, domain_permission_id, request: VersionDomainPermissionRequest, actor_id: str | None = None
+    ) -> DomainPermission:
+        """
+        Business Activity: Version and Re-effective-Date Authorization
+        Policy Object (BA-07), applied to Domain Permission.
+
+        Structural rules (BR-C003-05, EX-C003-07 Context Required):
+        - The target Domain Permission must already exist and currently
+          be ACTIVE (404 if it does not exist; 409 if the given id
+          already names a SUPERSEDED, historical version).
+        - The prior version is preserved, never mutated in place.
+        - membership_id, domain_id, and permission_level are never
+          amended here (BR-C003-01's structural rule is outside
+          EX-C003-07's own scope) — only the effective-date window may
+          be amended, per schemas/domain_permission.py's own
+          VersionDomainPermissionRequest scope note.
+        """
+        current = await self.domain_permission_repo.get_by_id(domain_permission_id)
+        if current is None:
+            record_audit(
+                action="VERSION_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{domain_permission_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target domain permission does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No domain permission found with id '{domain_permission_id}'.",
+            )
+
+        if current.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="VERSION_DOMAIN_PERMISSION",
+                resource=f"domain_permission:{domain_permission_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target domain permission is not the current ACTIVE version"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Domain permission '{domain_permission_id}' is not the current ACTIVE version; version its current version instead.",
+            )
+
+        now = datetime.now(timezone.utc)
+        current.status = VersionStatus.SUPERSEDED.value
+        current.effective_to = now
+
+        new_version = await self.domain_permission_repo.create(
+            {
+                "membership_id": current.membership_id,
+                "domain_id": current.domain_id,
+                "permission_level": current.permission_level,
+                "version": current.version + 1,
+                "status": VersionStatus.ACTIVE.value,
+                "effective_from": request.effective_from or now,
+                "effective_to": request.effective_to,
+                "approval_reference": request.approval_reference,
+                "supersedes_id": current.id,
+            }
+        )
+        await self.domain_permission_repo.session.flush()
+
+        record_audit(
+            action="VERSION_DOMAIN_PERMISSION",
+            resource=f"domain_permission:{new_version.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"supersedes_id": str(current.id), "version": new_version.version},
+        )
+        publish_event(
+            "DOMAIN_PERMISSION_VERSIONED",
+            {
+                "domain_permission_id": str(new_version.id),
+                "supersedes_id": str(current.id),
+                "version": new_version.version,
+            },
+        )
+        return new_version

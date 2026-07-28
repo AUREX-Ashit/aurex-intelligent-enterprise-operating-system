@@ -22,12 +22,14 @@ object table — it establishes exactly one Role row and nothing else.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
-from models.role import Role
+from models.role import Role, VersionStatus
 from repositories.role_repository import RoleRepository
-from schemas.role import EstablishRoleRequest
+from schemas.role import EstablishRoleRequest, VersionRoleRequest
 from observability import record_audit, publish_event, AuditStatus
 
 
@@ -104,3 +106,112 @@ class RoleService:
             },
         )
         return role
+
+    async def create_new_version(
+        self, role_id, request: VersionRoleRequest, actor_id: str | None = None
+    ) -> Role:
+        """
+        Business Activity: Version and Re-effective-Date Authorization
+        Policy Object (BA-07), applied to Role.
+
+        Structural rules (BR-C003-05, EX-C003-07 Context Required):
+        - The target Role must already exist and currently be ACTIVE
+          (404 if it does not exist; 409 if the given id already names a
+          SUPERSEDED, historical version — only the current version may
+          be versioned again).
+        - The prior version is preserved, never mutated in place: its
+          effective_to is closed and its status becomes SUPERSEDED; a new
+          row is created carrying the amendment, version + 1, and
+          supersedes_id pointing at the row it replaces.
+        - role_code and is_system_role are never amended here (identity
+          and fundamental type are outside EX-C003-07's own scope).
+        """
+        current = await self.role_repo.get_by_id(role_id)
+        if current is None:
+            record_audit(
+                action="VERSION_ROLE",
+                resource=f"role:{role_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target role does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No role found with id '{role_id}'.",
+            )
+
+        if current.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="VERSION_ROLE",
+                resource=f"role:{role_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target role is not the current ACTIVE version"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Role '{role_id}' is not the current ACTIVE version; version its current version instead.",
+            )
+
+        now = datetime.now(timezone.utc)
+        current.status = VersionStatus.SUPERSEDED.value
+        current.effective_to = now
+
+        try:
+            new_version = await self.role_repo.create(
+                {
+                    "role_code": current.role_code,
+                    "role_name": request.role_name if request.role_name is not None else current.role_name,
+                    "description": request.description if request.description is not None else current.description,
+                    "is_system_role": current.is_system_role,
+                    "version": current.version + 1,
+                    "status": VersionStatus.ACTIVE.value,
+                    "effective_from": request.effective_from or now,
+                    "effective_to": request.effective_to,
+                    "approval_reference": request.approval_reference,
+                    "supersedes_id": current.id,
+                }
+            )
+            await self.role_repo.session.flush()
+        except IntegrityError:
+            # Closes a concurrent-double-amendment race against the same
+            # role_id: two callers both reading the same ACTIVE current
+            # row would both attempt to insert a new ACTIVE row sharing
+            # role_code, which the partial unique index on
+            # (role_code, status='ACTIVE') rejects as the second insert's
+            # constraint violation — surfaced here as a clean 409 rather
+            # than an unhandled 500, same basis as establish()'s own
+            # concurrent-duplicate handling.
+            await self.role_repo.session.rollback()
+            record_audit(
+                action="VERSION_ROLE",
+                resource=f"role:{role_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "concurrent version amendment already superseded this role"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Role '{role_id}' was concurrently versioned by another request; re-fetch its current version and retry.",
+            )
+
+        record_audit(
+            action="VERSION_ROLE",
+            resource=f"role:{new_version.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "supersedes_id": str(current.id),
+                "version": new_version.version,
+            },
+        )
+        publish_event(
+            "ROLE_VERSIONED",
+            {
+                "role_id": str(new_version.id),
+                "supersedes_id": str(current.id),
+                "version": new_version.version,
+                "role_name": new_version.role_name,
+            },
+        )
+        return new_version

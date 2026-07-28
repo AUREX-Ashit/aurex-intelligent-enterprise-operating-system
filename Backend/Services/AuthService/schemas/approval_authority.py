@@ -60,6 +60,31 @@ class EstablishApprovalAuthorityRequest(BaseModel):
         return self
 
 
+class VersionApprovalAuthorityRequest(BaseModel):
+    """
+    Request body for Version and Re-effective-Date Authorization Policy
+    Object (BA-07, WP-02 / C-003, realizing ERB-C003-02 / EX-C003-07),
+    applied to Approval Authority. Amendable fields are metadata only
+    (authority_name, majority_threshold_pct) — approval_strategy and
+    scope_type/domain_id/object_type/object_id (BR-C003-01's structural
+    rule) are not amendable here, per EX-C003-07's own Trigger scope:
+    "does not change its fundamental type or structural rule conformance."
+    """
+    authority_name: str | None = Field(None, min_length=1, max_length=255, description="Amended authority name. Omit to leave unchanged.")
+    majority_threshold_pct: int | None = Field(None, ge=0, le=100, description="Amended threshold. Omit to leave unchanged.")
+    effective_from: datetime | None = Field(None, description="Defaults to now if omitted.")
+    effective_to: datetime | None = Field(None, description="NULL = open-ended.")
+    approval_reference: str | None = Field(None, max_length=255, description="Optional free-text reference to the authority approving this version (SD-002-011).")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "authority_name": "Annual Report Approver (Revised)",
+            }
+        }
+    }
+
+
 class ApprovalAuthorityResponse(BaseModel):
     """Establish Approval Authority's success response."""
     id: UUID
@@ -71,6 +96,12 @@ class ApprovalAuthorityResponse(BaseModel):
     domain_id: UUID | None
     object_type: str | None
     object_id: UUID | None
+    version: int
+    status: str
+    effective_from: datetime
+    effective_to: datetime | None
+    approval_reference: str | None
+    supersedes_id: UUID | None
     created_at: datetime
     updated_at: datetime | None
 

@@ -30,6 +30,32 @@ class EstablishDomainPermissionRequest(BaseModel):
     }
 
 
+class VersionDomainPermissionRequest(BaseModel):
+    """
+    Request body for Version and Re-effective-Date Authorization Policy
+    Object (BA-07, WP-02 / C-003, realizing ERB-C003-02 / EX-C003-07),
+    applied to Domain Permission. Domain Permission has no metadata field
+    distinct from its structural grant itself (membership_id, domain_id,
+    permission_level are each BR-C003-01's structural rule and are not
+    amendable here) — this Business Activity is therefore pure
+    re-effective-dating for this object type: only the effective-date
+    window may be amended, per EX-C003-07's own Trigger scope ("an
+    amended effective-date window... that does not change its
+    fundamental type or structural rule conformance").
+    """
+    effective_from: datetime | None = Field(None, description="Defaults to now if omitted.")
+    effective_to: datetime | None = Field(None, description="NULL = open-ended.")
+    approval_reference: str | None = Field(None, max_length=255, description="Optional free-text reference to the authority approving this version (SD-002-011).")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "effective_to": "2027-01-01T00:00:00Z",
+            }
+        }
+    }
+
+
 class DomainPermissionResponse(BaseModel):
     """Establish Domain Permission's success response."""
     id: UUID
@@ -38,6 +64,10 @@ class DomainPermissionResponse(BaseModel):
     permission_level: str
     effective_from: datetime
     effective_to: datetime | None
+    version: int
+    status: str
+    approval_reference: str | None
+    supersedes_id: UUID | None
     created_at: datetime
     updated_at: datetime | None
 

@@ -37,13 +37,15 @@ technical debt (TD-024).
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
 
-from models.delegation_policy import DelegationPolicy, DelegationScopeType
+from models.delegation_policy import DelegationPolicy, DelegationScopeType, VersionStatus
 from repositories.delegation_policy_repository import DelegationPolicyRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
-from schemas.delegation_policy import EstablishDelegationPolicyRequest
+from schemas.delegation_policy import EstablishDelegationPolicyRequest, VersionDelegationPolicyRequest
 from observability import record_audit, publish_event, AuditStatus
 
 
@@ -148,3 +150,89 @@ class DelegationPolicyService:
             },
         )
         return delegation_policy
+
+    async def create_new_version(
+        self, delegation_policy_id, request: VersionDelegationPolicyRequest, actor_id: str | None = None
+    ) -> DelegationPolicy:
+        """
+        Business Activity: Version and Re-effective-Date Authorization
+        Policy Object (BA-07), applied to Delegation Policy.
+
+        Structural rules (BR-C003-05, EX-C003-07 Context Required):
+        - The target Delegation Policy must already exist and currently
+          be ACTIVE (404 if it does not exist; 409 if the given id
+          already names a SUPERSEDED, historical version).
+        - The prior version is preserved, never mutated in place.
+        - delegation_type and scope_type/domain_id/object_type/
+          object_id/event_code are never amended here (structural rule
+          conformance is outside EX-C003-07's own scope).
+        """
+        current = await self.delegation_policy_repo.get_by_id(delegation_policy_id)
+        if current is None:
+            record_audit(
+                action="VERSION_DELEGATION_POLICY",
+                resource=f"delegation_policy:{delegation_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target delegation policy does not exist"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No delegation policy found with id '{delegation_policy_id}'.",
+            )
+
+        if current.status != VersionStatus.ACTIVE.value:
+            record_audit(
+                action="VERSION_DELEGATION_POLICY",
+                resource=f"delegation_policy:{delegation_policy_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target delegation policy is not the current ACTIVE version"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Delegation policy '{delegation_policy_id}' is not the current ACTIVE version; version its current version instead.",
+            )
+
+        now = datetime.now(timezone.utc)
+        current.status = VersionStatus.SUPERSEDED.value
+        current.effective_to = now
+
+        new_version = await self.delegation_policy_repo.create(
+            {
+                "organization_id": current.organization_id,
+                "policy_name": request.policy_name if request.policy_name is not None else current.policy_name,
+                "delegation_type": current.delegation_type,
+                "scope_type": current.scope_type,
+                "sub_delegation_allowed": request.sub_delegation_allowed if request.sub_delegation_allowed is not None else current.sub_delegation_allowed,
+                "domain_id": current.domain_id,
+                "object_type": current.object_type,
+                "object_id": current.object_id,
+                "event_code": current.event_code,
+                "version": current.version + 1,
+                "status": VersionStatus.ACTIVE.value,
+                "effective_from": request.effective_from or now,
+                "effective_to": request.effective_to,
+                "approval_reference": request.approval_reference,
+                "supersedes_id": current.id,
+            }
+        )
+        await self.delegation_policy_repo.session.flush()
+
+        record_audit(
+            action="VERSION_DELEGATION_POLICY",
+            resource=f"delegation_policy:{new_version.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={"supersedes_id": str(current.id), "version": new_version.version},
+        )
+        publish_event(
+            "DELEGATION_POLICY_VERSIONED",
+            {
+                "delegation_policy_id": str(new_version.id),
+                "supersedes_id": str(current.id),
+                "version": new_version.version,
+                "policy_name": new_version.policy_name,
+            },
+        )
+        return new_version

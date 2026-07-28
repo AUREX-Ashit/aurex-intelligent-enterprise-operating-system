@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, String, DateTime, Boolean, ForeignKey
+from sqlalchemy import CheckConstraint, String, DateTime, Boolean, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.database import Base
@@ -11,6 +11,19 @@ from models.database import Base
 if TYPE_CHECKING:
     from models.organization import Organization
     from models.domain import Domain
+
+
+class VersionStatus(str, Enum):
+    """
+    SD-002-011's Canonical Temporal Model Status property (WP-02 BA-07,
+    ERB-C003-02/EX-C003-07). ACTIVE is the object's current, in-force
+    version; SUPERSEDED is a preserved prior version (BR-C003-05 — never
+    invalidated, deprecated, or retired by being superseded). Deprecated/
+    Retired states belong to a future Business Activity (EX-C003-08) and
+    are not added here.
+    """
+    ACTIVE = "ACTIVE"
+    SUPERSEDED = "SUPERSEDED"
 
 
 class DelegationScopeType(str, Enum):
@@ -59,6 +72,10 @@ class DelegationPolicy(Base):
             "(scope_type = 'OBJECT' AND domain_id IS NULL AND object_type IS NOT NULL AND object_id IS NOT NULL AND event_code IS NULL) OR "
             "(scope_type = 'EVENT' AND domain_id IS NULL AND object_type IS NULL AND object_id IS NULL AND event_code IS NOT NULL)",
             name="ck_delegation_policies_scope_consistency",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'SUPERSEDED')",
+            name="ck_delegation_policies_status",
         ),
     )
 
@@ -120,6 +137,44 @@ class DelegationPolicy(Base):
     )
     """URA-001-92: organizations explicitly permit or prohibit further delegation of an already-delegated authority."""
 
+    version: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1"
+    )
+    """WP-02 BA-07: SD-002-011 Version property."""
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default=VersionStatus.ACTIVE.value,
+        server_default=VersionStatus.ACTIVE.value,
+    )
+    """WP-02 BA-07: SD-002-011 Status property (VersionStatus)."""
+
+    effective_from: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
+    """WP-02 BA-07: SD-002-011 Effective From property."""
+
+    effective_to: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    """WP-02 BA-07: SD-002-011 Effective To property. NULL while this version remains current."""
+
+    approval_reference: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+    """WP-02 BA-07: SD-002-011 Approval Reference property. Free-text (Contract 5.3 — never a workflow C-003 executes itself)."""
+
+    supersedes_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("delegation_policies.id"),
+        nullable=True
+    )
+    """WP-02 BA-07: BR-C003-05's prior-version link. 'Superseded By' is the derived inverse relationship, never a second stored column."""
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
@@ -134,3 +189,6 @@ class DelegationPolicy(Base):
     # Relationships
     organization: Mapped["Organization"] = relationship("Organization", foreign_keys=[organization_id])
     domain: Mapped["Domain | None"] = relationship("Domain", foreign_keys=[domain_id])
+    supersedes: Mapped["DelegationPolicy | None"] = relationship(
+        "DelegationPolicy", remote_side=[id], foreign_keys=[supersedes_id], backref="superseded_by_one"
+    )

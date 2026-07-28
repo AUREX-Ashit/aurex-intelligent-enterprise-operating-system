@@ -71,6 +71,32 @@ class EstablishDelegationPolicyRequest(BaseModel):
         return self
 
 
+class VersionDelegationPolicyRequest(BaseModel):
+    """
+    Request body for Version and Re-effective-Date Authorization Policy
+    Object (BA-07, WP-02 / C-003, realizing ERB-C003-02 / EX-C003-07),
+    applied to Delegation Policy. Amendable fields are metadata only
+    (policy_name, sub_delegation_allowed) — delegation_type and
+    scope_type/domain_id/object_type/object_id/event_code (BR-C003-01's
+    structural rule) are not amendable here, per EX-C003-07's own Trigger
+    scope: "does not change its fundamental type or structural rule
+    conformance."
+    """
+    policy_name: str | None = Field(None, min_length=1, max_length=255, description="Amended policy name. Omit to leave unchanged.")
+    sub_delegation_allowed: bool | None = Field(None, description="Amended sub-delegation permission (URA-001-92). Omit to leave unchanged.")
+    effective_from: datetime | None = Field(None, description="Defaults to now if omitted.")
+    effective_to: datetime | None = Field(None, description="NULL = open-ended.")
+    approval_reference: str | None = Field(None, max_length=255, description="Optional free-text reference to the authority approving this version (SD-002-011).")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "sub_delegation_allowed": True,
+            }
+        }
+    }
+
+
 class DelegationPolicyResponse(BaseModel):
     """Establish Delegation Policy's success response."""
     id: UUID
@@ -83,6 +109,12 @@ class DelegationPolicyResponse(BaseModel):
     object_type: str | None
     object_id: UUID | None
     event_code: str | None
+    version: int
+    status: str
+    effective_from: datetime
+    effective_to: datetime | None
+    approval_reference: str | None
+    supersedes_id: UUID | None
     created_at: datetime
     updated_at: datetime | None
 

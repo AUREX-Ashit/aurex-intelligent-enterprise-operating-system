@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +9,7 @@ from models.database import db_manager
 from repositories.approval_authority_repository import ApprovalAuthorityRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
-from schemas.approval_authority import EstablishApprovalAuthorityRequest, ApprovalAuthorityResponse
+from schemas.approval_authority import EstablishApprovalAuthorityRequest, ApprovalAuthorityResponse, VersionApprovalAuthorityRequest
 from services.approval_authority_service import ApprovalAuthorityService
 
 router = APIRouter()
@@ -79,4 +80,41 @@ async def establish_approval_authority(
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> ApprovalAuthorityResponse:
     approval_authority = await approval_authority_service.establish(request, actor_id=claims.get("person_id"))
+    return ApprovalAuthorityResponse.model_validate(approval_authority)
+
+
+@router.post(
+    "/{approval_authority_id}/versions",
+    response_model=ApprovalAuthorityResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Version and re-effective-date an Approval Authority",
+    description=(
+        "WP-02 Business Activity: Version and Re-effective-Date "
+        "Authorization Policy Object (C-003), realizing PE-001-C003's "
+        "ERB-C003-02 / EX-C003-07. Amends authority_name/"
+        "majority_threshold_pct and/or the effective-date window without "
+        "changing approval_strategy or scope (outside this Business "
+        "Activity's non-breaking scope). Preserves the prior version as "
+        "an inspectable, SUPERSEDED historical record (BR-C003-05). "
+        "Requires the PLATFORM_ADMIN role (same interim gate as BA-03)."
+    ),
+    responses={
+        201: {"description": "New version established; prior version preserved as SUPERSEDED."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Approval Authority does not exist."},
+        409: {"description": "The target Approval Authority id does not name the current ACTIVE version."},
+        422: {"description": "Invalid request."},
+    },
+)
+async def version_approval_authority(
+    approval_authority_id: UUID,
+    request: VersionApprovalAuthorityRequest,
+    approval_authority_service: Annotated[ApprovalAuthorityService, Depends(get_approval_authority_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> ApprovalAuthorityResponse:
+    approval_authority = await approval_authority_service.create_new_version(
+        approval_authority_id, request, actor_id=claims.get("person_id")
+    )
     return ApprovalAuthorityResponse.model_validate(approval_authority)

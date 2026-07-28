@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, String, DateTime, ForeignKey
+from sqlalchemy import CheckConstraint, String, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.database import Base
@@ -11,6 +11,19 @@ from models.database import Base
 if TYPE_CHECKING:
     from models.membership import Membership
     from models.domain import Domain
+
+
+class VersionStatus(str, Enum):
+    """
+    SD-002-011's Canonical Temporal Model Status property (WP-02 BA-07,
+    ERB-C003-02/EX-C003-07). ACTIVE is the object's current, in-force
+    version; SUPERSEDED is a preserved prior version (BR-C003-05 — never
+    invalidated, deprecated, or retired by being superseded). Deprecated/
+    Retired states belong to a future Business Activity (EX-C003-08) and
+    are not added here.
+    """
+    ACTIVE = "ACTIVE"
+    SUPERSEDED = "SUPERSEDED"
 
 
 class DomainPermissionLevel(str, Enum):
@@ -42,6 +55,10 @@ class DomainPermission(Base):
         CheckConstraint(
             "permission_level IN ('VIEW', 'ENTER', 'EDIT', 'REVIEW', 'APPROVE', 'ASSIGN', 'DELEGATE', 'ADMIN')",
             name="ck_domain_permissions_permission_level",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'SUPERSEDED')",
+            name="ck_domain_permissions_status",
         ),
     )
 
@@ -79,6 +96,32 @@ class DomainPermission(Base):
     )
     """NULL = open-ended, currently active (URA-001-53: permissions may be time-bound, not always)."""
 
+    version: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1"
+    )
+    """WP-02 BA-07: SD-002-011 Version property."""
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default=VersionStatus.ACTIVE.value,
+        server_default=VersionStatus.ACTIVE.value,
+    )
+    """WP-02 BA-07: SD-002-011 Status property (VersionStatus)."""
+
+    approval_reference: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+    """WP-02 BA-07: SD-002-011 Approval Reference property. Free-text (Contract 5.3 — never a workflow C-003 executes itself)."""
+
+    supersedes_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("domain_permissions.id"),
+        nullable=True
+    )
+    """WP-02 BA-07: BR-C003-05's prior-version link. 'Superseded By' is the derived inverse relationship, never a second stored column."""
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
@@ -93,3 +136,6 @@ class DomainPermission(Base):
     # Relationships
     membership: Mapped["Membership"] = relationship("Membership")
     domain: Mapped["Domain"] = relationship("Domain")
+    supersedes: Mapped["DomainPermission | None"] = relationship(
+        "DomainPermission", remote_side=[id], foreign_keys=[supersedes_id], backref="superseded_by_one"
+    )
