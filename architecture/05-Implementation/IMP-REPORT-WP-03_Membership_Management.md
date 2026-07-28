@@ -314,9 +314,13 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **BA-02 — Understand Membership Context:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`214a92c`, `53b67ab`).
 
-**BA-03 — Maintain Membership Terms:** Implementation COMPLETE (372/372 full suite passing, zero regressions, naive/aware datetime defect found and fixed within this same pass). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings — missing gap-analysis artifact, the datetime defect, and BA-04's open disposition — resolved in this same update, not deferred). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01/BA-02's own precedent).
+**BA-03 — Maintain Membership Terms:** Implementation COMPLETE (372/372 full suite passing, zero regressions, naive/aware datetime defect found and fixed within this same pass). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings — missing gap-analysis artifact, the datetime defect, and BA-04's open disposition — resolved in this same update, not deferred). Committed to `master` in two commits — `57e2d40` (implementation: 6 files) and `5dd320b` (documentation: this report, TECH-DEBT.md TD-035, WPR-001 status update).
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`) and BA-02 (`214a92c`, `53b67ab`) are committed to `master`. BA-03 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-03.
+**Commit Hash (BA-03):** `57e2d40` (implementation), `5dd320b` (documentation: implementation report, TECH-DEBT.md, WPR-001)
+
+**Commit Date (BA-03):** 2026-07-29 (both commits)
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), and BA-03 (`57e2d40`, `5dd320b`) are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-03.
 
 ---
 
