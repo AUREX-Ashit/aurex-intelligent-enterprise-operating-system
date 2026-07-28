@@ -562,9 +562,13 @@ Additionally confirmed: BA-08's own EX-C007-10 scope was not silently absorbed i
 
 **Commit Date (BA-06):** 2026-07-29 (both commits)
 
-**BA-07 — Surface Multi-Organization Membership Awareness:** Implementation COMPLETE (395/395 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-039, TD-040, neither blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-06's own precedent).
+**BA-07 — Surface Multi-Organization Membership Awareness:** Implementation COMPLETE (395/395 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-039, TD-040, neither blocking). Committed to `master` in two commits — `3f699ae` (implementation: 6 files) and `c6a14f2` (documentation: this report, TECH-DEBT.md TD-039/040, IRA-003, WPR-001 status update).
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), and BA-06 (`c5b6383`, `0f2efa3`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-07 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-07.
+**Commit Hash (BA-07):** `3f699ae` (implementation), `c6a14f2` (documentation: implementation report, TECH-DEBT.md, IRA-003, WPR-001)
+
+**Commit Date (BA-07):** 2026-07-29 (both commits)
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), and BA-07 (`3f699ae`, `c6a14f2`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-07.
 
 ---
 
