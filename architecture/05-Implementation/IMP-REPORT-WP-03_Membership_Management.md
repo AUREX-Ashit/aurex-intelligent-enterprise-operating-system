@@ -101,13 +101,13 @@ No other existing model, repository, service, or router was modified.
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** Pending — recorded in the follow-up commit-hash update to this report, per CLAUDE.md §19.7's Repository completion gate (implementation commit, then documentation commit).
+**Repository Commit:** Committed to `master` in two commits — `8e1d276` (implementation: 14 files) and `cc3f3cd` (documentation: this report, TECH-DEBT.md TD-031/032/033, WPR-001 status update).
 
-**Commit Hash:** *(to be recorded once committed)*
+**Commit Hash:** `8e1d276` (implementation), `cc3f3cd` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** *(to be recorded once committed)*
+**Commit Date:** 2026-07-29 (both commits)
 
-**Current Repository Status:** All WP-03 BA-01 implementation files (new and modified, listed under Documents Updated above) are complete and test-passing but were found **uncommitted** in the working tree at the start of this reporting pass — the prior session that implemented BA-01 terminated before writing this report, registering TD-031/032/033, updating WPR-001, or committing. This report, the TECH-DEBT.md additions, and the WPR-001 update close that gap. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and several untracked AI-governance-audit-remediation documents — `Master_Cluade_Code_Engineering_Prompt.md`, `PE-001_Capability_Engineering_Master_Prompt_v1.0.md`, `architecture/05-Implementation/WP-01A_Canonical_Coverage_Resolution.md`, `architecture/06-Reviews/AAR-001_Architecture_Audit_Remediation_Register.md`, `architecture/06-Reviews/ARM-002_Implementation_Report.md`, `architecture/06-Reviews/CERT-WP-01_Organization_Management.md`, `architecture/06-Reviews/ENTERPRISE-AI-ARCHITECTURE-AUDIT.md`) are confirmed unrelated to WP-03 — ARM-001's own report already discloses these were "deliberately left unstaged and uncommitted" — and remain outside this Business Activity's scope, not part of either commit this report describes.
+**Current Repository Status:** All WP-03 BA-01 artifacts are committed to `master` — implementation (14 files, `8e1d276`) and documentation (this report, TECH-DEBT.md TD-031/032/033, WPR-001 status update, `cc3f3cd`). The implementation files had been produced by a prior session that terminated before writing this report, registering TD-031/032/033, updating WPR-001, or committing; this reporting pass verified the implementation (full suite re-run: 341/341 passing, single Alembic head confirmed) and closed that gap. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and several untracked AI-governance-audit-remediation documents — `Master_Cluade_Code_Engineering_Prompt.md`, `PE-001_Capability_Engineering_Master_Prompt_v1.0.md`, `architecture/05-Implementation/WP-01A_Canonical_Coverage_Resolution.md`, `architecture/06-Reviews/AAR-001_Architecture_Audit_Remediation_Register.md`, `architecture/06-Reviews/ARM-002_Implementation_Report.md`, `architecture/06-Reviews/CERT-WP-01_Organization_Management.md`, `architecture/06-Reviews/ENTERPRISE-AI-ARCHITECTURE-AUDIT.md`) are confirmed unrelated to WP-03 — ARM-001's own report already discloses these were "deliberately left unstaged and uncommitted" — and remain outside this Business Activity's scope, not part of either commit above.
 
 ---
 
