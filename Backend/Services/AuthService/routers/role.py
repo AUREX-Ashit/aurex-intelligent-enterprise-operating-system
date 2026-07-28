@@ -1,13 +1,17 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import require_platform_admin
 from models.database import db_manager
+from repositories.domain_repository import DomainRepository
+from repositories.organization_repository import OrganizationRepository
 from repositories.role_repository import RoleRepository
+from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
 from schemas.role import EstablishRoleRequest, RoleResponse, VersionRoleRequest
+from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 from services.role_service import RoleService
 
 router = APIRouter()
@@ -27,6 +31,25 @@ async def get_role_service(
     role_repo: Annotated[RoleRepository, Depends(get_role_repository)],
 ) -> RoleService:
     return RoleService(role_repo)
+
+
+async def get_organization_repository(
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+) -> OrganizationRepository:
+    return OrganizationRepository(session)
+
+
+async def get_domain_repository(
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+) -> DomainRepository:
+    return DomainRepository(session)
+
+
+async def get_authorization_policy_conflict_service(
+    organization_repo: Annotated[OrganizationRepository, Depends(get_organization_repository)],
+    domain_repo: Annotated[DomainRepository, Depends(get_domain_repository)],
+) -> AuthorizationPolicyConflictService:
+    return AuthorizationPolicyConflictService(organization_repo, domain_repo)
 
 
 # ---------------------------------------------------------------------------
@@ -169,3 +192,76 @@ async def retire_role(
 ) -> RoleResponse:
     role = await role_service.retire(role_id, actor_id=claims.get("person_id"))
     return RoleResponse.model_validate(role)
+
+
+@router.post(
+    "/{role_id}/dependency-check",
+    response_model=DependencyConflictReport,
+    status_code=status.HTTP_200_OK,
+    summary="Detect Authorization Policy Dependency Conflict for a Role",
+    description=(
+        "WP-02 Business Activity: Detect and Resolve Authorization "
+        "Policy Dependency Conflict (C-003) — BA-09, realizing "
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Enumerates every "
+        "currently-active dependent (Membership, BR-C003-04) and checks "
+        "version-chain and temporal integrity, before a proposed "
+        "deprecation, retirement, or breaking amendment proceeds. Does "
+        "not itself deprecate or retire (BA-08's own capability, "
+        "unchanged). Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Dependency conflict report produced (has_conflicts indicates whether the change may proceed)."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Role does not exist."},
+    },
+)
+async def check_role_dependencies(
+    role_id: UUID,
+    role_repo: Annotated[RoleRepository, Depends(get_role_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DependencyConflictReport:
+    role = await role_repo.get_by_id(role_id)
+    if role is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No role found with id '{role_id}'.")
+    return await conflict_service.detect_conflicts("role", role, role_repo)
+
+
+@router.post(
+    "/{role_id}/resolve-dependency",
+    response_model=DependencyConflictReport,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve an Authorization Policy Dependency Conflict for a Role",
+    description=(
+        "WP-02 Business Activity: Detect and Resolve Authorization "
+        "Policy Dependency Conflict (C-003) — BA-09, realizing "
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Records the proposing "
+        "authority's explicit resolution statement (Contract 5.6 — "
+        "reassignment, natural expiry, or an affirmative accepted "
+        "break; never a silent default) and re-runs the dependency "
+        "check. Never mutates a Membership's own record (Contract "
+        "5.1's C-007 boundary). Requires the PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Resolution recorded; current dependency conflict report returned."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Role, or the supplied replacement_target_id, does not exist."},
+        409: {"description": "The supplied replacement_target_id is not the current ACTIVE version."},
+        422: {"description": "REASSIGNMENT_CONFIRMED requires replacement_target_id, or it names the object being replaced."},
+    },
+)
+async def resolve_role_dependency(
+    role_id: UUID,
+    request: ResolveDependencyConflictRequest,
+    role_repo: Annotated[RoleRepository, Depends(get_role_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DependencyConflictReport:
+    role = await role_repo.get_by_id(role_id)
+    if role is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No role found with id '{role_id}'.")
+    return await conflict_service.resolve_conflict("role", role, role_repo, request, actor_id=claims.get("person_id"))

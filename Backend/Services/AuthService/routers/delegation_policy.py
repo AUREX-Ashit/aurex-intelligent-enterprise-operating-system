@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import require_platform_admin
@@ -9,7 +9,9 @@ from models.database import db_manager
 from repositories.delegation_policy_repository import DelegationPolicyRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
+from schemas.authorization_policy_conflict import DependencyConflictReport, ResolveDependencyConflictRequest
 from schemas.delegation_policy import EstablishDelegationPolicyRequest, DelegationPolicyResponse, VersionDelegationPolicyRequest
+from services.authorization_policy_conflict_service import AuthorizationPolicyConflictService
 from services.delegation_policy_service import DelegationPolicyService
 
 router = APIRouter()
@@ -43,6 +45,13 @@ async def get_delegation_policy_service(
     domain_repo: Annotated[DomainRepository, Depends(get_domain_repository)],
 ) -> DelegationPolicyService:
     return DelegationPolicyService(delegation_policy_repo, organization_repo, domain_repo)
+
+
+async def get_authorization_policy_conflict_service(
+    organization_repo: Annotated[OrganizationRepository, Depends(get_organization_repository)],
+    domain_repo: Annotated[DomainRepository, Depends(get_domain_repository)],
+) -> AuthorizationPolicyConflictService:
+    return AuthorizationPolicyConflictService(organization_repo, domain_repo)
 
 
 # ---------------------------------------------------------------------------
@@ -180,3 +189,68 @@ async def retire_delegation_policy(
 ) -> DelegationPolicyResponse:
     delegation_policy = await delegation_policy_service.retire(delegation_policy_id, actor_id=claims.get("person_id"))
     return DelegationPolicyResponse.model_validate(delegation_policy)
+
+
+@router.post(
+    "/{delegation_policy_id}/dependency-check",
+    response_model=DependencyConflictReport,
+    status_code=status.HTTP_200_OK,
+    summary="Detect Authorization Policy Dependency Conflict for a Delegation Policy",
+    description=(
+        "WP-02 Business Activity: Detect and Resolve Authorization "
+        "Policy Dependency Conflict (C-003) — BA-09, realizing "
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Dependency conflict report produced."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Delegation Policy does not exist."},
+    },
+)
+async def check_delegation_policy_dependencies(
+    delegation_policy_id: UUID,
+    delegation_policy_repo: Annotated[DelegationPolicyRepository, Depends(get_delegation_policy_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DependencyConflictReport:
+    policy = await delegation_policy_repo.get_by_id(delegation_policy_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No delegation policy found with id '{delegation_policy_id}'.")
+    return await conflict_service.detect_conflicts("delegation_policy", policy, delegation_policy_repo)
+
+
+@router.post(
+    "/{delegation_policy_id}/resolve-dependency",
+    response_model=DependencyConflictReport,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve an Authorization Policy Dependency Conflict for a Delegation Policy",
+    description=(
+        "WP-02 Business Activity: Detect and Resolve Authorization "
+        "Policy Dependency Conflict (C-003) — BA-09, realizing "
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires the "
+        "PLATFORM_ADMIN role."
+    ),
+    responses={
+        200: {"description": "Resolution recorded; current dependency conflict report returned."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "The target Delegation Policy, or the supplied replacement_target_id, does not exist."},
+        409: {"description": "The supplied replacement_target_id is not the current ACTIVE version."},
+        422: {"description": "REASSIGNMENT_CONFIRMED requires replacement_target_id, or it names the object being replaced."},
+    },
+)
+async def resolve_delegation_policy_dependency(
+    delegation_policy_id: UUID,
+    request: ResolveDependencyConflictRequest,
+    delegation_policy_repo: Annotated[DelegationPolicyRepository, Depends(get_delegation_policy_repository)],
+    conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DependencyConflictReport:
+    policy = await delegation_policy_repo.get_by_id(delegation_policy_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No delegation policy found with id '{delegation_policy_id}'.")
+    return await conflict_service.resolve_conflict("delegation_policy", policy, delegation_policy_repo, request, actor_id=claims.get("person_id"))

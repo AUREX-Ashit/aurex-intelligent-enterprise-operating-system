@@ -36,14 +36,23 @@ class DomainPermissionRepository(BaseRepository[DomainPermission]):
         )
         return result.scalars().first()
 
+    async def get_active_dependents(self, domain_permission_id: uuid.UUID) -> list[dict]:
+        """
+        WP-02 BA-09 (ERB-C003-03/EX-C003-09's enumeration requirement):
+        unlike Role, no table anywhere in this schema references a
+        Domain Permission row by id — a Domain Permission is itself the
+        leaf grant (URA-001-47), not a policy other rows point back to.
+        Always returns an empty list, disclosed here rather than
+        silently omitted — this is an architectural fact about Domain
+        Permission's own shape, not an unimplemented check.
+        """
+        return []
+
     async def has_active_dependents(self, domain_permission_id: uuid.UUID) -> bool:
         """
-        WP-02 BA-08 (BR-C003-04's dependency-check requirement): unlike
-        Role, no table anywhere in this schema references a Domain
-        Permission row by id — a Domain Permission is itself the leaf
-        grant (URA-001-47), not a policy other rows point back to.
-        Always returns False, disclosed here rather than silently
-        omitted — this is an architectural fact about Domain Permission's
-        own shape, not an unimplemented check.
+        WP-02 BA-08 (BR-C003-04's dependency-check requirement). Reuses
+        get_active_dependents() (WP-02 BA-09) as its own single source
+        of truth, per the instruction not to duplicate dependency logic
+        between the two Business Activities.
         """
-        return False
+        return len(await self.get_active_dependents(domain_permission_id)) > 0
