@@ -62,6 +62,7 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-032 | `Membership.home_node_id` (BA-01, WP-03/C-007) is nullable, though URA-001-17b/ERG-001-03 specify it NOT NULL — no Business Activity anywhere yet owns "Establish Organization Node" (Enterprise Structure Management/C-005 has no IRA), so a caller cannot always supply a valid candidate. The minimal `organization_nodes` table BA-01 introduces has no establish()-style write path either; rows can only be created by direct data manipulation until that capability exists. See detailed entry below the table for full fields. | BA-01 | Data Integrity | Medium | Enterprise Structure Management (C-005)'s own future "Establish Organization Node" Business Activity, after which `home_node_id` can be tightened to NOT NULL for newly-established Memberships | Open | AuthService (Backend) |
 | TD-033 | `EstablishMembershipRequest.role_id` is required, though PE-001-C007 states verbatim "C-007 does not assign or remove Roles or Permissions" (§1.4/1.8/5.9/5.10) — this is an inherited WP-00-era schema coupling (`memberships.role_id` is NOT NULL), not a canonical requirement of BA-01 itself. BA-01 does not resolve this tension; it discloses it. See detailed entry below the table for full fields. | BA-01 | Architecture | Low | A repository-owner/architecture governance decision on whether `memberships.role_id`'s NOT NULL constraint is relaxed, reassigned to a later Business Activity's own write path, or affirmed as a correct joint Establish-time act | Open | AuthService (Backend) |
 | TD-034 | BA-02 (Understand Membership Context, WP-03/C-007) gates `GET /memberships/{id}` on the existing `PLATFORM_ADMIN` role claim only — PE-001-C007's EX-C007-03 names Membership Sponsor/Steward/Downstream Capability Consumer/Executive as its Participating Personas, none of which exists as a distinct, enforceable claim today. Same class of gap as TD-021 through TD-025/TD-031, found directly during BA-02 implementation. See detailed entry below the table for full fields. | BA-02 | Security | Low | A persona-specific authorization model covering Membership Sponsor/Steward/Downstream Capability Consumer/Executive (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for this endpoint | Open | AuthService (Backend) |
+| TD-035 | BA-03 (Maintain Membership Terms, WP-03/C-007) gates `POST /memberships/{id}/terms` on the existing `PLATFORM_ADMIN` role claim only — PE-001-C007's EX-C007-04/EX-C007-05 name Membership Steward/Sponsor as their Participating Personas, neither of which exists as a distinct, enforceable claim today. Same class of gap as TD-021 through TD-025/TD-031/TD-034, found directly during BA-03 implementation. See detailed entry below the table for full fields. | BA-03 | Security | Low | A Membership Steward/Sponsor persona authority model (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for this endpoint | Open | AuthService (Backend) |
 
 ---
 
@@ -300,6 +301,23 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-02 — Understand Membership Context
 - **Source:** BA-02 implementation (self-identified and disclosed in the router's own OpenAPI description and `membership-api.yaml`, not found only during review)
 - **Resolution Criteria:** A persona-specific authorization model exists and `GET /memberships/{membership_id}` is gated on it instead of `PLATFORM_ADMIN`; a test exists confirming a caller lacking the correct persona is rejected once the real gate replaces today's interim one.
+
+---
+
+### TD-035 — Detailed Entry
+
+- **Title:** PLATFORM_ADMIN-Only Authorization Gate for Maintain Membership Terms (EX-C007-04/05 Persona-Specific Defining Authority Deferred)
+- **Category:** Security / Authorization Granularity
+- **Description:** BA-03 (Maintain Membership Terms, WP-03/C-007) gates `POST /memberships/{membership_id}/terms` on the existing `PLATFORM_ADMIN` role claim only (`dependencies.require_platform_admin`, reused unchanged from BA-01/BA-02). PE-001-C007's EX-C007-04 (Resolve Conflicting Membership Terms) and EX-C007-05 (Change Membership Terms) both name Membership Steward/Sponsor as their Participating Personas, neither of which exists as a distinct, enforceable claim anywhere in the platform today.
+- **Root Cause:** The same unresolved-authorization-catalog gap ADR-002 already names for WP-02 (TD-021) and BA-01/BA-02 already recorded for their own personas (TD-031/TD-034) — no Membership Steward/Sponsor persona claim has ever been modeled in this codebase.
+- **Impact:** Any authenticated `PLATFORM_ADMIN` can change any Membership's terms, regardless of whether URA-001/EX-C007-04/05 would actually confer that specific defining authority to a Membership Steward or Sponsor. No privilege-escalation risk beyond what `PLATFORM_ADMIN` already holds platform-wide today; EX-C007-04/05's persona differentiation is simply not enforced. Same risk profile as TD-031/TD-034.
+- **Severity:** Low — a disclosed, deliberate simplification, the same class WP-01/WP-02/BA-01/BA-02 already established precedent for, not a silent gap.
+- **Status:** Open
+- **Target Resolution:** A Membership Steward/Sponsor persona authority model (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for `POST /memberships/{membership_id}/terms`.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-03 — Maintain Membership Terms
+- **Source:** BA-03 implementation (self-identified and disclosed in the router's own OpenAPI description and `membership-api.yaml`, not found only during review)
+- **Resolution Criteria:** A persona-specific authorization model exists and `POST /memberships/{membership_id}/terms` is gated on it instead of `PLATFORM_ADMIN`; a test exists confirming a caller lacking the correct persona is rejected once the real gate replaces today's interim one.
 
 ---
 

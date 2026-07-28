@@ -1,9 +1,9 @@
 # IMP-REPORT-WP-03 — Membership Management (C-007)
 
 **Work Package:** WP-03 — Membership Management (C-007)
-**Governing Readiness Assessment:** `IRA-003_WP-03_Membership_Management_Implementation_Readiness_Assessment.md` (Approved — WP-03 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-003 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is performed in this report (§ Gap Analysis Summary (BA-02)), extending IRA-003 §10's own preliminary Category B classification for BA-02.
+**Governing Readiness Assessment:** `IRA-003_WP-03_Membership_Management_Implementation_Readiness_Assessment.md` (Approved — WP-03 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-003 §1 and CLAUDE.md §19.7). BA-02's and BA-03's own fresh gap analyses are each performed in this report, extending IRA-003 §10's own preliminary Category B classification for BA-02 and IRA-003 §14's Category B classification for BA-03/BA-04.
 **Governing Capability Specification:** `PE-001-C007_Membership_Management.docx` (six ERBs, thirteen Enterprise Experiences, fourteen Business Rules, ten Chapter 5 Contracts)
-**Scope of this report:** BA-01 and BA-02. BA-03 through BA-11 (candidate list per IRA-003 §4) are **not started** and are not covered by this report.
+**Scope of this report:** BA-01, BA-02, and BA-03. BA-04 through BA-11 (candidate list per IRA-003 §4) are **not started** and are not covered by this report.
 
 ---
 
@@ -216,6 +216,110 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-03 — Maintain Membership Terms
+
+Realizing PE-001-C007's ERB-C007-03 (Maintain Membership Terms) / EX-C007-04 (Resolve Conflicting Membership Terms) + EX-C007-05 (Change Membership Terms). Per IRA-003 §14, BA-03/BA-04 were pre-classified **Category B** ("Extends `memberships` table fields; standard update pattern"); this section performs BA-03's own fresh gap analysis, the step IRA-003 §1/§4 explicitly deferred rather than performed itself.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Classify a requested change to a Membership's terms (`membership_type`, `license_type`, `home_node_id`, `effective_from`, `effective_to`) as either erroneous (no genuine difference from the current value) or a genuine change need, and apply only the latter — CAP-001's C-007 Business Intent ("Manage enterprise memberships"), scoped to term maintenance only.
+- **Input Contract:** `membership_id` (UUID, path parameter, required); `ChangeMembershipTermsRequest` — all fields optional, only-supplied-fields (PATCH-style) semantics: `membership_type`, `license_type`, `home_node_id`, `effective_from`, `effective_to`, `reason` (free text, audit-trail only, not validated — same disclosed class as TD-026).
+- **Output Contract:** The updated Membership (`MembershipResponse`, same shape as BA-01/BA-02), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C007-003 — a conflict between requested and existing Membership terms SHALL be classified before it is resolved. Satisfied by construction: `change_terms()` compares every supplied field against the Membership's current value; if none genuinely differ, the whole request is classified erroneous and rejected (409) rather than applied.
+  - BR-C007-004 — a term change SHALL preserve the pre-change value. Satisfied by construction: `record_audit()`'s own `previous_<field>`/`new_<field>` metadata captures the prior value of every changed field, the same traceability mechanism `OrganizationService.activate()`/`suspend()`/`retire()` already use for `previous_status` — no new versioning table, per IRA-003 §14's own Category B classification.
+  - BR-C007-006 — Membership terms SHALL remain unaffected by a standing transition, and standing SHALL remain unaffected by a term change. Satisfied by construction: `membership_status` is never read or written by `change_terms()`.
+  - BR-C007-002/007 (home-node candidate validity) — reused unchanged from BA-01: a supplied `home_node_id`, when it differs from the current value, is validated for existence (404) and `active_flag` (409) before being persisted; never invented or defaulted.
+- **Validation Rules:** Membership existence checked (404) via `MembershipRepository.get_by_id()` — reused as-is. At least one term field must be supplied (422 if the request body is empty). At least one supplied field must genuinely differ from the current value (409 otherwise, BR-C007-003).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required. **Scoped simplification, same class as TD-031/TD-034:** EX-C007-04/EX-C007-05 name Membership Steward/Sponsor as their Participating Personas; neither exists as an enforceable claim today. Disclosed explicitly, recorded as **TD-035**.
+- **Domain Events:** `MEMBERSHIP_TERMS_CHANGED` (membership_id, changed_fields).
+- **Audit Requirements:** `record_audit("CHANGE_MEMBERSHIP_TERMS", ...)` on every denial path (unknown membership, no field supplied, no genuine change, unknown/inactive home node) and on success, carrying `previous_<field>`/`new_<field>` for every changed field plus the caller-supplied `reason` — per SD-002-054's seven audit questions, same mechanism BA-01/BA-02 already established.
+- **Tests:** `tests/test_membership_service.py` (8 new unit tests: genuine-change application with prior-value preservation, no-genuine-difference rejection, empty-request rejection, unknown-membership rejection, home-node validation success/failure, standing-independence, and the naive/aware datetime regression below), `tests/test_membership_api.py` (10 new API/authorization tests) — 18 new tests, all passing; full AuthService suite (372 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-03)
+
+Reviewed: PE-001-C007 (ERB-C007-03, EX-C007-04's own Purpose text "Classify the conflict and route to rejection or to a governed term change," EX-C007-05's own Purpose text "Establish new authoritative terms while preserving prior terms," Chapter 5 Contract 5.2 "Membership Terms & Home-Node Contract," Chapter 7.3 BR-C007-002/003/004/006/007), IRA-003 §3/§4 (ERB-C007-03/EX-C007-04/05/06 derivation), IRA-003 §14 (Category B classification, "extends `memberships` table fields; standard update pattern"), IRA-003 §4's own BA-04 disposition note ("Reconfirm Home-Node Structural Congruence... may collapse into BA-03; confirm at that BA's own gap analysis" — resolved below), `IMP-REPORT-WP-03`'s own BA-01→BA-02 precedent for how a third Business Activity's report section is structured and independently reviewed, `models/membership.py` (existing `membership_type`/`license_type`/`home_node_id`/`effective_from`/`effective_to` columns, all added by BA-01 — no new column required), `repositories/membership_repository.py` (`get_by_id()`, `update()`, both inherited unchanged from `BaseRepository[Membership]`), `services/membership_service.py`'s own `_as_utc()` helper (added by BA-02 for exactly the SQLite dialect limitation BA-03 also encounters, below).
+
+**BA-04 disposition (resolved, per IRA-003 §4's own instruction to confirm at this gap analysis):** EX-C007-06 (Reconfirm Home-Node Structural Congruence) is **not** absorbed into BA-03 and is **not** implemented by it. Its own Trigger requires a structural-change signal from C-005/ERG-001 (Enterprise Structure Management) — no such signal producer exists anywhere in this codebase (C-005 has no IRA). `change_terms()`'s own `home_node_id` path is EX-C007-05's intentional-change path only (its Business Value text names "home node" as one of the terms it changes), not EX-C007-06's structural-signal-triggered reconfirmation. BA-04 therefore remains **not started**, distinct from BA-03, pending C-005's own future existence — consistent with IRA-003 §4's conditional wording, not a silent scope decision.
+
+**Key finding requiring disclosure, found during this report's own direct validation (not assumed complete from the code alone):** `change_terms()`'s initial implementation compared `effective_from`/`effective_to` values read back from the database directly against the request's supplied values, without the `_as_utc()` normalization BA-02 already built for exactly this class of problem. A reproduction (`db_session.commit()` + `db_session.refresh()`, simulating a genuinely separate request/session reading the Membership back) confirmed that SQLite's `DateTime(timezone=True)` dialect limitation returns these fields offset-naive on a fresh fetch, and Python's `!=` between an offset-naive and an offset-aware datetime never signals equality — so re-supplying the *exact same* `effective_to` value was incorrectly classified as a genuine change rather than correctly rejected under BR-C007-003. **Disposition:** fixed by applying the existing `_as_utc()` helper to both `current_value` and `new_value` for `effective_from`/`effective_to` before the equality comparison in `change_terms()` (`services/membership_service.py`) — safe because every stored value is UTC by construction, the same basis BA-02's own fix already established. A permanent regression test (`test_change_terms_detects_no_change_for_effective_to_across_a_fresh_fetch`) was added; the full suite was re-run to confirm 372/372 passing. Disclosed here as a genuine defect found and fixed during this reporting pass's own direct validation, consistent with this report's own precedent (BA-01's and BA-02's own Independent Reviews each found and closed defects the same way, not glossed over).
+
+---
+
+## Gap Analysis Summary (BA-03)
+
+- **Database:** No migration. `change_terms()` writes only to columns BA-01 already added (`membership_type`, `license_type`, `home_node_id`, `effective_from`, `effective_to`); nothing new is stored or altered, confirming IRA-003 §14's own "standard update pattern" prediction. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-03's mapping to ERB-C007-03/EX-C007-04/05 was already derived in IRA-003 §3/§4; this section performs the BA-03-specific gap analysis IRA-003 §1/§4 stated would be required before implementation, and resolves IRA-003 §4's own open BA-04 disposition question (above).
+- **API Impact:** One new endpoint, `POST /memberships/{membership_id}/terms`, added to the existing `membership-api.yaml` alongside BA-01's `POST /memberships` and BA-02's `GET /memberships/{membership_id}`. No existing endpoint's shape changed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/BA-02's own scope decision).
+- **Dependencies:** `MembershipRepository.get_by_id()`/`update()` (inherited from `BaseRepository[Membership]`, WP-00/WP-01) and `OrganizationNodeRepository.get_by_id()` (BA-01) — both reused unchanged, no new repository method. No dependency on `roles` or any other table beyond what BA-01/BA-02 already established.
+- **Risks:** TD-035 (interim PLATFORM_ADMIN gate) — Low severity, same risk profile as TD-031/TD-034, no privilege beyond what `PLATFORM_ADMIN` already holds platform-wide. The naive/aware datetime defect (above) — found and fixed within this same gap-analysis/implementation pass, not carried forward as debt, since CLAUDE.md §19.8.5 forbids deferring a misclassification-of-terms defect (BR-C007-003) as Technical Debt.
+- **Technical Debt registered:** TD-035 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-03)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-035 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-03 implemented and independently reviewed)
+
+**Implementation (modified, no new files):**
+- `Backend/Services/AuthService/schemas/membership.py` — added `ChangeMembershipTermsRequest` schema.
+- `Backend/Services/AuthService/services/membership_service.py` — added `CHANGEABLE_TERM_FIELDS`, `_audit_value()` (audit-metadata JSON-safety helper), and `MembershipService.change_terms()` (using the existing `_as_utc()` helper for the effective-date comparison fix, above).
+- `Backend/Services/AuthService/routers/membership.py` — added `POST /memberships/{membership_id}/terms`.
+- `Backend/Services/AuthService/membership-api.yaml` — added the `POST /memberships/{membership_id}/terms` path and `ChangeMembershipTermsRequest` schema.
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 8 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 10 new tests.
+
+No new model, repository, migration, or router file was required — confirming IRA-003 §14's own Category B classification.
+
+---
+
+## Validation (BA-03)
+
+- 18 new tests (8 unit, 10 API), all passing after the naive/aware datetime fix (above).
+- Full AuthService suite: **372 passed**, zero regressions (re-run directly, not taken on faith).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-03 introduces no migration.
+- Confirmed BR-C007-003: a request whose every supplied field already matches the Membership's current value is rejected with 409, both for scalar fields (`license_type`/`membership_type`) and, after the fix above, for `effective_to` across a genuinely fresh fetch.
+- Confirmed BR-C007-004: the pre-change value of every changed field is preserved in the audit trail (`previous_<field>`/`new_<field>` metadata), verified by reading `change_terms()`'s actual `record_audit()` call, not assumed from its docstring.
+- Confirmed BR-C007-006: a term change never alters `membership_status`, and an unrelated field (e.g. `membership_type`) is left untouched when only `license_type` is supplied.
+- Confirmed BR-C007-002/007: an unknown `home_node_id` is rejected with 404; an inactive one is rejected with 409; a valid, active one is persisted unchanged — identical to BA-01's own validation.
+- Confirmed an empty request body (no term field supplied) is rejected with 422, distinct from the 409 "no genuine difference" case.
+- Confirmed unknown `membership_id` returns 404; non-`PLATFORM_ADMIN` callers receive 403; missing/malformed Authorization header returns 400 — consistent with BA-01/BA-02's own authorization-boundary test pattern.
+- Confirmed `MembershipService.change_terms()` performs no write to `roles`, `role_permissions`, or `membership_status`, preserving PE-001-C007's own "does not assign or remove Roles or Permissions" boundary and BR-C007-006's terms/standing independence in practice.
+
+---
+
+## Independent Review (BA-03)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-03's independent review, performed by re-deriving repository state directly from Git (uncommitted working-tree diff, not conversation memory) rather than trusting the working tree's own in-progress docstrings — the same discipline BA-01's and BA-02's own Independent Reviews established. Three findings were identified; all three are resolved within this same pass, none blocking:
+
+1. **(Resolved by this update)** BA-03's implementation (schema, router, service method, OpenAPI spec, and 17 originally-authored tests) existed in the working tree, uncommitted, with **no governing gap analysis performed and no artifact recording one** — the same CLAUDE.md §19.7/IRA-003 §1/§4 gap BA-02's own Independent Review previously found and closed. The code additionally referenced `TD-035` in its own docstrings and OpenAPI description before any such entry existed in `TECH-DEBT.md` — the same §19.8.2 registration-hygiene gap. This report section, the Gap Analysis Summary above, and the TD-035 registration are that missing artifact, produced before commit.
+2. **(Resolved by this update)** `change_terms()` had a genuine, reproducible defect for `effective_from`/`effective_to` comparison — the naive/aware datetime mismatch described above, empirically confirmed via a `commit()`+`refresh()` reproduction before being fixed, not merely theorized. Per CLAUDE.md §19.8.5, a misclassification of BR-C007-003 (a rule this Business Activity exists to enforce) cannot be deferred as Technical Debt; it was fixed directly (`_as_utc()` reuse) and a permanent regression test added, with the full suite re-run to confirm 372/372 passing before this Business Activity is represented as complete.
+3. **(Resolved by this update)** IRA-003 §4 left BA-04's disposition ("may collapse into BA-03; confirm at that BA's own gap analysis") as an open question for BA-03's own gap analysis to resolve. This report's Governing Architecture Review section above performs that confirmation explicitly: EX-C007-06 is not absorbed into BA-03, and BA-04 remains not started pending C-005's own future existence.
+
+No security, tenant-isolation, or data-integrity defect was found. `MembershipService.change_terms()` was confirmed to write only to the five term columns BA-01 already established, never to `membership_status`, `roles`, or `role_permissions` — consistent with BR-C007-006 and PE-001-C007's own capability boundary. All three findings above concern process/registration hygiene, a computation defect, and an open scoping question left by IRA-003 itself — each closed in this same update, the same disposition pattern BA-01's and BA-02's own Independent Reviews already established as precedent.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Membership Context:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`8e1d276`, `cc3f3cd`).
+
+**BA-02 — Understand Membership Context:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`214a92c`, `53b67ab`).
+
+**BA-03 — Maintain Membership Terms:** Implementation COMPLETE (372/372 full suite passing, zero regressions, naive/aware datetime defect found and fixed within this same pass). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings — missing gap-analysis artifact, the datetime defect, and BA-04's open disposition — resolved in this same update, not deferred). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01/BA-02's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`) and BA-02 (`214a92c`, `53b67ab`) are committed to `master`. BA-03 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-03.
+
+---
+
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01 and BA-02 are now implementation-complete, tested, documented, and independently reviewed. **BA-03 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report. Awaiting explicit approval before beginning BA-03.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 through BA-11 remain not started** (BA-04's own disposition — "may collapse into BA-03" — was confirmed resolved as NOT collapsed and NOT started, above). No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report. Awaiting explicit approval before beginning BA-04.
