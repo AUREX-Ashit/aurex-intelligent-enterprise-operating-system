@@ -369,6 +369,112 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-06 — Reactivate Membership
+
+Realizing PE-001-C007's ERB-C007-04 (Govern Membership Lifecycle) / EX-C007-08 (Reactivate Membership). IRA-003 §10/§14 pre-classified BA-05/BA-06 together as **Category B**; this section performs BA-06's own fresh gap analysis.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Determine whether an existing non-active Membership may be restored to ACTIVE standing, and if so restore it — rather than establishing a duplicate — without ever asserting or inventing a permitted transition no canonical authority establishes (CAP-001's C-007 Business Intent, scoped to reactivation determination only).
+- **Input Contract:** `membership_id` (UUID, path parameter, required); `ReactivateMembershipRequest` — `reason` (free text, optional, audit-trail only).
+- **Output Contract:** The reactivated Membership (`MembershipResponse`), or an HTTP error naming the specific reason reactivation was not applied.
+- **Business Rules:**
+  - BR-C007-014 — a reactivation SHALL NOT be applied where no canonical authority establishes that the current standing may transition to active; the outcome SHALL instead be explicit and unresolved or rejected. Satisfied by construction: `reactivate()` never mutates `membership_status`; every call that reaches the permission check is rejected with 409, citing Pending Canonical Binding.
+- **Validation Rules:** Membership existence checked (404) via `MembershipRepository.get_by_id()` — reused as-is. A Membership already ACTIVE is rejected with 409 (distinct message from the permission-check rejection — there is nothing to reactivate, not merely nothing permitted).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required. **Scoped simplification, same class as TD-031/034/035:** EX-C007-08 names Membership Steward/Sponsor as its Participating Personas; neither exists as an enforceable claim today. Disclosed explicitly, recorded as **TD-036**.
+- **Domain Events:** None. A successful reactivation event would be published on the same basis BA-01's `MEMBERSHIP_ESTABLISHED`/BA-03's `MEMBERSHIP_TERMS_CHANGED` already use, but no code path can currently reach a success outcome (see TD-037) — no event is published for a rejected attempt, mirroring BA-01/BA-03's own "only a successful mutation publishes an event" precedent.
+- **Audit Requirements:** `record_audit("REACTIVATE_MEMBERSHIP", ...)` on every path — unknown membership, already-ACTIVE, and the permission-check rejection — per SD-002-054's seven audit questions, same mechanism BA-01/BA-02/BA-03 already established. Every attempt is captured even though none can currently succeed, since demand for reactivation is itself a fact worth preserving for the future governance decision this Business Activity is waiting on.
+- **Tests:** `tests/test_membership_service.py` (6 new unit tests, including a parametrized case covering all three non-active standings), `tests/test_membership_api.py` (6 new API/authorization tests) — 12 new tests, all passing; full AuthService suite (384 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-06)
+
+Reviewed: PE-001-C007 (ERB-C007-04, EX-C007-08's own Trigger/Purpose/Success Criteria/Experience Completion text, Chapter 5.3 Membership Lifecycle Contract, Chapter 6.2 Enterprise Transitions table's "Reactivation" row, Chapter 6.3 Exception & Recovery Semantics's "Reactivation not permitted by governing lifecycle authority" and "Existing Membership found" entries), URA-001-20/13/28/104, all five existing ADRs (`ADR-001` through `ADR-005`, none address a Membership reactivation matrix), IRA-003 §10/§14 (Category B classification), `models/membership.py` (`membership_status` is a plain `String(50)` with no CHECK constraint, `default="ACTIVE"` — confirming no migration is required and no canonical enum is silently narrowed), `repositories/membership_repository.py` (`get_by_id()`, inherited unchanged from `BaseRepository[Membership]` — no new repository method required).
+
+**Why this differs from BA-05's own BLOCKED disposition, despite sharing the identical root cause (no canonical transition matrix exists):** Contract 5.3's specific sentence on this exact case — "A transition to active SHALL occur only where the governing Membership lifecycle authority permits transition from the Membership's current standing to active; where that authority does not establish permission, the reference is Pending Canonical Binding, and the transition SHALL be reported as unresolved or rejected rather than assumed" — together with §6.3's own dedicated exception entry ("Reactivation not permitted by governing lifecycle authority") and EX-C007-08's own Experience Completion text (naming "explicitly reported as unpermitted/unresolved" as a fully legitimate completion, on equal footing with "permitted reactivation applied") give an **unambiguous, complete specification for today's canonical state**: recognize the target Membership, and — since no authority anywhere grants permission for any non-active-standing-to-ACTIVE transition — always reject, explicitly and audibly, never silently. This is not a stub or a workaround; it is BR-C007-014's own literal, affirmative requirement, correctly and completely implemented. BA-05's own general "standing transition" scope lacked this same unambiguous textual anchor for its own (non-reactivation) directions, which is why it was deferred instead.
+
+**Scope boundary disclosed, not implemented:** PE-001-C007's own §6.3 ("Existing Membership found") states that Recognition (EX-C007-01) should route "an inactive existing Membership... to EX-C007-08 for a governed reactivation determination." BA-01's own `establish()` does not currently perform this routing — it rejects **any** existing Membership (active or not) uniformly with 409 "already exists," a scope decision already made and independently reviewed at BA-01's own completion. Modifying `establish()` to add this routing would mean revisiting already-shipped, already-certified BA-01 code, out of BA-06's own scope (the same discipline WP-02's TD-030 already established: a later Business Activity does not silently modify an earlier one's already-accepted logic). Disclosed and recorded as **TD-038**, not silently left unaddressed.
+
+---
+
+## Gap Analysis Summary (BA-06)
+
+- **Database:** No migration. `reactivate()` never writes to `membership_status` or any other column — confirming IRA-003 §14's Category B classification and Contract 5.3's own "no transition matrix invented" requirement. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-06's mapping to ERB-C007-04/EX-C007-08 was already derived in IRA-003 §3/§4; this section performs the BA-06-specific gap analysis IRA-003 §1/§4 stated would be required before implementation.
+- **API Impact:** One new endpoint, `POST /memberships/{membership_id}/reactivate`, added to `membership-api.yaml` alongside BA-01/02/03's own endpoints. No existing endpoint's shape changed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/02/03's own scope decision).
+- **Dependencies:** `MembershipRepository.get_by_id()` (inherited from `BaseRepository[Membership]`) — reused unchanged, no new repository method, no dependency on `roles`, `organization_nodes`, or any table beyond what BA-01 already established.
+- **Testability given BA-05's own BLOCKED status:** no live Business Activity currently produces a non-ACTIVE Membership (BA-05 is blocked). Tests seed `membership_status` directly via the ORM, mirroring BA-01's own precedent of seeding `OrganizationNode` rows directly for a path no Business Activity yet establishes (TD-032's own precedent) — not a gap in BA-06 itself.
+- **Risks:** TD-036 (interim PLATFORM_ADMIN gate) — Low severity, same risk profile as TD-031/034/035. TD-037 (no reactivation can currently succeed) — disclosed prominently since it is the single most consequential fact about this Business Activity's current behavior. TD-038 (BA-01's `establish()` does not route an inactive existing Membership to reactivation consideration) — Low severity, a disclosed scope boundary, not a defect.
+- **Technical Debt registered:** TD-036, TD-037, TD-038 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-06)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-036, TD-037, TD-038 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-06 implemented and independently reviewed)
+
+**Implementation (modified, no new files):**
+- `Backend/Services/AuthService/schemas/membership.py` — added `ReactivateMembershipRequest` schema.
+- `Backend/Services/AuthService/services/membership_service.py` — added `MembershipService.reactivate()`.
+- `Backend/Services/AuthService/routers/membership.py` — added `POST /memberships/{membership_id}/reactivate`.
+- `Backend/Services/AuthService/membership-api.yaml` — added the `POST /memberships/{membership_id}/reactivate` path and `ReactivateMembershipRequest` schema.
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 6 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 6 new tests.
+
+No new model, repository, migration, or router file was required — confirming IRA-003 §10/§14's own Category B classification.
+
+---
+
+## Validation (BA-06)
+
+- 12 new tests (6 unit, 6 API), all passing.
+- Full AuthService suite: **384 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-06 introduces no migration.
+- Confirmed FastAPI's own generated OpenAPI schema registers `POST /memberships/{membership_id}/reactivate` correctly, and the standalone `membership-api.yaml` parses as valid YAML with the matching path and schema.
+- Confirmed BR-C007-014: every reactivation attempt from every non-active standing (SUSPENDED, DEACTIVATED, ARCHIVED — parametrized test) is rejected with 409, citing Pending Canonical Binding, and the Membership's `membership_status`/terms are confirmed unchanged afterward via a direct re-fetch.
+- Confirmed a Membership already ACTIVE is rejected with a distinct 409 ("already ACTIVE; nothing to reactivate"), not conflated with the permission-check rejection.
+- Confirmed unknown `membership_id` returns 404; non-`PLATFORM_ADMIN` callers receive 403; missing/malformed Authorization header returns 400 — consistent with BA-01/02/03's own authorization-boundary test pattern.
+- Confirmed `MembershipService.reactivate()` never writes to `membership_status` or any other column, and publishes no domain event, consistent with no success path being reachable today.
+
+---
+
+## Independent Review (BA-06)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-06's independent review, re-deriving repository state directly from Git and re-running the full suite directly rather than trusting docstrings — the same discipline BA-01 through BA-03's own Independent Reviews established. `MembershipService.reactivate()` was read in full and confirmed to perform no write to `membership_status` or any other column on any path, including the two rejection paths that precede the permission check (unknown membership, already-ACTIVE) — a genuine risk area given how easily a lifecycle-transition method can accidentally mutate state on an early-return path, checked directly rather than assumed. The parametrized test (`test_reactivate_rejects_every_non_active_standing_pending_canonical_binding`) was confirmed to genuinely exercise all three non-active standings independently (SUSPENDED, DEACTIVATED, ARCHIVED), not collapsed into a single representative case. Three findings were identified, all disclosed as Technical Debt rather than blocking:
+
+1. TD-036 (interim PLATFORM_ADMIN gate) — same class as TD-031/034/035, non-blocking by existing precedent.
+2. TD-037 (no reactivation can currently succeed, pending a future governance decision on BA-05's own BLOCKED question) — not a defect; confirmed to be the literal, correct, complete implementation of BR-C007-014 and EX-C007-08's own Experience Completion criteria for today's canonical state, not a placeholder or shortcut.
+3. TD-038 (BA-01's `establish()` does not route an inactive existing Membership to reactivation consideration, per §6.3's own "Existing Membership found" exception text) — a genuine, disclosed scope boundary versus already-shipped BA-01 code, correctly left unmodified per this repository's own discipline against revisiting an earlier Business Activity's already-accepted logic without a separately-scoped decision to do so.
+
+No security, tenant-isolation, or data-integrity defect was found. `MembershipService.reactivate()` was confirmed to hold no code path capable of mutating `membership_status`, consistent with BR-C007-014's own "SHALL NOT be applied" requirement being enforced by construction (there is no mutation statement anywhere in the method), not merely by convention.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
+
+**BA-02 — Understand Membership Context:** Implementation COMPLETE. Committed (`214a92c`, `53b67ab`).
+
+**BA-03 — Maintain Membership Terms:** Implementation COMPLETE. Committed (`57e2d40`, `5dd320b`, `5f2b9c1`).
+
+**BA-04 — Reconfirm Home-Node Structural Congruence:** BLOCKED — External Capability Dependency (C-005). Committed (`a452a84`).
+
+**BA-05 — Govern Membership Standing:** BLOCKED — Governance Decision Required. Committed (`bee1b8d`).
+
+**BA-06 — Reactivate Membership:** Implementation COMPLETE (384/384 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-036, TD-037, TD-038, none blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-03's own precedent).
+
+**Current Repository Status:** BA-01/02/03 implemented and committed; BA-04/05 formally blocked and committed; BA-06 implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-06.
+
+---
+
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 is formally closed as BLOCKED — External Capability Dependency (C-005).** **BA-05 is formally closed as BLOCKED — Governance Decision Required** (both above), neither merely "not started." **BA-06 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, and now BA-06 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** **BA-07 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
