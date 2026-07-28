@@ -324,6 +324,30 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-04 — Readiness Assessment (CLOSED — BLOCKED)
+
+**BA-04 — Reconfirm Home-Node Structural Congruence** (ERB-C007-03 / EX-C007-06, IRA-003 §4). BA-03's own Governing Architecture Review section (above) performed a first-pass confirmation that EX-C007-06 is not absorbed into BA-03. This section closes BA-04's own readiness assessment formally, re-verified directly against PE-001-C007's primary text (not only IRA-003's summary), CAP-001, ERG-001, WPR-001, and Master Technical Architecture.
+
+**Disposition: BLOCKED — External Capability Dependency (C-005).**
+
+**Governing evidence:**
+- **PE-001-C007, EX-C007-06's own Trigger (verbatim, extracted directly from the canonical `.docx`):** "Enterprise structure changes in a way that may affect an existing home-node anchor (**a signal from C-005/ERG-001**)." Its own Context Required: "the current home-node anchor; **a structural-change signal or scheduled congruence check from C-005/ERG-001**." Its own Business Value: prevents a stale home-node anchor "**without C-007 ever owning the structural change itself**."
+- **CAP-001 (Enterprise Capability Registry):** C-005 — Enterprise Structure Management — is registered as **Active**, governed by ERG-001 (CAP-001 line 56).
+- **WPR-001 (Work Package Roadmap), §2 and §3:** confirms no Work Package anywhere in this repository implements C-005 — only WP-00, WP-00A, WP-01, WP-02, and WP-03 exist. WPR-001's own Maintenance Rule (§3) forbids treating any informal or stray reference as a roadmap commitment absent an accepted IRA or a real commit; no IRA for C-005 exists.
+- **ERG-001-03 (Node-to-Membership Linkage):** defines only a candidate-home-node **lookup** capability — "the ERG exposes a lookup capability returning valid candidate home nodes for a given Organization" — already reused unchanged by BA-01/BA-03 via `OrganizationNodeRepository`. It defines no structural-change-event, signal, or notification mechanism of any kind.
+- **Master Technical Architecture:** defines `organization_node`/`organization_hierarchy` as static reference tables with RLS policies (Part D). No structural-change-event table, outbox, or signal-publishing mechanism exists anywhere in the schema.
+- **Repository search:** a full-tree search confirms zero structural-change-signal producer exists anywhere in AuthService or any other service in this repository.
+
+**Why implementation cannot proceed:** EX-C007-06's entire Trigger is a signal that, per its own governing text, must originate from C-005. C-005 is a real, registered, Active capability — not a hypothetical one — but it has never been chartered with an IRA, assigned a Work Package, or implemented anywhere in this repository. There is nothing for BA-04 to react to: no event, no table, no producer, no scheduled job. This is a missing-prerequisite-capability finding, not a documentation gap curable by re-reading more carefully.
+
+**Why no interim implementation is architecturally valid:** Two candidate workarounds were considered and both rejected:
+1. **Building a C-005/ERG-001 structural-change-event mechanism directly** — this would mean AuthService (WP-03/C-007) inventing a new service boundary, event architecture, and possibly a new capability's own tables under C-005's ownership, without an accepted IRA for C-005. This is exactly what CLAUDE.md §18 (Architectural Change Control) prohibits without explicit approval, and would make C-007 the owner of a structural-change signal PE-001-C007's own Business Value text explicitly says C-007 must never own.
+2. **Substituting a synthetic trigger** (e.g., an always-callable "recheck home-node congruence" endpoint with no real structural-change signal behind it) — this would misrepresent EX-C007-06's actual semantics. Since no real structural change ever occurs (there is no producer), such an endpoint's "reconfirmation" would be either vacuously trivial (nothing to detect) or would require C-007 to itself infer structural change from raw `organization_node` data — again crossing into C-005/ERG-001's own bounded context, the same boundary violation as option 1.
+
+**Conclusion:** BA-04 is formally closed as **BLOCKED — External Capability Dependency (C-005)**, distinct from "not started" (which implies only that work has not begun) and distinct from a governance or documentation gap (which implies something curable within WP-03's own scope). No architecture was invented, no ADR was created, and no runtime component was modified to reach this conclusion. BA-04 remains blocked until Enterprise Structure Management (C-005) is separately chartered with its own IRA and its own structural-change signal mechanism exists for C-007 to consume.
+
+---
+
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 through BA-11 remain not started** (BA-04's own disposition — "may collapse into BA-03" — was confirmed resolved as NOT collapsed and NOT started, above). No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report. Awaiting explicit approval before beginning BA-04.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 is formally closed as BLOCKED — External Capability Dependency (C-005)** (above), not merely "not started." **BA-05 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
