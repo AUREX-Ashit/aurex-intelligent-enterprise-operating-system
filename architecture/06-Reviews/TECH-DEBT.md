@@ -58,6 +58,9 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-028 | BA-08's `has_active_dependents()` pre-retirement dependency check (BR-C003-04) is real only for Role, which queries the AuthService-implemented `memberships` table. For the other four object types (Domain Permission, Approval Authority, Delegation Policy, Runtime Assignment Policy), the check always returns `False` — not because no dependency exists, but because each type's real canonical dependent (`membership_approval_authority`, `delegation_registry`, `runtime_assignment_registry`; Domain Permission has no dependent at all in this schema) is not yet implemented in AuthService, the same already-tracked root cause as TD-023/TD-024/TD-025/TD-027. Retirement of these four types therefore always passes this specific check today, regardless of real-world usage. | BA-08 | Data Integrity | Medium | Implement each missing dependent table in AuthService, then extend the corresponding `has_active_dependents()` to a real query, mirroring RoleRepository's own implementation | Open | AuthService (Backend) |
 | TD-029 | BA-08's `deprecate()`/`retire()` each require the target object's current status to be exactly ACTIVE, for all five object types. Consequence: once an object is moved to DEPRECATED, no existing code path can ever move it to RETIRED (or back to ACTIVE) — it is permanently stuck in the Hidden state pending a future Restore Business Activity. Neither EX-C003-08 nor BR-C003-04 mandates or forbids a DEPRECATED → RETIRED transition; this is an implementation choice (deprecate/retire modeled as two independent branches from ACTIVE, not a chain), not a contract violation, but it diverges from the WP-01 precedent this Business Activity otherwise mirrors closely (`OrganizationService.retire()` accepts entry from ACTIVE **or** SUSPENDED). Found directly by BA-08's Independent Review. | BA-08 (Independent Review) | Data Integrity | Low | Decide, at BA-09/Restore scoping time, whether DEPRECATED → RETIRED should become a legal transition (mirroring OrganizationService.retire()'s own SUSPENDED-or-ACTIVE entry) or remains intentionally excluded | Open | AuthService (Backend) |
 | TD-030 | BA-09's `resolve_conflict()` records an ACCEPTED_BREAK resolution purely as an audit-trail statement (Contract 5.6's own "affirmative accepted break stated by the proposing authority") — it does not itself flip BA-08's `has_active_dependents()` to False, because doing so would require either writing to the dependent's own table (crossing Contract 5.1's C-007 boundary for Membership) or introducing a new "accepted break" persisted flag BA-08's own check would need to consult (which would mean modifying BA-08's already-shipped code, out of this Business Activity's scope). Consequence: after an ACCEPTED_BREAK resolution, a subsequent call to BA-08's deprecate()/retire() for the same object is still blocked by the same dependent, until it naturally resolves (expires) or is genuinely reassigned via the dependent's own capability. EX-C003-09's own promise of "a cleared path for ERB-C003-02 to proceed" is therefore only fully realized for REASSIGNMENT_CONFIRMED/NATURAL_EXPIRY_CONFIRMED resolutions where the underlying data has genuinely changed — not yet for ACCEPTED_BREAK. | BA-09 | Data Integrity | Medium | Design a mechanism (e.g., a short-lived accepted-break record BA-08's own check consults) that lets an explicit ACCEPTED_BREAK resolution actually clear BA-08's gate, without BA-09 writing to any C-007-owned table | Open | AuthService (Backend) |
+| TD-031 | BA-01 (Establish Membership Context, WP-03/C-007) gates establishment on the existing `PLATFORM_ADMIN` role claim only — PE-001-C007's EX-C007-02 names Membership Steward/Membership Sponsor as its Participating Personas, neither of which exists as a distinct, enforceable claim today. Same class of gap as TD-021 through TD-025, found directly by BA-01's Independent Review. See detailed entry below the table for full fields. | BA-01 (Independent Review) | Security | Low | A Membership Steward/Sponsor persona authority model (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for this endpoint | Open | AuthService (Backend) |
+| TD-032 | `Membership.home_node_id` (BA-01, WP-03/C-007) is nullable, though URA-001-17b/ERG-001-03 specify it NOT NULL — no Business Activity anywhere yet owns "Establish Organization Node" (Enterprise Structure Management/C-005 has no IRA), so a caller cannot always supply a valid candidate. The minimal `organization_nodes` table BA-01 introduces has no establish()-style write path either; rows can only be created by direct data manipulation until that capability exists. See detailed entry below the table for full fields. | BA-01 | Data Integrity | Medium | Enterprise Structure Management (C-005)'s own future "Establish Organization Node" Business Activity, after which `home_node_id` can be tightened to NOT NULL for newly-established Memberships | Open | AuthService (Backend) |
+| TD-033 | `EstablishMembershipRequest.role_id` is required, though PE-001-C007 states verbatim "C-007 does not assign or remove Roles or Permissions" (§1.4/1.8/5.9/5.10) — this is an inherited WP-00-era schema coupling (`memberships.role_id` is NOT NULL), not a canonical requirement of BA-01 itself. BA-01 does not resolve this tension; it discloses it. See detailed entry below the table for full fields. | BA-01 | Architecture | Low | A repository-owner/architecture governance decision on whether `memberships.role_id`'s NOT NULL constraint is relaxed, reassigned to a later Business Activity's own write path, or affirmed as a correct joint Establish-time act | Open | AuthService (Backend) |
 
 ---
 
@@ -228,6 +231,57 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-09 — Detect and Resolve Authorization Policy Dependency Conflict
 - **Source:** BA-09 implementation (self-identified and disclosed in `resolve_conflict()`'s own docstring, not found only during review)
 - **Resolution Criteria:** An ACCEPTED_BREAK resolution, once recorded, results in a subsequent BA-08 deprecate()/retire() call succeeding for that specific, named dependent; a test exists confirming this end-to-end.
+
+---
+
+### TD-031 — Detailed Entry
+
+- **Title:** PLATFORM_ADMIN-Only Authorization Gate for Membership Management (EX-C007-02 Persona-Specific Defining Authority Deferred)
+- **Category:** Security / Authorization Granularity
+- **Description:** BA-01 (Establish Membership Context, WP-03/C-007) gates Membership establishment on the existing `PLATFORM_ADMIN` role claim only (`dependencies.require_platform_admin`, reused unchanged from WP-01/WP-02). PE-001-C007's EX-C007-02 names "Membership Steward"/"Membership Sponsor" as its Participating Personas, neither of which exists as a distinct, enforceable claim anywhere in the platform today.
+- **Root Cause:** No Membership Steward/Sponsor persona claim has ever been modeled in this codebase — the same unresolved-authorization-catalog class of gap ADR-002 already names for WP-02 (TD-021), now recurring for a different capability's own personas.
+- **Impact:** Any authenticated `PLATFORM_ADMIN` can establish a Membership for any Person/Organization pair, regardless of whether URA-001 would actually confer that specific defining authority to a Membership Steward or Sponsor. No privilege-escalation risk beyond what `PLATFORM_ADMIN` already holds platform-wide today; EX-C007-02's persona differentiation is simply not enforced.
+- **Severity:** Low — a disclosed, deliberate simplification, the same class WP-01/WP-02 already established precedent for, not a silent gap; confirmed non-blocking by Independent Review.
+- **Status:** Open
+- **Target Resolution:** A Membership Steward/Sponsor persona authority model (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for `POST /memberships`.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-01 — Establish Membership Context
+- **Source:** BA-01 implementation (self-identified and disclosed in `MembershipService.establish()`'s own module docstring and the router's OpenAPI description; confirmed non-blocking by Independent Review)
+- **Resolution Criteria:** A Membership Steward/Sponsor persona authority model exists and `POST /memberships` is gated on it instead of `PLATFORM_ADMIN`; a test exists confirming a caller lacking that persona is rejected once the real gate replaces today's interim one.
+
+---
+
+### TD-032 — Detailed Entry
+
+- **Title:** `home_node_id` Is Nullable and `organization_nodes` Has No Establish Path
+- **Category:** Data Integrity
+- **Description:** BA-01 adds `Membership.home_node_id` as a nullable foreign key to a new, minimal `organization_nodes` table, though URA-001-17b/ERG-001-03 specify every Membership's home-node anchor as NOT NULL. When a caller supplies a `home_node_id`, BA-01 validates it references a real, active `OrganizationNode` (BR-C007-002/007) — but no Business Activity anywhere in the platform yet establishes an `OrganizationNode` row through a governed write path, so a caller cannot always supply one.
+- **Root Cause:** MDP-001 explicitly excludes `organization_node` from build-time seeding ("populate exclusively through real tenant onboarding and real business operation"), and no capability currently owns an "Establish Organization Node" Business Activity — Enterprise Structure Management (C-005), the capability ERG-001-02/03 assigns this object to, has no IRA yet.
+- **Impact:** A Membership can be established today with `home_node_id = NULL`, diverging from the canonical NOT NULL shape. This is disclosed, not silent, and does not violate BR-C007-002/007 (which govern a *supplied* candidate's validity, not whether one must be supplied) — but the gap is real and will need closing once C-005 exists.
+- **Severity:** Medium — higher than TD-031's own Low severity, because this concerns a canonical NOT NULL constraint intentionally not enforced, not an authorization-persona simplification.
+- **Status:** Open
+- **Target Resolution:** Enterprise Structure Management (C-005)'s own future "Establish Organization Node" Business Activity, after which `home_node_id` can be reassessed for tightening to NOT NULL on newly-established Memberships.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-01 — Establish Membership Context
+- **Source:** BA-01 implementation (self-identified in IRA-003 §9 and `models/organization_node.py`'s own module docstring, not found only during review)
+- **Resolution Criteria:** C-005 is chartered with its own IRA and implements Establish Organization Node; `home_node_id`'s nullability is then explicitly revisited (tightened or reaffirmed) as part of that or a subsequent WP-03 Business Activity.
+
+---
+
+### TD-033 — Detailed Entry
+
+- **Title:** `role_id` Required on Membership Despite C-007's Own "Does Not Assign Roles" Boundary
+- **Category:** Architecture
+- **Description:** `EstablishMembershipRequest.role_id` is a required field, though PE-001-C007 states verbatim, reaffirmed at four separate points in its own text (§1.4/1.8/5.9/5.10): "C-007 does not assign or remove Roles or Permissions." Requiring `role_id` at Membership establishment reads, on its surface, as C-007 performing a Role-assignment act.
+- **Root Cause:** `memberships.role_id` was declared NOT NULL in WP-00's bootstrap-era schema (predating the current IRA/capability-boundary governance process entirely) to support the login/JWT-claim-building flow. BA-01 inherits this existing column shape; it does not introduce or widen the coupling.
+- **Impact:** No functional or data-integrity defect — `MembershipService.establish()` only ever writes to `memberships`, never to `roles`, `role_permissions`, or any Role/Permission table, so BR-C003-02-equivalent separation is preserved in practice. The tension is between the API's required field and the capability's own declared boundary, not in the code's actual behavior.
+- **Severity:** Low — disclosed at design time (schema/service module docstrings, IRA-003 §17's own Governance Backlog Item), not discovered as a defect.
+- **Status:** Open
+- **Target Resolution:** A repository-owner/architecture governance decision on whether `memberships.role_id`'s NOT NULL constraint should be relaxed once C-003's own Membership-anchored Role-assignment path exists (see TD-028), reassigned to a later Business Activity's own write path, or affirmed as a correct joint Establish-time act that does not actually violate the boundary.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-01 — Establish Membership Context
+- **Source:** BA-01 implementation (self-identified in `schemas/membership.py`'s own module docstring and IRA-003 §17's own Governance Backlog Item, not found only during review)
+- **Resolution Criteria:** A governance decision is recorded (an ADR, or an update to WPR-001/IRA-003) on `role_id`'s required status; `schemas/membership.py`'s own docstring is updated to reference that decision instead of disclosing an open tension.
 
 ---
 
