@@ -16,6 +16,7 @@ from schemas.membership import (
     EstablishMembershipRequest,
     MembershipResponse,
     MembershipUnderstandingResponse,
+    ReactivateMembershipRequest,
 )
 from services.membership_service import MembershipService, compute_membership_authority_consequence
 
@@ -182,4 +183,41 @@ async def change_membership_terms(
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> MembershipResponse:
     membership = await membership_service.change_terms(membership_id, request, actor_id=claims.get("person_id"))
+    return MembershipResponse.model_validate(membership)
+
+
+@router.post(
+    "/{membership_id}/reactivate",
+    response_model=MembershipResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Reactivate a non-active Membership",
+    description=(
+        "WP-03 Business Activity: Reactivate Membership (C-007), "
+        "realizing PE-001-C007's ERB-C007-04 / EX-C007-08. Requires the "
+        "PLATFORM_ADMIN role (interim gate — EX-C007-08's own Membership "
+        "Steward/Sponsor personas are not yet implementable claims, "
+        "tracked as TD-036). Per BR-C007-014 and Contract 5.3, no "
+        "canonical authority anywhere establishes that any non-active "
+        "standing may transition to ACTIVE, so every call is currently "
+        "rejected with 409 (Pending Canonical Binding) and the existing "
+        "Membership is preserved unchanged — this is not a defect, it is "
+        "EX-C007-08's own explicitly named rejection/unresolved "
+        "completion path. See TD-037."
+    ),
+    responses={
+        200: {"description": "Membership reactivated. Not currently reachable — see TD-037."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No Membership exists with this id."},
+        409: {"description": "Membership is already ACTIVE, or reactivation from its current standing is not permitted (Pending Canonical Binding, TD-037)."},
+    },
+)
+async def reactivate_membership(
+    membership_id: UUID,
+    request: ReactivateMembershipRequest,
+    membership_service: Annotated[MembershipService, Depends(get_membership_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> MembershipResponse:
+    membership = await membership_service.reactivate(membership_id, request, actor_id=claims.get("person_id"))
     return MembershipResponse.model_validate(membership)

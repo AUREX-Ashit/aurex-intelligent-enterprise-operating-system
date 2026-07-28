@@ -117,6 +117,26 @@ class ChangeMembershipTermsRequest(BaseModel):
     reason: str | None = Field(None, max_length=500, description="Business reason for the change (Term Change Context's own 'reason' field). Not validated against a real approval record — same disclosed class as TD-026.")
 
 
+class ReactivateMembershipRequest(BaseModel):
+    """
+    Request body for Reactivate Membership (WP-03 BA-06, C-007,
+    realizing ERB-C007-04 / EX-C007-08 Reactivate Membership).
+
+    Per BR-C007-014 and PE-001-C007's own Exception & Recovery
+    Semantics (6.3, "Reactivation not permitted by governing lifecycle
+    authority") and Contract 5.3: no canonical authority anywhere in
+    this repository establishes that any non-active standing (SUSPENDED,
+    DEACTIVATED, ARCHIVED) may transition to ACTIVE. This request can
+    therefore never currently succeed — every call is rejected with
+    409, and the existing Membership is preserved exactly as it stood,
+    per EX-C007-08's own "explicit unresolved or rejected outcome"
+    completion criterion. This is not a defect; it is the literal,
+    correct behavior BR-C007-014 requires in the absence of an
+    established permission. See TD-037.
+    """
+    reason: str | None = Field(None, max_length=500, description="Business reason for the requested reactivation.")
+
+
 class MembershipUnderstandingResponse(MembershipResponse):
     """
     Understand Membership Context's response (WP-03 BA-02). Extends

@@ -4,16 +4,20 @@ info:
   description: >
     Membership Management (C-007, WP-03) endpoints for the CorpStage
     AuthService. Covers BA-01 (Establish Membership Context), BA-02
-    (Understand Membership Context), and BA-03 (Maintain Membership
+    (Understand Membership Context), BA-03 (Maintain Membership
     Terms — EX-C007-04/05 only; EX-C007-06 Reconfirm Home-Node
-    Structural Congruence is out of scope, see IMP-REPORT-WP-03) — see
-    IRA-003 for the full six-ERB/thirteen-EX Business Activity mapping;
-    BA-04 onward are not yet implemented. Authorization gate:
-    PLATFORM_ADMIN (persona-specific defining authority per EX-C007-02's
-    Membership Steward/Sponsor personas is deferred, tracked as TD-031;
+    Structural Congruence is out of scope, see IMP-REPORT-WP-03), and
+    BA-06 (Reactivate Membership, EX-C007-08 — every call currently
+    rejected with 409 per BR-C007-014/Contract 5.3, no canonical
+    authority establishing a permitted transition to ACTIVE exists;
+    see TD-037). BA-04 and BA-05 are formally BLOCKED (see
+    IMP-REPORT-WP-03); see IRA-003 for the full six-ERB/thirteen-EX
+    Business Activity mapping. Authorization gate: PLATFORM_ADMIN
+    (persona-specific defining authority per EX-C007-02's Membership
+    Steward/Sponsor personas is deferred, tracked as TD-031;
     EX-C007-03's Sponsor/Steward/Downstream Capability Consumer/
     Executive personas, TD-034; EX-C007-04/05's Steward/Sponsor
-    personas, TD-035).
+    personas, TD-035; EX-C007-08's Steward/Sponsor personas, TD-036).
   version: 1.0.0
 paths:
   /memberships/{membership_id}:
@@ -100,6 +104,51 @@ paths:
           description: Requested terms match the Membership's current terms, or the supplied home_node_id is not active.
         '422':
           description: No term field was supplied.
+  /memberships/{membership_id}/reactivate:
+    post:
+      summary: Reactivate a non-active Membership
+      description: >
+        WP-03 Business Activity: Reactivate Membership, realizing
+        PE-001-C007's ERB-C007-04 / EX-C007-08. Requires the
+        PLATFORM_ADMIN role. Per BR-C007-014 and Contract 5.3, no
+        canonical authority anywhere establishes that any non-active
+        standing may transition to ACTIVE, so every call is currently
+        rejected with 409 (Pending Canonical Binding) and the existing
+        Membership is preserved unchanged — this is not a defect, it
+        is EX-C007-08's own explicitly named rejection/unresolved
+        completion path. See TD-037.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: membership_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactivateMembershipRequest'
+      responses:
+        '200':
+          description: Membership reactivated. Not currently reachable — see TD-037.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No Membership exists with this id.
+        '409':
+          description: Membership is already ACTIVE, or reactivation from its current standing is not permitted (Pending Canonical Binding, TD-037).
   /memberships:
     post:
       summary: Establish a new Membership Context
@@ -253,6 +302,18 @@ components:
           type: string
           format: date-time
           nullable: true
+        reason:
+          type: string
+          maxLength: 500
+          nullable: true
+    ReactivateMembershipRequest:
+      type: object
+      description: >
+        Per BR-C007-014/Contract 5.3, no canonical authority establishes
+        that any non-active standing may transition to ACTIVE, so every
+        call is currently rejected with 409 regardless of the supplied
+        reason. See TD-037.
+      properties:
         reason:
           type: string
           maxLength: 500

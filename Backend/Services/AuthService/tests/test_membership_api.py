@@ -14,6 +14,7 @@ from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
+from models.membership import Membership
 from models.organization import Organization
 from models.organization_node import OrganizationNode
 from models.person import Person
@@ -399,4 +400,100 @@ def test_change_terms_rejects_non_platform_admin(
 
 def test_change_terms_requires_authorization_header(client: TestClient) -> None:
     response = client.post(f"/memberships/{uuid.uuid4()}/terms", json={"license_type": "LIGHT"})
+    assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-06 — Reactivate Membership (ERB-C007-04/EX-C007-08)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+async def seeded_suspended_membership(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> str:
+    """
+    No Business Activity yet writes a non-ACTIVE membership_status
+    (BA-05 is BLOCKED) - seeded directly, mirroring the same
+    direct-data-setup precedent BA-01's own OrganizationNode fixtures
+    already use for a path no BA yet establishes.
+    """
+    person_id, organization_id, role_id = seeded_person_organization_role
+    membership = Membership(
+        person_id=uuid.UUID(person_id),
+        organization_id=uuid.UUID(organization_id),
+        role_id=uuid.UUID(role_id),
+        membership_status="SUSPENDED",
+    )
+    db_session.add(membership)
+    await db_session.commit()
+    return str(membership.id)
+
+
+def test_reactivate_membership_rejects_unknown_id(client: TestClient) -> None:
+    response = client.post(
+        f"/memberships/{uuid.uuid4()}/reactivate", headers=_auth_headers(), json={},
+    )
+    assert response.status_code == 404
+
+
+def test_reactivate_membership_rejects_already_active(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/reactivate", headers=_auth_headers(), json={},
+    )
+
+    assert response.status_code == 409
+
+
+def test_reactivate_membership_rejects_suspended_pending_canonical_binding(
+    client: TestClient, seeded_suspended_membership
+) -> None:
+    """BR-C007-014/Contract 5.3: no canonical authority establishes that SUSPENDED may transition to ACTIVE (TD-037)."""
+    membership_id = seeded_suspended_membership
+
+    response = client.post(
+        f"/memberships/{membership_id}/reactivate",
+        headers=_auth_headers(),
+        json={"reason": "Return from leave"},
+    )
+
+    assert response.status_code == 409
+
+
+def test_reactivate_membership_preserves_existing_context_unchanged(
+    client: TestClient, seeded_suspended_membership
+) -> None:
+    """A rejected reactivation SHALL preserve the existing Membership context exactly as it stood (6.3)."""
+    membership_id = seeded_suspended_membership
+
+    client.post(f"/memberships/{membership_id}/reactivate", headers=_auth_headers(), json={})
+    response = client.get(f"/memberships/{membership_id}", headers=_auth_headers())
+
+    assert response.json()["membership_status"] == "SUSPENDED"
+
+
+def test_reactivate_membership_rejects_non_platform_admin(
+    client: TestClient, seeded_suspended_membership
+) -> None:
+    membership_id = seeded_suspended_membership
+
+    response = client.post(
+        f"/memberships/{membership_id}/reactivate",
+        headers=_auth_headers(role_code="ESG_MANAGER"),
+        json={},
+    )
+
+    assert response.status_code == 403
+
+
+def test_reactivate_membership_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(f"/memberships/{uuid.uuid4()}/reactivate", json={})
     assert response.status_code == 400

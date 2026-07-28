@@ -28,7 +28,12 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import ChangeMembershipTermsRequest, EstablishMembershipRequest, MembershipAuthorityConsequence
+from schemas.membership import (
+    ChangeMembershipTermsRequest,
+    EstablishMembershipRequest,
+    MembershipAuthorityConsequence,
+    ReactivateMembershipRequest,
+)
 from services.membership_service import MembershipService, compute_membership_authority_consequence
 
 
@@ -434,3 +439,80 @@ async def test_change_terms_detects_no_change_for_effective_to_across_a_fresh_fe
     with pytest.raises(HTTPException) as exc_info:
         await service.change_terms(established.id, ChangeMembershipTermsRequest(effective_to=effective_to))
     assert exc_info.value.status_code == 409
+
+
+# ---------------------------------------------------------------------------
+# BA-06 — Reactivate Membership (ERB-C007-04/EX-C007-08)
+# ---------------------------------------------------------------------------
+
+async def test_reactivate_rejects_unknown_membership_id(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.reactivate(uuid.uuid4(), ReactivateMembershipRequest())
+    assert exc_info.value.status_code == 404
+
+
+async def test_reactivate_rejects_already_active_membership(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    assert established.membership_status == "ACTIVE"
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.reactivate(established.id, ReactivateMembershipRequest())
+    assert exc_info.value.status_code == 409
+
+
+@pytest.mark.parametrize("non_active_standing", ["SUSPENDED", "DEACTIVATED", "ARCHIVED"])
+async def test_reactivate_rejects_every_non_active_standing_pending_canonical_binding(
+    db_session: AsyncSession, seeded_person_organization_role, non_active_standing: str
+) -> None:
+    """
+    BR-C007-014/Contract 5.3: no canonical authority anywhere establishes
+    that SUSPENDED, DEACTIVATED, or ARCHIVED may transition to ACTIVE.
+    Every reactivation attempt from every non-active standing is
+    rejected today (TD-037) - there is no established permission for
+    any of the three states, not merely the one this test happens to
+    exercise.
+    """
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    # No Business Activity yet writes a non-ACTIVE standing (BA-05 is
+    # BLOCKED) - set directly, mirroring BA-01's own precedent of
+    # seeding OrganizationNode rows directly for a path no BA yet
+    # establishes.
+    established.membership_status = non_active_standing
+    await db_session.flush()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.reactivate(established.id, ReactivateMembershipRequest(reason="Return from leave"))
+    assert exc_info.value.status_code == 409
+
+
+async def test_reactivate_preserves_existing_membership_context_unchanged(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """A rejected reactivation SHALL preserve the existing Membership context exactly as it stood (6.3)."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    established.membership_status = "SUSPENDED"
+    await db_session.flush()
+
+    with pytest.raises(HTTPException):
+        await service.reactivate(established.id, ReactivateMembershipRequest())
+
+    await db_session.refresh(established)
+    assert established.membership_status == "SUSPENDED"
+    assert established.license_type == "FULL"
+    assert established.membership_type == "INTERNAL"

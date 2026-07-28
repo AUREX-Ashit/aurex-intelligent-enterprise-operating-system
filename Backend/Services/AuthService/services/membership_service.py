@@ -59,7 +59,12 @@ from repositories.organization_node_repository import OrganizationNodeRepository
 from repositories.organization_repository import OrganizationRepository
 from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
-from schemas.membership import ChangeMembershipTermsRequest, EstablishMembershipRequest, MembershipAuthorityConsequence
+from schemas.membership import (
+    ChangeMembershipTermsRequest,
+    EstablishMembershipRequest,
+    MembershipAuthorityConsequence,
+    ReactivateMembershipRequest,
+)
 from observability import record_audit, publish_event, AuditStatus
 
 CHANGEABLE_TERM_FIELDS = ("membership_type", "license_type", "home_node_id", "effective_from", "effective_to")
@@ -468,3 +473,83 @@ class MembershipService:
             },
         )
         return updated
+
+    async def reactivate(
+        self, membership_id: UUID, request: ReactivateMembershipRequest, actor_id: str | None = None
+    ) -> Membership:
+        """
+        Business Activity: Reactivate Membership (BA-06, ERB-C007-04 /
+        EX-C007-08).
+
+        Per PE-001-C007's own Exception & Recovery Semantics (6.3,
+        "Reactivation not permitted by governing lifecycle authority")
+        and Contract 5.3: URA-001-20 establishes the canonical standing
+        states only, no canonical matrix of which source standing may
+        transition to active. C-007 SHALL NOT invent such permission.
+        No ADR or other canonical document anywhere in this repository
+        establishes that SUSPENDED, DEACTIVATED, or ARCHIVED may
+        transition to ACTIVE (same root cause as BA-05's own BLOCKED —
+        Governance Decision Required disposition; see TD-037).
+
+        BR-C007-014 requires that, absent established permission, "the
+        outcome SHALL instead be explicit and unresolved or rejected"
+        — this method implements exactly that: the existing Membership
+        is never mutated, and every call is rejected with 409, citing
+        Pending Canonical Binding. This is EX-C007-08's own explicitly
+        named second completion path (the first — a permitted
+        reactivation actually applied — is not reachable until a
+        future governance decision establishes real permitted
+        transitions).
+        """
+        membership = await self.membership_repo.get_by_id(membership_id)
+        if membership is None:
+            record_audit(
+                action="REACTIVATE_MEMBERSHIP",
+                resource=f"membership:{membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "membership not found"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No Membership exists with id '{membership_id}'.",
+            )
+
+        if membership.membership_status == "ACTIVE":
+            record_audit(
+                action="REACTIVATE_MEMBERSHIP",
+                resource=f"membership:{membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "membership is already ACTIVE; there is nothing to reactivate"},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Membership is already ACTIVE; there is nothing to reactivate.",
+            )
+
+        # BR-C007-014 / Contract 5.3: no canonical authority anywhere establishes
+        # that this (or any) non-active standing may transition to ACTIVE.
+        # C-007 SHALL NOT invent that permission. TD-037.
+        record_audit(
+            action="REACTIVATE_MEMBERSHIP",
+            resource=f"membership:{membership_id}",
+            status=AuditStatus.DENIED,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "current_standing": membership.membership_status,
+                "reason": request.reason,
+                "rejection_basis": (
+                    "no canonical authority establishes that this standing may "
+                    "transition to ACTIVE (Pending Canonical Binding, TD-037)"
+                ),
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Reactivation from '{membership.membership_status}' to ACTIVE is not "
+                "currently permitted: no canonical authority establishes this transition "
+                "(Pending Canonical Binding, TD-037)."
+            ),
+        )
