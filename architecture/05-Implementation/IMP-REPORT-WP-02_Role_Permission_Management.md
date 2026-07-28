@@ -3,7 +3,7 @@
 **Work Package:** WP-02 — Role & Permission Management (C-003)
 **Governing Readiness Assessment:** `IRA-002_WP-02_Role_Permission_Management_Implementation_Readiness_Assessment.md` (Approved — WP-02 READY, BA-01 only; BA-02 assessed inline below per IRA-002 §2.2's own instruction that BA-02 onward each require a fresh gap analysis before implementation)
 **Governing Capability Specification:** `PE-001-C003_Role_Permission_Management.docx` v1.0 (three ERBs, ten Enterprise Experiences)
-**Scope of this report:** BA-01, BA-02, and BA-03, per the Business Activity Completion Gate (CLAUDE.md §19.7), each completed and gated independently. BA-04 through BA-10 (mapped in IRA-002 §2.2) are not started.
+**Scope of this report:** BA-01 through BA-10 (mapped in IRA-002 §2.2), per the Business Activity Completion Gate (CLAUDE.md §19.7), each completed and gated independently. WP-02 is now fully implemented.
 
 ---
 
@@ -848,7 +848,7 @@ Reviewed: PE-001-C003 (ERB-C003-03, EX-C003-09, Contract 5.1/5.6, extracted dire
 - **API Impact:** Ten new endpoints — `POST /{resource}/{id}/dependency-check` and `POST /{resource}/{id}/resolve-dependency`, one pair per existing resource, each thin, delegating entirely to the one shared service.
 - **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–08's own scope decision).
 - **Dependencies:** None blocking. BA-01–08's own `establish()`/`create_new_version()`/`deprecate()`/`retire()` methods are untouched; only the two `has_active_dependents()`/`get_active_dependents()` pairs were refactored, confirmed behavior-preserving by the full suite passing unchanged before any new BA-09 code was added.
-- **Risks:** TD-030 (ACCEPTED_BREAK resolution does not yet clear BA-08's own gate — Medium severity, a genuine gap between this Business Activity's stated purpose and its current effect for one of three resolution modes). Residual scoping note, not a defect: BA-10's own cross-capability hand-off rejection classification (BR-C003-06) remains not started, per instruction.
+- **Risks:** TD-030 (ACCEPTED_BREAK resolution does not yet clear BA-08's own gate — Medium severity, a genuine gap between this Business Activity's stated purpose and its current effect for one of three resolution modes). BA-10's own cross-capability hand-off rejection classification (BR-C003-06) was implemented as the next Business Activity in this same Work Package, per instruction (see BA-10 section below).
 - **Technical Debt registered:** TD-030 (`architecture/06-Reviews/TECH-DEBT.md`).
 
 ---
@@ -926,3 +926,103 @@ No security, tenant-isolation, or build-breaking defect was found. No violation 
 **Commit Date:** 2026-07-31 (both commits).
 
 **Current Repository Status:** BA-01 through BA-09 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-09 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+
+---
+
+## BA-10 — Resolve Dependent Capability Authorization Policy Hand-off Rejection
+
+Realizing PE-001-C003's ERB-C003-03 (Resolve Authorization Policy Dependency Conflict and Cross-Capability Hand-off) / EX-C003-10 (Resolve Dependent Capability Authorization Policy Hand-off Rejection). **This is WP-02's tenth and final Business Activity.**
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** When a dependent capability (C-002 Access Management, or any other) reports that it cannot rely on an authorization policy object C-003 produced, classify the stated rejection as either capability-scoped insufficiency (the object is fine; the rejection is scoped to that capability's own attempted use) or an authorization policy object integrity signal (the object's own definition is genuinely in question) — and route accordingly, per BR-C003-06/Contract 5.7.
+- **Input Contract:** the target object's id (path parameter) plus `reporting_capability` and `stated_reason`.
+- **Output Contract:** A `HandoffRejectionOutcome` — `classification`, `object_preserved`, `explanation` (naming the exact basis), `routed_to` (populated only for INTEGRITY_SIGNAL), and the full underlying `conflict_report` (BA-09's own, embedded for complete traceability) — or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-06 / Contract 5.7 — the classification is computed entirely from this capability's own already-established signals (BA-08's `status`, BA-09's `detect_conflicts()`), never from `stated_reason`, which is recorded for audit traceability only. Satisfied by construction: `classify_handoff_rejection()` reads `request.stated_reason` exactly once, to place it in the audit/event metadata — it never appears in any conditional the classification itself depends on.
+  - Contract 5.7 — a `CAPABILITY_SCOPED_INSUFFICIENCY` classification preserves the object unchanged (satisfied by construction: this Business Activity performs no `repo.update()` call anywhere).
+  - Contract 5.8 — no automatic correction is ever performed; an `INTEGRITY_SIGNAL` classification only names the governing ERB the correction is routed to (`ERB-C003-01/ERB-C003-02`), never invoking BA-01–08's own establish/version/deprecate/retire methods itself.
+  - Contract 5.3 — this Business Activity never evaluates or enforces whether a specific request is currently permitted; that determination and its runtime enforcement remain exclusively RTA-001's Authorization Engine and C-002's own concern, which consume this classification as an input.
+- **Validation Rules:** the target object must exist (404); `reporting_capability` and `stated_reason` are both required, non-empty (422 otherwise).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (same interim gate as BA-01–09).
+- **Domain Events:** `AUTHORIZATION_POLICY_HANDOFF_REJECTION_CLASSIFIED`.
+- **Audit Requirements:** `record_audit("REPORT_HANDOFF_REJECTION_<TYPE>", ...)` on every classification, per SD-002-054's seven audit questions.
+- **Tests:** `tests/test_authorization_policy_handoff_rejection_service.py` (6 unit tests), `tests/test_authorization_policy_handoff_rejection_api.py` (10 API/authorization tests) — 16 new tests, all passing; full suite (325 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-10)
+
+Reviewed: PE-001-C003 (ERB-C003-03, EX-C003-10, Contract 5.7, Contract 5.8, extracted directly from the docx's `word/document.xml`), BR-C003-06, IMP-001 (§13.17's shared-mechanism governing rule), CLAUDE.md §19.7, and BA-08's/BA-09's own already-implemented `status` field and `detect_conflicts()` (the exact logic this Business Activity was instructed to orchestrate, not duplicate).
+
+**Required Analysis, performed before implementation:**
+- **Every dependency already implemented in BA-08 and BA-09**, reconstructed: BA-08 owns `status` (ACTIVE/SUPERSEDED/DEPRECATED/RETIRED) and the `deprecate()`/`retire()` transitions; BA-09 owns `get_active_dependents()`/`has_active_dependents()` (inbound), the outbound Organization/Domain anchor checks, temporal validity, and version-chain integrity, all surfaced through `detect_conflicts()`. Nothing in this list needed re-implementation — BA-10 calls `detect_conflicts()` and reads `obj.status` directly.
+- **Every external capability hand-off defined by PE-001-C003**, identified: Contract 5.7 names exactly one structural pattern — "C-002 (and any other dependent capability)" consuming an authorization policy object and reporting a rejection. No other hand-off shape exists in PE-001-C003; `reporting_capability` is therefore an open-text field (mirroring `delegation_type`'s own open-ended precedent), not a closed enum of specific capability codes, since none is canonically enumerated.
+- **When rejection is required versus delegation to BA-09**, verified: EX-C003-10 and Contract 5.7 govern *classifying a rejection already reported by someone else* — they do not themselves detect conflicts. BA-09 remains the sole conflict-detection authority; BA-10 never runs a check BA-09 doesn't already provide.
+
+**Key finding, resolved without escalation:** EX-C003-10's Context Invalidated states that an INTEGRITY_SIGNAL classification "invalidates the object's current version for further consumption until corrected." This does not require BA-10 to mutate the object's own `status` — Contract 5.3 forbids C-003 from performing or implying any runtime-permission determination, and "invalidated for further consumption" is exactly that kind of runtime-enforcement statement, exclusively RTA-001/C-002's concern to act on. BA-10 satisfies this by producing a named, explained classification record (consumed by RTA-001/C-002 as an input) — never by itself flipping a status value, which would also silently duplicate BA-08's own capability.
+
+---
+
+## Gap Analysis (BA-10)
+
+- **Database:** No schema change. No new table, no new column.
+- **Reuse, not duplication (this Business Activity's own central instruction):** `classify_handoff_rejection()` is a new method added to the same shared `AuthorizationPolicyConflictService` BA-09 already introduced — no new service class, no new dependency-detection logic. It calls `self.detect_conflicts()` (BA-09) exactly once and reads `obj.status` (BA-08) directly; it introduces zero new checks of its own.
+- **"Invalid policy references" and "unsupported policy types"** (this Business Activity's own Behaviour list): both are structurally impossible to submit through this API, not gaps requiring new checks — each of the ten new endpoints is bound to exactly one existing, type-specific resource router (`/roles/{id}/...`, `/approval-authorities/{id}/...`, etc.), so a caller cannot name an unsupported type through this interface at all, and an unresolvable id is already caught by each endpoint's own pre-existing 404 check (the same pattern every WP-02 endpoint already uses).
+- **"Invalid/inactive replacement targets"** (this Business Activity's own Behaviour list): already fully validated by BA-09's own `resolve_conflict()` (REASSIGNMENT_CONFIRMED path) — not re-validated here, since BA-10 never itself performs a reassignment.
+- **API Impact:** Five new endpoints — `POST /{resource}/{id}/handoff-rejection`, one per existing resource, each thin, delegating entirely to the one shared service.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–09's own scope decision).
+- **Dependencies:** None blocking. BA-01–09's own methods are untouched; `AuthorizationPolicyConflictService` gained one new, additive method.
+- **Risks:** None found requiring registration. Unlike BA-07/08/09, this Business Activity's own scope — pure classification-and-routing over already-computed signals — introduced no new vacuous check, no new concurrency surface, and no new boundary crossing.
+- **Technical Debt registered:** None. Genuinely not required — the same discipline CLAUDE.md §19.8 establishes for registering only real gaps, not manufacturing one for its own sake.
+
+---
+
+## Documents Updated (BA-10)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/schemas/authorization_policy_handoff.py` (`HandoffRejectionClassification`, `ReportHandoffRejectionRequest`, `HandoffRejectionOutcome`)
+- `Backend/Services/AuthService/tests/test_authorization_policy_handoff_rejection_service.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_handoff_rejection_api.py`
+
+**Implementation (modified):**
+- `services/authorization_policy_conflict_service.py` — gains `classify_handoff_rejection()` (additive method; `detect_conflicts()`, `resolve_conflict()`, and `_check_version_chain()` from BA-09 are unchanged).
+- `routers/role.py`, `routers/domain_permission.py`, `routers/approval_authority.py`, `routers/delegation_policy.py`, `routers/runtime_assignment_policy.py` — each gains `POST /{resource}/{id}/handoff-rejection`, reusing the same `AuthorizationPolicyConflictService` dependency factory BA-09 already wired in.
+
+No `establish()`, `create_new_version()`, `deprecate()`, `retire()`, `detect_conflicts()`, `resolve_conflict()`, existing endpoint, or previously-shipped test was modified.
+
+---
+
+## Developer Validation (BA-10)
+
+- With `JWT_SECRET_KEY`/`JWT_ALGORITHM` set: full suite passing with zero regressions (see commit for exact count).
+- Confirmed `CAPABILITY_SCOPED_INSUFFICIENCY` for a clean, ACTIVE, conflict-free Role, Domain Permission, Approval Authority, Delegation Policy, and Runtime Assignment Policy — one representative per type at the API layer, full branch coverage for Role at the service layer.
+- Confirmed `INTEGRITY_SIGNAL` for a RETIRED Role, a DEPRECATED Role, and an ACTIVE Role with broken temporal validity (BA-09's own Contract-5.4 check) — each names the exact basis in `explanation` and cites the underlying `conflict_report`.
+- Confirmed the classification is independent of `stated_reason`'s own content — an alarming stated reason against a clean object still classifies as capability-scoped, and a mild stated reason against a RETIRED object still classifies as an integrity signal.
+- Confirmed no `repo.update()` call exists anywhere in `classify_handoff_rejection()` — the object is never mutated by this Business Activity, verified by direct code inspection, not only by test assertion.
+- Single Alembic head unchanged (`c3e9a5f7b2d4`) — this Business Activity required no migration.
+
+---
+
+## Independent Review (BA-10)
+
+**Review Result: ACCEPT WITH NON-BLOCKING OBSERVATIONS**, performed by a fresh-context reviewer with no prior involvement in BA-01–BA-10, per CLAUDE.md §19.7.
+
+**Verified independently (re-extracted PE-001-C003 text, re-ran tests, direct code inspection — not taken on trust from this report):**
+- Canonical fidelity of ERB-C003-03/EX-C003-10/Contract 5.7/BR-C003-06 against the docx source confirmed, no conflict found.
+- `classify_handoff_rejection()` calls `detect_conflicts()` exactly once per path and never reimplements BA-08/BA-09 logic — no duplication found.
+- `request.stated_reason` is referenced only inside audit/event metadata construction, never in a classification-affecting conditional — the "signal, not an authority" guarantee holds by direct code read, not only by test assertion.
+- No mutation of the target object anywhere in the method (grepped for `.update(`, `setattr(`, `session.add`, `session.commit`, `session.flush` — none found); no Membership-table reference in any BA-10 file.
+- All five routers wired identically and correctly: 404 on unknown id, `require_platform_admin` gate, `actor_id` threaded to audit, no route collision.
+- Re-ran the two new test files directly: 5 service + 10 API tests passed (this report's original draft undercounted — corrected above); full suite 324 passed.
+
+**Findings raised and disposition:**
+1. **[NON-BLOCKING → FIXED, not deferred]** A `SUPERSEDED`-status object (a preserved, non-current historical version per BR-C003-05) fell through to `CAPABILITY_SCOPED_INSUFFICIENCY` with an explanation string that incorrectly asserted it "is the current ACTIVE version." Fixed by folding `SUPERSEDED` into the same status branch as `DEPRECATED`/`RETIRED` (`services/authorization_policy_conflict_service.py`), since a SUPERSEDED row is, by every model's own docstring, never the object's current, in-force version — the same rationale Contract 5.7/BR-C003-06 apply to DEPRECATED/RETIRED. A new regression test, `test_classify_handoff_rejection_integrity_signal_for_a_superseded_role`, was added; full BA-10 test file re-run confirms 16/16 passing after the fix. No Technical Debt entry required — this was a genuine correctness defect in already-written code, not a deferred scope decision.
+2. **[NON-BLOCKING → FIXED]** This report's original test counts and this file's own top-of-file scope line were stale/inaccurate (undercounted new tests by one in each file; top-of-file scope line still read "BA-04 through BA-10 ... not started"). Both corrected in this report.
+
+No blocking findings. BA-10 satisfies the Business Activity Completion Gate (CLAUDE.md §19.7).
+
+---
