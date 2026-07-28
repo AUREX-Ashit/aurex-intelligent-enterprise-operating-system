@@ -45,6 +45,7 @@ Each layer consumes the layer above it and never redefines it. This mirrors ARCH
 |---|---|---|---|
 | **ARCH-000** | Chief Architecture Office | The authoritative entry point; defines every document's responsibility, ownership, and the Constitutional Document Standard. | None — read this first. |
 | **DOC-000** (this document) | Chief Architecture Office | Navigation guide to the whole repository. | ARCH-000 |
+| **WPR-001** | Repository Owner / Engineering Governance | The authoritative Work Package → Capability roadmap; the single source for which WP-NN implements which C-XXX. | CAP-001, ARCH-000 |
 
 ### Layer 1 — Constitutional Architecture
 
