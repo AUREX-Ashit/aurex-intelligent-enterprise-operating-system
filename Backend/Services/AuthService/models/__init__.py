@@ -16,6 +16,7 @@ from .domain_permission import DomainPermission
 from .approval_authority import ApprovalAuthority
 from .delegation_policy import DelegationPolicy
 from .runtime_assignment_policy import RuntimeAssignmentPolicy
+from .organization_node import OrganizationNode
 
 __all__ = [
     "Base",
@@ -33,4 +34,5 @@ __all__ = [
     "ApprovalAuthority",
     "DelegationPolicy",
     "RuntimeAssignmentPolicy",
+    "OrganizationNode",
 ]

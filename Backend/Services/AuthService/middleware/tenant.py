@@ -73,6 +73,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # the sole caller today (TD-025 — no Corporate Admin/Domain Admin
         # authority model exists yet), the same disposition as
         # TD-022/TD-023/TD-024.
+        # /memberships (WP-03, BA-01 Establish Membership Context) is
+        # tenant-agnostic for the identical narrower reason as
+        # /domain-permissions: a Membership IS organization-scoped data
+        # (memberships.organization_id is required). Exempted only because
+        # PLATFORM_ADMIN is the sole caller today (TD-031 — no Membership
+        # Steward/Sponsor persona authority model exists yet), the same
+        # disposition as TD-021/TD-022/TD-023/TD-024/TD-025.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -84,7 +91,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/domain-permissions" or path.startswith("/domain-permissions/") \
           or path == "/approval-authorities" or path.startswith("/approval-authorities/") \
           or path == "/delegation-policies" or path.startswith("/delegation-policies/") \
-          or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/"):
+          or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/") \
+          or path == "/memberships" or path.startswith("/memberships/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

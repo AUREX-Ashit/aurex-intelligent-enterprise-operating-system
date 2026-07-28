@@ -14,6 +14,12 @@ class MembershipRepository(BaseRepository[Membership]):
     Repository for Membership records.
     Resolves Person-Organization-Role associations required for JWT claim building.
     All queries that feed the login flow eagerly load Role to avoid N+1 queries.
+
+    WP-03 BA-01 (Establish Membership Context) adds get_by_person_and_
+    organization() below for its own recognition lookup; the write path
+    (establish) uses the inherited create() directly, mirroring every
+    other WP-01/WP-02 repository's own establish pattern — no new write
+    method is needed here.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -69,6 +75,30 @@ class MembershipRepository(BaseRepository[Membership]):
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def get_by_person_and_organization(
+        self,
+        person_id: UUID,
+        organization_id: UUID
+    ) -> Membership | None:
+        """
+        Returns any Membership (regardless of status) for a
+        (person_id, organization_id) pair — WP-03 BA-01's own
+        recognition lookup (BR-C007-001/EX-C007-01): a new Authoritative
+        Membership Context SHALL NOT be established without first
+        confirming, deterministically, that none already exists for
+        this pair. Unlike get_active_membership(), this intentionally
+        does not filter by membership_status, since BR-C007-001
+        concerns whether a Membership exists at all, not only an active
+        one — the same UniqueConstraint('person_id', 'organization_id')
+        the model already declares.
+        """
+        query = select(Membership).where(
+            Membership.person_id == person_id,
+            Membership.organization_id == organization_id,
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
 
     async def get_primary_membership(self, person_id: UUID) -> Membership | None:
         """
