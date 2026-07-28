@@ -674,6 +674,10 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 
 **BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`cddacc6`, `c07a67a`, `e8ce080`).
 
-**BA-07 — Version and Re-effective-Date Authorization Policy Object:** Implementation COMPLETE (260/260 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (both substantive findings resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-026/TD-027, and this report, is being committed next).
+**BA-07 — Version and Re-effective-Date Authorization Policy Object:** Implementation COMPLETE (260/260 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (both substantive findings resolved in the same update they were raised in). Committed (`a9129ab` implementation, `457fde2` documentation).
 
-**Current Repository Status:** BA-01 through BA-05 remain committed to `master`. IMP-001's §13.17-13.25 extension was already committed separately (`4970e54`), as its own governance update, prior to this Business Activity. BA-07's implementation (migration, 5 modified models, 5 modified schemas, 5 modified services, 5 modified routers, 2 new test files), `TECH-DEBT.md`'s TD-026/TD-027 entries, and this report's BA-07 sections are new since BA-05's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. **BA-07 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+**Commit Hash:** `a9129ab` (implementation: 23 files), `457fde2` (documentation: IMP-REPORT-WP-02 + TECH-DEBT.md TD-026/TD-027, 2 files). IMP-001's §13.17-13.25 governance extension was committed separately, prior to this Business Activity, as `4970e54`.
+
+**Commit Date:** 2026-07-29 (all three commits).
+
+**Current Repository Status:** BA-01 through BA-07 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of any of these commits. **BA-07 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
