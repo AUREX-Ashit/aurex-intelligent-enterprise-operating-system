@@ -469,9 +469,13 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **BA-05 — Govern Membership Standing:** BLOCKED — Governance Decision Required. Committed (`bee1b8d`).
 
-**BA-06 — Reactivate Membership:** Implementation COMPLETE (384/384 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-036, TD-037, TD-038, none blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-03's own precedent).
+**BA-06 — Reactivate Membership:** Implementation COMPLETE (384/384 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-036, TD-037, TD-038, none blocking). Committed to `master` in two commits — `c5b6383` (implementation: 6 files) and `0f2efa3` (documentation: this report, TECH-DEBT.md TD-036/037/038, IRA-003, WPR-001 status update).
 
-**Current Repository Status:** BA-01/02/03 implemented and committed; BA-04/05 formally blocked and committed; BA-06 implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-06.
+**Commit Hash (BA-06):** `c5b6383` (implementation), `0f2efa3` (documentation: implementation report, TECH-DEBT.md, IRA-003, WPR-001)
+
+**Commit Date (BA-06):** 2026-07-29 (both commits)
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), and BA-06 (`c5b6383`, `0f2efa3`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-06.
 
 ---
 
