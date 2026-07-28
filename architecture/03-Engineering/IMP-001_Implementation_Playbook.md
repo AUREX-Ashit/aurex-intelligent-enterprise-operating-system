@@ -40,7 +40,7 @@ IMP-001 is built upon the principles established by:
 
 -   CMD-001 -- Canonical Data Model & Master Data Governance Architecture
 
--   RTA-001 -- Runtime Architecture and Execution *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3 — Section 13 implements RTA-001's Sections 12, 13, 21, and 22, including AMD-013 Phase 2's Execution Strategy, Execution Capability Selection, Evidence Fusion, and Evidence Sufficiency Gate extensions)*
+-   RTA-001 -- Runtime Architecture and Execution *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3 — Section 13 implements RTA-001's Sections 12, 13, 21, and 22, including AMD-013 Phase 2's Execution Strategy, Execution Capability Selection, Evidence Fusion, and Evidence Sufficiency Gate extensions; extended under the Runtime Engineering Methodology governance determination (WP-02) to implement RTA-001's remaining Runtime Components — Sections 6-11 and 14-19 — as Section 13's second engineering specialization, §§13.17-13.25)*
 
 It does **not redefine architecture**. It operationalizes it.
 
@@ -11796,7 +11796,7 @@ Provisioning or verifying the Neo4j Aura graph instance, the `vector_index_regis
 
 ---
 
-**Section 13 — Enterprise Intelligence Implementation Patterns** *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3)*
+**Section 13 — Specialized Engineering Methodologies** *(retitled under the Runtime Engineering Methodology governance determination, WP-02 — Enterprise Intelligence Implementation Patterns, §§13.1-13.16, originally added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3, are unchanged and now constitute this Section's first engineering specialization; Runtime Component Engineering, §§13.17-13.25, is added as its second)*
 
 **13.1 Purpose**
 
@@ -11930,6 +11930,135 @@ Testing for §13.2–§13.5 is governed by Section 11.6 (IMP-TEST-005); testing 
 **13.16 Implementation Sequence**
 
 Knowledge Graph Repository (§13.2) → Retrieval Service (§13.3), which depends on Document Chunking (§13.4) → Discovery Provider Resolver (§13.8) and Reasoning Engine Resolver (§13.9), which depend on Execution Capability Resolver (§13.7) → Execution Strategy (§13.10) → Planner (§13.6), which depends on all preceding resolvers and strategies being available to plan against → Agent Orchestrator (§13.5) and Multi-Agent Pattern (§13.11), which compose the Planner, resolvers, and strategies → Evidence Fusion (§13.12) and Knowledge & Memory (§13.13), consumed throughout → Discovery Pipeline (§13.14), which composes Discovery, Normalization, Embedding, Retrieval, Evidence, Knowledge, and Memory into one end-to-end flow, and depends on every preceding pattern in this section. No pattern in this section is independently implementable out of this order without stubbing the dependency this sequence states.
+
+---
+
+**13.17 Engineering Specialization Framework** *(added under the Runtime Engineering Methodology governance determination, WP-02)*
+
+An Engineering Specialization is a domain of implementable units sharing a common Layer 1 constitutional source of truth (per ARCH-000 §3) but requiring engineering treatment distinct from Business Activity Engineering's own experiential shape (ERB/EX/Persona, derived via PE-001 from CAP-001). Section 13 is IMP-001's canonical home for every such specialization, per IMP-001's own Layer 3 mandate (ARCH-000 §3: "these documents define how constitutional architecture is engineered") and the unqualified "Enterprise Engineering" concern ARCH-000 §6 assigns to IMP-001 alone.
+
+Two specializations exist as of this version:
+
+- **Enterprise Intelligence Engineering** (§§13.1-13.16) — implements EIA-001's Knowledge Graph, Memory, and AI Runtime Components (RTA-001 §§12, 13, 21, 22), engineered directly through this Section with no Layer 2 intermediary, per the precedent this Section itself already established.
+- **Runtime Component Engineering** (§§13.17-13.25) — implements RTA-001's remaining Runtime Components (§§6-11, 14-19), following the identical precedent.
+
+**Governing rule.** Every specialization added to this Section MAY define its own Contract, Registry, and Readiness Assessment, shaped to its own object type. Every specialization SHALL reuse, never re-invent, the common Enterprise Engineering lifecycle (§6.23's Version Lifecycle and Canonical Version Model), governance principles (§6.22.12's Registry Governance principle, generalized), review methodology, Completion Gate, and Certification discipline (CLAUDE.md §19.7). A specialization's Contract, Registry, and Readiness Assessment are permitted to differ from every other specialization's; its lifecycle, governance, review, gate, and certification discipline are not.
+
+**The common artifact families.** Engineering Contract, Engineering Registry, and Engineering Readiness Assessment are each an abstract Enterprise Engineering artifact type with, currently, two specializations apiece:
+
+```
+Enterprise Engineering Artifact (abstract)
+├── Engineering Contract
+│   ├── Business Activity Contract (BAC) ............ §6.7
+│   └── Runtime Component Contract (RCC) ............ §13.20
+├── Engineering Registry
+│   ├── Business Activity Registry (BAR) ............ §6.22
+│   └── Runtime Component Registry (RCR) ............ §13.22
+└── Engineering Readiness Assessment
+    ├── Implementation Readiness Assessment (IRA) .... capability-scoped
+    └── Runtime Readiness Assessment (RRA) ........... §13.23
+```
+
+No existing artifact — BAC, BAR, or IRA — is redefined, restructured, or renamed by this abstraction. §6.7, §6.22, and §6.23 remain exactly as written; this diagram states only that they are, in retrospect, the Business Activity specialization of a pattern Runtime Component Engineering now specializes a second time.
+
+**Permanent extension point.** This Section is designed to accommodate further specializations without amendment to this framework and without a new top-level chapter or a new canonical document: Integration Engineering, Data Pipeline Engineering, AI Runtime Engineering, Workflow Runtime Engineering, and others not yet named are each added as a further `§13.N` range following this same recipe — its own Contract, Registry, and Readiness Assessment, reusing the common lifecycle, governance, review, Completion Gate, and Certification discipline stated above. Should a future domain of implementable units prove genuinely incapable of fitting this specialization model, that is itself a determination to be made at that time, against that domain's own evidence — it is not assumed or foreclosed here.
+
+**13.18 Runtime Component Engineering — Purpose**
+
+This specialization engineers RTA-001's Runtime Components: Business Activity Runtime (§6), Workflow Runtime (§7), Event Runtime (§8), Metadata Runtime (§9), Enterprise Context Runtime (§10), Authorization Runtime (§11), Transaction Runtime (§14), Caching & Performance Runtime (§15), Integration Runtime (§16), Observability Runtime (§17), Failure & Recovery Runtime (§18), and Deployment Runtime (§19). It excludes the Knowledge Graph, AI, and Memory Runtime Components (RTA-001 §§12, 13, 21), which remain Enterprise Intelligence Engineering's own scope (§§13.2-13.16) and are not re-engineered here.
+
+Per §13.17, this is a specialization of Enterprise Engineering, not a separate discipline. It does not redefine RTA-001 (Runtime Architecture remains RTA-001's sole authority), Master Technical Architecture, or any Business Activity — each Runtime Component pattern below cites the RTA-001 section it implements rather than restating it, exactly as §§13.2-13.16 already do for RTA-001 §§12/13/21/22.
+
+**13.19 Runtime Component Model**
+
+A Runtime Component is the implementable realization of one RTA-001 Runtime section. Every Runtime Component has:
+
+- **Runtime Domain** — the owning RTA-001 section (e.g., §9, Metadata Runtime).
+- **Runtime Responsibilities** — consumed by reference from that section's own Runtime Responsibilities table, never restated.
+- **Runtime Position** — consumed by reference from that section's own Runtime Position statement.
+- **Architectural Guarantees** — consumed by reference from that section's own Architectural Guarantees.
+
+This model describes engineering shape only. It does not redefine architecture — RTA-001 remains the sole authority for what each Runtime Component is and how it behaves; this Section states only how an engineer builds it, mirroring the boundary §13.1 already draws for Enterprise Intelligence's own Runtime Components.
+
+**13.20 Runtime Component Contract (RCC)**
+
+Every Runtime Component shall have a Runtime Component Contract, the Runtime Component specialization of Engineering Contract (§13.17):
+
+  -----------------------------------------------------------------------
+  **Attribute**              **Description**
+  -------------------------- --------------------------------------------
+  Component Identifier       Unique ID
+
+  Runtime Domain              Owning RTA-001 section (§13.19)
+
+  Component Type              Category
+
+  Runtime Intent               Purpose
+
+  Runtime Responsibilities     Consumed from RTA-001 (§13.19)
+
+  Input Contract                Required inputs
+
+  Output Contract               Expected outputs
+
+  Authorization                  Required permissions
+
+  Events                          Published events
+
+  Observability                   Required telemetry
+
+  Dependencies                     See §13.21
+
+  Definition of Done                Completion criteria
+  -----------------------------------------------------------------------
+
+The RCC is the authoritative specification for implementation, mirroring the role BAC (§6.7) plays for Business Activities.
+
+**13.21 Runtime Component Dependencies**
+
+Every Runtime Component Contract's Dependencies attribute (§13.20) is populated per this model:
+
+- **Depends On** — every other Runtime Component this component's own behavior presumes, stated by Component Identifier.
+- **Required Runtime Components** — the subset of Depends On without which this component cannot operate at all.
+- **Optional Runtime Components** — the subset of Depends On this component degrades gracefully without, rather than failing.
+
+Dependency declarations are recorded in the Runtime Component Registry (§13.22) against each component's entry, and verified during the Runtime Readiness Assessment (§13.23) before implementation begins — mirroring, generalized rather than copied, the Dependency Management principle BAR already establishes at §6.22.11 for Business Activities.
+
+**13.22 Runtime Component Registry (RCR)**
+
+The Runtime Component Registry is the canonical inventory of Runtime Components, analogous to BAR (§6.22) for Business Activities — an independent registry, not an extension of BAR, per the same one-concern-one-owner discipline that keeps every other Engineering Registry specialization separate.
+
+The RCR holds, for every registered Runtime Component: its Runtime Component Contract (§13.20), its dependency declarations (§13.21), and its current lifecycle status. Status is tracked here, in the registry, exactly as Business Activity status is tracked in BAR (§6.22.9) rather than left to the separate versioning discipline alone — a Runtime Component's current state is always answerable by querying the RCR directly.
+
+Lifecycle status reuses the same six states already governing Business Activities (§6.23) — **Draft, Registered, Approved, Active, Deprecated, Retired** — applied here to Runtime Components. No new state model is introduced; only Approved and Active Runtime Components are available for consumption by a Business Activity or another Runtime Component.
+
+Registry governance and observability follow the same principles §6.22.12 (Registry Governance) and §6.22.13 (Registry Observability) already establish for BAR, generalized to Runtime Components rather than restated.
+
+**13.23 Runtime Readiness Assessment (RRA)**
+
+Every Runtime Component shall undergo a Runtime Readiness Assessment before implementation begins, occupying the same lifecycle position an Implementation Readiness Assessment occupies for a Business Activity — produced first, gating what follows.
+
+An RRA's assessment criteria are Runtime-specific and do not reuse IRA's own Capability-shaped sections (Capability Assessment, Business Activity Assessment, UI Impact Matrix), which do not apply to a Runtime Component:
+
+- Runtime Responsibilities (per §13.19's consumption from RTA-001)
+- State Management
+- Configuration
+- Thread Safety
+- Failure Behaviour
+- Recovery
+- Observability
+- Performance
+- Scalability
+- Dependency Readiness (verified against §13.21's declarations)
+- Runtime Guarantees (per §13.19's Architectural Guarantees)
+
+**13.24 Runtime Component Versioning**
+
+Runtime Components follow the same Version Lifecycle and Canonical Version Model already defined at §6.23, applied to Runtime Components rather than Business Activities. No new lifecycle or version model is introduced here.
+
+**13.25 Runtime Component Review, Completion Gate, and Certification**
+
+Every Runtime Component is subject to the same Independent Review, Completion Gate, and Certification discipline CLAUDE.md §19.7 already establishes for Business Activities, substituting "Runtime Component" for "Business Activity" throughout that section's requirements — including that the implementation agent shall not certify its own work, and that no further Runtime Component's implementation shall begin until the current one has passed this same gate. This section references that discipline; it does not restate, redefine, or relocate it.
 
 ---
 
