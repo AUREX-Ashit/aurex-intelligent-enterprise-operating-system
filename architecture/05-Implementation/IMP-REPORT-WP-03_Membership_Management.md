@@ -348,6 +348,27 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-05 — Readiness Assessment (CLOSED — BLOCKED)
+
+**BA-05 — Govern Membership Standing (Lifecycle Transition)** (ERB-C007-04 / EX-C007-07, IRA-003 §4). A fresh gap analysis was performed directly against PE-001-C007's primary text (Chapter 4.8 EX-C007-07, Chapter 5.3 Membership Lifecycle Contract), URA-001, and every ADR in this repository.
+
+**Disposition: BLOCKED — Governance Decision Required.**
+
+**Governing evidence:**
+- **PE-001-C007, Contract 5.3 (Membership Lifecycle Contract), verbatim:** "URA-001-20 establishes the canonical standing states but no canonical matrix of which source standing may transition to which target standing; **C-007 SHALL NOT invent such a matrix**, and SHALL NOT invent a tenant-configured lifecycle transition policy **unless a canonical authority explicitly establishes one**."
+- **EX-C007-07's own Experience Completion text:** a fully conformant transition either applies where permitted, or is "explicitly rejected or left unresolved rather than silently allowed... where canonical authority does not establish it, the determination is Pending Canonical Binding."
+- **URA-001-20/13/28:** establish the four canonical standing states (active, suspended, deactivated, archived) but establish no source-to-target transition pairs.
+- **All five existing ADRs** (`ADR-001` through `ADR-005`) reviewed in full: none address a Membership standing transition matrix. `ADR-005` (Organization Lifecycle Interim Model) is the nearest precedent in shape — an accepted interim model for a different capability (C-004) facing a different gap (SD-002 §7's metadata-runtime absence) — but Organization Management's own governing text carries no equivalent "SHALL NOT invent a transition matrix" prohibition, so ADR-005's precedent does not transfer as an implicit authorization here.
+- **No other canonical document anywhere in this repository** establishes which Membership standing transitions are permitted.
+
+**Why this is a governance decision, not an implementer's disclosed simplification:** WP-01/WP-02's own precedent (e.g., TD-029's disclosed choice to model Deprecate/Retire as two independent branches from ACTIVE) involved the implementer filling a *silent* gap and disclosing the choice — appropriate where the canonical text is silent, not where it affirmatively prohibits invention. Contract 5.3's own language is not silence; it is an explicit, repeated (Contract 5.3, EX-C007-07, EX-C007-08 all state it independently) prohibition against exactly the act BA-05 would otherwise require: deciding which source standing may transition to which target standing. Building any transition logic that grants permission for a specific pair — even an "obviously reasonable" one like ACTIVE→SUSPENDED — would itself be inventing the forbidden matrix, not merely disclosing an interpretation of silence.
+
+**Decision presented to, and made by, the repository owner:** three options were presented — (1) implement `change_standing()` fully conformant to the literal text, checking for a granting authority and returning an explicit "not permitted / Pending Canonical Binding" outcome for every request, since none is currently established anywhere; (2) record a new ADR (mirroring ADR-005's own interim-model precedent) explicitly authorizing a minimal, disclosed, forward-only transition matrix; (3) defer BA-05 entirely, formally closing its readiness as blocked pending that governance decision. **The repository owner selected option (3) — defer entirely.** No ADR was created, no transition matrix was invented, and no runtime component was implemented or modified for BA-05 in this session.
+
+**Conclusion:** BA-05 is formally closed as **BLOCKED — Governance Decision Required**, distinct from BA-04's own External Capability Dependency disposition (BA-04 lacks a *producing mechanism*; BA-05 lacks a *governance decision* the canonical text explicitly reserves to a "governing Membership lifecycle authority" outside C-007's own implementation). BA-05 remains blocked until a governance decision — most naturally a future ADR, mirroring ADR-005's own precedent — explicitly establishes which Membership standing transitions are permitted.
+
+---
+
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 is formally closed as BLOCKED — External Capability Dependency (C-005)** (above), not merely "not started." **BA-05 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, and BA-03 are now implementation-complete, tested, documented, and independently reviewed. **BA-04 is formally closed as BLOCKED — External Capability Dependency (C-005).** **BA-05 is formally closed as BLOCKED — Governance Decision Required** (both above), neither merely "not started." **BA-06 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
