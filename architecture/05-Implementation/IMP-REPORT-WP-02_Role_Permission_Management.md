@@ -553,6 +553,10 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 
 **BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (sole blocking finding resolved). Committed (`a347b00`, `5f61520`, `4632a30`).
 
-**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE (239/239 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (sole substantive finding resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, architecture completion, TECH-DEBT.md TD-025, and this report, is being committed next).
+**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE (239/239 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (sole substantive finding resolved in the same update it was raised in). Committed (`cddacc6` implementation, `c07a67a` documentation).
 
-**Current Repository Status:** BA-01 through BA-04 remain committed to `master`. BA-05's implementation (10 new files, 3 minimally-modified files, one architecture completion to `Master_Technical_Architecture.md` v7.0→v7.1), `TECH-DEBT.md`'s TD-025 entry, and this report's BA-05 sections are new since BA-04's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and are not part of this update. **BA-05 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+**Commit Hash:** `cddacc6` (implementation: 13 files), `c07a67a` (documentation: architecture completion + IMP-REPORT-WP-02 + TECH-DEBT.md TD-025, 3 files).
+
+**Commit Date:** 2026-07-28 (both commits).
+
+**Current Repository Status:** BA-01 through BA-05 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-05 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
