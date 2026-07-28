@@ -681,3 +681,115 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 **Commit Date:** 2026-07-29 (all three commits).
 
 **Current Repository Status:** BA-01 through BA-07 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of any of these commits. **BA-07 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+
+---
+
+## BA-08 — Deprecate or Retire Authorization Policy Object
+
+Realizing PE-001-C003's ERB-C003-02 (Govern Authorization Policy Lifecycle) / EX-C003-08 (Deprecate or Retire Authorization Policy Object).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Move an established authorization policy object to a Deprecated (Hidden) or Retired (Archived) lifecycle state, per URA-001-127's Hide/Archive distinction, once no active dependency remains unresolved (BR-C003-04) — never a hard deletion.
+- **Input Contract:** the target object's id (path parameter) only — no request body; Deprecate and Retire are each a distinct, action-named endpoint, mirroring WP-01's `OrganizationService.activate()`/`suspend()`/`retire()` shape exactly rather than a single parameterized transition.
+- **Output Contract:** The object with its status transitioned in place (`status`, `effective_to` changed; every other field unchanged), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-04 — deprecation and retirement occur only once no active dependency remains unresolved (satisfied by construction: `has_active_dependents()` is checked before every transition; see Gap Analysis for exactly which types this check is real for today).
+  - BR-C003-04 — no authorization policy object is ever hard-deleted (satisfied by construction: both transitions call `<Repository>.update()`, never `.delete()`; the row and its full field history remain queryable).
+  - Version integrity — only the object's current ACTIVE version may be deprecated or retired (404 if the object does not exist; 409 if it is not ACTIVE — already SUPERSEDED by BA-07's own versioning mechanism, or already DEPRECATED/RETIRED).
+  - Retirement is terminal — no code path transitions a RETIRED object away from RETIRED, the same discipline `OrganizationService.activate()`/`suspend()` already established for Organization's own RETIRED state (WP-01 BA-07). Deprecation is not reactivated here either — "Restore" is out of this Business Activity's scope (EX-C003-08's own title is "Deprecate **or** Retire," not Restore; noted as a future BA, not a silent gap).
+- **Validation Rules (this Business Activity's own Validation Requirements, applied identically across all five types):** version integrity (ACTIVE-only transition); organization ownership (for the four organization-scoped types — Approval Authority, Delegation Policy, Runtime Assignment Policy, and, structurally, none needed for Role or Domain Permission, neither of which carries its own `organization_id`); dependency validation / runtime assignment references / active authorization references, all realized through the single `has_active_dependents()` method per type; audit completeness (every branch, success and denial alike, records an audit entry, matching BA-01–07's own discipline exactly).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (same interim gate as BA-01–07; no new technical debt — reuses each type's own already-tracked TD-021/022/023/024/025 gap, not a sixth instance of it).
+- **Domain Events:** `ROLE_DEPRECATED`/`ROLE_RETIRED`, `DOMAIN_PERMISSION_DEPRECATED`/`DOMAIN_PERMISSION_RETIRED`, `APPROVAL_AUTHORITY_DEPRECATED`/`APPROVAL_AUTHORITY_RETIRED`, `DELEGATION_POLICY_DEPRECATED`/`DELEGATION_POLICY_RETIRED`, `RUNTIME_ASSIGNMENT_POLICY_DEPRECATED`/`RUNTIME_ASSIGNMENT_POLICY_RETIRED`.
+- **Audit Requirements:** `record_audit("DEPRECATE_<TYPE>"/"RETIRE_<TYPE>", ...)` on success and on every denial path, per SD-002-054's seven audit questions.
+- **Tests:** `tests/test_authorization_policy_deprecate_retire_service.py` (13 unit tests, all five object types), `tests/test_authorization_policy_deprecate_retire_api.py` (10 API/authorization tests) — 23 new tests, all passing; full suite (283 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-08)
+
+Reviewed: PE-001-C003 (ERB-C003-02, EX-C003-08, BR-C003-04, extracted directly from the docx and already quoted in full in this session's earlier governance turns), URA-001-127 (Hide/Archive/Purge distinction), IMP-001 (§6.23 Versioning, §13.17's governing rule that lifecycle/governance discipline is shared across specializations, not reinvented per type), CLAUDE.md §19.7, and — as the single most directly relevant precedent, per this Business Activity's own instruction to reuse existing implementation style — `OrganizationService`'s `activate()`/`suspend()`/`retire()` (WP-01 BA-05/06/07) and the `d2d840d224b6` migration that widened `ck_organizations_status` to add `RETIRED`.
+
+**Key finding, resolved without escalation:** EX-C003-08's own Purpose statement ties Deprecate/Retire to "once ERB-C003-03 confirms no currently-active dependency remains unresolved" — ERB-C003-03 is the not-yet-implemented Dependency Conflict Resolution Business Activity (BA-09), explicitly out of this Business Activity's scope per your own instruction. This was resolved, not escalated, because your own Validation Requirements already specify the concrete checks BA-08 itself must perform (dependency validation, runtime assignment references, active authorization references) — a blocking pre-check within BA-08's own scope, distinct from BA-09's fuller enumerate-and-negotiate flow (EX-C003-09's own text: "enumerates every currently-active dependent and holds the proposed change until the proposing authority resolves, reassigns, or affirmatively accepts each one"). BA-08 implements the former only; the latter remains BA-09's own, not-yet-started scope.
+
+**Second finding, resolved without escalation:** whether Deprecate/Retire should create a new version row (BA-07's mechanism) or mutate the current row in place. Resolved by direct textual and structural analogy: BR-C003-05 (version preservation) governs *content amendment*; BR-C003-04 (Hide/Archive/Purge) governs *lifecycle transition* — a different rule, and WP-01's own `OrganizationService.suspend()`/`retire()` already establish the precedent that a lifecycle transition mutates the current row's status in place, never creating a new row. BA-08 follows that precedent exactly, reusing BA-07's `status`/`effective_to` columns as the mechanism (per your own instruction to reuse the Version/Lifecycle model, not invent a second one) without invoking `create_new_version()`'s own row-creation behavior.
+
+---
+
+## Gap Analysis (BA-08)
+
+- **Database:** No new column. One migration (`c3e9a5f7b2d4`) widens each of the five existing `status` CHECK constraints (BA-07) from `('ACTIVE', 'SUPERSEDED')` to `('ACTIVE', 'SUPERSEDED', 'DEPRECATED', 'RETIRED')` — purely additive to the constraint's own value set, mirroring WP-01's own `d2d840d224b6` (which widened `ck_organizations_status` to add `RETIRED` at Organization's own BA-07) column-for-column in approach.
+- **Dependency check reality, per type — the central finding of this Gap Analysis:** Role is the only one of the five types with a real, AuthService-implemented dependent table (`memberships.role_id`, WP-00-era) — its `has_active_dependents()` performs a genuine query and genuinely blocks retirement of a Role with an active Membership (tested directly). The other four types' `has_active_dependents()` are stubs returning `False` unconditionally, disclosed in each one's own docstring, because their real canonical dependents (`membership_approval_authority`, `delegation_registry`, `runtime_assignment_registry`) are not yet implemented in AuthService — the same already-tracked root cause as TD-023/024/025/027; Domain Permission has no dependent at all in the reviewed schema, an architectural fact, not a gap. This is consistency of *method* (identical call shape, identical rejection behavior if a dependent is ever found) with an honestly-disclosed difference in *current real-world effect* — registered as TD-028, not silently presented as uniform dependency safety.
+- **Consistency requirement:** every one of the five types implements `deprecate()`/`retire()` via the identical sequence — load, check ACTIVE, check organization ownership (where the type has one), check `has_active_dependents()`, mutate in place, audit, publish, return. The only type-specific variations (Role/Domain Permission skip the organization-ownership check, since neither carries its own `organization_id`) are directly required by each type's own already-established schema shape (BA-01/BA-02), not an inconsistency introduced here.
+- **API Impact:** Ten new endpoints — `POST /{resource}/{id}/deprecate` and `POST /{resource}/{id}/retire`, one pair per existing establish-endpoint, `200 OK` (a state transition on an existing resource, not a creation — matching WP-01's own `200` convention for `activate`/`suspend`/`retire`, distinct from BA-07's versioning endpoints' `201`, which create a new row).
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–07's own scope decision).
+- **Dependencies:** None blocking. BA-01–07's own `establish()`/`create_new_version()` methods are untouched.
+- **Risks:** TD-028 (dependency check is vacuous for four of five types — Medium severity, the first Medium-severity item in this register, since it concerns BR-C003-04's own data-integrity guarantee directly rather than an authorization-persona simplification). Residual scoping notes, not defects: Restore (DEPRECATED → ACTIVE) is out of this Business Activity's scope, per EX-C003-08's own title; the fuller BA-09 dependency-conflict-resolution flow (enumerate, negotiate, resolve) remains not started.
+- **Technical Debt registered:** TD-028 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-08)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-028 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_30_0900-c3e9a5f7b2d4_authorization_policy_object_deprecate_retire.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_deprecate_retire_service.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_deprecate_retire_api.py`
+
+**Implementation (modified):**
+- `models/role.py`, `models/domain_permission.py`, `models/approval_authority.py`, `models/delegation_policy.py`, `models/runtime_assignment_policy.py` — each `VersionStatus` enum gains `DEPRECATED`/`RETIRED`, each CHECK constraint widened to match.
+- `repositories/role_repository.py`, `repositories/domain_permission_repository.py`, `repositories/approval_authority_repository.py`, `repositories/delegation_policy_repository.py`, `repositories/runtime_assignment_policy_repository.py` — each gains `has_active_dependents()` (real for Role; disclosed stubs for the other four, per Gap Analysis above).
+- `services/role_service.py`, `services/domain_permission_service.py`, `services/approval_authority_service.py`, `services/delegation_policy_service.py`, `services/runtime_assignment_policy_service.py` — each gains `deprecate()`/`retire()`.
+- `routers/role.py`, `routers/domain_permission.py`, `routers/approval_authority.py`, `routers/delegation_policy.py`, `routers/runtime_assignment_policy.py` — each gains `POST /{resource}/{id}/deprecate` and `POST /{resource}/{id}/retire`.
+
+No `establish()`, `create_new_version()`, existing endpoint, or previously-shipped test was modified.
+
+---
+
+## Developer Validation (BA-08)
+
+- With `JWT_SECRET_KEY`/`JWT_ALGORITHM` set: **283 passed, 0 failed** (46.41s) — 260 prior (BA-01–07 + pre-WP-02 baseline) + 23 new BA-08 tests (13 service, 10 API), zero regressions.
+- Single, linear Alembic head confirmed (`c3e9a5f7b2d4`, `alembic heads`), chained onto BA-07's `b7d4f2a8e1c6`.
+- Confirmed Role's dependency check is real: establishing a Membership against a Role and attempting to deprecate that Role is rejected with 409 naming BR-C003-04 explicitly, at both the service and API layers; retiring the same Role once the Membership no longer exists (or was never created) succeeds.
+- Confirmed, for every one of the five types: deprecating/retiring an already-non-ACTIVE object (SUPERSEDED, or already DEPRECATED/RETIRED) is rejected with 409; retiring an unknown id is rejected with 404; retirement is terminal (a second retire attempt on an already-RETIRED object is rejected).
+- Confirmed no row is ever deleted — every deprecated/retired object remains fetchable by id with its full field history intact, only `status`/`effective_to` changed.
+
+---
+
+## Independent Review (BA-08)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-extracted `PE-001-C003_Role_Permission_Management.docx` (`word/document.xml`) directly and confirmed EX-C003-08, EX-C003-09, and BR-C003-04's own text word-for-word against the report's quotations, including EX-C003-09's fuller enumerate-and-negotiate description, used here only to justify BA-08's own narrower scope. URA-001-127's Hide/Archive/Purge distinction was independently confirmed. The reviewer read `OrganizationService.activate()/suspend()/retire()` and the organization router in full and confirmed 200 OK, in-place mutation, and explicit terminal-state rejection are the genuine WP-01 precedent BA-08 follows, not a superficial resemblance. All five modified models, all five `has_active_dependents()` implementations, all ten new service methods, all ten new router endpoints, and the migration's `upgrade()`/`downgrade()` were read in full. `git diff` confirmed no BA-01–07 `establish()`/`create_new_version()` logic was altered. The reviewer independently re-ran the full suite (**283 passed, 0 failed**) and `alembic heads` (single head, `c3e9a5f7b2d4`), matching the report exactly. Role's dependency check was confirmed genuinely real, tested end-to-end with a seeded Membership producing a 409 naming BR-C003-04; the other four types' stubs were confirmed to always return `False`, honestly disclosed. TD-028 was confirmed genuinely registered with its Medium severity justified.
+
+Four findings were raised and are disposed of as follows:
+1. **(Resolved by this update)** `deprecate()`/`retire()` both require `status == ACTIVE`, meaning a DEPRECATED object can never progress to RETIRED (or back to ACTIVE) through any existing code path — a real divergence from `OrganizationService.retire()`'s own precedent of accepting entry from ACTIVE **or** SUSPENDED. Not a contract violation (neither EX-C003-08 nor BR-C003-04 mandates either transition graph), but an undisclosed limitation until now — registered as TD-029.
+2. **(Informational, not actioned)** The "owning organization still exists" check in the three org-scoped services has no code path that can trigger it today, since Organizations are never hard-deleted. Honestly disclosed as "defensive" in its own docstring; not hidden, and not a defect.
+3. **(Informational, not actioned)** The migration's `downgrade()` would fail against any row already moved to DEPRECATED/RETIRED — the same class of latent downgrade risk already implicit in BA-07's own migration, not a new defect.
+4. **(Verified, no defect)** The "BA-09's fuller flow is out of scope" framing was independently confirmed to be an honest scoping decision, not a rationalization — EX-C003-09's own text describes a materially fuller flow than BA-08's blocking pre-check.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found. No architecture, business rule, or contract violation was found in the implementation itself.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`65a8310`, `4ba8f99`).
+
+**BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`a347b00`, `5f61520`, `4632a30`).
+
+**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`cddacc6`, `c07a67a`, `e8ce080`).
+
+**BA-07 — Version and Re-effective-Date Authorization Policy Object:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`a9129ab`, `457fde2`, `1a82493`).
+
+**BA-08 — Deprecate or Retire Authorization Policy Object:** Implementation COMPLETE (283/283 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (the one substantive finding registered as TD-029; three others informational, not actioned). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-028/TD-029, and this report, is being committed next).
+
+**Current Repository Status:** BA-01 through BA-07 remain committed to `master`. BA-08's implementation (migration, 5 modified models, 5 modified repositories, 5 modified services, 5 modified routers, 2 new test files), `TECH-DEBT.md`'s TD-028/TD-029 entries, and this report's BA-08 sections are new since BA-07's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. **BA-08 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
