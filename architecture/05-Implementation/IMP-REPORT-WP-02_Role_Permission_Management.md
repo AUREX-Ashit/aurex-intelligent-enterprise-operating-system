@@ -433,4 +433,126 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 
 ---
 
-*Per instruction: BA-05 has not been started. Awaiting explicit approval before proceeding.*
+## BA-05 — Establish Runtime Assignment Policy
+
+Realizing PE-001-C003's ERB-C003-01 (Define Authorization Policy Structure) / EX-C003-05 (Establish Runtime Assignment Policy).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Establish a Runtime Assignment Policy declaring its assignment-target flexibility (Named User, Business Role, Group, or External User, URA-001-75), its configured lifecycle states (URA-001-78), and its escalation rule (URA-001-80/94/94a) — never a specific assignment instance itself, per EX-C003-05's own Context Produced ("the specific act of assigning a Person to an object/event remains an operational act outside this capability").
+- **Input Contract:** `organization_id` (UUID, required), `policy_name` (required, 1–255 chars), `assignment_target_type` (one of NAMED_USER/BUSINESS_ROLE/GROUP/EXTERNAL_USER, URA-001-75), `configured_lifecycle_states` (optional list of strings, defaults to URA-001-78's nine canonical states), `escalation_policy_id` (optional UUID, cross-registry reference to `escalation_policy_registry`).
+- **Output Contract:** The established Runtime Assignment Policy (id, organization_id, policy_name, assignment_target_type, configured_lifecycle_states, escalation_policy_id, created_at, updated_at), or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-01 — established only where the target Organization exists (404); `assignment_target_type` is one of the four canonical values (422, enforced by `AssignmentTargetType` before the service layer is reached).
+  - BR-C003-03 — a Runtime Assignment Policy declares its assignment-target rule, lifecycle states, and escalation rule, but never holds a specific object/event anchor, assignee, status, or concrete date window (satisfied by construction: `RuntimeAssignmentPolicy` has no such columns).
+  - Contract 5.2 (Object Distinctness) — a Runtime Assignment Policy is never conflated with a Runtime Assignment instance: "a Runtime Assignment grants a new, object-scoped authority independent of any transfer (URA-001-74)" — the instance remains outside this capability, unaffected by this Business Activity.
+  - EX-C003-05's Corporate Admin/Domain Admin authority requirement (URA-001-32/45). **Scoped simplification, same class as BA-01/BA-02/BA-03/BA-04's disposition:** gated on the existing `PLATFORM_ADMIN` role, since neither authority exists as a distinct, enforceable claim today — the same two already-tracked root causes as TD-021 (ADR-002) and TD-022 (Domain-is-ownership-free). Stated explicitly, not a silent gap; registered as TD-025.
+- **Validation Rules:** `assignment_target_type` enforced at the schema layer (422, Pydantic enum) and re-enforced at the database layer (`ck_runtime_assignment_policies_target_type`); `configured_lifecycle_states`, if supplied, must be non-empty (422); Organization existence checked before creation (404).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (see the Business Rules disposition above; TD-025).
+- **Domain Events:** `RUNTIME_ASSIGNMENT_POLICY_ESTABLISHED` (runtime_assignment_policy_id, organization_id, policy_name, assignment_target_type, configured_lifecycle_states, escalation_policy_id).
+- **Audit Requirements:** `record_audit("ESTABLISH_RUNTIME_ASSIGNMENT_POLICY", ...)` on success and on the denial path (unknown organization), per SD-002-054's seven audit questions — same mechanism reused as-is.
+- **Tests:** `tests/test_runtime_assignment_policy_schema.py` (10 unit tests), `tests/test_runtime_assignment_policy_service.py` (7 unit tests), `tests/test_runtime_assignment_policy_api.py` (7 API/authorization tests) — 24 new tests, all passing; full suite (239 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-05)
+
+Reviewed: PE-001-C003 (ERB-C003-01, EX-C003-05, extracted and read directly from the docx's `word/document.xml`; BR-C003-01/03 and Contract 5.2 (Authorization Policy Object Distinctness), Chapter 7/Chapter 5, extracted the same way), URA-001 (URA-001-74/75/77/78/80/93/94/94a, Section 6/7 Event Architecture & Runtime Assignment Model), `Master_Technical_Architecture.md` (`runtime_assignment_registry` as it existed prior to this Business Activity, and `escalation_policy_registry`), IRA-002 §2.2 (BA-05 mapping), `IMP-REPORT-WP-02`'s own BA-01–04 precedent.
+
+**Key finding requiring disclosure, verified before any implementation — proven, not inferred, per explicit instruction:** it was necessary to determine whether the existing `runtime_assignment_registry` already represented the Runtime Assignment *Policy* EX-C003-05 requires, before treating it as architecturally incomplete. Evidence assembled from the six named sources only (PE-001-C003, URA-001, Contract 5.2, BR-C003-01, EX-C003-05, Master Technical Architecture):
+
+1. BR-C003-01 names "Runtime Assignment Policy" as one of the six object types this capability establishes; it does not name "Runtime Assignment" (no "Policy" suffix) in that list.
+2. BR-C003-03 states a Runtime Assignment Policy "SHALL always remain Object Scoped, Event Scoped, and Time Scoped (URA-001-77) and SHALL NEVER imply a global, unscoped permission" — naming the Policy specifically.
+3. Contract 5.2 states: "a Delegation Policy SHALL NOT be treated as interchangeable with a Runtime Assignment Policy — a Delegation transfers an already-held authority temporarily (URA-001-79/87), while a Runtime Assignment grants a new, object-scoped authority independent of any transfer (URA-001-74)" — explicitly separating "Runtime Assignment Policy" (the object type) from "a Runtime Assignment" (the grant act, tied to URA-001-74).
+4. EX-C003-05 states its Purpose is to establish the Policy "never a specific assignment instance itself," and its Context Produced places "the specific act of assigning a Person to an object/event" outside this capability.
+5. URA-001-74 describes the instance's field list verbatim ("Assignment ID, Object Type, Object ID, Event, Assigned By, Assigned To, Start/End Date, Status, and Comments").
+6. `runtime_assignment_registry`'s actual, pre-existing columns (`assignment_id`, `object_type`, `object_id`, `event_code`, `assigned_to_membership_id`/`assigned_to_group_id`/`assigned_to_business_role_id`, `status`, `effective_from`/`effective_to`) map 1:1 onto URA-001-74's instance field list, and contain no column expressing a rule (no target-type-flexibility declaration, no configured-states set, no escalation reference).
+
+Conclusion, reported to and confirmed with the user before any architecture change: `runtime_assignment_registry` is the Runtime Assignment **Instance** — correctly and completely built as such — not a Policy, hybrid, or incomplete object. The governing Policy object BR-C003-01/03 and Contract 5.2 require had no table anywhere in Master Technical Architecture prior to this version. `Master_Technical_Architecture.md` was updated (v7.0 → v7.1) to add `runtime_assignment_policy_registry` and extend `runtime_assignment_registry` with a required `runtime_assignment_policy_id` FK — reusing `approval_strategy`'s/`delegation_type`'s own single-required-discriminator convention for `assignment_target_type`, this document's own JSONB-schema-column convention for `configured_lifecycle_states_json`, and `escalation_policy_registry`'s own existing depth-limit guarantee via a cross-registry reference rather than duplicating escalation columns. No new architectural style was introduced.
+
+---
+
+## Gap Analysis Summary (BA-05)
+
+- **Database:** New table required — `runtime_assignment_policies` did not exist anywhere in AuthService prior to this Business Activity. One new, purely additive migration (`a4c8e1f6d9b3`, chained onto BA-04's `f2a7c9e4b6d1` head), plus the architecture completion above (one new canonical table + one new FK column on the existing, not-yet-AuthService-implemented `runtime_assignment_registry` — no existing AuthService table's data is affected).
+- **Business Activities:** BA-05's mapping to ERB-C003-01/EX-C003-05 was already derived in IRA-002 §2.2; this report performs the fresh, BA-05-specific gap analysis IRA-002 §2.2 stated would be required before implementation, including the Instance-vs-Policy proof above.
+- **API Impact:** One new endpoint, `POST /runtime-assignment-policies`, mirroring `POST /delegation-policies`'s established shape (schema/repository/service/router layering, existence-check-then-create, audit/event emission).
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–04's own scope decision).
+- **Dependencies:** `organizations` (WP-00-era) — consumed as a pre-existing, unaltered table; BA-05 adds rows to a new table only. `escalation_policy_id` references `escalation_policy_registry` by ID only (cross-registry, no FK, no AuthService-side existence check) — that table is canonical but not yet implemented in AuthService, the same disposition `delegation_registry` had at BA-04.
+- **Risks:** Corporate Admin/Domain Admin authority gap (TD-025) — Low severity, same risk profile as TD-021/TD-022/TD-023/TD-024. Tenant-scoping: `/runtime-assignment-policies` is tenant-exempt (`middleware/tenant.py`), same narrower rationale as `/delegation-policies` — `organization_id` is genuinely required/real data, but `PLATFORM_ADMIN` is the sole caller today.
+- **Technical Debt registered:** TD-025 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-05)
+
+**Architecture:**
+- `architecture/04-Technical/Master_Technical_Architecture.md` (v7.0 → v7.1: `runtime_assignment_policy_registry` architecture completion, proven via the Instance-vs-Policy evidence above)
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-025 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/alembic/versions/2026_07_28_1000-a4c8e1f6d9b3_runtime_assignment_policy_registry.py`
+- `Backend/Services/AuthService/models/runtime_assignment_policy.py`
+- `Backend/Services/AuthService/repositories/runtime_assignment_policy_repository.py`
+- `Backend/Services/AuthService/services/runtime_assignment_policy_service.py`
+- `Backend/Services/AuthService/schemas/runtime_assignment_policy.py`
+- `Backend/Services/AuthService/routers/runtime_assignment_policy.py`
+- `Backend/Services/AuthService/runtime-assignment-policy-api.yaml`
+- `Backend/Services/AuthService/tests/test_runtime_assignment_policy_schema.py`
+- `Backend/Services/AuthService/tests/test_runtime_assignment_policy_service.py`
+- `Backend/Services/AuthService/tests/test_runtime_assignment_policy_api.py`
+
+**Implementation (modified, minimal):**
+- `Backend/Services/AuthService/main.py` — registered the new `runtime_assignment_policy` router at `/runtime-assignment-policies`.
+- `Backend/Services/AuthService/models/__init__.py` — registered `RuntimeAssignmentPolicy`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/runtime-assignment-policies` to the tenant-exemption list, same narrower rationale as `/delegation-policies`.
+
+No existing model, repository, service, or router was modified beyond the registrations above.
+
+---
+
+## Developer Validation (BA-05)
+
+Performed directly against the working `venv`, same as BA-04's own validation pass.
+
+- With `JWT_SECRET_KEY`/`JWT_ALGORITHM` set (TD-010, pre-existing, unrelated to BA-05): **239 passed, 0 failed** (70.50s) — 215 prior (BA-01/02/03/04 + pre-WP-02 baseline) + 24 new BA-05 tests (10 schema, 7 service, 7 API), zero regressions.
+- Single, linear Alembic head confirmed (`a4c8e1f6d9b3`, `alembic heads`), chained onto BA-04's `f2a7c9e4b6d1`, purely additive.
+- `runtime-assignment-policy-api.yaml` confirmed to parse cleanly via `yaml.safe_load`.
+- Confirmed `RuntimeAssignmentPolicyService.establish()` never reads or writes an object/event anchor, assignee, status, or date-window field (Contract 5.2, tested implicitly by the model's own column set — `models/runtime_assignment_policy.py` has no such columns to write).
+- Confirmed unknown Organization independently produces 404 (`test_establish_rejects_unknown_organization`).
+- Confirmed all four `assignment_target_type` values (NAMED_USER, BUSINESS_ROLE, GROUP, EXTERNAL_USER) establish correctly, and an invalid value is rejected at both the schema layer (422) and re-enforced by the database CHECK constraint.
+- Confirmed `configured_lifecycle_states` defaults to URA-001-78's nine canonical states when omitted, and a caller-supplied superset (e.g. adding `BOARD_APPROVED`) is preserved as-is.
+- Confirmed `escalation_policy_id` is stored and returned as supplied, with no existence check performed against it (disclosed above — `escalation_policy_registry` is not yet implemented in AuthService).
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403 and a missing Authorization header receives 400.
+
+---
+
+## Independent Review (BA-05)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-extracted `PE-001-C003_Role_Permission_Management.docx` (`word/document.xml`) directly and independently confirmed BR-C003-01, BR-C003-03, Contract 5.2, and EX-C003-05's own text word-for-word against the report's quotations — every quotation matches the source exactly, with no paraphrase presented as a direct quote. The reviewer independently re-derived the Instance-vs-Policy distinction: `runtime_assignment_registry`'s actual pre-existing columns (`assignment_id`, `object_type`, `object_id`, `event_code`, three `assigned_to_*` FKs, `status`, `effective_from`/`effective_to`) map 1:1 onto URA-001-74's instance field list and contain zero rule-declaring columns, while BR-C003-01 explicitly separates "Runtime Assignment Policy" from "Runtime Assignment" as distinct object types and Chapter 5.4 requires every authorization policy object to be its own metadata-driven, versioned structure. Extending `runtime_assignment_registry` in place was considered and correctly rejected: doing so would conflate a per-instance record with a per-policy governing rule, the exact conflation Contract 5.2 forbids — the same reasoning already accepted at BA-04 for `delegation_registry`/`delegation_policy_registry`. A new table was architecturally necessary, not a shortcut. The reviewer confirmed `models/runtime_assignment_policy.py`, the Alembic migration, and `Master_Technical_Architecture.md`'s DDL agree column-for-column, confirmed via `git diff` that `main.py`, `models/__init__.py`, and `middleware/tenant.py` received only the three additive, minimal edits claimed, and confirmed `dependencies.py` (the `PLATFORM_ADMIN` gate) was not touched. The reviewer **independently re-ran the full suite** and observed **239 passed, 0 failed** (70.2s), and `alembic heads` returned the single expected head `a4c8e1f6d9b3`. All three new test files (24 tests) were read in full; each exercises genuinely distinct behavior (four target types, default vs. custom lifecycle states, escalation-reference storage without existence-check, 404/403/400/422 paths) with no padding. TD-025 was confirmed genuinely registered in `TECH-DEBT.md` (summary table row + detailed entry), and its content — `PLATFORM_ADMIN`-only gate, same two root causes as TD-021/TD-022 — was verified factually accurate by the same full-codebase-grep method BA-04's reviewer used (no Corporate Admin/Domain Admin claim exists anywhere in AuthService).
+
+Three findings were raised and are disposed of as follows:
+1. **(Resolved by this update)** Naming drift between canonical DDL and implementation: `Master_Technical_Architecture.md` originally named the JSON column `configured_lifecycle_states_json` and typed it `JSONB`, while the actual model/migration name the column `configured_lifecycle_states` and type it generic `JSON` — a deliberate, correct cross-dialect choice (works under both the test SQLite engine and production Postgres; JSONB has no SQLite equivalent). The architecture document's column name and type have been corrected to match the implementation, with the portability rationale stated explicitly in the table's own PURPOSE comment.
+2. **(Informational, not actioned)** TD-025's `Source` field ("Independent Review of BA-05") was authored before this Independent Review actually ran — the review's completion is what makes the statement true, the same forward-dated-attribution convention already implicitly accepted at TD-022/TD-023/TD-024. Not a defect.
+3. **(Informational, not actioned)** Neither `RuntimeAssignmentPolicy` nor its BA-04 sibling `DelegationPolicy` carries explicit versioning columns despite Chapter 5.4/BR-C003-05's "effective-dated, and versioned" requirement. Pre-existing gap carried identically from the already-approved BA-04 precedent, not a new or BA-05-specific shortfall — not a basis for rejection here.
+
+No data-integrity, tenant-isolation, security, or build-breaking defect was found. No architecture, business rule, or contract violation was found in the implementation itself.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all findings resolved). Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (all three findings resolved). Committed (`65a8310`, `4ba8f99`).
+
+**BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (sole blocking finding resolved). Committed (`a347b00`, `5f61520`, `4632a30`).
+
+**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE (239/239 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (sole substantive finding resolved in this same update — see above). Repository Commit: Pending (this update, including code, tests, architecture completion, TECH-DEBT.md TD-025, and this report, is being committed next).
+
+**Current Repository Status:** BA-01 through BA-04 remain committed to `master`. BA-05's implementation (10 new files, 3 minimally-modified files, one architecture completion to `Master_Technical_Architecture.md` v7.0→v7.1), `TECH-DEBT.md`'s TD-025 entry, and this report's BA-05 sections are new since BA-04's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and are not part of this update. **BA-05 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**

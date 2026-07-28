@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.0)
+CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.1)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -221,6 +221,53 @@ DOCUMENT VERSION HISTORY
     tables altered.
     Final verified total: 149 distinct tables, 108 RLS policies — net
     +1/+1 from v6.9.
+  v7.1 (this version): architecture completion, closing a missing-object
+    gap found during WP-02 BA-05 (Establish Runtime Assignment Policy)
+    readiness verification, proven (not inferred) directly against
+    PE-001-C003 BR-C003-01/BR-C003-03, Contract 5.2 (Authorization Policy
+    Object Distinctness — "a Delegation Policy SHALL NOT be treated as
+    interchangeable with a Runtime Assignment Policy — a Delegation
+    transfers an already-held authority temporarily, while a Runtime
+    Assignment grants a new, object-scoped authority independent of any
+    transfer, URA-001-74"), EX-C003-05 ("declaring its assignment-target
+    flexibility, its lifecycle states, and its escalation rule — never a
+    specific assignment instance itself"), and this document's own
+    pre-existing runtime_assignment_registry definition. That table's
+    every column (assignment_id, object_type/object_id, event_code,
+    assigned_to_*, status, effective_from/to) matches URA-001-74's
+    instance field list exactly, with no column expressing a rule — it
+    was confirmed to be the Runtime Assignment *instance*, correctly and
+    completely built, not an incomplete or hybrid Policy object. The
+    governing Policy object BR-C003-01/03 and Contract 5.2 require had no
+    table anywhere in this document prior to this version.
+    Adds runtime_assignment_policy_registry: organization_id (NOT NULL),
+    policy_name, assignment_target_type (NAMED_USER/BUSINESS_ROLE/GROUP/
+    EXTERNAL_USER per URA-001-75 — mirrors approval_strategy's/
+    delegation_type's own single-required-discriminator convention, no
+    anchor-consistency CHECK needed since the field has no varying anchor
+    column), configured_lifecycle_states (default + tenant-extensible
+    states per URA-001-78, generic JSON rather than JSONB for SQLite/
+    Postgres portability — see the table's own PURPOSE comment), and
+    escalation_policy_id (nullable,
+    cross-registry reference to the existing escalation_policy_registry —
+    no FK declared, same basis as this document's own object_id/event_code
+    convention, reusing URA-001-94/94a's mandatory depth-limit guarantee
+    rather than duplicating it). Extends the existing
+    runtime_assignment_registry with runtime_assignment_policy_id (NOT
+    NULL FK to runtime_assignment_policy_registry) so every Runtime
+    Assignment instance traces to exactly one governing policy, the same
+    traceability discipline v7.0 established between delegation_policy_
+    registry and delegation_registry — runtime_assignment_registry's own
+    instance-level columns are otherwise unchanged.
+    No new architectural style is introduced — every element reuses an
+    existing, already-established pattern from elsewhere in this same
+    document.
+    Net addition: 1 new table, 1 new RLS policy (identical in shape to
+    delegation_policy_registry's own policy), 1 new FK column on an
+    existing table (runtime_assignment_registry.runtime_assignment_policy_id),
+    0 other tables altered.
+    Final verified total: 150 distinct tables, 109 RLS policies — net
+    +1/+1 from v7.0.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -1264,9 +1311,19 @@ CREATE TABLE domain_permission_registry (
 -- runtime_assignment_registry
 -- PURPOSE: A live, in-flight work assignment — always object-scoped,
 -- event-scoped, and time-scoped; never a standing global assignment.
+-- TRACEABILITY (WP-02 BA-05): every Runtime Assignment instance SHALL
+-- reference exactly one governing Runtime Assignment Policy —
+-- runtime_assignment_policy_id is required so an instance can never
+-- exist without the governed rule it was created under, preserving
+-- complete governance traceability between the reusable policy
+-- (runtime_assignment_policy_registry, below) and the specific act (this
+-- table) — the same traceability discipline BA-04 established between
+-- delegation_policy_registry and delegation_registry.
 -- FK: assigned_to_membership_id -> membership_registry |
 --     assigned_to_group_id -> group_registry |
---     assigned_to_business_role_id -> business_role_registry
+--     assigned_to_business_role_id -> business_role_registry |
+--     runtime_assignment_policy_id -> runtime_assignment_policy_registry
+--     (required, WP-02 BA-05)
 -- -- URA-001-77: Object Scoped, Event Scoped, Time Scoped, never global
 -- -- URA-001-78: status lifecycle enumeration
 -- event_code links to workflow_event_registry, Part D below
@@ -1281,7 +1338,68 @@ CREATE TABLE runtime_assignment_registry (
     assigned_to_business_role_id UUID REFERENCES business_role_registry(business_role_id),
     status VARCHAR(50), -- CREATED/ASSIGNED/ACCEPTED/IN_PROGRESS/COMPLETED/REJECTED/ESCALATED/EXPIRED/ARCHIVED (URA-001-78)
     effective_from TIMESTAMP WITH TIME ZONE,
-    effective_to TIMESTAMP WITH TIME ZONE
+    effective_to TIMESTAMP WITH TIME ZONE,
+    runtime_assignment_policy_id UUID NOT NULL REFERENCES runtime_assignment_policy_registry(runtime_assignment_policy_id) -- WP-02 BA-05, required
+);
+
+-- =========================================================================
+-- runtime_assignment_policy_registry
+-- PURPOSE: WP-02 BA-05. The governed, reusable rule under which future
+-- Runtime Assignment instances (runtime_assignment_registry, above) may
+-- occur — declaring exactly one assignment_target_type, a configured
+-- lifecycle-states set, and an optional escalation reference
+-- (PE-001-C003 ERB-C003-01/EX-C003-05). Explicitly distinct from a
+-- Runtime Assignment instance (Contract 5.2, Authorization Policy Object
+-- Distinctness — "a Runtime Assignment grants a new, object-scoped
+-- authority independent of any transfer, URA-001-74"): this table never
+-- holds a specific object_type/object_id anchor, assignee, status, or
+-- concrete effective_from/effective_to window — those belong exclusively
+-- to runtime_assignment_registry, the out-of-capability operational act
+-- EX-C003-05 itself declares "outside this capability."
+-- TARGET TYPE: assignment_target_type mirrors approval_strategy's and
+-- delegation_type's own single-required-discriminator convention
+-- (exactly one value per policy, per BR-C003-01's "structural rule
+-- specific to its type"), using URA-001-75's own four literal values
+-- (NAMED_USER/BUSINESS_ROLE/GROUP/EXTERNAL_USER) — a policy-level
+-- declaration distinct from runtime_assignment_registry's three FK-shape
+-- assignee columns (External User is stored at the instance level via
+-- membership_registry's own external_user_flag, not a separate FK
+-- target, so no fourth assignee column is needed there).
+-- LIFECYCLE STATES: configured_lifecycle_states stores the policy's
+-- configured state set, defaulting to URA-001-78's nine named states
+-- (CREATED/ASSIGNED/ACCEPTED/IN_PROGRESS/COMPLETED/REJECTED/ESCALATED/
+-- EXPIRED/ARCHIVED) and tenant-extensible (e.g. BOARD_APPROVED), the same
+-- schema-flexible column category as this document's own _json-suffixed
+-- columns elsewhere (e.g. reporting_framework_json), typed generic JSON
+-- rather than JSONB and named without the _json suffix here specifically
+-- because AuthService's own implementation must run identically against
+-- both this table's production Postgres engine and the test suite's
+-- SQLite engine — SQLAlchemy's generic JSON type is the cross-dialect-
+-- portable choice; JSONB has no SQLite equivalent.
+-- ESCALATION: reuses escalation_policy_registry (existing, URA-001-94/
+-- 94a) rather than duplicating max_depth/cycle-protection columns
+-- locally — escalation_policy_id is nullable because EX-C003-05's own
+-- Success Criteria only requires a stated max-depth/cycle-detection rule
+-- "where escalation is configured," not on every policy; no FK is
+-- declared (a cross-registry reference, same basis as this table's own
+-- object_id/event_code convention below), since escalation_policy_registry
+-- is canonical but not yet implemented in AuthService.
+-- FK: organization_id -> organization_master (required) |
+--     escalation_policy_id -> escalation_policy_registry (cross-registry
+--     reference, no FK — populated only where escalation is configured)
+-- -- URA-001-75: assignment_target_type | URA-001-78: configured_lifecycle_states
+-- -- URA-001-80/94/94a: escalation_policy_id
+-- =========================================================================
+CREATE TABLE runtime_assignment_policy_registry (
+    runtime_assignment_policy_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organization_master(organization_id),
+    policy_name VARCHAR(255) NOT NULL,
+    assignment_target_type VARCHAR(50) NOT NULL, -- NAMED_USER / BUSINESS_ROLE / GROUP / EXTERNAL_USER (URA-001-75)
+    configured_lifecycle_states JSON NOT NULL, -- default + tenant-extensible states (URA-001-78); generic JSON, not JSONB, for SQLite/Postgres portability (see PURPOSE comment above)
+    escalation_policy_id UUID, -- cross-registry reference, no FK (populated only where escalation is configured, URA-001-80/94/94a)
+    CONSTRAINT chk_runtime_assignment_policy_target_type CHECK (
+        assignment_target_type IN ('NAMED_USER', 'BUSINESS_ROLE', 'GROUP', 'EXTERNAL_USER')
+    )
 );
 
 -- =========================================================================
@@ -4509,6 +4627,10 @@ CREATE POLICY org_isolation ON approval_authority_registry
 
 ALTER TABLE delegation_policy_registry ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON delegation_policy_registry
+    USING (organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
+
+ALTER TABLE runtime_assignment_policy_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON runtime_assignment_policy_registry
     USING (organization_id = NULLIF(current_setting('app.organization_id', true), '')::uuid);
 
 ALTER TABLE escalation_policy_registry ENABLE ROW LEVEL SECURITY;
