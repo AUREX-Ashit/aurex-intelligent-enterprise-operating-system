@@ -919,6 +919,10 @@ No security, tenant-isolation, or build-breaking defect was found. No violation 
 
 **BA-08 — Deprecate or Retire Authorization Policy Object:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`7415eb6`, `57cf9cf`, `311f32a`).
 
-**BA-09 — Detect and Resolve Authorization Policy Dependency Conflict:** Implementation COMPLETE (309/309 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (the sole blocking finding fixed in the same update it was raised in; two further findings closed with new tests; two informational, not actioned). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-030, and this report, is being committed next).
+**BA-09 — Detect and Resolve Authorization Policy Dependency Conflict:** Implementation COMPLETE (309/309 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (the sole blocking finding fixed in the same update it was raised in; two further findings closed with new tests; two informational, not actioned). Committed (`f378bed` implementation, `6756218` documentation).
 
-**Current Repository Status:** BA-01 through BA-08 remain committed to `master`. BA-09's implementation (2 new shared modules, 5 modified repositories, 5 modified routers, 2 new test files), `TECH-DEBT.md`'s TD-030 entry, and this report's BA-09 sections are new since BA-08's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. **BA-09 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+**Commit Hash:** `f378bed` (implementation: 14 files), `6756218` (documentation: IMP-REPORT-WP-02 + TECH-DEBT.md TD-030, 2 files).
+
+**Commit Date:** 2026-07-31 (both commits).
+
+**Current Repository Status:** BA-01 through BA-09 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-09 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
