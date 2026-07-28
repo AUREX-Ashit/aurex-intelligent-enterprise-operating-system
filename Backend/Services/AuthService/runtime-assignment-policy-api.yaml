@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Runtime Assignment Policy API
+  description: >
+    Runtime Assignment Policy establishment (C-003, WP-02 BA-05). Covers
+    ERB-C003-01 / EX-C003-05 (Establish Runtime Assignment Policy) only —
+    see IRA-002 for the full ten-Enterprise-Experience Business Activity
+    mapping. Establishes the governed, reusable rule only — never a
+    specific Runtime Assignment instance (object/event anchor, assignee,
+    status, concrete date window), which remains outside this
+    capability's boundary. Authorization gate: PLATFORM_ADMIN (interim,
+    mirroring BA-01/BA-02/BA-03/BA-04's precedent — Corporate Admin/
+    Domain Admin authority per URA-001-32/45 is not yet implementable).
+  version: 1.0.0
+paths:
+  /runtime-assignment-policies:
+    post:
+      summary: Establish a new Runtime Assignment Policy
+      description: >
+        WP-02 Business Activity: Establish Runtime Assignment Policy,
+        realizing PE-001-C003's ERB-C003-01 / EX-C003-05. Declares exactly
+        one assignment_target_type (NAMED_USER/BUSINESS_ROLE/GROUP/
+        EXTERNAL_USER, URA-001-75) and a configured lifecycle-states set
+        (URA-001-78, defaulting to the nine canonical states). Rejects an
+        unknown Organization with 404.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishRuntimeAssignmentPolicyRequest'
+      responses:
+        '201':
+          description: Runtime Assignment Policy established.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeAssignmentPolicyResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: The target Organization does not exist.
+        '422':
+          description: Invalid request — an unrecognized assignment_target_type, or an empty configured_lifecycle_states list.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EstablishRuntimeAssignmentPolicyRequest:
+      type: object
+      required:
+        - organization_id
+        - policy_name
+        - assignment_target_type
+      properties:
+        organization_id:
+          type: string
+          format: uuid
+        policy_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        assignment_target_type:
+          type: string
+          enum: [NAMED_USER, BUSINESS_ROLE, GROUP, EXTERNAL_USER]
+        configured_lifecycle_states:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Defaults to the nine canonical URA-001-78 states when omitted.
+        escalation_policy_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Reference to an existing Escalation Policy (URA-001-80/94/94a). Populated only where escalation is configured.
+    RuntimeAssignmentPolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_id:
+          type: string
+          format: uuid
+        policy_name:
+          type: string
+        assignment_target_type:
+          type: string
+        configured_lifecycle_states:
+          type: array
+          items:
+            type: string
+        escalation_policy_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true

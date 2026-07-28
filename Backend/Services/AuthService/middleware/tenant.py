@@ -65,6 +65,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # PLATFORM_ADMIN is the sole caller today (TD-024 — no Corporate
         # Admin/Domain Owner authority model exists yet), the same
         # disposition as TD-022/TD-023.
+        # /runtime-assignment-policies (WP-02, BA-05 Establish Runtime
+        # Assignment Policy) is tenant-agnostic for the identical narrower
+        # reason as /delegation-policies: runtime_assignment_policy_registry.
+        # organization_id is required, so this genuinely is
+        # organization-scoped data. Exempted only because PLATFORM_ADMIN is
+        # the sole caller today (TD-025 — no Corporate Admin/Domain Admin
+        # authority model exists yet), the same disposition as
+        # TD-022/TD-023/TD-024.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -75,7 +83,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/domains" or path.startswith("/domains/") \
           or path == "/domain-permissions" or path.startswith("/domain-permissions/") \
           or path == "/approval-authorities" or path.startswith("/approval-authorities/") \
-          or path == "/delegation-policies" or path.startswith("/delegation-policies/"):
+          or path == "/delegation-policies" or path.startswith("/delegation-policies/") \
+          or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

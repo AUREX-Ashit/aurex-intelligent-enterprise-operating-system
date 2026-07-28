@@ -15,6 +15,7 @@ from .domain import Domain
 from .domain_permission import DomainPermission
 from .approval_authority import ApprovalAuthority
 from .delegation_policy import DelegationPolicy
+from .runtime_assignment_policy import RuntimeAssignmentPolicy
 
 __all__ = [
     "Base",
@@ -31,4 +32,5 @@ __all__ = [
     "DomainPermission",
     "ApprovalAuthority",
     "DelegationPolicy",
+    "RuntimeAssignmentPolicy",
 ]

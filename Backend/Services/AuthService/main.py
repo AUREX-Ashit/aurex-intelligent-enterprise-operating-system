@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, person, role, domain, domain_permission, approval_authority, delegation_policy
+from routers import auth, health, organization, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy
 from models.database import db_manager
 from config import settings
 
@@ -87,3 +87,4 @@ app.include_router(domain.router, prefix="/domains", tags=["Domain"])
 app.include_router(domain_permission.router, prefix="/domain-permissions", tags=["Domain Permission"])
 app.include_router(approval_authority.router, prefix="/approval-authorities", tags=["Approval Authority"])
 app.include_router(delegation_policy.router, prefix="/delegation-policies", tags=["Delegation Policy"])
+app.include_router(runtime_assignment_policy.router, prefix="/runtime-assignment-policies", tags=["Runtime Assignment Policy"])
