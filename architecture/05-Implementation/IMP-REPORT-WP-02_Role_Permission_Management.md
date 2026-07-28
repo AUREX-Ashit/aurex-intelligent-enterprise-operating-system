@@ -925,6 +925,14 @@ No security, tenant-isolation, or build-breaking defect was found. No violation 
 
 **Commit Date:** 2026-07-31 (both commits).
 
+**BA-10 — Resolve Dependent Capability Authorization Policy Hand-off Rejection:** Implementation COMPLETE (325/325 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review ACCEPT WITH NON-BLOCKING OBSERVATIONS (both findings fixed rather than deferred: a SUPERSEDED-status misclassification corrected with a new regression test, and stale test-count/scope text in this report corrected). No Technical Debt registered. Committed (`ffaaec6` implementation, `6cb60ad` documentation).
+
+**Commit Hash (BA-10):** `ffaaec6` (implementation: 9 files), `6cb60ad` (documentation: IMP-REPORT-WP-02, 1 file).
+
+**Commit Date (BA-10):** 2026-07-28.
+
+**WP-02 (Role & Permission Management) is now fully implemented — all ten Business Activities (BA-01 through BA-10) are complete, independently reviewed, and committed.**
+
 **Current Repository Status:** BA-01 through BA-09 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-09 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
 
 ---
