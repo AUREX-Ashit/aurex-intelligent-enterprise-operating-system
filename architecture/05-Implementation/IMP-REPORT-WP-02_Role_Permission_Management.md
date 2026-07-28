@@ -797,3 +797,128 @@ No data-integrity, tenant-isolation, security, or build-breaking defect was foun
 **Commit Date:** 2026-07-30 (both commits).
 
 **Current Repository Status:** BA-01 through BA-08 are all committed to `master`. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the frozen Enterprise-AI-Audit-remediation documents) remain outside WP-02's scope and were not part of either commit. **BA-08 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
+
+---
+
+## BA-09 — Detect and Resolve Authorization Policy Dependency Conflict
+
+Realizing PE-001-C003's ERB-C003-03 (Resolve Authorization Policy Dependency Conflict and Cross-Capability Hand-off) / EX-C003-09 (Detect and Resolve Authorization Policy Dependency Conflict).
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Determine whether a proposed deprecation, retirement, or breaking amendment to an authorization policy object is safe — enumerating every currently-active dependent and every other checkable dependency dimension — and, where the governing specification requires resolution rather than outright rejection, record the proposing authority's explicit resolution statement (Contract 5.6). Never itself deprecates/retires (BA-08's own, unmodified capability) or performs a cross-capability hand-off rejection (BA-10, not started).
+- **Input Contract:** Detect: the target object's id (path parameter) only. Resolve: the target object's id plus a `resolution_type` (one of Contract 5.6's three modes), a `reason`, and, for `REASSIGNMENT_CONFIRMED`, a `replacement_target_id`.
+- **Output Contract:** A `DependencyConflictReport` — `has_conflicts`, a list of explicit `DependencyViolation`s (each naming the exact violated rule, per this Business Activity's own instruction and EX-C003-09's Success Criteria), and every enumerated active dependent — or an HTTP error naming the specific violated rule.
+- **Business Rules:**
+  - BR-C003-04 / Contract 5.6 — every currently-active dependent is enumerated, never assumed absent (satisfied by construction: `detect_conflicts()` always calls `get_active_dependents()`, never `has_active_dependents()`'s own boolean shortcut).
+  - Contract 5.6 — resolution is always explicit (`resolution_type` + `reason` required on every call; no silent default).
+  - Contract 5.1 — this Business Activity never writes to Membership or any other dependent's own record; `resolve_conflict()` records a statement and re-checks, it does not itself reassign anything.
+- **Validation Rules — the Required Analysis, applied identically across all five types, scoped to what this schema can actually support (see Gap Analysis):**
+  - **Inbound dependencies** — `get_active_dependents()` per type (real for Role — both `memberships.role_id` and `role_permissions.role_id`, the second found only by Independent Review, see below; disclosed empty for the other four, reusing, not duplicating, BA-08's own root cause).
+  - **Outbound dependencies** — the referenced Organization (for the three org-scoped types) and Domain (where present) must still resolve; a RETIRED owning Organization is flagged.
+  - **Runtime dependencies** — the same disclosed gap as inbound dependencies for Delegation Policy/Runtime Assignment Policy (their real runtime dependents are not yet implemented in AuthService).
+  - **Organizational dependencies** — same as outbound, above.
+  - **Version dependencies** — the supersedes_id chain is walked for cycles (a data-integrity impossibility under normal application logic, checked defensively) and for more than one row claiming ACTIVE in one chain (directly verifying TD-027's own concern has not materialized).
+  - **Temporal dependencies** — `effective_to` must not precede `effective_from`; an ACTIVE object whose `effective_to` has already passed is flagged as a conflicting lifecycle state.
+  - Explicitly scoped out, disclosed rather than fabricated: multi-level dependency chains (no C-003 object type has a dependent that is itself depended upon by another — no 2-hop chain exists in this schema today); "orphaned policy references" as a literal runtime risk (BR-C003-04's never-hard-delete guarantee means a version-chain reference can never dangle under normal operation — checked defensively in the version-chain walk above, not as a separate mechanism).
+- **Resolution:** `REASSIGNMENT_CONFIRMED` validates the supplied `replacement_target_id` is the same type, exists, is not the object itself, and is the current ACTIVE version (this Business Activity's own "determine whether replacement is possible" requirement) — 404/409/422 naming the specific reason otherwise.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required (same interim gate as BA-01–08).
+- **Domain Events:** `AUTHORIZATION_POLICY_DEPENDENCY_CONFLICT_RESOLUTION_RECORDED`.
+- **Audit Requirements:** `record_audit("RESOLVE_DEPENDENCY_CONFLICT_<TYPE>", ...)` on every resolution, per SD-002-054's seven audit questions.
+- **Tests:** `tests/test_authorization_policy_dependency_conflict_service.py` (15 unit tests), `tests/test_authorization_policy_dependency_conflict_api.py` (11 API/authorization tests) — 26 new tests, all passing; full suite (309 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-09)
+
+Reviewed: PE-001-C003 (ERB-C003-03, EX-C003-09, Contract 5.1/5.6, extracted directly from the docx and already quoted in full in this session's earlier turns), BR-C003-04/05/06, IMP-001 (§13.17's shared-mechanism governing rule), CLAUDE.md §19.7, and BA-08's own `has_active_dependents()` implementation (the exact logic this Business Activity was instructed not to duplicate).
+
+**Key finding, resolved without escalation:** EX-C003-09's own Purpose ("enumerates every currently-active dependent and holds the proposed change until the proposing authority resolves, reassigns, or affirmatively accepts each one") is materially fuller than BA-08's own blocking pre-check, but the two are not in conflict — BA-08 already discloses (in its own commit and report) that it implements only the blocking half of BR-C003-04, deferring the fuller enumerate-and-resolve flow to this Business Activity. BA-09 supplies exactly that fuller flow as an additive, separate capability, invoked *before* BA-08's endpoints by the caller, never *by* BA-08's own code (which remains completely unmodified, per instruction).
+
+**Second finding, resolved without escalation, and disclosed as TD-030:** Contract 5.6's three resolution modes are not equally "clearable" given this Business Activity's own boundaries (Contract 5.1's C-007 boundary; the instruction not to modify BA-08). `REASSIGNMENT_CONFIRMED`/`NATURAL_EXPIRY_CONFIRMED` clear naturally because the underlying dependent's own state genuinely changes elsewhere; `ACCEPTED_BREAK` cannot yet flip BA-08's own gate without either crossing Contract 5.1 or modifying BA-08's already-shipped code. Resolved by implementing `ACCEPTED_BREAK` as a genuine, audited governance statement — satisfying Contract 5.6's textual requirement that such a statement be explicit and recorded — while disclosing, not concealing, that it does not yet mechanically clear BA-08's own check.
+
+**Third finding, resolved by scoping to real schema relationships, not invented ones:** several items in this Business Activity's own Required Analysis (circular dependencies, dependency chains, orphaned references) describe failure modes that, on inspection of the actual five-object-type schema, either cannot occur under normal operation (a cycle in a `supersedes_id` chain; an orphaned version reference, given BR-C003-04's never-hard-delete guarantee) or have no multi-level structure to detect (no C-003 object type is itself depended upon by another). Rather than build speculative graph-analysis machinery with nothing real to operate on, these are implemented as genuine, if normally-vacuous, defensive integrity checks (the version-chain walk) or explicitly disclosed as architecturally not-applicable — the same discipline TD-023/024/025/027/028 already established for inbound-dependency checks that are real for one type and disclosed stubs for others.
+
+---
+
+## Gap Analysis (BA-09)
+
+- **Database:** No schema change. No new table, no new column — this Business Activity is pure computation over existing columns (BA-07's Canonical Temporal Model, BA-08's status values) plus the existing audit/event mechanism.
+- **Reuse, not duplication (this Business Activity's own central instruction):** each repository's `has_active_dependents()` (BA-08) now composes `get_active_dependents()` (BA-09) rather than running a separate query — one query per type, two callers. Role's own `get_active_dependents()` queries two tables (`memberships`, `role_permissions`) — Independent Review found the original implementation enumerated only Membership, an incomplete enumeration against EX-C003-09's own Success Criteria; corrected in this same update (see Independent Review, below). `AuthorizationPolicyConflictService` is the single, shared mechanism this Business Activity's own instruction requires, dispatched generically (via `getattr`/duck-typing over `organization_id`/`domain_id`/`effective_from`/`effective_to`/`status`/`supersedes_id`, present in varying combinations across the five models per the Repository Evidence gathered before implementation) rather than five parallel per-type services.
+- **API Impact:** Ten new endpoints — `POST /{resource}/{id}/dependency-check` and `POST /{resource}/{id}/resolve-dependency`, one pair per existing resource, each thin, delegating entirely to the one shared service.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01–08's own scope decision).
+- **Dependencies:** None blocking. BA-01–08's own `establish()`/`create_new_version()`/`deprecate()`/`retire()` methods are untouched; only the two `has_active_dependents()`/`get_active_dependents()` pairs were refactored, confirmed behavior-preserving by the full suite passing unchanged before any new BA-09 code was added.
+- **Risks:** TD-030 (ACCEPTED_BREAK resolution does not yet clear BA-08's own gate — Medium severity, a genuine gap between this Business Activity's stated purpose and its current effect for one of three resolution modes). Residual scoping note, not a defect: BA-10's own cross-capability hand-off rejection classification (BR-C003-06) remains not started, per instruction.
+- **Technical Debt registered:** TD-030 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-09)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-02_Role_Permission_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-030 added)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/schemas/authorization_policy_conflict.py` (shared `DependencyViolation`, `DependencyConflictReport`, `ResolutionType`, `ResolveDependencyConflictRequest`)
+- `Backend/Services/AuthService/services/authorization_policy_conflict_service.py` (the single shared mechanism)
+- `Backend/Services/AuthService/tests/test_authorization_policy_dependency_conflict_service.py`
+- `Backend/Services/AuthService/tests/test_authorization_policy_dependency_conflict_api.py`
+
+**Implementation (modified):**
+- `repositories/role_repository.py`, `repositories/domain_permission_repository.py`, `repositories/approval_authority_repository.py`, `repositories/delegation_policy_repository.py`, `repositories/runtime_assignment_policy_repository.py` — each gains `get_active_dependents()`; each `has_active_dependents()` (BA-08) refactored to compose it, zero behavior change (confirmed: full suite passed unchanged immediately after this refactor, before any new BA-09 code existed).
+- `routers/role.py`, `routers/domain_permission.py`, `routers/approval_authority.py`, `routers/delegation_policy.py`, `routers/runtime_assignment_policy.py` — each gains `POST /{resource}/{id}/dependency-check` and `POST /{resource}/{id}/resolve-dependency`, plus the dependency-factory wiring for the shared conflict service.
+
+No `establish()`, `create_new_version()`, `deprecate()`, `retire()`, existing endpoint, or previously-shipped test was modified beyond the disclosed, behavior-preserving repository refactor above.
+
+---
+
+## Developer Validation (BA-09)
+
+- With `JWT_SECRET_KEY`/`JWT_ALGORITHM` set: **309 passed, 0 failed** (55.55s) — 283 prior (BA-01–08 + pre-WP-02 baseline) + 26 new BA-09 tests (15 service, 11 API), zero regressions. The repository refactor (has_active_dependents → get_active_dependents composition) was verified behavior-preserving in isolation: the full 283-test suite was re-run immediately after that refactor, before any new BA-09 code existed, and passed unchanged.
+- Confirmed Role's inbound-dependency detection is real end-to-end: a seeded active Membership produces a `BR-C003-04` violation naming the dependent explicitly, at both the service and API layers.
+- Confirmed outbound dependency detection: an Approval Authority whose owning Organization is RETIRED is flagged; a clean object of each type produces `has_conflicts: false`.
+- Confirmed temporal validity checks: `effective_to` before `effective_from`, and an ACTIVE object with a past `effective_to`, are each flagged with the exact rule cited.
+- Confirmed version-chain integrity: a normally-versioned object (BA-07) produces no chain violation.
+- Confirmed resolution: `REASSIGNMENT_CONFIRMED` rejects a missing target (422), a self-referential target (422), and a non-ACTIVE target (409); `ACCEPTED_BREAK` records the statement and honestly re-reports `has_conflicts: true` (TD-030).
+- Single Alembic head unchanged (`c3e9a5f7b2d4`) — this Business Activity required no migration.
+
+---
+
+## Independent Review (BA-09)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement, re-extracted `PE-001-C003_Role_Permission_Management.docx` (`word/document.xml`) directly and confirmed ERB-C003-03, EX-C003-09, and Contracts 5.1/5.4/5.6's own text word-for-word against the report's quotations. The reviewer read `services/authorization_policy_conflict_service.py` in full and confirmed `detect_conflicts()` genuinely calls `get_active_dependents()` (never the boolean shortcut), that the outbound-anchor/temporal/version-chain checks are each grounded in real columns present on all five models, and that the version-chain walk terminates correctly for both the common unversioned case and a single BA-07 hop. `resolve_conflict()` was confirmed to never write to Membership or any table other than the audit/event mechanism, with complete, distinctly-coded REASSIGNMENT_CONFIRMED validation. `git diff` confirmed all five `has_active_dependents()` methods are now pure boolean projections of `get_active_dependents()` with the original query logic preserved, and confirmed no BA-01–08 service file was touched. All ten new router endpoints were confirmed to perform their own 404 check before delegating to the single, generically-dispatched shared service, gated by `PLATFORM_ADMIN` identically to every other WP-02 endpoint. The reviewer independently re-ran the full suite (306 passed at review time, 0 failed) and `alembic heads` (single head, `c3e9a5f7b2d4`, no new migration). TD-030 was confirmed genuinely registered with its Contract 5.1/C-007 rationale verified as a real constraint.
+
+Six findings were raised and are disposed of as follows:
+1. **(Resolved by this update — the sole blocking finding)** `RoleRepository.get_active_dependents()` enumerated only `memberships.role_id`, missing `role_permissions.role_id` — a second real, WP-00-era, FK-referencing, seeded dependent table for Role (42 seed rows via `scripts/03_seed_r001_data.sql`). This meant a seeded system role with real permission assignments but no active Membership would incorrectly report `has_conflicts: false`, violating EX-C003-09's own Success Criteria that every currently-active dependent be enumerated. Fixed: `get_active_dependents()` now queries both tables; `RolePermission` rows (which carry no lifecycle/status column of their own) are treated as permanently active dependents. The Gap Analysis's inaccurate claim above is corrected. A new test (`test_detect_conflicts_finds_role_permission_dependent`) confirms the fix.
+2. **(Resolved by this update)** `resolve_conflict()`'s four validation-failure branches raised `HTTPException` before any audit record was written, diverging from every other WP-02 Business Activity's discipline of auditing both success and denial paths. Fixed: a new `_record_resolution_denial()` helper audits each branch before raising.
+3. **(Resolved by this update)** Neither test file exercised `resolve_conflict()`'s 404 branch (unknown replacement target) or the outbound "Domain no longer resolves" branch. Two new tests added (`test_resolve_conflict_reassignment_rejects_unknown_replacement_target`, `test_detect_conflicts_flags_unresolvable_domain`), the latter constructing the otherwise-unreachable scenario via direct ORM deletion, the same technique already used elsewhere in this suite for edge cases with no application code path to trigger them naturally.
+4. **(Informational, not actioned)** The version-chain cycle/orphan-reference defensive branches remain untested beyond the clean path — accepted as the same class of gap already established for TD-027 (a data-integrity impossibility under normal application logic).
+5. **(Informational, not actioned)** Role's `has_active_dependents()` now fetches full rows via `get_active_dependents()` rather than a `LIMIT 1` existence check — a minor efficiency consideration for roles with very large active-dependent counts, not a correctness issue.
+6. **(Verified, no defect)** The "one reusable mechanism" requirement is genuinely satisfied — one service class, dispatched generically via `getattr`, with no per-type branching in the detection or resolution logic itself.
+
+No security, tenant-isolation, or build-breaking defect was found. No violation of Contract 5.1's C-007 boundary was found.
+
+---
+
+## Status (Combined)
+
+**BA-01 — Establish Business or System Role:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`bca7f0b`, `178d07b`, `67e45c9`, `0258d6c`).
+
+**BA-02 — Establish Domain Permission:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`31ed253`, `5655b2f`).
+
+**BA-03 — Establish Approval Authority:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`65a8310`, `4ba8f99`).
+
+**BA-04 — Establish Delegation Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`a347b00`, `5f61520`, `4632a30`).
+
+**BA-05 — Establish Runtime Assignment Policy:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`cddacc6`, `c07a67a`, `e8ce080`).
+
+**BA-07 — Version and Re-effective-Date Authorization Policy Object:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`a9129ab`, `457fde2`, `1a82493`).
+
+**BA-08 — Deprecate or Retire Authorization Policy Object:** Implementation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS. Committed (`7415eb6`, `57cf9cf`, `311f32a`).
+
+**BA-09 — Detect and Resolve Authorization Policy Dependency Conflict:** Implementation COMPLETE (309/309 tests passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (the sole blocking finding fixed in the same update it was raised in; two further findings closed with new tests; two informational, not actioned). Repository Commit: Pending (this update, including code, tests, TECH-DEBT.md TD-030, and this report, is being committed next).
+
+**Current Repository Status:** BA-01 through BA-08 remain committed to `master`. BA-09's implementation (2 new shared modules, 5 modified repositories, 5 modified routers, 2 new test files), `TECH-DEBT.md`'s TD-030 entry, and this report's BA-09 sections are new since BA-08's last commit and are being committed next, per instruction, in a separate implementation commit and documentation commit. **BA-09 has satisfied the Business Activity Completion Gate (CLAUDE.md §19.7) in full.**
