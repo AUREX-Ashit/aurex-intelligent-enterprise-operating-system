@@ -379,6 +379,40 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 
 ---
 
+### TD-039 — Detailed Entry
+
+- **Title:** PLATFORM_ADMIN-Only Authorization Gate for Surface Multi-Organization Membership Awareness (EX-C007-09 Persona-Specific Defining Authority Deferred)
+- **Category:** Security / Authorization Granularity
+- **Description:** BA-07 (Surface Multi-Organization Membership Awareness, WP-03/C-007) gates `GET /memberships/multi-organization-awareness` on the existing `PLATFORM_ADMIN` role claim only (`dependencies.require_platform_admin`, reused unchanged from BA-01/BA-02/BA-03/BA-06). PE-001-C007's EX-C007-09 names Membership Sponsor, Membership Steward, and Platform Oversight Participant as its Participating Personas, none of which exist as a distinct, enforceable claim anywhere in the platform today.
+- **Root Cause:** The same unresolved-authorization-catalog gap ADR-002 already names for WP-02 (TD-021) and BA-01/BA-02/BA-03/BA-06 already recorded for their own personas (TD-031/TD-034/TD-035/TD-036) — no Membership Sponsor/Steward/Platform Oversight Participant persona claim has ever been modeled in this codebase.
+- **Impact:** Any authenticated `PLATFORM_ADMIN` can query whether a given Person holds Memberships in other Organizations, regardless of whether URA-001/EX-C007-09 would actually confer that specific defining authority to a Membership Sponsor, Steward, or Platform Oversight Participant. No privilege-escalation risk beyond what `PLATFORM_ADMIN` already holds platform-wide today, and the response itself is already existence-only (BR-C007-008, TD-040) regardless of caller — EX-C007-09's persona differentiation is simply not enforced.
+- **Severity:** Low — a disclosed, deliberate simplification, the same class WP-01/WP-02/BA-01/BA-02/BA-03/BA-06 already established precedent for, not a silent gap.
+- **Status:** Open
+- **Target Resolution:** A Membership Sponsor/Steward/Platform Oversight Participant persona authority model (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for `GET /memberships/multi-organization-awareness`.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-07 — Surface Multi-Organization Membership Awareness
+- **Source:** BA-07 implementation (self-identified and disclosed in the router's own OpenAPI description and `membership-api.yaml`); this detailed entry itself added during the WP-03 Independent Certification (CERT-WP-03) after the summary table row's own "See detailed entry below the table" claim was found, upon independent verification, not to be true — a genuine §19.8.2 registration-hygiene gap, corrected here.
+- **Resolution Criteria:** A persona-specific authorization model exists and `GET /memberships/multi-organization-awareness` is gated on it instead of `PLATFORM_ADMIN`; a test exists confirming a caller lacking the correct persona is rejected once the real gate replaces today's interim one.
+
+---
+
+### TD-040 — Detailed Entry
+
+- **Title:** No Cross-Tenant Sharing Agreement Mechanism Exists Anywhere in This Repository
+- **Category:** Architecture
+- **Description:** PE-001-C007's Contract 5.4 and URA-001-17a both name an "explicit, named, audited cross-tenant sharing agreement" as the sole exception path that would entitle an establishing Organization to more than an existence-only signal of a Person's Memberships elsewhere. No such mechanism — registry, table, model, or API — exists anywhere in this codebase. BA-07's `surface_multi_organization_awareness()` therefore always returns the most-restrictive, existence-only default (BR-C007-008), unconditionally, for every caller and every Organization pair.
+- **Root Cause:** No capability in this repository has ever been chartered to define or implement a cross-tenant sharing agreement construct; it is named only as an exception clause within URA-001-17a/Contract 5.4's own restriction, not as a Business Object any Work Package has yet owned.
+- **Impact:** None adverse today — the always-existence-only default is the complete, correct, and safest behavior for the only case that currently exists (no agreement is ever present to consult). The impact is purely one of missing future functionality: if a genuine cross-tenant sharing agreement is ever chartered, `surface_multi_organization_awareness()` would need to be extended to consult it before defaulting to existence-only.
+- **Severity:** Low — a disclosed, deliberate non-delivery of an exception path with no canonical owner yet, not a defect in the default path itself, which is already fully correct.
+- **Status:** Open
+- **Target Resolution:** A cross-tenant sharing agreement registry/model (future, separately-scoped Business Activity or architecture amendment, requiring its own governing capability and canonical specification), after which `surface_multi_organization_awareness()` could be extended to consult it before defaulting to existence-only.
+- **Owning Work Package:** WP-03 — Membership Management (C-007)
+- **Related Business Activity:** BA-07 — Surface Multi-Organization Membership Awareness
+- **Source:** BA-07 implementation (self-identified during this Business Activity's own gap analysis, confirmed directly against Contract 5.4 and URA-001-17a); this detailed entry itself added during the WP-03 Independent Certification (CERT-WP-03) for the same registration-hygiene reason as TD-039 (above).
+- **Resolution Criteria:** A cross-tenant sharing agreement model exists and is queryable; `surface_multi_organization_awareness()` is extended to consult it before defaulting to existence-only; a test exists confirming a Person with an active sharing agreement correctly receives expanded visibility while one without still receives only the existence-only signal.
+
+---
+
 ### TD-041 — Detailed Entry
 
 - **Title:** EX-C007-10's Own "Authorized Aggregator" Persona Is Not Implemented (Deliberately Excluded, Not Deferred)
