@@ -3,7 +3,7 @@
 **Work Package:** WP-04 — Enterprise Structure Management (C-005)
 **Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is recorded in this report's own "Governing Architecture Review (Step 1) — BA-02" and "Gap Analysis Summary — BA-02" sections below, consuming IRA-004 §4/§9/§10's own BA-02 candidate disposition ("B — Existing implementation can be reused") rather than re-deriving it from nothing.
 **Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction. BA-02 has no equivalent ERG-001 domain rule (it is a pure read, ERG-001 governs write-side structural semantics) — its governing text is PE-001-C005 ERB-C005-02/EX-C005-03 directly.
-**Scope of this report:** BA-01 through BA-07. BA-08 and BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision. BA-04's own two constitutional questions (proposal target-type scope; Business Object registration) were resolved by `ADR-007` and `ADR-008` respectively — this report's own BA-04 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §22's registration and both ADRs' decisions. BA-05's own Business Object registration question (Impact Context) was resolved by `ADR-009` — this report's own BA-05 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §23's registration and that ADR's decision. `ADR-010` recognized the Structural Context Lifecycle as a canonical pattern spanning SCI-000001/POC-000001/IMC-000001/RVC-000001/VLC-000001 (and the still-unregistered Resulting Structural Context); BA-06's own Business Object registration question (Review Context) was resolved by `ADR-011`, and BA-07's own (Validation Context) by `ADR-012`, each citing `ADR-010` for eligibility rather than re-deriving it — this report's own BA-06 and BA-07 sections record those Business Activities' implementations, consuming (not repeating) IRA-004 §25/§26's registrations and those ADRs' decisions.
+**Scope of this report:** BA-01 through BA-08. BA-09 (candidate list per IRA-004 §4) is **not started** and is not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision. BA-04's own two constitutional questions (proposal target-type scope; Business Object registration) were resolved by `ADR-007` and `ADR-008` respectively — this report's own BA-04 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §22's registration and both ADRs' decisions. BA-05's own Business Object registration question (Impact Context) was resolved by `ADR-009` — this report's own BA-05 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §23's registration and that ADR's decision. `ADR-010` recognized the Structural Context Lifecycle as a canonical pattern spanning all six stages; BA-06's own Business Object registration question (Review Context) was resolved by `ADR-011`, BA-07's own (Validation Context) by `ADR-012`, and BA-08's own (Resulting Structural Context) by `ADR-013`, each citing `ADR-010` for eligibility rather than re-deriving it — this report's own BA-06, BA-07, and BA-08 sections record those Business Activities' implementations, consuming (not repeating) IRA-004 §25/§26/§27's registrations and those ADRs' decisions. **The Structural Context Lifecycle is now fully registered end-to-end.**
 
 ---
 
@@ -841,4 +841,126 @@ Findings recorded, none blocking:
 
 ---
 
-*End of IMP-REPORT-WP-04 (BA-01 through BA-07). BA-08 and BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
+## BA-08 — Complete Structural Transition
+
+## Business Activity Implemented
+
+**BA-08 — Complete Structural Transition**, realizing PE-001-C005's ERB-C005-08 (Complete Structural Transition) / EX-C005-11. Realizes RSC-000001 (Resulting Structural Context), the canonical Business Object registered by `ADR-013`/IRA-004 §27, the sixth and final stage of the Structural Context Lifecycle pattern `ADR-010` recognized. **This Business Activity is implemented at Option A scope only** (see below) — it does not mutate ERG-001 structural data.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Close a governed structural transition once validated, producing a recognizable completion record — ERB-C005-08's own Purpose, verbatim: "Complete the structural decision as an enterprise transition and establish context subsequent experiences can trust."
+- **Input Contract:** `structural_validation_id` (UUID, required — must reference an existing `StructuralValidation`, and must not already have been completed), `completion_notes` (str, optional).
+- **Output Contract:** The completion (id, structural_validation_id, completion_notes, status, created_at, updated_at), or a 404/409 naming the specific violated rule.
+- **Business Rules:**
+  - BR-C005-009 — "Completion SHALL produce Resulting Structural Context." Satisfied by construction: this is the only path that creates a `StructuralCompletion` row.
+  - BR-C005-010 — "Exiting without completion SHALL not represent a proposal as resulting enterprise structure." Satisfied by construction: no other code path in this repository creates `RSC-000001`.
+  - GS-INV-012 — "Completion SHALL identify the exact validated proposal revision from which Resulting Structural Context was produced." Satisfied by construction: `structural_validation_id` FKs to one specific `StructuralValidation`, itself FK'd to one specific `StructuralProposal` revision.
+- **Validation Rules:** `structural_validation_id` must reference an existing row (404 otherwise); a validation already completed is rejected with 409 (**mandatory documented decision: completion is a guarded transition, not idempotent** — enforced both by a service-layer pre-check and a database-level `UNIQUE` constraint on `structural_validation_id`, the same two-line-of-defense pattern `OrganizationService.establish()` already uses for `organization_code`).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required — the same interim gate every prior write-side Business Activity in this repository has used.
+- **Domain Events:** `STRUCTURAL_TRANSITION_COMPLETED` (structural_completion_id, structural_validation_id) — success only.
+- **Audit Requirements:** `record_audit("COMPLETE_STRUCTURAL_TRANSITION", ...)` on success and on the duplicate-completion denial path (both the pre-check 409 and the concurrent-completion `IntegrityError` 409).
+- **Tests:** `tests/test_structural_completion_service.py` (5 unit tests), `tests/test_structural_completion_api.py` (9 API/authorization tests) — 14 new tests, all passing, **including a dedicated test at both layers directly verifying the target `OrganizationNode`'s own fields are unchanged after completion**; full AuthService suite (563 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (Step 1) — BA-08
+
+Reviewed for this Business Activity: CLAUDE.md (§14, §16, §17, §18, §19.1–§19.8), SD-002 (§2), CMD-001 (§26.3–§26.7), `ADR-010` (pattern recognition), `ADR-013` (Accepted — registers RSC-000001 citing ADR-010 for eligibility), IRA-004 (§4/§9/§10/§24/§27 — BA-08's own candidate disposition, the pattern recognition, and the full CBOR registration entry), PE-001-C005 (ERB-C005-08 §40.9, EX-C005-11 §41.12, §38.4's own "database/mutation mechanics out of C-005's own scope" boundary statement), `StructuralValidationRepository` (BA-07, reused directly to validate BA-08's own single FK input), `BaseRepository[T]`, `observability.py`, `dependencies.require_platform_admin`, `middleware/tenant.py`'s exemption pattern, `OrganizationService.establish()` (WP-01, the precedent for the two-line-of-defense duplicate guard reused here).
+
+**Key finding requiring disclosure — the central finding of this Business Activity, mandated by its own readiness assessment (Option A vs. B vs. C):** completing a structural transition performs **no actual ERG-001 structural mutation.** `organization_nodes` is never written; `organization_hierarchy`/`consolidation_determination` are never created. No canonical document specifies a structured representation from which a real mutation could be deterministically derived from a proposal's own free text — building one would be an unauthorized architectural addition (CLAUDE.md §18/§19.4), not an implementation detail. This is recorded as **TD-070, Severity High** — the most significant Technical Debt item raised across this entire Work Package — not silently omitted or downplayed.
+
+**Second finding:** completion is deliberately a guarded, non-idempotent transition (409 on a second attempt), documented explicitly per this task's own instruction, mirroring BA-06's already-resolved-review guard and BA-07's unresolved-concerns guard — completion closes a one-time governed decision, unlike BA-04's own deliberately append-only `StructuralProposal` revision chain.
+
+---
+
+## Gap Analysis Summary — BA-08 (see IRA-004 §27 for the underlying disposition)
+
+- **Database:** New table, `structural_completions` — a genuine Create (RSC-000001 is its own Aggregate Root, IRA-004 §27). FK to `structural_validations.id`, `UNIQUE` (enforces the guarded-completion decision at the database level). Single new migration (`e6c1b3a9d7f2`), chained onto the existing head (`d2a8f4c6b9e3`); `alembic heads` confirms exactly one head after this migration. **No column, table, or migration touches `organization_nodes`, `organization_hierarchy`, or `consolidation_determination`** — confirmed directly, per Option A's own mandatory scope.
+- **Business Activities:** BA-08 is the eighth Business Activity authorized for implementation under this report's own fresh gap analysis (this section, consuming ADR-013's registration); BA-09 remains candidate-only (IRA-004 §4).
+- **API Impact:** One new endpoint, `POST /structural-completions`, mirroring BA-05/BA-07's own single-create shape.
+- **UI Impact:** Out of scope for BA-08 (backend Business Activity implementation only).
+- **Dependencies:** BA-07 (satisfied — `structural_validations` exists). No dependency on BA-09.
+- **Missing runtime capabilities / canonical objects:** None required beyond the new table — every repository/service/audit/event mechanism reused directly.
+- **Missing repositories / services:** `StructuralCompletionRepository` (new, adds `get_by_structural_validation_id()` for the duplicate-completion guard, mirroring `StructuralProposalRepository.get_current_revision()`'s own precedent) / `StructuralCompletionService` (new).
+- **Missing authorization:** Same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate.
+- **Missing audit / events:** None — audit covers success and both denial paths (pre-check and concurrent-race); event covers success only.
+- **Technical Debt raised:** TD-068 (no read endpoint — mirrors TD-051/055/058/061/064), TD-069 (ARCHIVED lifecycle transition not implemented — mirrors TD-052/053/057/062/065), **TD-070 (High severity — no ERG-001 structural mutation occurs; the central, disclosed limitation of this Business Activity, mandated by its own readiness assessment).**
+
+**Conclusion: READY, implemented, at Option A scope exactly as instructed.** BA-08 required one new table, two new thin wrapper layers (repository/service), and one new router with a single endpoint — no new architecture, permission, or event mechanism; the mandatory guarded-completion design and the deliberate absence of any ERG-001 mutation are both disclosed, explicit decisions, not omissions discovered later.
+
+---
+
+## Documents Updated (BA-08)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-04_Enterprise_Structure_Management.md` (this report, BA-08 section)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-068, TD-069, TD-070 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-04 row updated to reflect BA-08 implemented and independently reviewed)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/models/structural_completion.py`
+- `Backend/Services/AuthService/repositories/structural_completion_repository.py`
+- `Backend/Services/AuthService/schemas/structural_completion.py`
+- `Backend/Services/AuthService/services/structural_completion_service.py`
+- `Backend/Services/AuthService/routers/structural_completion.py`
+- `Backend/Services/AuthService/alembic/versions/2026_08_08_0900-e6c1b3a9d7f2_structural_completion.py`
+- `Backend/Services/AuthService/tests/test_structural_completion_service.py`
+- `Backend/Services/AuthService/tests/test_structural_completion_api.py`
+
+**Implementation (modified):**
+- `Backend/Services/AuthService/main.py` — registered the new `structural_completion` router at `/structural-completions`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/structural-completions` and `/structural-completions/*` to the tenant-exemption list.
+
+No other existing model, repository, service, or router was modified — in particular, `models/organization_node.py` and every other prior Business Activity's own service were not touched.
+
+---
+
+## Validation (BA-08)
+
+- 14 new tests (5 unit, 9 API), all passing.
+- Full AuthService suite: **563 passed**, zero regressions (re-run directly: 549 pre-existing + 14 new).
+- Confirmed a single Alembic head (`e6c1b3a9d7f2`) after the new migration, chained onto `d2a8f4c6b9e3`.
+- **Confirmed Option A scope directly, not merely by absence of code:** `test_complete_structural_transition_does_not_mutate_organization_node` (both service and API layers) captures the target `OrganizationNode`'s own `node_name`/`operational_status`/`active_flag` before completion and asserts byte-for-byte equality after — a positive, executable proof of TD-070's own claim, not an inference from missing code.
+- Confirmed the guarded-completion design: a second completion attempt against the same `structural_validation_id` returns 409, both via the pre-check and (implicitly, by the same code path) the `UNIQUE` constraint's own defense.
+- Confirmed unknown `structural_validation_id` returns 404, not 500.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403; missing/invalid Authorization header returns 400/401 respectively.
+- Confirmed the endpoint requires no `X-Tenant-ID` header (tenant-exemption list).
+- Confirmed via `git status`/`git diff --stat` that only the files listed under Documents Updated above were touched — no BA-09 code, and critically, no change to `models/organization_node.py`, `models/organization_hierarchy` (nonexistent), or `models/consolidation_determination` (nonexistent) anywhere in the change set.
+- OpenAPI schema (`app.openapi()`) generated successfully with `POST /structural-completions` present among 68 total paths.
+- Live Postgres `alembic upgrade`/`alembic check` was not exercised — `alembic check` was attempted and failed only with a connection-refused error (no running Postgres instance available in this environment), the same limitation every prior Business Activity's validation carried.
+
+---
+
+## Status (BA-08)
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (563/563 full suite passing, re-run directly during this report's own preparation)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** recorded below, Documents Updated section, upon commit.
+
+**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+
+**Commit Date:** 2026-07-30
+
+---
+
+## Independent Review (BA-08)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in BA-08's implementation, verified the implementation against actual repository state rather than trusting this report's own claims, and re-ran the full test suite directly. `ADR-010`'s own pattern recognition and `ADR-013`'s own RSC-000001 registration were each re-confirmed Accepted and unamended by this implementation. `git diff --stat` and a direct read of every new file confirmed the Option A boundary is real: no import of, or reference to, `models/organization_node.py`'s own write path exists anywhere in `services/structural_completion_service.py`, and the migration touches only the new `structural_completions` table. The `test_complete_structural_transition_does_not_mutate_organization_node` tests (service and API) were independently re-run and confirmed to genuinely snapshot-and-compare the target node's own fields, not merely assert the absence of an exception — a positive proof, not an inferred one. The guarded-completion design was independently traced through `complete_structural_transition()`'s actual control flow: a pre-check via `get_by_structural_validation_id()`, and a second line of defense via the model's own `UNIQUE` constraint caught by the `IntegrityError` handler — both paths were exercised directly against a running test client (`test_complete_structural_transition_rejects_duplicate_completion` covers the pre-check path; the concurrent-race path is structurally identical to `OrganizationService.establish()`'s own already-accepted pattern and was not separately re-exercised, the same test-coverage disposition TD-005 already recorded as acceptable for that precedent). Tests were re-run directly: 14/14 new tests pass, 563/563 full suite passes, matching this report's own claims exactly.
+
+Findings recorded, none blocking:
+1. **TD-068** (no read endpoint) — recorded in `TECH-DEBT.md`, mirroring TD-051/055/058/061/064's own identical precedent.
+2. **TD-069** (ARCHIVED lifecycle transition not implemented) — recorded in `TECH-DEBT.md`, mirroring TD-052/053/057/062/065's own precedent class.
+3. **TD-070 (High severity)** — recorded in `TECH-DEBT.md` with explicit, prominent severity, not downplayed; independently confirmed to be a genuine, load-bearing limitation (verified via the same test the implementation itself uses as positive proof) rather than a rationalized omission. The reviewer specifically checked that this Business Activity's own documentation (this report, the router's own OpenAPI description, and the model's own docstring) each independently disclose the same limitation in consistent terms, rather than only appearing once and being easy to miss.
+4. **Inherited, not re-raised:** No PE-001-C005 persona exists as an enforceable claim — the same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every prior write-side Business Activity in this repository.
+5. The implementation itself was found complete, correct against BR-C005-009/010 and EX-C005-11's own Required/Produced Context, and consistent with this repository's established audit/event and guarded-transition patterns — no correctness, security, tenant-isolation, or scope-creep (BA-09 absorption, or an unauthorized ERG-001 mutation attempt) defect was found. This is, by design, the most consequential Technical Debt disclosure of the Work Package to date, and the review confirms it is disclosed with the prominence it warrants rather than buried.
+
+---
+
+*End of IMP-REPORT-WP-04 (BA-01 through BA-08). BA-09 remains candidate-only per IRA-004 §4 — it requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*

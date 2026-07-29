@@ -95,6 +95,9 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-065 | `StructuralValidation.status` is constrained to IRA-004 §26's own registered Lifecycle Model (CREATED, INVALIDATED, ARCHIVED), but BA-07's own code only ever writes CREATED — INVALIDATED and ARCHIVED are never reached. | BA-07 implementation (self-identified, mirroring TD-052/TD-053/TD-057/TD-062's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per GS-INV-007) — deliberately out of BA-07's own scope, the same disposition already recorded for Impact Context (TD-057) and Review Context (TD-062). | Open | AuthService (Backend) |
 | TD-066 | `POST /structural-validations` enforces only BR-C005-007 (review concerns resolved) as its readiness gate. EX-C005-10's own AI Assistance clause — "AI MAY identify missing context or apparent inconsistencies" — alludes to further readiness criteria beyond concern-resolution that are not implemented. | BA-07 implementation (self-identified during this Business Activity's own gap analysis, directly against EX-C005-10's own text) | Architecture | Low | A future revisit of BA-07, once a concrete additional readiness criterion (e.g., missing required context, structural inconsistency detection) is actually needed by a real caller — not invented speculatively ahead of that need. | Open | AuthService (Backend) |
 | TD-067 | `POST /structural-validations` does not verify that the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own proposal lineage — mirrors TD-059/TD-063's identical gap for Impact Context and Review Context, now also present for Validation Context. | BA-07 implementation (self-identified, same disclosed-not-assumed disposition as TD-059/TD-063) | Architecture | Low | A future revisit of BA-07 (or BA-08's own readiness gap analysis) decides whether validating against a superseded revision should be rejected, allowed with a warning, or remains permitted — ideally resolved once for TD-059/TD-063/TD-067 together. | Open | AuthService (Backend) |
+| TD-068 | No `GET` read endpoint exists for Resulting Structural Context — only `POST /structural-completions` exists. Mirrors TD-051/TD-055/TD-058/TD-061/TD-064's identical disposition for the other Structural Context Lifecycle objects. | BA-08 implementation (self-identified, IRA-004 §4's own typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-09 (Continue from Resulting Structure)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
+| TD-069 | `StructuralCompletion.status` is constrained to IRA-004 §27's own registered Lifecycle Model (CREATED, ARCHIVED), but BA-08's own code only ever writes CREATED — ARCHIVED is never reached. | BA-08 implementation (self-identified, mirroring TD-052/TD-053/TD-057/TD-062/TD-065's own identical class) | Architecture | Low | A future retirement/archival path reaches ARCHIVED once a real consumer needs it. | Open | AuthService (Backend) |
+| TD-070 | **BA-08 ("Complete Structural Transition") records that a governed structural transition has been completed (`RSC-000001`) but performs no actual ERG-001 structural mutation.** `organization_nodes` is never modified, and `organization_hierarchy`/`consolidation_determination` are never created. A caller can complete an entire Structural Change Intent → Proposal → Review → Validation → Completion chain, and the enterprise's own real structural data (the `OrganizationNode` the proposal targeted) is byte-for-byte unchanged afterward — verified directly by this Business Activity's own tests (`test_complete_structural_transition_does_not_mutate_organization_node`, both service- and API-level). | BA-08 implementation (deliberate, mandatory scope decision — Option A, per this Business Activity's own readiness assessment and explicit implementation instruction) | Architecture | **High** | No canonical document in this repository (PE-001-C005, ERG-001, Master Technical Architecture) specifies a structured representation from which a real structural mutation could be deterministically derived from a `StructuralProposal`'s own free-text `proposed_outcome_description` (TD-054's own identical gap). Resolution requires, at minimum: (1) a governance decision on what a "structural change" is represented as in data (a structured patch/diff schema, not free text); (2) the actual ERG-001 write-path capability (`organization_hierarchy`, `consolidation_determination` — neither exists anywhere in this repository); (3) a mechanism connecting a completed `RSC-000001` row to that write path. This is real, substantial future work, likely spanning multiple future Business Activities or its own governance decision — not invented speculatively here. | Open | AuthService (Backend) |
 
 ---
 
@@ -877,6 +880,57 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-07 — Validate Transition Readiness
 - **Source:** BA-07 implementation (self-identified, mirroring TD-059/TD-063's own precedent)
 - **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision validation is permitted, and that decision is enforced and tested.
+
+---
+
+### TD-068 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Resulting Structural Context
+- **Category:** Architecture
+- **Description:** BA-08 implements `POST /structural-completions` only. No endpoint retrieves an existing completion by id.
+- **Root Cause:** Mirrors TD-051/TD-055/TD-058/TD-061/TD-064's identical scoping precedent — no read path was scoped for this Business Activity's own first pass.
+- **Impact:** None today — the create response already returns every field a caller needs immediately. Becomes real friction once BA-09 (Continue from Resulting Structure) needs to resolve a completion by id.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** BA-09's own future implementation-readiness gap analysis decides whether a dedicated `GET /structural-completions/{id}` is required.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-08 — Complete Structural Transition
+- **Source:** BA-08 implementation (self-identified, mirroring TD-051/055/058/061/064's own identical precedent)
+- **Resolution Criteria:** A read path for Resulting Structural Context exists, if and only if BA-09's own gap analysis determines one is required.
+
+---
+
+### TD-069 — Detailed Entry
+
+- **Title:** Resulting Structural Context Lifecycle Transition Beyond CREATED Is Not Implemented
+- **Category:** Architecture
+- **Description:** `StructuralCompletion.status` (`models/structural_completion.py`) is constrained to IRA-004 §27's registered Lifecycle Model — CREATED, ARCHIVED — but BA-08's own service only ever writes CREATED.
+- **Root Cause:** No retirement/archival mechanism exists anywhere in this repository yet; ARCHIVED is SD-002-008's own generic terminal state, not something PE-001-C005 itself triggers.
+- **Impact:** None today — mirrors every prior Business Activity's own identical, already-accepted disposition (TD-052/053/057/062/065).
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future retirement/archival path, once a real consumer needs it.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-08 — Complete Structural Transition
+- **Source:** BA-08 implementation (self-identified, mirroring TD-052/053/057/062/065's own precedent)
+- **Resolution Criteria:** ARCHIVED has a real, tested code path once the mechanism that owns that transition is implemented.
+
+---
+
+### TD-070 — Detailed Entry
+
+- **Title:** Completing a Structural Transition Performs No Actual ERG-001 Structural Mutation
+- **Category:** Architecture
+- **Description:** BA-08 ("Complete Structural Transition") creates a `StructuralCompletion` (`RSC-000001`) row recording that a governed decision chain — Structural Change Intent → Proposed Outcome → Review → Validation — has reached completion. It does **not** modify `organization_nodes`, and does **not** create `organization_hierarchy` or `consolidation_determination`. The enterprise's own real structural data (the `OrganizationNode` a proposal targeted) is provably unchanged after "completion" — directly verified by this Business Activity's own tests, which assert the target node's `node_name`/`operational_status`/`active_flag` are byte-for-byte identical before and after completion, at both the service and API layers.
+- **Root Cause:** No canonical document in this repository (PE-001-C005, ERG-001, Master Technical Architecture) specifies a structured representation from which a real structural mutation could be deterministically derived from a `StructuralProposal`'s own free-text `proposed_outcome_description` — the same upstream gap TD-054 already disclosed for Comparison Context. PE-001-C005 §38.4 itself explicitly places database/mutation mechanics outside C-005's own scope. Building a mutation mechanism now would require inventing both a change-representation schema and the write logic itself — an unauthorized architectural addition (CLAUDE.md §18/§19.4), not an implementation detail. This was evaluated explicitly during BA-08's own readiness assessment (Option A vs. B vs. C) and Option A — no mutation — was the only option requiring no invention.
+- **Impact:** **Significant, and disclosed prominently rather than left implicit.** The entire WP-04 Structural Context Lifecycle (BA-03 through BA-08) currently produces a complete, governed, auditable *decision record* — but the enterprise's actual structural data (`organization_nodes`, and the still-nonexistent `organization_hierarchy`/`consolidation_determination`) is never touched by any code path in this repository. A caller who runs the full chain to "completion" has not changed anything about the real enterprise structure. This also means WP-03's own TD-032 (`memberships.home_node_id` nullability) remains unaffected by WP-04's own completion, since no new `OrganizationNode` state is ever produced by a completed transition.
+- **Severity:** **High** — this is the central, load-bearing gap of the entire Structural Context Lifecycle as currently implemented; every other Technical Debt item raised across BA-03 through BA-08 is comparatively minor next to this one.
+- **Status:** Open
+- **Target Resolution:** Real resolution requires, at minimum: (1) a governance decision on how a "structural change" is represented as structured data (not free text) — likely its own ADR; (2) the actual ERG-001 write-path capability, including `organization_hierarchy` and `consolidation_determination`, neither of which exists anywhere in this repository; (3) a mechanism connecting a completed `RSC-000001` row to that write path, satisfying GS-INV-012's own exact-revision traceability requirement. This is substantial, multi-Business-Activity (or multi-Work-Package) future work — not invented speculatively here.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-08 — Complete Structural Transition
+- **Source:** BA-08 implementation (mandatory disclosure, per this Business Activity's own explicit instruction and readiness assessment)
+- **Resolution Criteria:** Completing a structural transition produces a real, verifiable change to the enterprise's own structural data, not only a C-005 experience-layer completion record.
 
 ---
 
