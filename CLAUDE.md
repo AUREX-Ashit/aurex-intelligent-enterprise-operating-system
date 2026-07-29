@@ -641,6 +641,25 @@ Create
 Claude Code SHALL prefer improving an existing implementation over
 creating a parallel implementation.
 
+**Worked example (formalized per ADR-014 — METH-001):** WP-04's BA-08
+("Complete Structural Transition") illustrates this rule at the
+minimum-scope decision point. Three implementation scopes were
+identified — Option A (produce Resulting Structural Context only, no
+`organization_nodes` mutation), Option B (also mutate
+`organization_nodes` directly), Option C (also create new
+`organization_hierarchy`/`consolidation_determination` tables). Option A
+was selected because it is the smallest scope that satisfies the
+governing Enterprise Experience's own Produced Context without inventing
+an ERG-001 structural-mutation mechanism nowhere documented in canonical
+architecture — Options B and C would each have required exactly the kind
+of undocumented new database object §18 and §19.4 already prohibit. The
+deferred mutation mechanism was disclosed as Technical Debt (`TD-070`)
+rather than silently built. This is the Reuse → Configure → Extend →
+Compose → Create order applied to a scope decision, not only to a
+build-vs-reuse decision: the smallest sufficient option in that order is
+the correct one, and what it deliberately excludes is disclosed, not
+hidden.
+
 -------------------------------------------------------------------------------
 19.6 Compliance Verification
 -------------------------------------------------------------------------------
@@ -815,5 +834,219 @@ Certification SHALL be performed independently using the approved
 architecture, implementation reports, source code, tests, APIs,
 database migrations, and other implementation evidence.
 
+**Fresh-context reviewer requirement (formalized per ADR-014 —
+METH-001):** "Independently" requires a genuinely independent reviewer —
+a fresh-context subagent or a separate reviewing party that re-derives
+and re-verifies material claims (test execution, migration state, API
+conformance) against actual source, rather than synthesizing a
+certification from the implementing session's own conversational memory.
+Certification produced from the implementing session's own memory, no
+matter how thorough, does not satisfy this section — the implementation
+agent SHALL NOT certify its own work, and a same-context "review" of the
+same session's own claims is self-certification in substance even when
+it is not labelled as such.
+
 Only an independently certified Work Package shall be considered
 complete.
+
+19.8 Technical Debt Management (Mandatory)
+
+Technical Debt is recognised as a normal outcome of iterative software
+development.
+
+Technical Debt SHALL be visible, traceable, prioritised, and actively
+managed.
+
+Technical Debt SHALL NEVER be hidden, ignored, or repeatedly carried
+forward without being recorded.
+
+19.8.1 Definition
+
+Technical Debt includes non-blocking implementation observations that:
+
+• do not justify failing Independent Review
+
+• do not require an Architecture Decision Record (ADR)
+
+• do not require immediate remediation
+
+• are intentionally deferred to a future Business Activity,
+Work Package, or release
+
+Examples include:
+
+• additional test coverage
+
+• performance improvements
+
+• refactoring opportunities
+
+• code simplification
+
+• improved observability
+
+• improved diagnostics
+
+• enhanced validation
+
+• concurrency improvements
+
+• non-critical UX improvements
+
+19.8.2 Mandatory Recording
+
+Every accepted Technical Debt item SHALL be recorded in the repository
+Technical Debt Register.
+
+Location:
+
+architecture/06-Reviews/TECH-DEBT.md
+
+Each entry SHALL include:
+
+• Technical Debt ID
+
+• Description
+
+• Raised In
+
+• Priority
+
+• Planned Resolution
+
+• Status
+
+Technical Debt SHALL NOT exist solely within Independent Review reports,
+implementation reports, commit messages, or chat history.
+
+19.8.3 Independent Review Behaviour
+
+Once a Technical Debt item has been recorded:
+
+Future Independent Reviews SHALL reference the Technical Debt ID rather
+than repeating the full observation.
+
+Example:
+
+Observation:
+
+Tracked as TD-001.
+
+No additional discussion required.
+
+This prevents recurring observations from being repeatedly copied into
+multiple review reports.
+
+19.8.4 Resolution
+
+Technical Debt may be resolved by:
+
+• the current Business Activity
+
+• a future Business Activity
+
+• Work Package Closure
+
+• a later Work Package
+
+• a dedicated technical improvement initiative
+
+When resolved:
+
+• update the Technical Debt Register
+
+• record the resolving Work Package or Business Activity
+
+• change the Status to Closed
+
+19.8.5 Technical Debt Governance
+
+Technical Debt SHALL NOT be used to defer:
+
+• architectural defects
+
+• security defects
+
+• data integrity defects
+
+• tenant isolation defects
+
+• failing tests
+
+• build failures
+
+• broken functionality
+
+• mandatory compliance requirements
+
+Such issues SHALL be remediated before the Business Activity Completion
+Gate (§19.7) is satisfied.
+
+19.8.6 Guiding Principle
+
+Technical Debt is acceptable only when it is:
+
+• visible
+
+• justified
+
+• prioritised
+
+• planned
+
+• tracked
+
+• eventually resolved
+
+The objective is to maintain continuous delivery without compromising
+long-term maintainability, architectural integrity, or software quality.
+
+19.8.7 Technical Debt Severity Rubric (formalized per ADR-014 — METH-001)
+
+Every Technical Debt entry SHALL be assigned a severity of High, Medium,
+or Low against the following rubric, so that severity is a stated
+judgment against a fixed standard rather than an ad hoc label.
+
+High —
+
+• the gap defeats the governing capability's own stated Business Intent
+  (CAP-001), even if only for a disclosed subset of cases; or
+
+• the gap weakens a security or tenant-isolation boundary, even if no
+  exploit is currently known.
+
+Example: `TD-070` (WP-04) — no real ERG-001 structural-mutation
+mechanism exists yet, so a completed structural transition does not
+actually change enterprise structure. This defeats C-005's own Business
+Intent for a disclosed subset of cases (any transition whose outcome
+must be reflected in `organization_nodes` or a hierarchy/consolidation
+table) and is rated High for that reason, not merely because it is
+large.
+
+Medium —
+
+• the gap is an internal completeness or robustness concern (additional
+  test coverage, performance headroom, refactoring, improved
+  observability, enhanced validation, concurrency hardening) that does
+  not defeat the capability's stated Business Intent and does not touch
+  a security or tenant-isolation boundary, but is expected to require
+  resolution before the capability is exercised at production scale or
+  by a downstream capability that depends on it.
+
+Low —
+
+• the gap is a non-critical improvement (minor UX polish, diagnostic
+  convenience, naming or documentation clarity) whose absence has no
+  effect on correctness, security, or another capability's ability to
+  depend on this one.
+
+Severity is independent of Priority (§19.8.2's own Technical Debt
+Register field): a High-severity item may still be deliberately deferred
+with a documented Planned Resolution, exactly as `TD-070` was — severity
+states how much is at stake if the gap is never closed; Priority states
+when it is planned to be closed. Neither field substitutes for the
+other, and §19.8.5's own governance list (Technical Debt SHALL NOT defer
+architectural, security, data-integrity, or tenant-isolation defects, or
+failing tests or build failures) already prohibits deferring severity
+that would itself be disqualifying — this rubric classifies debt that
+has already passed that gate, it does not relax it.

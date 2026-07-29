@@ -1538,6 +1538,12 @@ artifacts.
   Documentation                               ✓
   -----------------------------------------------------------------------
 
+**5.4a Canonical Name vs. Implementation Name** *(formalized per ADR-014 — METH-001)*
+
+A registered Canonical Business Object's own CMD-001 §26.4 Canonical Name is not required to be the name of its implementing class. An implementation MAY use a more code-idiomatic class name, provided the model's own docstring discloses both names and cross-references the Business Object's own CMD-001 identifier.
+
+This is an established, already-proven practice, not a new obligation: every WP-04 Structural Context Lifecycle object (`StructuralChangeIntent` for Structural Change Intent/SCI-000001, `StructuralProposal` for Proposed Outcome Context/POC-000001, `ImpactAssessment` for Impact Context/IMC-000001, `StructuralReview` for Review Context/RVC-000001, `StructuralValidation` for Validation Context/VLC-000001, `StructuralCompletion` for Resulting Structural Context/RSC-000001) already follows this pattern. This subsection formalizes it rather than introducing it.
+
 **5.5 Aggregate Root**
 
 Every Business Object shall identify exactly one Aggregate Root.
@@ -1888,6 +1894,30 @@ The platform executes business intent.
 
 It does not execute database operations.
 
+**6.2a Business Activity Readiness Discovery** *(formalized per ADR-014 — METH-001)*
+
+Before a Business Activity's own Implementation Readiness Assessment (IRA) begins implementation planning, it shall perform a bounded Context Discovery scan of the governing Enterprise Experience specification.
+
+**Scan procedure.** Read the specification's own table of contents / section-header list only (not a full-text re-read) and identify any chapter analogous to a named, cross-cutting Context/Object/Data Model declaration — a section that declares, in one place, the full set of Business Objects, Contexts, or data constructs a capability's Enterprise Experiences produce and consume across their lifecycle (for example, PE-001-C005 §38.15's "C-005 Context Model"). If such a section exists, every construct it names shall be tested against CMD-001 §26.3a's eligibility procedure in this one pass, before the first Business Activity of the Work Package begins implementation — not discovered piecemeal, one Business Activity at a time, as each construct is separately encountered.
+
+**Secondary trigger.** Where no such named section exists, the same scan is still required if the capability's own Enterprise Requirement Breakdown (ERB) analysis describes a generic, multi-stage journey shape (e.g., propose → assess → review → validate → complete) rather than a set of independent lifecycle verbs. A generic journey shape is itself evidence that intermediate stage outputs are likely to be Business Objects consumed downstream, and the same upfront scan applies.
+
+This is a bounded procedure, not an open-ended architectural review: it identifies candidate constructs for CMD-001 §26.3a's own eligibility test to evaluate; it does not itself decide eligibility, and it does not substitute for the Work Package's own per-Business-Activity Implementation Readiness Assessment.
+
+**6.2b Gap Analysis Category Scheme (A–E)** *(canonicalized per ADR-014 — METH-001)*
+
+Every Implementation Readiness Assessment (IRA-001 through IRA-004) has classified each Business Activity's own readiness against a five-point A–E scale, by convention, since IRA-001. This scale was never itself defined in a canonical document; this subsection canonicalizes it as observed and applied, without changing its meaning.
+
+The scale is ordered from least to most blocking, mirroring CLAUDE.md §19.5's own Reuse → Configure → Extend → Compose → Create ordering:
+
+-   **A — Reuse.** No gap. An existing implementation satisfies the Business Activity as-is.
+-   **B — Existing implementation can be reused.** A direct extension point exists (e.g., an existing repository's inherited method, an existing response model) and requires no new architectural or constitutional groundwork.
+-   **C — Architecture requires completion (implementation-level).** Ordinary implementation-level design work remains (persistence mechanism, endpoint shape, service/repository composition), but no open constitutional or governance question blocks it.
+-   **D — Governance clarification required.** An open constitutional or architectural question (e.g., an undetermined Canonical Business Object eligibility question, an undetermined target-type scope) must be resolved — typically via an Architecture Decision Record — before implementation-level design can proceed with confidence.
+-   **E — Genuine STOP condition.** No path forward exists without further approval; implementation shall not proceed. (No Business Activity across WP-01 through WP-04 has yet met this category.)
+
+**Constitutional-vs-Implementation blocker distinction.** Categories D and C are distinguished by the *kind* of open question, not merely its difficulty. A category **D** finding is a constitutional blocker: it requires a governance decision (an ADR, a Business Object registration, a canonical scope decision) because the answer is not yet architecturally determined. A category **C** finding is an implementation blocker: the architecture is already determined, and what remains is ordinary engineering design. WP-04's own six Business Activities (BA-03 through BA-08) each began at category D pending a Business Object registration or scope decision and were reclassified to C once the relevant ADR was adopted. **This reclassification does not by itself authorize implementation.** A fresh, Business-Activity-specific implementation-readiness gap analysis is still required after any D→C reclassification, per CLAUDE.md §19.7.
+
 **6.3 Business Activity Lifecycle**
 
 Every Business Activity follows the same execution lifecycle.
@@ -2054,9 +2084,25 @@ The contract shall include:
   AI Assistance                    Optional AI behavior
 
   Definition of Done               Completion criteria
+
+  Idempotency                      Guarded or idempotent transition
+                                    disclosure (required for any write
+                                    endpoint callable twice against the
+                                    same target — see §6.7a)
   -----------------------------------------------------------------------
 
 The BAC is the authoritative specification for implementation.
+
+**6.7a Business Activity Resume Protocol (Informative)** *(formalized per ADR-014 — METH-001)*
+
+This subsection is informative, not normative. It documents an already-proven practice from WP-04; its absence does not by itself produce an incorrect implementation, so it is not a mandatory gate.
+
+For a write endpoint callable twice against the same target, the BAC's own Idempotency attribute shall disclose which of two patterns the Business Activity uses:
+
+-   **Guarded transition.** The second call is rejected (e.g., an already-resolved `StructuralReview`'s concerns cannot be resolved again). Enforced by both a service-layer pre-check and a database-level uniqueness constraint, so that a race between two concurrent calls still fails safely at the database if the service-layer check is bypassed. WP-04's `StructuralReview.resolve_concerns` and `StructuralCompletion.complete_structural_transition` both use this pattern.
+-   **Idempotent transition.** The second call returns the same outcome as the first without error (e.g., re-requesting an already-generated read-only response).
+
+A Business Activity that resumes after an interruption (per CLAUDE.md §19's own Repository Reconstruction / Interruption Analysis phases) shall re-derive its own current state from the repository before continuing, and its own write path's guarded-or-idempotent disclosure determines whether a resumed call that partially succeeded before the interruption is safe to simply retry.
 
 **6.8 Business Activity Granularity**
 

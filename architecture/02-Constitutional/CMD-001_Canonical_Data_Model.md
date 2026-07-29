@@ -11875,6 +11875,27 @@ Registration precedes:
 
 Architecture therefore precedes implementation.
 
+**26.3a Canonical Business Object Eligibility Test** *(formalized per ADR-014, the WP-04/C-005 retrospective — METH-001)*
+
+Before a candidate concept is registered under §26.3, it shall be tested against the following procedure. The test operationalizes SD-002 §2's Universal Business Object Blueprint; it does not restate or replace it.
+
+**Step 1 — Independent Identity.** Does the candidate have identity separable from the request that produced it (SD-002-004)? A value that exists only for the duration of one request/response cycle is not a Business Object.
+
+**Step 2 — Cross-Experience Reference Test.** Is the candidate named, by exact term or by unambiguous content, as Required Context or Consumed Context by a Business Activity or Enterprise Experience other than the one that produces it? A construct retrieved, by identity, from a separately-invoked later Business Activity satisfies this step; a construct consumed only within the same Business Activity that produces it does not.
+
+**Step 3 — Governed Lifecycle.** Does the candidate's own governing text describe a real lifecycle — a state that persists and is later invalidated by a subsequent event — or does it explicitly self-describe as transient?
+
+A candidate that satisfies Step 1 and at least one of Steps 2–3 is eligible for registration under §26.3/§26.4. A candidate that fails all three is not a Business Object, regardless of how many Enterprise Experiences mention it.
+
+**Negative Indicators.** A candidate is presumptively **not** a Business Object if its own governing text:
+
+-   is named only within one Enterprise Experience's own Produced Context field, with no later Business Activity or Enterprise Experience naming it as Required or Consumed Context; or
+-   explicitly describes the candidate using language such as "transient," "not required downstream," or "closes without being carried forward."
+
+Both indicators are drawn directly from concrete cases this test correctly excluded (WP-04's own Comparison Context and Downstream Continuation Context, neither registered) and are provided so that a negative eligibility finding can be reached and documented as quickly as a positive one.
+
+This test does not itself perform registration. A positive result proceeds to §26.4's own attribute structure; a negative result is documented as a disclosed non-registration, not silently omitted.
+
 **26.4 Canonical Registration Structure**
 
 Every registered Business Object shall contain the following
