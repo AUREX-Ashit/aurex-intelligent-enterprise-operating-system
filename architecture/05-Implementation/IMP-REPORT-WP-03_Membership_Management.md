@@ -544,6 +544,91 @@ Additionally confirmed: BA-08's own EX-C007-10 scope was not silently absorbed i
 
 ---
 
+## BA-08 — Present Person's Own Cross-Organization Membership View
+
+Realizing PE-001-C007's ERB-C007-05 (Preserve Multi-Organization Membership Context) / EX-C007-10 (Present Person's Own Cross-Organization Membership View). IRA-003 §10/§14 pre-classified BA-07/BA-08 together as **Category B**; BA-07's own gap analysis already confirmed BA-08 is NOT collapsed into it (distinct triggers, personas, opposite visibility postures). This section performs BA-08's own fresh gap analysis.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Present the complete detail of a Membership Subject's own Membership portfolio across every Organization they participate in — this is the Person's own data, never restricted by URA-001-17a's cross-tenant rule (CAP-001's C-007 Business Intent, scoped to self-service presentation only).
+- **Input Contract:** None from the caller directly. `person_id` is taken exclusively from the caller's own verified JWT claims — never a path or query parameter — the entire safety property this Business Activity rests on.
+- **Output Contract:** `MembershipPortfolioResponse` — a list of `MembershipResponse` (the same full-detail shape BA-01/02/03/06 already expose), one per ACTIVE Membership the caller holds, across every Organization.
+- **Business Rules:**
+  - BR-C007-009 — a Membership Subject SHALL be able to see the complete detail of their own Membership portfolio. Satisfied by construction: `present_own_portfolio()` returns every field `MembershipResponse` already exposes, unfiltered, for every ACTIVE Membership belonging to the authenticated caller.
+- **Validation Rules:** None beyond authentication itself — no existence check is performed on `person_id`, since it is derived from an already-verified access token issued only after a real Person was resolved at login (URA-001-13/28: Persons are never hard-deleted), not supplied as untrusted input.
+- **Authorization Rules:** Requires only a valid, verified access token (`get_current_claims`) — **no `PLATFORM_ADMIN` role gate**, a deliberate departure from every prior WP-03 endpoint. This is not a simplification or an oversight: BR-C007-009 entitles *any* Membership Subject to see their *own* data, and URA-001-17a's cross-tenant restriction was never designed to apply to a Person's own record in the first place (its own text: "an organization may never see that same Person's roles, permissions, or memberships at any other organization," which concerns an Organization's visibility into a Person, not a Person's visibility into themselves). EX-C007-10's own second Participating Persona, "Platform Oversight Participant where an authorized aggregator is involved," is **not implemented** — disclosed as **TD-041**.
+- **Domain Events:** None — a pure read, the same disposition BA-02's own `understand()` already established.
+- **Audit Requirements:** None. Unlike BA-07 (which audits every call because it crosses a cross-tenant data-isolation boundary), BA-08 performs no authorization-boundary check inside its own business logic — the entire safety property is enforced structurally (the caller can only ever name themselves) — making this closer to BA-02's own "only a write path audits" precedent than BA-07's boundary-crossing one. Disclosed explicitly as a deliberate distinction, not an inconsistency.
+- **Tests:** `tests/test_membership_service.py` (5 new unit tests, including a cross-Person-leakage check), `tests/test_membership_api.py` (5 new API tests, including a test confirming the endpoint works for a non-`PLATFORM_ADMIN` caller) — 10 new tests, all passing; full AuthService suite (405 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-08)
+
+Reviewed: PE-001-C007 (ERB-C007-05, EX-C007-10's own Trigger/Purpose/Business Value/Participating Personas text, Chapter 5.4 Multiple Membership & Cross-Tenant Visibility Contract's own "A Membership Subject SHALL be entitled to see the complete detail of their own Membership portfolio... this is the Person's own data and is not restricted by URA-001-17a" sentence, Chapter 6.3's "Multiple Memberships across Organizations" exception entry), URA-001-17a (verbatim, re-confirmed: the restriction concerns what "an organization" may see, not what a Person may see of themselves), IRA-003 §10/§14 (Category B classification), `dependencies.py` (`get_current_claims` — an existing, unmodified, role-agnostic authentication dependency, already used internally by `require_platform_admin` itself, confirming no new authentication mechanism is required), `services/auth_service.py` (`decode_access_token`'s own claims construction — `person_id` is set from a resolved `identity.person_id` at login and JSON-serialized as a plain string, never client-suppliable), `repositories/membership_repository.py` (`get_person_memberships()` — the same query BA-07 already reuses).
+
+**Authorization design, confirmed rather than assumed:** the decision to gate this endpoint on `get_current_claims` (any authenticated caller) rather than `require_platform_admin` was verified, not merely reasoned about in the abstract, three ways: (1) `dependencies.py`'s own docstring and implementation were read in full — `get_current_claims` performs signature/expiry verification only, with `require_platform_admin` itself built as a thin role-check wrapper on top of it, confirming role-gating is an explicit additional step this Business Activity deliberately does not take; (2) `decode_access_token`'s own claims-construction code was read to confirm `person_id` is set once, at login, from a resolved `Identity`/`Person` row — never re-suppliable by the caller after that point; (3) a test (`test_present_own_portfolio_does_not_require_platform_admin`) exercises a non-`PLATFORM_ADMIN` token end-to-end and confirms 200, not merely asserting the router code looks right.
+
+**Why the "authorized aggregator" persona is excluded, not deferred via the usual PLATFORM_ADMIN stand-in:** every prior WP-03 Business Activity's own persona simplification (TD-031/034/035/036/039) used `PLATFORM_ADMIN` as a disclosed, low-risk interim stand-in for a missing persona claim, because each of those Business Activities' own worst-case exposure was bounded (a single Organization's own administrative action, or an existence-only cross-org signal). Applying the same pattern here would mean any `PLATFORM_ADMIN` caller could read *any* Person's *complete* cross-tenant Membership detail — a categorically larger exposure, and one URA-001-17a's own text arguably still intends to restrict even for platform administrators, since no canonical text anywhere grants `PLATFORM_ADMIN` a blanket cross-tenant-visibility right. Rather than silently accept that risk under the guise of "the usual interim gate," the aggregator path is not implemented at all, disclosed as **TD-041**.
+
+---
+
+## Gap Analysis Summary (BA-08)
+
+- **Database:** No migration. `present_own_portfolio()` performs a pure read via the existing `get_person_memberships()` query; nothing is stored. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-08's mapping to ERB-C007-05/EX-C007-10 was already derived in IRA-003 §3/§4 and confirmed NOT collapsed into BA-07 at that Business Activity's own gap analysis; this section performs BA-08's own remaining gap analysis.
+- **API Impact:** One new endpoint, `GET /memberships/my-portfolio`, added to `membership-api.yaml`. Registered before `GET /memberships/{membership_id}` in `routers/membership.py`, the same route-ordering discipline BA-07's own `/multi-organization-awareness` endpoint already established — confirmed via the FastAPI app's own route table, not assumed. No existing endpoint's shape changed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with BA-01/02/03/06/07's own scope decision).
+- **Dependencies:** `MembershipRepository.get_person_memberships()` (existing, reused unchanged from BA-07) and `dependencies.get_current_claims()` (existing, reused unchanged — already a dependency of `require_platform_admin` itself). No new repository method, no new authentication mechanism.
+- **Risks:** TD-041 (authorized-aggregator persona not implemented) — Medium severity given the exposure a naive `PLATFORM_ADMIN` stand-in would have created, but the risk is fully avoided by *not* implementing that path today, not merely disclosed as tolerated.
+- **Technical Debt registered:** TD-041 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-08)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-041 added)
+- `architecture/05-Implementation/IRA-003_WP-03_Membership_Management_Implementation_Readiness_Assessment.md` (BA-08 row updated to Implemented)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-08 implemented and independently reviewed)
+
+**Implementation (modified, no new files):**
+- `Backend/Services/AuthService/schemas/membership.py` — added `MembershipPortfolioResponse` schema.
+- `Backend/Services/AuthService/services/membership_service.py` — added `MembershipService.present_own_portfolio()`.
+- `Backend/Services/AuthService/routers/membership.py` — added `GET /memberships/my-portfolio` (registered before the dynamic `/{membership_id}` route), gated on `get_current_claims` rather than `require_platform_admin`.
+- `Backend/Services/AuthService/membership-api.yaml` — added the `GET /memberships/my-portfolio` path and `MembershipPortfolioResponse` schema.
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 5 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 5 new tests.
+
+No new model, repository, migration, or router file was required — confirming IRA-003 §10/§14's own Category B classification.
+
+---
+
+## Validation (BA-08)
+
+- 10 new tests (5 unit, 5 API), all passing.
+- Full AuthService suite: **405 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-08 introduces no migration.
+- Confirmed the FastAPI app's own generated OpenAPI schema and route table register `GET /memberships/my-portfolio` ahead of `GET /memberships/{membership_id}`; the standalone `membership-api.yaml` parses as valid YAML with the matching path and schema.
+- Confirmed BR-C007-009: a caller with an established Membership sees its complete detail (organization_id, membership_status, membership_type, license_type, and every other `MembershipResponse` field); a caller with no Memberships sees an empty list; a caller never sees another Person's Membership, even when that other Person has an established Membership in the same test database.
+- Confirmed the endpoint succeeds for a non-`PLATFORM_ADMIN` caller (`ESG_MANAGER` role), end-to-end, not merely by inspecting the router's dependency declaration.
+- Confirmed missing/malformed Authorization header returns 400, consistent with `get_current_claims`'s own existing behavior.
+
+---
+
+## Independent Review (BA-08)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-08's independent review, re-deriving repository state directly from Git and re-running the full suite directly. The authorization design — the single most consequential decision in this Business Activity — was independently re-verified rather than accepted from the implementation's own docstring: `dependencies.py` was read in full to confirm `get_current_claims` performs authentication only, `services/auth_service.py`'s claims-construction code was read to confirm `person_id` is server-set at login and never caller-suppliable thereafter, and a live end-to-end test was run confirming a non-`PLATFORM_ADMIN` token succeeds against this specific endpoint. A cross-Person-leakage test was confirmed to genuinely exercise two distinct Person rows in the same test database, not a single Person under two different assertions. One finding was identified, disclosed as Technical Debt rather than blocking:
+
+1. TD-041 (EX-C007-10's own "authorized aggregator" persona not implemented) — a deliberate exclusion, not a deferred simplification: the reviewer confirmed that standing `PLATFORM_ADMIN` in for this specific persona (the usual WP-03 pattern) would have created a materially larger cross-tenant exposure than any prior Business Activity permits, and confirmed the implementation does not do so — no code path in `present_own_portfolio()` or its router accepts a caller-supplied `person_id` of any kind.
+
+No security, tenant-isolation, or data-integrity defect was found. `MembershipService.present_own_portfolio()` was confirmed to accept `person_id` only as a positional argument supplied by the router from verified claims, with no HTTP-layer path for a caller to request another Person's data.
+
+---
+
 ## Status (Combined)
 
 **BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
@@ -568,10 +653,12 @@ Additionally confirmed: BA-08's own EX-C007-10 scope was not silently absorbed i
 
 **Commit Date (BA-07):** 2026-07-29 (both commits)
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), and BA-07 (`3f699ae`, `c6a14f2`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-07.
+**BA-08 — Present Person's Own Cross-Organization Membership View:** Implementation COMPLETE (405/405 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-041, not blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-07's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), and BA-07 (`3f699ae`, `c6a14f2`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-08 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-08.
 
 ---
 
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, and now BA-07 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** BA-08's own EX-C007-10 scope was confirmed NOT collapsed into BA-07 and remains not started. **BA-08 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, and now BA-08 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** **BA-09 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
