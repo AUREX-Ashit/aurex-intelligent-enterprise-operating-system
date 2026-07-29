@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - CNCF CloudEvents Module.
+Aurex Shared Events Framework - CNCF CloudEvents Module.
 
 Provides standard v1.0 CloudEvents wrapper envelopes for cross-service messages, Ensure
 interoperability on standard routers and brokers like Kafka, RabbitMQ, and Azure Service Bus.
@@ -9,11 +9,11 @@ import datetime
 import json
 from typing import Any, Dict, Optional, Type, TYPE_CHECKING
 
-from corpstage.backend.shared.events.exceptions import EventValidationError
-from corpstage.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.exceptions import EventValidationError
+from aurex.backend.shared.events.event_base import BaseEvent
 
 if TYPE_CHECKING:
-    from corpstage.backend.shared.events.event_registry import EventRegistry
+    from aurex.backend.shared.events.event_registry import EventRegistry
 
 
 class CloudEvent:
@@ -59,12 +59,12 @@ class CloudEvent:
     @classmethod
     def wrap(cls, event: BaseEvent, source_service: str, subject: Optional[str] = None) -> "CloudEvent":
         """
-        Wraps a CorpStage BaseEvent inside a CNCF standard envelope.
+        Wraps a Aurex BaseEvent inside a CNCF standard envelope.
         """
         event.validate() # Enforce schema checks prior to routing
         return cls(
             id=event.event_id,
-            source=f"corpstage://services/{source_service}",
+            source=f"aurex://services/{source_service}",
             type=event.event_name,
             data=event.to_dict(),
             time=event.timestamp,

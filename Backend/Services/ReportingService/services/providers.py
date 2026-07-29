@@ -39,7 +39,7 @@ class DashboardProvider(ABC):
 # PRODUCTION IMPLEMENTATIONS
 # =====================================================================
 
-class CorpStageReportProvider(ReportProvider):
+class AurexReportProvider(ReportProvider):
     async def generate_report(self, db: AsyncSession, request: ReportGenerateRequest, operator: str) -> ESGReport:
         report_repo = ReportRepository(db)
         audit_repo = AuditLogRepository(db)
@@ -160,7 +160,7 @@ class CorpStageReportProvider(ReportProvider):
         return {"E": e_score, "S": s_score, "G": g_score, "O": overall}
 
 
-class CorpStageExportProvider(ExportProvider):
+class AurexExportProvider(ExportProvider):
     async def export_report(self, db: AsyncSession, request: ReportExportRequest, operator: str) -> ReportExport:
         report_repo = ReportRepository(db)
         export_repo = ExportRepository(db)
@@ -200,7 +200,7 @@ class CorpStageExportProvider(ExportProvider):
         return export_rec
 
 
-class CorpStageDashboardProvider(DashboardProvider):
+class AurexDashboardProvider(DashboardProvider):
     async def get_dashboard_summary(self, db: AsyncSession, year: int) -> Dict[str, Any]:
         report_repo = ReportRepository(db)
         scorecard_repo = ScorecardRepository(db)

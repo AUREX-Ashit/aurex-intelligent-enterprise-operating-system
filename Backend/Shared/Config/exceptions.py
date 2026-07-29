@@ -1,5 +1,5 @@
 """
-CorpStage Shared Configuration Framework - Exceptions Module.
+Aurex Shared Configuration Framework - Exceptions Module.
 
 This module defines custom enterprise exceptions for the configuration framework
 to support fail-fast behavior and precise diagnostics.

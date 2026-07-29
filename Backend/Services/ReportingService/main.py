@@ -29,7 +29,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI):
     """Execution bounds capturing boot constraints and connections"""
     configure_logging()
-    logger.info("Initializing CorpStage ReportingService startup sequences", env=settings.environment)
+    logger.info("Initializing Aurex ReportingService startup sequences", env=settings.environment)
     
     # Auto-scaffold database tables on startup if possible
     try:
@@ -44,11 +44,11 @@ async def lifespan(app: FastAPI):
         
     yield
     
-    logger.info("Exiting CorpStage ReportingService task instances")
+    logger.info("Exiting Aurex ReportingService task instances")
     await engine.dispose()
 
 app = FastAPI(
-    title="CorpStage Reporting API",
+    title="Aurex Reporting API",
     description="Enterprise API engine generating ESG, BRSR, GRI, and CSRD disclosure reports, tracking metric scorecards, and compiling audit logs.",
     version="1.0.0",
     lifespan=lifespan,
@@ -87,7 +87,7 @@ async def health_check():
     """Provides platform verification checks including DB, region, provider, and features"""
     return {
         "status": "healthy",
-        "service": "corpstage-reporting",
+        "service": "aurex-reporting",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "platform_context": {
             "name": settings.name,

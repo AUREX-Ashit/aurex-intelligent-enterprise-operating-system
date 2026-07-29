@@ -1,7 +1,7 @@
--- CorpStage Enterprise Platform - PostgreSQL Initialization Script
+-- Aurex Enterprise Platform - PostgreSQL Initialization Script
 -- Bootstraps microservice-specific schemas, execution users, and security isolation layers.
 
-SELECT 'Bootstrapping CorpStage PostgreSQL Instance...' AS progress_marker;
+SELECT 'Bootstrapping Aurex PostgreSQL Instance...' AS progress_marker;
 
 -- 1. Create Core Database and Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

@@ -19,7 +19,7 @@ Before authoring any new content, this document was searched in full against eve
 
 ### 1. Purpose
 
-PE-001 is the canonical Enterprise Experience Blueprint for the CorpStage Enterprise Operating System (EOS). It defines enterprise experiences, journeys, workspaces, capability experience blueprints (CRBs), enterprise experience blueprints (ERBs), navigation philosophy, business activity experience, the enterprise experience lifecycle, and — as of Version 1.1 — how Enterprise Intelligence, AI, decision support, evidence, search, and knowledge discovery are experienced. It intentionally excludes implementation architecture owned by other canonical specifications.
+PE-001 is the canonical Enterprise Experience Blueprint for the Aurex Enterprise Operating System (EOS). It defines enterprise experiences, journeys, workspaces, capability experience blueprints (CRBs), enterprise experience blueprints (ERBs), navigation philosophy, business activity experience, the enterprise experience lifecycle, and — as of Version 1.1 — how Enterprise Intelligence, AI, decision support, evidence, search, and knowledge discovery are experienced. It intentionally excludes implementation architecture owned by other canonical specifications.
 
 ### 2. Canonical Ownership
 
@@ -85,7 +85,7 @@ This document is the canonical experience specification. Changes shall preserve 
 
 ## Chapter 1 — Document Governance
 
-**1.1 Objective.** Document Governance defines how PE-001 is created, owned, versioned, reviewed, approved, maintained and evolved. It establishes PE-001 as the canonical Enterprise Experience Blueprint for the CorpStage Enterprise Operating System (EOS).
+**1.1 Objective.** Document Governance defines how PE-001 is created, owned, versioned, reviewed, approved, maintained and evolved. It establishes PE-001 as the canonical Enterprise Experience Blueprint for the Aurex Enterprise Operating System (EOS).
 
 **1.2 Canonical Status.** PE-001 SHALL be treated as the authoritative specification for Enterprise Experience. Any conflicting implementation, design note or downstream specification shall defer to PE-001 for experience ownership while architecture remains owned by the relevant architecture specifications.
 
@@ -115,7 +115,7 @@ This document is the canonical experience specification. Changes shall preserve 
 
 ## Chapter 2 — Purpose and Scope
 
-**2.1 Purpose.** The purpose of PE-001 is to define the canonical Enterprise Experience for the CorpStage Enterprise Operating System (EOS). Experience is treated as a first-class architectural discipline that connects enterprise intent, business activities and user interaction without prescribing implementation.
+**2.1 Purpose.** The purpose of PE-001 is to define the canonical Enterprise Experience for the Aurex Enterprise Operating System (EOS). Experience is treated as a first-class architectural discipline that connects enterprise intent, business activities and user interaction without prescribing implementation.
 
 **2.2 Objectives.** PE-001 SHALL: define a consistent enterprise experience language; describe enterprise capabilities through experiences rather than screens; establish Capability Experience Blueprints (CRBs) and Enterprise Experience Blueprints (ERBs); ensure every experience is aligned to Enterprise Lifecycle transitions; provide a specification that downstream architecture and engineering teams can implement without ambiguity.
 
@@ -163,7 +163,7 @@ This document is the canonical experience specification. Changes shall preserve 
 
 ## Chapter 5 — Enterprise Experience Philosophy
 
-Enterprise Experience is a first-class architectural discipline within the CorpStage Enterprise Operating System (EOS). This chapter establishes the philosophy that governs how enterprise capabilities are presented, navigated and realized through coherent experiences. It intentionally focuses on the "what" and "why" of the experience rather than implementation details.
+Enterprise Experience is a first-class architectural discipline within the Aurex Enterprise Operating System (EOS). This chapter establishes the philosophy that governs how enterprise capabilities are presented, navigated and realized through coherent experiences. It intentionally focuses on the "what" and "why" of the experience rather than implementation details.
 
 **5.1 Experience First.** Enterprise experiences SHALL be designed around the outcomes an enterprise intends to achieve rather than around screens, modules or technical services. Capabilities are experienced as purposeful business outcomes.
 
@@ -231,7 +231,7 @@ Canonical terminology establishes a single authoritative vocabulary for the Ente
 | **7.10 Enterprise Transition** | A measurable change in enterprise state resulting from one or more Enterprise Experiences. |
 | **7.11 Enterprise State** | A business-recognizable condition of an enterprise at a point in its lifecycle. |
 | **7.12 Enterprise Operational Lifecycle** | The lifecycle governing day-to-day operation of the enterprise after onboarding. |
-| **7.13 Enterprise Commercial Lifecycle** | The lifecycle governing commercial engagement between CorpStage and the enterprise. |
+| **7.13 Enterprise Commercial Lifecycle** | The lifecycle governing commercial engagement between Aurex and the enterprise. |
 | **7.14 Enterprise Intelligence Lifecycle** | The lifecycle governing acquisition, refinement and application of enterprise intelligence. Detailed architecture is owned by EIA-001. |
 | **7.15 Enterprise Information Object (EIO)** | A canonical business information object referenced by Enterprise Experiences. |
 | **7.16 Enterprise Activity Catalog (EAC)** | The canonical catalog of Enterprise Activities and Business Activities referenced throughout EOS. |

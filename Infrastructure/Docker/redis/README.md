@@ -1,6 +1,6 @@
 # Redis Caching Infrastructure
 
-Redis provides low-latency caching, session storage context persistence, and rate-limiting bounds for CorpStage microservices.
+Redis provides low-latency caching, session storage context persistence, and rate-limiting bounds for Aurex microservices.
 
 ## Ports and Connections
 * **Internal Routing (Docker Network):** `redis:6379`
@@ -11,17 +11,17 @@ Redis provides low-latency caching, session storage context persistence, and rat
 ### Connect to Redis CLI
 To connect to the interactive Redis console inside the container:
 ```bash
-docker exec -it corpstage-redis redis-cli
+docker exec -it aurex-redis redis-cli
 ```
 
 ### Flush Cached Keys
 In development, use this to clear all session or cache stores:
 ```bash
-docker exec -it corpstage-redis redis-cli FLUSHALL
+docker exec -it aurex-redis redis-cli FLUSHALL
 ```
 
 ### Check Active Memory Metrics
 To view current keys and memory footprints:
 ```bash
-docker exec -it corpstage-redis redis-cli info memory
+docker exec -it aurex-redis redis-cli info memory
 ```

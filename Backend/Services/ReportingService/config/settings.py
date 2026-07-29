@@ -22,8 +22,8 @@ class PostgresqlSettings(BaseModel):
     version: str = "16"
     host: str = "localhost"
     port: int = 5432
-    database_name: str = "corpstage"
-    username: str = "corpstage"
+    database_name: str = "aurex"
+    username: str = "aurex"
     password: str = "CHANGE_IN_ENVIRONMENT"
     pool_size: int = 30
     max_overflow: int = 10
@@ -58,7 +58,7 @@ class FeatureFlagsSettings(BaseModel):
     enable_bulk_validation: bool = True
 
 class PlatformSettings(BaseSettings):
-    name: str = "CorpStage"
+    name: str = "Aurex"
     environment: str = "development"
     region: str = "centralindia"
     
@@ -110,7 +110,7 @@ def get_settings() -> PlatformSettings:
     init_data = {}
     if "platform" in yaml_data:
         p_data = yaml_data["platform"]
-        init_data["name"] = p_data.get("name", "CorpStage")
+        init_data["name"] = p_data.get("name", "Aurex")
         init_data["environment"] = p_data.get("environment", "development")
         init_data["region"] = p_data.get("region", "centralindia")
 

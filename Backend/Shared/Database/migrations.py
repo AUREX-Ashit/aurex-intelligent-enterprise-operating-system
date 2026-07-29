@@ -1,5 +1,5 @@
 """
-CorpStage Shared Database Framework - Migrations Module.
+Aurex Shared Database Framework - Migrations Module.
 
 Defines hooks and helper operations for Alembic database migrations.
 Exposes uniform metadata interfaces for generating declarative schema files.
@@ -10,10 +10,10 @@ import logging
 from typing import Dict, Any
 from sqlalchemy import pool
 
-from corpstage.backend.shared.database.base_model import Base
-from corpstage.backend.shared.database.engine_factory import EngineFactory
+from aurex.backend.shared.database.base_model import Base
+from aurex.backend.shared.database.engine_factory import EngineFactory
 
-logger = logging.getLogger("CorpStage.Database.Migrations")
+logger = logging.getLogger("Aurex.Database.Migrations")
 
 
 class MigrationHelper:
@@ -30,7 +30,7 @@ class MigrationHelper:
         This represents the 'target_metadata' referenced inside Alembic migrations configurations.
         
         Example on Alembic env.py:
-            # from corpstage.backend.shared.database.migrations import MigrationHelper
+            # from aurex.backend.shared.database.migrations import MigrationHelper
             # target_metadata = MigrationHelper.get_target_metadata()
         """
         return Base.metadata
@@ -60,11 +60,11 @@ class MigrationHelper:
             )
             
             # Fallback directly to raw environment or standard local dev address
-            db_port = os.getenv("CORPSTAGE__DATABASE__POSTGRESQL__PORT", "5432")
-            db_pw = os.getenv("CORPSTAGE_DATABASE_PASSWORD", "corpstage")
-            db_user = os.getenv("CORPSTAGE__DATABASE__POSTGRESQL__USERNAME", "corpstage")
-            db_host = os.getenv("CORPSTAGE__DATABASE__POSTGRESQL__HOST", "localhost")
-            db_name = os.getenv("CORPSTAGE__DATABASE__POSTGRESQL__DATABASE_NAME", "corpstage")
+            db_port = os.getenv("AUREX__DATABASE__POSTGRESQL__PORT", "5432")
+            db_pw = os.getenv("AUREX_DATABASE_PASSWORD", "aurex")
+            db_user = os.getenv("AUREX__DATABASE__POSTGRESQL__USERNAME", "aurex")
+            db_host = os.getenv("AUREX__DATABASE__POSTGRESQL__HOST", "localhost")
+            db_name = os.getenv("AUREX__DATABASE__POSTGRESQL__DATABASE_NAME", "aurex")
             
             return f"postgresql://{db_user}:{db_pw}@{db_host}:{db_port}/{db_name}"
 

@@ -1,5 +1,5 @@
 """
-CorpStage Shared Logging Framework - Request-Tracing Middleware Module.
+Aurex Shared Logging Framework - Request-Tracing Middleware Module.
 
 Implements high-fidelity request tracking, context propagation, and correlation injection
 via a full-featured FastAPI / Starlette compliance middleware pipeline.
@@ -12,8 +12,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from corpstage.backend.shared.logging.logger_factory import LoggerFactory
-from corpstage.backend.shared.logging.correlation_context import CorrelationContext
+from aurex.backend.shared.logging.logger_factory import LoggerFactory
+from aurex.backend.shared.logging.correlation_context import CorrelationContext
 
 logger = LoggerFactory.get_logger("cs.telemetry.requests")
 

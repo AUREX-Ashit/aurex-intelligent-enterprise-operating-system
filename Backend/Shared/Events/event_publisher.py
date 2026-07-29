@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Publisher Module.
+Aurex Shared Events Framework - Event Publisher Module.
 
 Declares abstract integration adapters and architectural interfaces for publishing
 events across disparate enterprise message brokers (such as Apache Kafka and Azure Service Bus).
@@ -9,10 +9,10 @@ from abc import ABC, abstractmethod
 import logging
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
-from corpstage.backend.shared.events.event_base import BaseEvent
-from corpstage.backend.shared.events.cloud_event import CloudEvent
-from corpstage.backend.shared.events.event_serializer import EventSerializer
-from corpstage.backend.shared.events.exceptions import EventPublishError
+from aurex.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.cloud_event import CloudEvent
+from aurex.backend.shared.events.event_serializer import EventSerializer
+from aurex.backend.shared.events.exceptions import EventPublishError
 
 # Fetch core logger proxy
 logger = logging.getLogger("cs.events.publisher")

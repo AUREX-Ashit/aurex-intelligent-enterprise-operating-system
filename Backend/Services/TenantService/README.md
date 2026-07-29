@@ -1,8 +1,8 @@
-# CorpStage TenantService
+# Aurex TenantService
 
 Production-grade, asynchronous SaaS Tenant, Organization, and Workspace provisioning microservice.
 
-Designed for high durability, strict isolation, and robust configurations matching the **CorpStage Enterprise Platform**.
+Designed for high durability, strict isolation, and robust configurations matching the **Aurex Enterprise Platform**.
 
 ---
 
@@ -27,8 +27,8 @@ TenantService/
 ├── README.md                  # Microservice system handbook
 ├── config/
 │   ├── settings.py            # Pydantic Settings class parsing platform-config.yaml
-│   ├── platform-config.yaml   # Original Corpstage Enterprise platform parameters
-│   └── tenant-api.yaml        # Original Corpstage Tenant OpenAPI specification
+│   ├── platform-config.yaml   # Original Aurex Enterprise platform parameters
+│   └── tenant-api.yaml        # Original Aurex Tenant OpenAPI specification
 ├── models/
 │   ├── base.py                # DeclarativeBase foundation with general UUID keys
 │   └── tenant.py              # Tenant, TenantConfig, and TenantUser database schemas
@@ -48,14 +48,14 @@ TenantService/
 
 ## ⚙ Configurations and Environment Precedence
 
-The service loads all presets from `config/platform-config.yaml`. However, any configuration item can be dynamically overridden using standard environment variables prefixed with `CORPSTAGE_` and utilizing double underscores (`__`) to delimit nested JSON blocks:
+The service loads all presets from `config/platform-config.yaml`. However, any configuration item can be dynamically overridden using standard environment variables prefixed with `AUREX_` and utilizing double underscores (`__`) to delimit nested JSON blocks:
 
 | Pydantic Parameter | Equivalent Env Variable | Default Value | Description |
 |---|---|---|---|
-| `platform.environment` | `CORPSTAGE_PLATFORM__ENVIRONMENT` | `development` | Active build profile |
-| `database.postgresql.host` | `CORPSTAGE_DATABASE__POSTGRESQL__HOST` | `localhost`| Database IP / hostname |
-| `database.postgresql.password` | `CORPSTAGE_DATABASE__POSTGRESQL__PASSWORD` | `CHANGE_IN_ENVIRONMENT` | Postgres authentications |
-| `authentication.tenant.header_name` | `CORPSTAGE_AUTHENTICATION__TENANT__HEADER_NAME` | `X-Tenant-ID` | Incoming Tenant HTTP Header |
+| `platform.environment` | `AUREX_PLATFORM__ENVIRONMENT` | `development` | Active build profile |
+| `database.postgresql.host` | `AUREX_DATABASE__POSTGRESQL__HOST` | `localhost`| Database IP / hostname |
+| `database.postgresql.password` | `AUREX_DATABASE__POSTGRESQL__PASSWORD` | `CHANGE_IN_ENVIRONMENT` | Postgres authentications |
+| `authentication.tenant.header_name` | `AUREX_AUTHENTICATION__TENANT__HEADER_NAME` | `X-Tenant-ID` | Incoming Tenant HTTP Header |
 
 ---
 
@@ -124,6 +124,6 @@ uvicorn main:app --host 0.0.0.0 --port 3000 --reload
 To verify the Docker container build:
 
 ```bash
-docker build -t corpstage-tenant-service .
-docker run -p 3000:3000 corpstage-tenant-service
+docker build -t aurex-tenant-service .
+docker run -p 3000:3000 aurex-tenant-service
 ```

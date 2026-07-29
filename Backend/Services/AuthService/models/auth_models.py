@@ -12,7 +12,7 @@ class LoginRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "email": "ashit.corpstage@gmail.com",
+                "email": "ashit.aurex@gmail.com",
                 "password": "Password123!"
             }
         }
@@ -79,6 +79,6 @@ class HealthCheckResponse(BaseModel):
     Health check metadata telemetry.
     """
     status: str = Field(..., description="Overall health state (e.g. green, orange, red)")
-    service: str = Field(dfault="corpstage-auth-service", description="Service identity identifier")
+    service: str = Field(dfault="aurex-auth-service", description="Service identity identifier")
     database_connected: bool = Field(..., description="Active connection check to PostgreSQL")
     uptime_seconds: float = Field(..., description="Seconds since server boots successfully")

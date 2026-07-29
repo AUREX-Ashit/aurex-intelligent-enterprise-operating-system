@@ -16,7 +16,7 @@ from schemas.validation import ValidationRequest
 from schemas.scoring import ScoringRequest
 
 class AIOrchestrator:
-    """The master cognitive brain of CorpStage. Orchestrates services and commits state data databases."""
+    """The master cognitive brain of Aurex. Orchestrates services and commits state data databases."""
     def __init__(
         self,
         db: AsyncSession = Depends(get_db),

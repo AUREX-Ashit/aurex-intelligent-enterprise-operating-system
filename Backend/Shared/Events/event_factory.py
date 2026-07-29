@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Factory Module.
+Aurex Shared Events Framework - Event Factory Module.
 
 Provides flexible, fluent builder APIs and factory interfaces to construct
 fully contextualized domain event definitions and generic messages.
@@ -7,9 +7,9 @@ fully contextualized domain event definitions and generic messages.
 
 from typing import Any, Dict, Optional, Type
 
-from corpstage.backend.shared.events.event_base import BaseEvent
-from corpstage.backend.shared.events.cloud_event import CloudEvent
-from corpstage.backend.shared.events.event_context import EventContext
+from aurex.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.cloud_event import CloudEvent
+from aurex.backend.shared.events.event_context import EventContext
 
 
 class EventFactory:

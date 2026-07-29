@@ -1,9 +1,9 @@
-# CORPSTAGE PLATFORM CONFIGURATION
+# AUREX PLATFORM CONFIGURATION
 
 # Version: v1.0.0
 
 platform:
-  name: CorpStage
+  name: Aurex
   environment: development
   region: centralindia
 
@@ -106,9 +106,9 @@ database:
   host: localhost
   port: 5432
 
-  database_name: corpstage
+  database_name: aurex
 
-  username: corpstage
+  username: aurex
   password: CHANGE_IN_ENVIRONMENT
 
   pool_size: 30
@@ -142,7 +142,7 @@ storage:
 
   azure_blob_storage:
     enabled: true
-    container: corpstage-evidence
+    container: aurex-evidence
 
   s3:
     enabled: false

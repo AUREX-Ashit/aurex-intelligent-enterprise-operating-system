@@ -1,4 +1,4 @@
-# CorpStage Authentication Service (`AuthService`)
+# Aurex Authentication Service (`AuthService`)
 
 A production-grade, multi-tenant authentication microservice scaffold based on FastAPI, Python 3.14, and Pydantic v2. Designed with high-performance async pools using SQLAlchemy 2.0 and structural security configurations ready to be deployed on container architectures.
 
@@ -111,10 +111,10 @@ Build and run the release package safely inside modern sandboxed containers:
 
 ```bash
 # Build the Docker image
-docker build -t corpstage-auth-service:latest .
+docker build -t aurex-auth-service:latest .
 
 # Run the container specifying port mappings
-docker run -p 8000:8000 --env DATABASE_URL=postgresql+asyncpg://postgres:secret@db:5432/corpstage corpstage-auth-service:latest
+docker run -p 8000:8000 --env DATABASE_URL=postgresql+asyncpg://postgres:secret@db:5432/aurex aurex-auth-service:latest
 ```
 
 ---

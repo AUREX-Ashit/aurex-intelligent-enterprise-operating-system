@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Domain Reference Data API
+  title: Aurex Domain Reference Data API
   description: >
     Domain reference/master-data catalog (AMD-014, URA-001 §4). Supports
     WP-02 BA-02's lookup requirement (PE-001-C003 EX-C003-02's Entry

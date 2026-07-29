@@ -1,6 +1,6 @@
 -- =============================================================================
 -- 04_post_seed_verify.sql
--- CorpStage AuthService — Final Post-Seed Verification
+-- Aurex AuthService — Final Post-Seed Verification
 -- =============================================================================
 -- PURPOSE
 --   Run after 03_seed_r001_data.sql.
@@ -9,7 +9,7 @@
 --   is considered ready for AuthService operation.
 --
 -- HOW TO RUN
---   docker exec -it corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -it aurex-postgres psql -U postgres -d aurex \
 --     -f /path/to/04_post_seed_verify.sql
 -- =============================================================================
 

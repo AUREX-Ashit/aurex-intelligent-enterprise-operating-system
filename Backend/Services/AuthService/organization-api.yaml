@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Organization Management API
+  title: Aurex Organization Management API
   description: >
-    Organization Management (C-004, WP-01) endpoints for the CorpStage
+    Organization Management (C-004, WP-01) endpoints for the Aurex
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
     Lifecycle model: ADR-005, extended by BA-07 to a third, terminal
     RETIRED state per ERB-C004-07 (PE-001-C004). Covers WP-01's 7

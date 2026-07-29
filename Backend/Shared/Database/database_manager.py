@@ -1,8 +1,8 @@
 """
-CorpStage Shared Database Framework - Database Manager Module.
+Aurex Shared Database Framework - Database Manager Module.
 
 High-level coordinator managing baseline integrations, health-check probes,
-and table configuration schemas across CorpStage application bounds.
+and table configuration schemas across Aurex application bounds.
 """
 
 import logging
@@ -11,11 +11,11 @@ from typing import Dict, Any, Optional
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from corpstage.backend.shared.database.engine_factory import EngineFactory
-from corpstage.backend.shared.database.base_model import Base
-from corpstage.backend.shared.database.exceptions import DatabaseInitializationError, DatabaseConnectionError
+from aurex.backend.shared.database.engine_factory import EngineFactory
+from aurex.backend.shared.database.base_model import Base
+from aurex.backend.shared.database.exceptions import DatabaseInitializationError, DatabaseConnectionError
 
-logger = logging.getLogger("CorpStage.Database.DatabaseManager")
+logger = logging.getLogger("Aurex.Database.DatabaseManager")
 
 
 class DatabaseManager:

@@ -7,8 +7,8 @@
  * responsibility.
  */
 
-const ACCESS_TOKEN_KEY = "corpstage.access_token";
-const REFRESH_TOKEN_KEY = "corpstage.refresh_token";
+const ACCESS_TOKEN_KEY = "aurex.access_token";
+const REFRESH_TOKEN_KEY = "aurex.refresh_token";
 
 export const authStorage = {
   getToken(): string | null {

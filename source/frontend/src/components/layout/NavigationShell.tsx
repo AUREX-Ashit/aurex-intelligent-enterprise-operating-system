@@ -21,9 +21,9 @@ export function NavigationShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface-muted text-sm font-black tracking-tight text-brand-strong">
-              CS
+              AX
             </span>
-            <span className="text-lg font-extrabold tracking-tight text-foreground">CorpStage</span>
+            <span className="text-lg font-extrabold tracking-tight text-foreground">Aurex</span>
           </Link>
 
           <nav aria-label="Primary" className="hidden gap-1 sm:flex">
@@ -43,7 +43,7 @@ export function NavigationShell({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</main>
 
       <footer className="border-t border-border-muted px-6 py-4 text-center text-xs text-muted-foreground">
-        CorpStage Enterprise Operating System
+        Aurex Enterprise Operating System
       </footer>
     </div>
   );

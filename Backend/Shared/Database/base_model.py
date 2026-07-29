@@ -1,5 +1,5 @@
 """
-CorpStage Shared Database Framework - Base Model Module.
+Aurex Shared Database Framework - Base Model Module.
 
 Hosts the shared Enterprise Declarative Base containing timestamp attributes,
 conversions, and multi-tenant schema isolation contracts.
@@ -10,14 +10,14 @@ from typing import Any, Dict, List
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from corpstage.backend.shared.database.tenant_context import TenantContext
-from corpstage.backend.shared.database.exceptions import TenantResolutionError
+from aurex.backend.shared.database.tenant_context import TenantContext
+from aurex.backend.shared.database.exceptions import TenantResolutionError
 
 
 class Base(DeclarativeBase):
     """
     Unified declarative base representing the baseline metadata standard for
-    every SQLAlchemy schema model within the CorpStage estate.
+    every SQLAlchemy schema model within the Aurex estate.
     """
     
     # Trackers for auditing lifecycles

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- CorpStage Enterprise SaaS Platform - Immutable Master Seed Script
+-- Aurex Enterprise SaaS Platform - Immutable Master Seed Script
 -- Population of standard system roles, security permissions, taxonomy guidelines,
 -- ESG Metrics codes (GRI/SASB standards) and United Nations 17 SDGs.
 -- ==============================================================================

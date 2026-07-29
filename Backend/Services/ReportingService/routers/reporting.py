@@ -18,9 +18,9 @@ from schemas.report import (
     AuditLogResponse
 )
 from services.providers import (
-    CorpStageReportProvider, 
-    CorpStageExportProvider, 
-    CorpStageDashboardProvider
+    AurexReportProvider, 
+    AurexExportProvider, 
+    AurexDashboardProvider
 )
 from repositories.report_repository import ScorecardRepository, AuditLogRepository
 from config.settings import settings
@@ -77,7 +77,7 @@ async def generate_esg_report(
     db: AsyncSession = Depends(get_db),
     operator: str = Depends(get_current_operator)
 ):
-    provider = CorpStageReportProvider()
+    provider = AurexReportProvider()
     try:
         report = await provider.generate_report(db, request, operator)
         await db.commit()
@@ -102,7 +102,7 @@ async def export_esg_report(
     db: AsyncSession = Depends(get_db),
     operator: str = Depends(get_current_operator)
 ):
-    provider = CorpStageExportProvider()
+    provider = AurexExportProvider()
     try:
         export_rec = await provider.export_report(db, request, operator)
         await db.commit()
@@ -135,7 +135,7 @@ async def get_dashboard_summary(
     else:
         resolved_year = year
         
-    provider = CorpStageDashboardProvider()
+    provider = AurexDashboardProvider()
     try:
         data = await provider.get_dashboard_summary(db, resolved_year)
         return data

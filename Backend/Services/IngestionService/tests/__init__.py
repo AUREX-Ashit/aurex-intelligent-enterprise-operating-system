@@ -1,3 +1,3 @@
 """
-CorpStage Ingestion Suite Integration Testing.
+Aurex Ingestion Suite Integration Testing.
 """

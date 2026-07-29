@@ -1,12 +1,12 @@
 """
-CorpStage Shared Database Framework - Exceptions Module.
+Aurex Shared Database Framework - Exceptions Module.
 
 Defines custom enterprise exception hierarchies for database operations,
 connection life cycles, and multi-tenant security boundary checks.
 """
 
 class DatabaseError(Exception):
-    """Base exception for all CorpStage database operations."""
+    """Base exception for all Aurex database operations."""
     pass
 
 

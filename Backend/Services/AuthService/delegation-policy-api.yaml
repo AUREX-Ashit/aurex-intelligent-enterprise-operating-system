@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Delegation Policy API
+  title: Aurex Delegation Policy API
   description: >
     Delegation Policy establishment (C-003, WP-02 BA-04). Covers
     ERB-C003-01 / EX-C003-04 (Establish Delegation Policy) only — see

@@ -1,4 +1,4 @@
-# CorpStage Enterprise Operating System (EOS)
+# Aurex Enterprise Operating System (EOS)
 
 ## Repository Architecture Index
 

@@ -1,24 +1,24 @@
 -- =============================================================================
 -- 05_bootstrap_first_user.sql
--- CorpStage AuthService — Bootstrap: First Organization, Person, Identity, Membership
+-- Aurex AuthService — Bootstrap: First Organization, Person, Identity, Membership
 -- =============================================================================
 -- PURPOSE
 --   Creates the minimum R-001 entity graph required to test the login flow
 --   end-to-end against a live AuthService instance.
 --
 --   This script creates:
---     1. Organization     — CorpStage Demo Organization (CORP-DEMO-001)
+--     1. Organization     — Aurex Demo Organization (CORP-DEMO-001)
 --     2. Person           — Admin User
 --     3. Identity         — admin@corpstage.com / LOCAL credential
 --     4. Membership       — Admin User -> Demo Org -> ORG_ADMIN
 --
 -- CREDENTIALS FOR LOGIN TESTING
 --   Email:    admin@corpstage.com
---   Password: CorpStage#Admin2026!
+--   Password: Aurex#Admin2026!
 --   Org UUID: 5466c6bf-67b2-52ac-ba83-a8cff7b8b42e
 --
 -- UUID STRATEGY
---   All bootstrap UUIDs are deterministic (uuid5) with the CorpStage seed
+--   All bootstrap UUIDs are deterministic (uuid5) with the Aurex seed
 --   namespace. Re-running produces the same UUIDs. ON CONFLICT DO NOTHING
 --   makes this script safe to run multiple times.
 --
@@ -40,7 +40,7 @@
 --   - ORG_ADMIN role exists with UUID c0d893dd-834a-539a-b0b9-cea32d756c9e
 --
 -- HOW TO RUN
---   docker exec -i corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -i aurex-postgres psql -U postgres -d aurex \
 --     < scripts/05_bootstrap_first_user.sql
 -- =============================================================================
 
@@ -55,7 +55,7 @@ BEGIN;
 -- =============================================================================
 -- 1. Organization
 -- =============================================================================
-\echo 'Creating Organization: CorpStage Demo Organization ...'
+\echo 'Creating Organization: Aurex Demo Organization ...'
 
 INSERT INTO organizations (
     id,
@@ -69,7 +69,7 @@ INSERT INTO organizations (
 VALUES (
     '5466c6bf-67b2-52ac-ba83-a8cff7b8b42e',
     'CORP-DEMO-001',
-    'CorpStage Demo Organization',
+    'Aurex Demo Organization',
     'CORPORATE',
     true,
     NOW(),
@@ -108,7 +108,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
 -- 3. Identity
---    password_hash is a bcrypt cost-12 hash of: CorpStage#Admin2026!
+--    password_hash is a bcrypt cost-12 hash of: Aurex#Admin2026!
 --    Verified round-trip in Python before embedding.
 --    is_verified = true: allows immediate login without email verification flow.
 -- =============================================================================
@@ -144,7 +144,7 @@ ON CONFLICT (email) DO NOTHING;
 
 -- =============================================================================
 -- 4. Membership
---    Links: Admin User -> CorpStage Demo Org -> ORG_ADMIN
+--    Links: Admin User -> Aurex Demo Org -> ORG_ADMIN
 --    is_primary = true: this is the person's default organization.
 --    membership_status = ACTIVE: immediately accessible after login.
 --    role_id references ORG_ADMIN from 03_seed_r001_data.sql.
@@ -185,7 +185,7 @@ COMMIT;
 \echo ''
 \echo 'Login credentials:'
 \echo '  Email:    admin@corpstage.com'
-\echo '  Password: CorpStage#Admin2026!'
+\echo '  Password: Aurex#Admin2026!'
 \echo '  Org UUID: 5466c6bf-67b2-52ac-ba83-a8cff7b8b42e'
 \echo '  Role:     ORG_ADMIN'
 \echo ''

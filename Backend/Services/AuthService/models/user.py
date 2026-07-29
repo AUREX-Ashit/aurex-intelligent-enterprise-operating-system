@@ -7,7 +7,7 @@ from models.database import Base
 class TenantModel(Base):
     """
     Scaffolding for Multi-tenant support.
-    Represents tenants/organizations within the CorpStage platform.
+    Represents tenants/organizations within the Aurex platform.
     """
     __tablename__ = "tenants"
 

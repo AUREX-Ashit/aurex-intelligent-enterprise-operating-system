@@ -2,9 +2,9 @@
 ### Version 2.0 — GOLD STANDARD (Supersedes v1.0 Draft)
 
 **Status:** LOCKED
-**Scope:** Defines what users see and how every screen in CorpStage is designed.
+**Scope:** Defines what users see and how every screen in Aurex is designed.
 **Companion documents:** SD-002 (Universal Business Object Rules), SD-003 (Interaction Laws)
-**Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
+**Governing framework:** Aurex Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
 
@@ -262,7 +262,7 @@ Every presentation experience consumes the same Enterprise Intelligence while pr
 
 ## SECTION 3: Guided Completion & the Question Engine
 
-This section defines how a screen behaves when the platform does not yet have an answer — the single most important interaction sequence in CorpStage, and the one most exposed in v1.0 (only 4 of the 6 required steps were represented).
+This section defines how a screen behaves when the platform does not yet have an answer — the single most important interaction sequence in Aurex, and the one most exposed in v1.0 (only 4 of the 6 required steps were represented).
 
 **SD-001-004: The Six-Step Resolution Sequence**
 
@@ -372,7 +372,7 @@ Any in-progress operation (discovery running, AI extraction in progress, evidenc
 
 *(New in v2.0 — this section did not exist in v1.0; only its numbering slot, SD-001-43 through SD-001-56, was reserved.)*
 
-Every enterprise operates differently — not just in vocabulary or org structure, but in how it makes decisions. This section defines how the same CorpStage screens adapt their behavior to an enterprise's operating character without any code change. **The underlying DNA configuration data model belongs to SD-002** (Appendix A); this section governs only how screens consume and express it.
+Every enterprise operates differently — not just in vocabulary or org structure, but in how it makes decisions. This section defines how the same Aurex screens adapt their behavior to an enterprise's operating character without any code change. **The underlying DNA configuration data model belongs to SD-002** (Appendix A); this section governs only how screens consume and express it.
 
 **SD-001-027: Enterprise DNA Is a Resolved Screen Input, Not a Screen-Level Setting**
 
@@ -400,7 +400,7 @@ Whenever a screen's behavior differs from the platform default because of a DNA 
 
 **SD-001-033: DNA Profiles Do Not Fork the Platform**
 
-No DNA configuration produces a custom build, a customer-specific codebase, or a one-off screen. Every DNA-driven variation in this section is a rendering rule applied to the same universal screen metadata (Section 5). This is the mechanism by which CorpStage claims "same platform, different enterprise behavior, no custom development" — and it is falsifiable: if a DNA setting ever requires a code branch, this principle has been violated.
+No DNA configuration produces a custom build, a customer-specific codebase, or a one-off screen. Every DNA-driven variation in this section is a rendering rule applied to the same universal screen metadata (Section 5). This is the mechanism by which Aurex claims "same platform, different enterprise behavior, no custom development" — and it is falsifiable: if a DNA setting ever requires a code branch, this principle has been violated.
 
 ---
 
@@ -408,7 +408,7 @@ No DNA configuration produces a custom build, a customer-specific codebase, or a
 
 *(Rated World Class in independent review. Retained from v1.0 with the Action Center now properly named and specified per L38, plus two new subsections closing gaps identified in review: Error & Conflict States, and Bulk Actions & Saved Views.)*
 
-Every screen in CorpStage follows the same structure regardless of domain, industry, customer, department, role, or device. A user learns CorpStage once and uses it everywhere.
+Every screen in Aurex follows the same structure regardless of domain, industry, customer, department, role, or device. A user learns Aurex once and uses it everywhere.
 
 **Universal Screen Model:** Header & Context → Navigation & Filters → Primary Business Content (widgets, activities, business objects) → Right Intelligence Panel (evidence, assignments, history, confidence, Action Center) → Footer (version, audit, last updated).
 
@@ -490,7 +490,7 @@ A number on a Sacred 12 screen is never presented alone. It is paired with the d
 
 ## SECTION 9: Universal Design Laws
 
-These 28 laws are the non-negotiable constants of CorpStage screen design — they hold across every industry, country, company, framework, department, technology, and AI provider. They are distinct from, but substantially consistent with, the platform's outer 39-Law framework (Blueprint v2.1); the reconciliation table below makes that relationship explicit for the first time.
+These 28 laws are the non-negotiable constants of Aurex screen design — they hold across every industry, country, company, framework, department, technology, and AI provider. They are distinct from, but substantially consistent with, the platform's outer 39-Law framework (Blueprint v2.1); the reconciliation table below makes that relationship explicit for the first time.
 
 | Law | Statement |
 |---|---|
@@ -686,7 +686,7 @@ A deprecated field, widget, or screen template remains functional for a minimum 
 
 **SD-001-111: Enterprise Memory Principle** — nothing a customer has configured, extended, or answered is ever silently discarded across an upgrade; see LAW-24.
 
-**SD-001-112: The Platform Adapts to the Enterprise** — restated as the closing principle of this document: every mechanism above exists so that CorpStage bends to fit the customer, never the reverse.
+**SD-001-112: The Platform Adapts to the Enterprise** — restated as the closing principle of this document: every mechanism above exists so that Aurex bends to fit the customer, never the reverse.
 
 ---
 

@@ -1,4 +1,4 @@
-**CORPSTAGE**
+**AUREX**
 
 Unified Architecture Blueprint
 
@@ -49,7 +49,7 @@ Confidential --- Internal Product Leadership
 | and node-based authorization resolving into URA-001's precedence      |
 | chain (ERG-001-10).                                                    |
 |                                                                       |
-| CORPSTAGE_Master_Technical_Architecture_GOLD_STANDARD (v2, 137        |
+| AUREX_Master_Technical_Architecture_GOLD_STANDARD (v2, 137        |
 | tables) --- the physical schema implementing all of the above,         |
 | including screen_registry (the database-backed implementation of      |
 | the Two-Layer Sacred 12 referenced in this Blueprint's Law 33 and in   |
@@ -60,7 +60,7 @@ Confidential --- Internal Product Leadership
 +-----------------------------------------------------------------------+
 | **What This Document Is**                                             |
 |                                                                       |
-| The complete, authoritative product architecture for CorpStage. Every |
+| The complete, authoritative product architecture for Aurex. Every |
 | law here is a binding product decision,                               |
 |                                                                       |
 | not a design preference. Changes require cross-functional alignment   |
@@ -70,7 +70,7 @@ Confidential --- Internal Product Leadership
 
 **Executive Summary**
 
-CorpStage is an **Intelligent Enterprise Operating Center** --- not an
+Aurex is an **Intelligent Enterprise Operating Center** --- not an
 ESG platform, not a compliance tool, not a reporting portal.
 
 It exists for one purpose: to improve the quality of executive judgment.
@@ -82,7 +82,7 @@ decision input.
 +-----------------------------------------------------------------------+
 | **The Platform Identity --- Non-Negotiable**                          |
 |                                                                       |
-| CorpStage is an Intelligent Enterprise Operating Center.              |
+| Aurex is an Intelligent Enterprise Operating Center.              |
 |                                                                       |
 | Sustainability signals are one of many inputs. Business decisions are |
 | the only output.                                                      |
@@ -219,7 +219,7 @@ it being stable.
 +---+------------------------------------------------------------------+
 | * | **Enterprise Mental Model & Canonical Executive Questions**      |
 | * |                                                                  |
-| 0 | The foundational worldview. How CorpStage thinks about a         |
+| 0 | The foundational worldview. How Aurex thinks about a         |
 | * | business. Locked before all else.                                |
 | * |                                                                  |
 +===+==================================================================+
@@ -340,7 +340,7 @@ it being stable.
 +---+------------------------------------------------------------------+
 | * | **Final Blueprint Freeze**                                       |
 | * |                                                                  |
-| 1 | Complete reconciliation. CorpStage Architecture v1 --- Locked.   |
+| 1 | Complete reconciliation. Aurex Architecture v1 --- Locked.   |
 | 3 |                                                                  |
 | * |                                                                  |
 | * |                                                                  |
@@ -354,15 +354,15 @@ it being stable.
   -----------------------------------------------------------------------
 
 *This document must be locked before any other step begins. Every law,
-every layer, every screen, every data point in the entire CorpStage
+every layer, every screen, every data point in the entire Aurex
 architecture must trace back to this document. If it does not serve the
 Enterprise Mental Model or answer a Canonical Executive Question, it
-does not exist in CorpStage.*
+does not exist in Aurex.*
 
 +-----------------------------------------------------------------------+
 | **Critical Distinction --- Mental Model vs Intelligence Library**     |
 |                                                                       |
-| Enterprise Mental Model = How CorpStage thinks about an enterprise.   |
+| Enterprise Mental Model = How Aurex thinks about an enterprise.   |
 | The conceptual framework. The worldview.                              |
 |                                                                       |
 | Canonical Intelligence Library = The atomic intelligence points. The  |
@@ -377,7 +377,7 @@ does not exist in CorpStage.*
 
 **Part A --- The Enterprise Mental Model**
 
-The Enterprise Mental Model is CorpStage\'s complete answer to one
+The Enterprise Mental Model is Aurex\'s complete answer to one
 foundational question: \"What must an intelligent platform truly
 understand about a business --- before it can be genuinely useful to the
 people running it?\" Not how to acquire that understanding. Not how to
@@ -386,7 +386,7 @@ display it. Simply --- what must be known.
 This model has six dimensions. Every intelligence point in the Canonical
 Intelligence Library maps to one of them. Every screen in the Master
 Screen Architecture illuminates one or more of them. Every question
-CorpStage asks deepens its understanding of one of them.
+Aurex asks deepens its understanding of one of them.
 
 The six dimensions are not data categories. They are living,
 interconnected aspects of a real enterprise --- each one influencing the
@@ -397,7 +397,7 @@ consequence.
 
 *What this enterprise fundamentally is*
 
-Before understanding how an enterprise performs, CorpStage must
+Before understanding how an enterprise performs, Aurex must
 understand what it is. Identity is the skeleton on which all other
 understanding is built. Risk exposure attaches to legal entities, not to
 organisational structures. Regulatory obligations attach to
@@ -438,7 +438,7 @@ regulatory mapping, and peer comparison is sector-specific.
 *How the enterprise actually runs*
 
 Understanding what an enterprise does operationally --- not just what it
-reports --- is the difference between intelligence and data. CorpStage
+reports --- is the difference between intelligence and data. Aurex
 must understand the mechanics of value creation, not just its financial
 outputs.
 
@@ -488,7 +488,7 @@ This is the dimension that no platform has systematically built. Every
 enterprise has made hundreds of commitments --- to different audiences,
 in different documents, at different times, with different levels of
 precision and legal enforceability. Nobody tracks them all. Nobody maps
-them against operational reality. CorpStage does.
+them against operational reality. Aurex does.
 
 **3.1 Financial Commitments**
 
@@ -535,7 +535,7 @@ approval or community acceptance.
 
 Exposure is not risk in the traditional sense. It is the universe of
 forces that can reduce the enterprise\'s ability to create value, meet
-its obligations, or maintain its strategic direction. CorpStage maps all
+its obligations, or maintain its strategic direction. Aurex maps all
 exposures, not just the ones that appear in risk registers.
 
 **4.1 Physical & Climate Exposures**
@@ -588,7 +588,7 @@ redundancy. Supply chain concentration risk.
 
 No enterprise operates in isolation. Every enterprise is embedded in a
 web of relationships --- each one carrying dependencies, obligations,
-influence, and risk. CorpStage maps this web and understands the
+influence, and risk. Aurex maps this web and understands the
 financial materiality of each relationship.
 
 **5.1 Capital Relationships**
@@ -635,7 +635,7 @@ areas material to the enterprise\'s risk profile.
 direction matches its real momentum*
 
 Trajectory is the dimension that separates a backward-looking
-intelligence platform from a forward-looking decision system. CorpStage
+intelligence platform from a forward-looking decision system. Aurex
 does not just understand where the enterprise is. It understands where
 it is going --- and whether those are the same thing.
 
@@ -693,10 +693,10 @@ Which current exemptions are at risk of being removed?
 | review.                                                               |
 |                                                                       |
 | Trajectory reveals Commitment integrity gaps --- the most material    |
-| intelligence CorpStage produces is the gap between what was promised  |
+| intelligence Aurex produces is the gap between what was promised  |
 | and where trajectory is actually taking the enterprise.               |
 |                                                                       |
-| This interconnection is why CorpStage cannot be built as a collection |
+| This interconnection is why Aurex cannot be built as a collection |
 | of separate modules.                                                  |
 +=======================================================================+
 +-----------------------------------------------------------------------+
@@ -725,7 +725,7 @@ words a product manager would use in a requirements document.
 | decisions.                                                            |
 |                                                                       |
 | If a feature, data point, intelligence rule, or screen element does   |
-| not serve at least one of them --- it does not exist in CorpStage.    |
+| not serve at least one of them --- it does not exist in Aurex.    |
 +=======================================================================+
 +-----------------------------------------------------------------------+
 
@@ -11182,7 +11182,7 @@ words a product manager would use in a requirements document.
 +------+---------------------------------------------------------------+
 
 +------+---------------------------------------------------------------+
-| *    | **CorpStage Thinks Before It Asks**                           |
+| *    | **Aurex Thinks Before It Asks**                           |
 | *Law |                                                               |
 | 34** |                                                               |
 +======+===============================================================+
@@ -11483,7 +11483,7 @@ words a product manager would use in a requirements document.
 
 *These three laws are new in Version 2.0. They represent the
 capabilities that no competitor has built, and the reasons a corporate
-buys CorpStage immediately rather than evaluating it slowly.*
+buys Aurex immediately rather than evaluating it slowly.*
 
 +------+---------------------------------------------------------------+
 | *    | **The Question Engine --- The Platform Asks What Teams Cannot |
@@ -13894,7 +13894,7 @@ buys CorpStage immediately rather than evaluating it slowly.*
   -----------------------------------------------------------------------
 
 Every label, prompt, heading, metric name, notification, and narrative
-in CorpStage must pass the business language test. If a sustainability
+in Aurex must pass the business language test. If a sustainability
 professional must translate it for the CFO, it has failed.
 
   -----------------------------------------------------------------------
@@ -13951,9 +13951,9 @@ professional must translate it for the CFO, it has failed.
 
   -----------------------------------------------------------------------
 
-**What CorpStage Is --- In One Paragraph**
+**What Aurex Is --- In One Paragraph**
 
-CorpStage is an Intelligent Enterprise Operating Center that
+Aurex is an Intelligent Enterprise Operating Center that
 progressively understands a business --- from uploaded documents and
 public filings on day one, to connected operational systems over time
 --- and translates everything it learns into financial consequences,
@@ -13966,7 +13966,7 @@ evidenced, auditable, and always translated into the language of money,
 risk, and strategic consequence.
 
 +-----------------------------------------------------------------------+
-| **Who Buys CorpStage --- and Why**                                    |
+| **Who Buys Aurex --- and Why**                                    |
 |                                                                       |
 | CFO buys it: because the Resilience P&L finally shows what business   |
 | risk costs in financial terms.                                        |
@@ -13994,12 +13994,12 @@ risk, and strategic consequence.
 +-----------------------------------------------------------------------+
 | **Commitment Integrity --- The Scenario That Closes Deals**           |
 |                                                                       |
-| CEO commits to net-zero by 2040 on a Q2 earnings call. CorpStage      |
+| CEO commits to net-zero by 2040 on a Q2 earnings call. Aurex      |
 | tracks every capital allocation decision since. By FY24: zero capex   |
 | earmarked for decarbonisation. Energy intensity up 8%. Renewable      |
 | share down from 22% to 18%.                                           |
 |                                                                       |
-| CorpStage surfaces this 18 months before any external party finds it: |
+| Aurex surfaces this 18 months before any external party finds it: |
 |                                                                       |
 | → \"Your FY25 renewable commitment (40%) is on trajectory to deliver  |
 | 24%. Green bond step-up clause triggered.\"                           |
@@ -14013,33 +14013,33 @@ risk, and strategic consequence.
 | Routed to CEO, CFO, General Counsel simultaneously. Options surfaced: |
 | correct the trajectory, revise the commitment, accept the step-up.    |
 |                                                                       |
-| Without CorpStage: this surfaces when a bondholder, journalist, or    |
+| Without Aurex: this surfaces when a bondholder, journalist, or    |
 | regulator finds it first.                                             |
 |                                                                       |
-| With CorpStage: the executive team addresses it 18 months earlier,    |
+| With Aurex: the executive team addresses it 18 months earlier,    |
 | with all options still open.                                          |
 +=======================================================================+
 +-----------------------------------------------------------------------+
 
 +-----------------------------------------------------------------------+
-| **What CorpStage Replaces**                                           |
+| **What Aurex Replaces**                                           |
 |                                                                       |
-| CorpStage does NOT compete with: ESG platforms · GRC platforms · BI   |
+| Aurex does NOT compete with: ESG platforms · GRC platforms · BI   |
 | platforms · Compliance tools.                                         |
 |                                                                       |
-| CorpStage competes with:                                              |
+| Aurex competes with:                                              |
 |                                                                       |
-| • McKinsey engagements (episodic, expensive, no memory) --- CorpStage |
+| • McKinsey engagements (episodic, expensive, no memory) --- Aurex |
 | has Living Memory, runs daily, costs a fraction                       |
 |                                                                       |
-| • Board advisors (agenda-driven, not data-driven) --- CorpStage is    |
+| • Board advisors (agenda-driven, not data-driven) --- Aurex is    |
 | evidence-backed, always current                                       |
 |                                                                       |
-| • Executive coaches (no organisational data access) --- CorpStage     |
+| • Executive coaches (no organisational data access) --- Aurex     |
 | knows the organisation\'s full history                                |
 |                                                                       |
 | • Trusted lieutenants (tell executives what they want to hear) ---    |
-| CorpStage surfaces contradictions                                     |
+| Aurex surfaces contradictions                                     |
 |                                                                       |
 | Price anchors accordingly: not against software subscriptions, but    |
 | against:                                                              |
@@ -14209,7 +14209,7 @@ data has meaning.*
 
 **2.1 --- Enterprise Understanding Domains**
 
-CorpStage must hold sixteen dimensions of enterprise reality
+Aurex must hold sixteen dimensions of enterprise reality
 simultaneously, in relationship with each other, to generate
 intelligence that is genuinely useful to the people running the
 business. These sixteen domains are not data categories. They are the
@@ -14221,7 +14221,7 @@ the complete worldview.
 | Canonical Intelligence Domains (Step 5)**                             |
 |                                                                       |
 | The 16 Understanding Domains here are the CONCEPTUAL MODEL --- how    |
-| CorpStage thinks about an enterprise. The worldview.                  |
+| Aurex thinks about an enterprise. The worldview.                  |
 |                                                                       |
 | The 20 Canonical Intelligence Library domains in Step 5 are the DATA  |
 | OBJECTS collected within this model. What is tracked.                 |
@@ -14362,14 +14362,14 @@ the complete worldview.
 +----+-----------------------------------------------------------------+
 | *  | **Evidence & Trust**                                            |
 | *D |                                                                 |
-| 16 | *The quality, confidence, and integrity of everything CorpStage |
+| 16 | *The quality, confidence, and integrity of everything Aurex |
 | ** | knows --- the meta-layer governing all other layers*            |
 +====+=================================================================+
 +----+-----------------------------------------------------------------+
 
 **2.2 --- Enterprise Relationship Model**
 
-CorpStage is synthesis intelligence, not data warehousing. The
+Aurex is synthesis intelligence, not data warehousing. The
 intelligence it generates is not found in any single domain --- it
 emerges from the relationships between domains. Understanding these
 relationships is as important as understanding the domains themselves.
@@ -14491,7 +14491,7 @@ relationships is as important as understanding the domains themselves.
 |                                                                       |
 | > → Observed performance diverges (D14)                               |
 | >                                                                     |
-| > → CorpStage contradiction detected (D16)                            |
+| > → Aurex contradiction detected (D16)                            |
 | >                                                                     |
 | > → Executive alert generated (D12)                                   |
 | >                                                                     |
@@ -14503,7 +14503,7 @@ relationships is as important as understanding the domains themselves.
 
 **2.3 --- Enterprise State Model**
 
-CorpStage must understand and track six states simultaneously ---
+Aurex must understand and track six states simultaneously ---
 because the most important executive questions are not about what is
 happening now, but about what happened before, what direction things are
 moving, and what is going to happen next.
@@ -14547,7 +14547,7 @@ moving, and what is going to happen next.
                                   estimate. The gap between Projected
                                   Future State and Committed State is the
                                   Commitment Integrity Signal --- the
-                                  most important signal CorpStage
+                                  most important signal Aurex
                                   generates.
 
   **Observed**                    What external signals, independent of
@@ -14562,7 +14562,7 @@ moving, and what is going to happen next.
 
 Risk is a threat with a probability and an impact. A pressure is
 different --- a sustained force that shapes decisions, constrains
-options, and influences behaviour continuously. CorpStage thinks in
+options, and influences behaviour continuously. Aurex thinks in
 pressures because pressures explain why enterprises make the decisions
 they make.
 
@@ -14575,9 +14575,9 @@ pricing, covenant requirements, or investor expectations. When extreme,
 it overrides stated strategic priorities.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
-| When cost pressure indicators rise, CorpStage monitors which          |
+| When cost pressure indicators rise, Aurex monitors which          |
 | commitments and investments are being cut first, and whether those    |
 | cuts create future risks.                                             |
 +=======================================================================+
@@ -14590,7 +14590,7 @@ strategy and the capabilities it currently has. One of the most common
 causes of strategic under-delivery.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | When strategic ambition consistently outpaces execution, and when the |
 | capability investment required to close the gap is below what the     |
@@ -14605,7 +14605,7 @@ strategic investments. The most common cause of commitment integrity
 failures.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | When near-term pressure is consuming the capital or management        |
 | attention required to deliver long-term commitments. Flags            |
@@ -14619,7 +14619,7 @@ Pressure arising from cash availability relative to obligations. Affects
 every other decision --- strategic, operational, and workforce.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Liquidity headroom trends. Covenant proximity. The interaction        |
 | between liquidity pressure and commitment deliverability.             |
@@ -14635,7 +14635,7 @@ enterprise\'s jurisdictions. Increasing globally and a primary driver of
 capital reallocation and strategic repositioning in every sector.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Regulatory pipeline density --- how many material changes in          |
 | development? Financial consequence modelling --- what does full       |
@@ -14650,7 +14650,7 @@ pressures on facilities built for a climate that no longer exists or
 will not exist within their operational lifetime.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Physical risk scores by facility, updated as climate science          |
 | advances. Insurance market signals --- where are premiums rising or   |
@@ -14665,7 +14665,7 @@ regulatory favour, and strategic positioning. The continuous movement of
 relative position.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Competitor investment signals --- where are competitors deploying     |
 | capital that the enterprise is not? Talent flow signals --- where are |
@@ -14680,7 +14680,7 @@ tariff changes, and conflict in geographies where the enterprise
 operates, sources, or sells.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Geopolitical risk scores for all material operating and sourcing      |
 | geographies. Supply chain concentration in high-geopolitical-risk     |
@@ -14695,7 +14695,7 @@ standards, supply chain transparency, transition-cost intensity limits --- now
 with revenue consequences for non-compliance.
 
 +-----------------------------------------------------------------------+
-| **CorpStage signal:**                                                 |
+| **Aurex signal:**                                                 |
 |                                                                       |
 | Customer Business Resilience requirement inventory. Revenue at risk from   |
 | contract conditions the enterprise cannot currently satisfy.          |
@@ -14706,7 +14706,7 @@ with revenue consequences for non-compliance.
 
 An intelligence signal is material when it matters enough to change an
 executive decision, alter a capital allocation, or require a governance
-response. Everything else is noise. CorpStage uses seven dimensions.
+response. Everything else is noise. Aurex uses seven dimensions.
 
   -----------------------------------------------------------------------
   **Dimension**                   **Definition and threshold**
@@ -14762,12 +14762,12 @@ response. Everything else is noise. CorpStage uses seven dimensions.
 
 **2.6 --- Enterprise Truth Model**
 
-Not all intelligence is equal. CorpStage must distinguish between seven
+Not all intelligence is equal. Aurex must distinguish between seven
 types of truth --- because mixing truth types without labelling them is
 how AI systems erode executive trust.
 
   -----------------------------------------------------------------------
-  **Truth Type**                  **Definition and how CorpStage handles
+  **Truth Type**                  **Definition and how Aurex handles
                                   it**
   ------------------------------- ---------------------------------------
   **Deterministic**               Known with certainty from reliable
@@ -14806,7 +14806,7 @@ how AI systems erode executive trust.
                                   observed and declared is a primary
                                   contradiction detection signal.
 
-  **Derived**                     Conclusions CorpStage reaches through
+  **Derived**                     Conclusions Aurex reaches through
                                   synthesis and reasoning across multiple
                                   inputs. Most valuable --- and most
                                   important to handle carefully. Full
@@ -14823,12 +14823,12 @@ how AI systems erode executive trust.
 
 **2.7 --- Enterprise Intelligence States**
 
-For every intelligence element, CorpStage holds an understanding at one
+For every intelligence element, Aurex holds an understanding at one
 of eight maturity levels --- about the quality of understanding and the
-confidence with which CorpStage can act on what it knows.
+confidence with which Aurex can act on what it knows.
 
   -----------------------------------------------------------------------
-  **Intelligence State**          **Definition and CorpStage action**
+  **Intelligence State**          **Definition and Aurex action**
   ------------------------------- ---------------------------------------
   **Unknown**                     No information. An active state that
                                   triggers acquisition activity. Flags as
@@ -14837,7 +14837,7 @@ confidence with which CorpStage can act on what it knows.
 
   **Suspected**                   Weak signals consistent with a
                                   particular state, insufficient to
-                                  confirm. Shapes what CorpStage looks
+                                  confirm. Shapes what Aurex looks
                                   for. Does not drive action
                                   recommendations.
 
@@ -14880,7 +14880,7 @@ confidence with which CorpStage can act on what it knows.
 
 **2.8 --- Enterprise Time Model**
 
-Most intelligence systems understand current state. CorpStage
+Most intelligence systems understand current state. Aurex
 understands four temporal dimensions simultaneously --- because the most
 important executive questions span all four.
 
@@ -14924,12 +14924,12 @@ important executive questions span all four.
 
 **2.9 --- Enterprise Value Translation Model**
 
-Every piece of intelligence CorpStage holds must ultimately answer:
+Every piece of intelligence Aurex holds must ultimately answer:
 \"What does this mean for the value and resilience of my business?\"
 Seven translation targets are defined.
 
   -----------------------------------------------------------------------
-  **Translation Target**          **What it measures and how CorpStage
+  **Translation Target**          **What it measures and how Aurex
                                   translates it**
   ------------------------------- ---------------------------------------
   **EBITDA Impact**               Direct effect on earnings. Primary
@@ -14987,7 +14987,7 @@ Seven translation targets are defined.
 
 **2.10 --- Executive Relevance Model**
 
-Everything CorpStage understands cannot and should not reach the
+Everything Aurex understands cannot and should not reach the
 executive simultaneously. The Executive Relevance Model is the filter.
 It answers one question before any intelligence is surfaced:
 
@@ -15036,12 +15036,12 @@ It answers one question before any intelligence is surfaced:
 
 The Relevance Score drives the Action Center ranking --- not the
 severity of the underlying signal, not the framework importance, not the
-recency. This is how CorpStage maintains the maximum-7-items discipline
+recency. This is how Aurex maintains the maximum-7-items discipline
 while holding a complete intelligence picture of the enterprise.
 
 **2.11 --- The Enterprise Intelligence Lens Model**
 
-CorpStage holds one intelligence model. One data layer. One IDAL. One
+Aurex holds one intelligence model. One data layer. One IDAL. One
 set of 16 understanding domains and 20 canonical intelligence objects.
 One set of 12 canonical executive questions. What changes between roles
 is not the data --- it is the vocabulary applied to it, the signals
@@ -15106,7 +15106,7 @@ design.
                                   new lens. One day of configuration.
   -----------------------------------------------------------------------
 
-The Lens Model means CorpStage is simultaneously the CFO\'s tool AND the
+The Lens Model means Aurex is simultaneously the CFO\'s tool AND the
 CSO\'s tool AND the CRO\'s tool. Three buyers. One platform. One source
 of truth. See Law 39.
 
@@ -15162,7 +15162,7 @@ of truth. See Law 39.
   Synthesis**                     moat. Supplier concentration +
                                   geopolitical risk + financing
                                   sensitivity + customer expectations →
-                                  \$4.2M EBITDA risk. Where CorpStage
+                                  \$4.2M EBITDA risk. Where Aurex
                                   becomes unique.
 
   **Layer 7 --- Confidence,       Universal across all domains. Same
@@ -15209,12 +15209,12 @@ of truth. See Law 39.
   **Phase 1 --- Enterprise        Enterprise Understanding Center,
   Foundation**                    Intelligence Completion Center,
                                   Evidence Intelligence Center. Purpose:
-                                  CorpStage learns the enterprise.
+                                  Aurex learns the enterprise.
                                   Extraction, inference, confirmation,
                                   minimal user entry.
 
   **Phase 2 --- Executive         Screens 1--12. Purpose: How executives
-  Cognition (Sacred 12)**         think with CorpStage. Executive
+  Cognition (Sacred 12)**         think with Aurex. Executive
                                   cognition, synthesis, contradictions,
                                   reflection, financial meaning. Not data
                                   collection.
@@ -15262,7 +15262,7 @@ of truth. See Law 39.
 
 **4.1 --- Synthesis Output Specifications (Phase 4 Exchange & Outputs)**
 
-Ten synthesis outputs are generated by CorpStage from the intelligence
+Ten synthesis outputs are generated by Aurex from the intelligence
 engine. Each has a defined audience, frequency, AI role, human approval
 requirement, and key fields. These power the Phase 4 Exchange & Outputs
 screens.
@@ -15380,7 +15380,7 @@ screens.
 +--------+-------------------------------------------------------------+
 
 The Canonical Intelligence Library defines the universe of intelligence
-points CorpStage needs to understand a business. It is built on an
+points Aurex needs to understand a business. It is built on an
 enterprise ontology --- not a framework ontology. Every intelligence
 object holds: the intelligence point, its related data points,
 cross-domain relationships, materiality weight, sourceability,
@@ -15392,7 +15392,7 @@ framework mapping (hidden from executives).
 | 16 Understanding Domains (Step 2)**                                   |
 |                                                                       |
 | These 20 domains are DATA OBJECTS --- the specific intelligence       |
-| points CorpStage collects, infers, and tracks.                        |
+| points Aurex collects, infers, and tracks.                        |
 |                                                                       |
 | The 16 Understanding Domains in Step 2 are the CONCEPTUAL MODEL       |
 | within which these data objects live.                                 |
@@ -15450,7 +15450,7 @@ framework mapping (hidden from executives).
 | **5.0b --- Intelligence Construction & Framework Reconciliation       |
 | (binding)**                                                           |
 |                                                                       |
-| **Intelligence Construction Principle.** CorpStage does not collect   |
+| **Intelligence Construction Principle.** Aurex does not collect   |
 | data for frameworks --- it builds enterprise intelligence.            |
 | Frameworks, reports, disclosures, assessments, and executive insights |
 | are downstream consumers of that intelligence, never its purpose.     |
@@ -15495,7 +15495,7 @@ framework mapping (hidden from executives).
 | user to confirm a finding) → Ask (system asks the Business Question   |
 | outright, only if every prior stage fails). This is Law 4             |
 | (Discover→Infer→Ask Last) restated at the Business Question level:    |
-| instead of "What subsidiaries exist?" CorpStage opens with "We        |
+| instead of "What subsidiaries exist?" Aurex opens with "We        |
 | identified 12 subsidiaries from annual reports and corporate filings. |
 | Confidence: 91%. Please confirm."                                     |
 |                                                                       |
@@ -15540,10 +15540,10 @@ framework mapping (hidden from executives).
 | > **2. Three framework tiers, three governance owners --- never       |
 | > two.**                                                              |
 | >                                                                     |
-| > **Tier 1 --- Standard Frameworks (CorpStage Admin only):** BRSR,    |
+| > **Tier 1 --- Standard Frameworks (Aurex Admin only):** BRSR,    |
 | > GRI, ISSB, ESRS, CDP and equivalents. Externally governed and       |
 | > identical across every customer; if the regulator changes the       |
-| > framework, CorpStage Admin changes it once, centrally. No Corporate |
+| > framework, Aurex Admin changes it once, centrally. No Corporate |
 | > Admin may edit, fork, or silently diverge a Standard Framework ---  |
 | > doing so would break the "one fact, many consumers" guarantee       |
 | > (Section 5.0b, Reporting Reconciliation) for every other customer   |
@@ -15567,7 +15567,7 @@ framework mapping (hidden from executives).
 | > time.                                                               |
 | >                                                                     |
 | > **3. CDEs are Global or Corporate-Scoped --- net-new CDEs default   |
-| > to Corporate-Scoped; promotion to Global is a CorpStage Admin       |
+| > to Corporate-Scoped; promotion to Global is a Aurex Admin       |
 | > decision, never automatic.** When a Corporate Admin needs a CDE     |
 | > that does not yet exist (Tier 2 or Tier 3), the platform first      |
 | > attempts a semantic match against the existing Global CDE library   |
@@ -15581,13 +15581,13 @@ framework mapping (hidden from executives).
 | > If multiple customers independently create the materially same      |
 | > Corporate-Scoped CDE, this is read as a signal --- not an automatic |
 | > trigger --- that a new Global CDE, and potentially a new Business   |
-| > Question or Domain, may be needed; CorpStage Admin reviews and      |
+| > Question or Domain, may be needed; Aurex Admin reviews and      |
 | > decides whether to promote it.                                      |
 | >                                                                     |
 | > **4. An unrecognised future framework is onboarded through the same |
 | > Extract→Infer→Confirm pipeline as any other document --- never a    |
 | > manual architect-only process.** When a user names a framework      |
-| > CorpStage does not yet recognise, its disclosure list or            |
+| > Aurex does not yet recognise, its disclosure list or            |
 | > requirements document is ingested exactly as any other uploaded     |
 | > document (Section 7.9 Intelligence Intake Guardrails apply          |
 | > identically). The platform attempts to semantically match each      |
@@ -15595,7 +15595,7 @@ framework mapping (hidden from executives).
 | > existing CDE beneath it second --- reusing Binding 3's matching     |
 | > mechanism. Disclosures with no match become new Business Question   |
 | > candidates, surfaced to a human (the Corporate Admin for a Tier 2/3 |
-| > framework; CorpStage Admin if the framework is later proposed for   |
+| > framework; Aurex Admin if the framework is later proposed for   |
 | > Tier 1 promotion) for a one-time confirmation before the framework  |
 | > becomes active. From that point forward, the framework operates     |
 | > identically to any other --- Framework→Business Question is the     |
@@ -15627,7 +15627,7 @@ framework mapping (hidden from executives).
 | > and discard. If the materially same entry recurs independently      |
 | > across multiple customers' registries, this feeds the same          |
 | > promotion signal as Binding 3 --- evidence that a Global CDE is     |
-| > missing, surfaced to CorpStage Admin, never auto-created.           |
+| > missing, surfaced to Aurex Admin, never auto-created.           |
 | >                                                                     |
 | > **6. Every CDE has exactly one owning Domain, regardless of how     |
 | > many Domains consume it --- ownership goes to where the fact is     |
@@ -15649,7 +15649,7 @@ framework mapping (hidden from executives).
 | > where Evidence Source is ambiguous between Domains, the Domain      |
 | > whose Business Questions the fact most directly answers (Section    |
 | > 5.0a, BQ definition); (c) where (a) and (b) both remain genuinely   |
-| > tied, CorpStage Admin makes a one-time ownership ruling, recorded   |
+| > tied, Aurex Admin makes a one-time ownership ruling, recorded   |
 | > against the CDE, binding on all Domains thereafter. Every other     |
 | > Domain references the owning Domain's CDE rather than creating its  |
 | > own --- this is the same "one fact, many consumers" guarantee       |
@@ -15688,7 +15688,7 @@ framework mapping (hidden from executives).
 | > Purge ever removes a CDE from the Global canonical library --- both |
 | > actions operate only at the Corporate-Scoped or view-configuration  |
 | > layer (Binding 3); a Global CDE's presence in the canonical model   |
-| > is a CorpStage Admin decision exclusively, consistent with Binding  |
+| > is a Aurex Admin decision exclusively, consistent with Binding  |
 | > 3's promotion-only-on-review rule applied in reverse. \*\*8.        |
 | > Framework Completeness is a derived percentage, never a stored      |
 | > value --- computed from Business Questions answered, not data       |
@@ -15713,13 +15713,13 @@ framework mapping (hidden from executives).
 | > underlying CDE pool, because the two Frameworks require different,  |
 | > overlapping subsets of it.                                          |
 | >                                                                     |
-| > Binding 3 (CDE Scope) describes Global promotion as CorpStage Admin |
+| > Binding 3 (CDE Scope) describes Global promotion as Aurex Admin |
 | > observing convergence across customers and initiating the review. A |
 | > Corporate Admin may also actively request promotion of their own    |
 | > Corporate-Scoped CDE --- for example, to share it with a separate   |
 | > instance of their own group, or because they believe it has broader |
 | > value. The request follows the identical review: semantic-match     |
-| > check against the existing Global library, then a CorpStage Admin   |
+| > check against the existing Global library, then a Aurex Admin   |
 | > decision. A request is never auto-approved regardless of who        |
 | > initiates it; the only difference between the two promotion paths   |
 | > is who raises the question, not how it is resolved.                 |
@@ -15738,7 +15738,7 @@ framework mapping (hidden from executives).
 | Hide per Section 5.0c Binding 7), an aggregation rule for role-level  |
 | views (Binding 2 below), and --- for roles specifically --- a Lens    |
 | assignment (Section 2.11) determining the vocabulary the role sees.   |
-| **1. CorpStage Admin may add a new Department or Role without         |
+| **1. Aurex Admin may add a new Department or Role without         |
 | engineering change.** Adding "Chief AI Officer" or "Biodiversity"     |
 | follows the identical pattern already frozen for adding a new Lens    |
 | (Section 2.11, ⚑ NEW LAW --- Infinite Extensibility): a new metadata  |
@@ -15768,7 +15768,7 @@ framework mapping (hidden from executives).
 | **5.0e --- Domain Coverage Dashboard (operational layer, not Sacred   |
 | 12)**                                                                 |
 |                                                                       |
-| Purpose: shows what CorpStage currently knows about this specific     |
+| Purpose: shows what Aurex currently knows about this specific     |
 | organisation in one Domain --- never what it is required to know      |
 | (that is Framework Completeness, Section 5.0c Binding 8, a different  |
 | metric entirely). This is operational-team-facing data-acquisition    |
@@ -15796,7 +15796,7 @@ framework mapping (hidden from executives).
 
 **5.1 --- Three-Layer Data Architecture**
 
-CorpStage operates on a three-layer data architecture. Every piece of
+Aurex operates on a three-layer data architecture. Every piece of
 intelligence passes through all three layers. Executives see only the
 top. Framework compliance emerges invisibly from the bottom. This
 architecture is the single-source-of-truth model that makes the Lens
@@ -16056,7 +16056,7 @@ Telecommunications, Transport & Logistics.
 +--------+-------------------------------------------------------------+
 | **Step | **Business Question Architecture**                          |
 | 6**    |                                                             |
-|        | *How CorpStage speaks to humans. Business-first.            |
+|        | *How Aurex speaks to humans. Business-first.            |
 |        | Intelligent. Minimal.*                                      |
 +========+=============================================================+
 +--------+-------------------------------------------------------------+
@@ -16277,7 +16277,7 @@ the platform.
 +--------+-------------------------------------------------------------+
 | **Step | **Intelligent Data Acquisition Architecture (IDAL)**        |
 | 7**    |                                                             |
-|        | *How CorpStage acquires enterprise truth. Understand first. |
+|        | *How Aurex acquires enterprise truth. Understand first. |
 |        | Ask last.*                                                  |
 +========+=============================================================+
 +--------+-------------------------------------------------------------+
@@ -16287,7 +16287,7 @@ the platform.
 |                                                                       |
 | Wrong enterprise model: Collect → Validate → Report                   |
 |                                                                       |
-| CorpStage model: Understand → Infer → Confirm → Strengthen Confidence |
+| Aurex model: Understand → Infer → Confirm → Strengthen Confidence |
 |                                                                       |
 | The burden of understanding belongs to the system. Humans only        |
 | resolve what the system cannot know.                                  |
@@ -16407,7 +16407,7 @@ phased in as customer ARPU justifies the cost.
                                   Provides**
   ------------------------------- ---------------------------------------
   **Bloomberg Terminal / B-PIPE** Customer BYOL (Bring Your Own License)
-                                  --- \$0 to CorpStage. Live commodity
+                                  --- \$0 to Aurex. Live commodity
                                   prices, FX, transition credit prices (EUA,
                                   CCA, VCM), bond yields, peer
                                   financials, Business Resilience ratings (MSCI,
@@ -16537,13 +16537,13 @@ phased in as customer ARPU justifies the cost.
                                   long-context document analysis and
                                   complex reasoning. Multi-vendor
                                   resilience. Also available as primary
-                                  inference engine (see CorpStage
+                                  inference engine (see Aurex
                                   platform).
   -----------------------------------------------------------------------
 
 **7.9 --- Intelligence Intake Guardrails**
 
-*Every document, file, or connection entering CorpStage through Stage 1
+*Every document, file, or connection entering Aurex through Stage 1
 (Extract) passes through a guardrail layer before becoming intelligence.
 The governing principle is binding: warn, never silently fail; block
 only for security and integrity. Everything else is surfaced to the
@@ -16641,13 +16641,13 @@ surfaces a decision to the human --- consistent with Law 18
 +-----------------------------------------------------------------------+
 | **Foundational Principle**                                            |
 |                                                                       |
-| CorpStage supports multiple intelligence domains powered by one       |
+| Aurex supports multiple intelligence domains powered by one       |
 | enterprise understanding model.                                       |
 |                                                                       |
 | Wrong model: Separate modules. Each asks different questions. Each    |
 | stores different data. Each duplicates effort.                        |
 |                                                                       |
-| CorpStage model: One Enterprise Understanding → One Canonical         |
+| Aurex model: One Enterprise Understanding → One Canonical         |
 | Intelligence Model → One IDAL → Multiple Intelligence Domains.        |
 |                                                                       |
 | Example: Supplier concentration intelligence simultaneously powers    |
@@ -16805,7 +16805,7 @@ surfaces a decision to the human --- consistent with Law 18
 |                                                                       |
 | ↓                                                                     |
 |                                                                       |
-| CorpStage: Estimated EBITDA pressure: ₹14.2 Cr over 18 months.        |
+| Aurex: Estimated EBITDA pressure: ₹14.2 Cr over 18 months.        |
 | Leadership discussion recommended.                                    |
 |                                                                       |
 | Domain extensibility: New domains can be added without redesign       |
@@ -16828,7 +16828,7 @@ surfaces a decision to the human --- consistent with Law 18
 +-----------------------------------------------------------------------+
 | **Foundational Principle**                                            |
 |                                                                       |
-| CorpStage never claims certainty it cannot defend.                    |
+| Aurex never claims certainty it cannot defend.                    |
 |                                                                       |
 | Everything must answer: \"Why should I trust this?\"                  |
 |                                                                       |
@@ -16879,7 +16879,7 @@ uncertainty earns more trust than false precision.
                                   confidence materially.
 
   **D. Freshness**                Older information decays confidence.
-                                  CorpStage applies decay functions by
+                                  Aurex applies decay functions by
                                   intelligence type. Regulatory signals
                                   decay fastest. Strategic signals decay
                                   slowest.
@@ -16961,7 +16961,7 @@ uncertainty earns more trust than false precision.
                                   independently per screen.
 
   **Confidence Decay Engine**     Truth gets stale. Confidence weakens
-                                  over time. CorpStage tracks age and
+                                  over time. Aurex tracks age and
                                   applies decay. Supplier review 18
                                   months old → confidence decreases →
                                   refresh recommended.
@@ -16973,11 +16973,11 @@ uncertainty earns more trust than false precision.
                                   Powers Screens 10--12 heavily.
 
   **Explainability Layer**        Executives can always ask: Why?
-                                  CorpStage answers: Why this conclusion?
+                                  Aurex answers: Why this conclusion?
                                   · Why this confidence? · What evidence?
                                   · What assumptions? · What changed?
 
-  **Executive Trust Index**       Measures how trustworthy CorpStage
+  **Executive Trust Index**       Measures how trustworthy Aurex
                                   currently is for this enterprise. Based
                                   on: evidence coverage · confidence
                                   quality · contradiction resolution ·
@@ -16988,7 +16988,7 @@ uncertainty earns more trust than false precision.
 +--------+-------------------------------------------------------------+
 | **Step | **Executive Cognition Architecture**                        |
 | 10**   |                                                             |
-|        | *How CorpStage thinks with executives. The heart of the     |
+|        | *How Aurex thinks with executives. The heart of the     |
 |        | platform.*                                                  |
 +========+=============================================================+
 +--------+-------------------------------------------------------------+
@@ -17079,7 +17079,7 @@ uncertainty earns more trust than false precision.
 
   **Cognitive Memory**            FY24: leadership committed to supplier
                                   resilience. FY25: same dependency
-                                  persists. CorpStage: \"The organisation
+                                  persists. Aurex: \"The organisation
                                   appears committed --- but patterns
                                   suggest execution may be lagging
                                   intention.\"
@@ -17097,7 +17097,7 @@ uncertainty earns more trust than false precision.
 +--------+-------------------------------------------------------------+
 | **Step | **Enterprise Interaction Model**                            |
 | 11**   |                                                             |
-|        | *How humans and CorpStage work together. The burden of      |
+|        | *How humans and Aurex work together. The burden of      |
 |        | effort shifts from humans to the system.*                   |
 +========+=============================================================+
 +--------+-------------------------------------------------------------+
@@ -17108,10 +17108,10 @@ uncertainty earns more trust than false precision.
 | Wrong model: User drives system. Upload everything. Fill forms.       |
 | Maintain records. Chase stakeholders.                                 |
 |                                                                       |
-| CorpStage model: CorpStage Understands → CorpStage Infers → CorpStage |
+| Aurex model: Aurex Understands → Aurex Infers → Aurex |
 | Clarifies → Humans Resolve Ambiguity → Intelligence Strengthens.      |
 |                                                                       |
-| Humans should feel: \"CorpStage understands my business.\" Not: \"I   |
+| Humans should feel: \"Aurex understands my business.\" Not: \"I   |
 | need to feed the system.\"                                            |
 +=======================================================================+
 +-----------------------------------------------------------------------+
@@ -17126,7 +17126,7 @@ uncertainty earns more trust than false precision.
   **Stage 2 --- Observe**         Continuously watch enterprise signals
                                   --- internal reality, external reality,
                                   supplier ecosystem, market shifts,
-                                  regulations, contradictions. CorpStage
+                                  regulations, contradictions. Aurex
                                   works silently.
 
   **Stage 3 --- Infer**           Reduce uncertainty. \"We believe
@@ -17183,13 +17183,13 @@ uncertainty earns more trust than false precision.
 +-----------------------------------------------------------------------+
 | **Foundational Principle**                                            |
 |                                                                       |
-| Not all intelligence deserves attention. CorpStage optimises for      |
+| Not all intelligence deserves attention. Aurex optimises for      |
 | executive attention --- not information completeness.                 |
 |                                                                       |
 | Wrong model: Show everything. 50 KPIs. 100 alerts. Red-yellow-green   |
 | overload. Result: executives stop paying attention.                   |
 |                                                                       |
-| CorpStage model: Show what matters most now. Suppress everything      |
+| Aurex model: Show what matters most now. Suppress everything      |
 | else. Create calm executive cognition.                                |
 |                                                                       |
 | Core rule: Every intelligence point must answer \"Why now?\" If no    |
@@ -17234,7 +17234,7 @@ uncertainty earns more trust than false precision.
   **Category 4 --- Background     \"Observe silently.\" No interruption.
   Monitoring**                    Examples: benchmark updates, minor
                                   regulation shifts, low materiality
-                                  signals. CorpStage watches quietly.
+                                  signals. Aurex watches quietly.
                                   Very premium behaviour.
 
   **Category 5 --- Suppressed     \"Do not surface.\" Criteria:
@@ -17274,8 +17274,8 @@ uncertainty earns more trust than false precision.
 
   **Silent Intelligence           Most intelligence should remain
   Principle**                     invisible unless needed. Executives
-                                  feel: \"CorpStage seems thoughtful.\"
-                                  Not: \"CorpStage overwhelms me.\"
+                                  feel: \"Aurex seems thoughtful.\"
+                                  Not: \"Aurex overwhelms me.\"
   -----------------------------------------------------------------------
 
 +-----------------------------------------------------------------------+
@@ -17283,7 +17283,7 @@ uncertainty earns more trust than false precision.
 |                                                                       |
 | Instead of: 42 issues.                                                |
 |                                                                       |
-| CorpStage surfaces:                                                   |
+| Aurex surfaces:                                                   |
 |                                                                       |
 | \"What matters now:                                                   |
 |                                                                       |
@@ -17294,7 +17294,7 @@ uncertainty earns more trust than false precision.
 | • Transition Cost Exposure is emerging as a medium-term financial         |
 | pressure.\"                                                           |
 |                                                                       |
-| Golden Rule: CorpStage should maximize signal, minimize noise.        |
+| Golden Rule: Aurex should maximize signal, minimize noise.        |
 | Executive attention is the scarcest enterprise resource.              |
 +=======================================================================+
 +-----------------------------------------------------------------------+
@@ -17302,7 +17302,7 @@ uncertainty earns more trust than false precision.
 +--------+-------------------------------------------------------------+
 | **Step | **Final Blueprint Freeze**                                  |
 | 13**   |                                                             |
-|        | *CorpStage Architecture v1 --- Locked*                      |
+|        | *Aurex Architecture v1 --- Locked*                      |
 +========+=============================================================+
 +--------+-------------------------------------------------------------+
 
@@ -17324,7 +17324,7 @@ coheres into one enterprise operating system.
                                   Calm premium experience · Traceable,
                                   auditable, defensible.
 
-  **Product Positioning v1**      CorpStage is an Intelligent Enterprise
+  **Product Positioning v1**      Aurex is an Intelligent Enterprise
                                   Operating Center. A business
                                   performance, risk and intelligence
                                   platform that connects external reality
@@ -17363,7 +17363,7 @@ coheres into one enterprise operating system.
 
   **Confidence & Evidence v1**    Everything must be: explainable ·
                                   traceable · confidence-aware ·
-                                  evidence-backed · auditable. CorpStage
+                                  evidence-backed · auditable. Aurex
                                   never claims certainty it cannot
                                   defend.
 
@@ -17408,7 +17408,7 @@ coheres into one enterprise operating system.
   -----------------------------------------------------------------------
   **SIM Phase**                       **Purpose, screens, and focus**
   ----------------------------------- -----------------------------------
-  **Phase 1 --- Enterprise Foundation How CorpStage understands the
+  **Phase 1 --- Enterprise Foundation How Aurex understands the
   SIM**                               enterprise. Contains: Enterprise
                                       Understanding Center · Intelligence
                                       Completion Center · Evidence
@@ -17419,7 +17419,7 @@ coheres into one enterprise operating system.
                                       acquisition phase.
 
   **Phase 2 --- Executive Cognition   How executives think with
-  SIM**                               CorpStage. Contains: Sacred 12
+  SIM**                               Aurex. Contains: Sacred 12
                                       Screens (Screens 1--12). Focus:
                                       executive cognition, synthesis,
                                       contradictions, reflection,
@@ -17459,7 +17459,7 @@ coheres into one enterprise operating system.
   (SIM)**                             
   -----------------------------------------------------------------------
 
-*The SIM defines, for every screen in CorpStage, exactly what
+*The SIM defines, for every screen in Aurex, exactly what
 intelligence it consumes, how it acquires it, how it synthesises it, and
 what it delivers to the executive. This section covers Phase 1
 (Enterprise Foundation), the Sacred 12 (Phase 2), and the Cross-Screen
@@ -17600,7 +17600,7 @@ report, and MCA public filing.*
 |   | **Financial Exposure**                                             |
 |   |                                                                    |
 |   | Your EU export revenue (₹340Cr, 28% of total) is exposed to CBAM   |
-|   | transition-cost border adjustment from Q3. CorpStage estimates ₹18--42Cr    |
+|   | transition-cost border adjustment from Q3. Aurex estimates ₹18--42Cr    |
 |   | cost impact based on production footprint from annual report. No   |
 |   | mitigation plan visible in any uploaded document. Confidence: 67%. |
 +===+====================================================================+
@@ -17676,10 +17676,10 @@ Without them, the cognition screens become shallow.
 
 Build a progressively intelligent understanding of the organization with
 minimal human effort. This screen exists not for onboarding, not for
-setup, not for master data entry --- but to help CorpStage understand
+setup, not for master data entry --- but to help Aurex understand
 enough about the business to begin meaningful intelligence synthesis.
 
-Outcome: CorpStage understands enough about the business to begin
+Outcome: Aurex understands enough about the business to begin
 meaningful intelligence synthesis.
 
 **2. Organizational Truth**
@@ -17689,7 +17689,7 @@ the company says it is, but what operational, financial, organizational
 and ecosystem reality suggests it truly is.
 
   -----------------------------------------------------------------------
-  **Sub-Truth**                   **What CorpStage must reveal**
+  **Sub-Truth**                   **What Aurex must reveal**
   ------------------------------- ---------------------------------------
   **Enterprise Identity**         Who are we? Company profile, industry,
                                   sector, ownership model,
@@ -17731,7 +17731,7 @@ and ecosystem reality suggests it truly is.
                                   weakly understood, what is missing.
   -----------------------------------------------------------------------
 
-**3. What CorpStage Must Understand --- 11 Intelligence Domains**
+**3. What Aurex Must Understand --- 11 Intelligence Domains**
 
   -----------------------------------------------------------------------
   **Domain**                      **Must understand**
@@ -17933,7 +17933,7 @@ and ecosystem reality suggests it truly is.
 
 **7. What Gets Confirmed --- Preferred Human Interaction**
 
-CorpStage should primarily seek confirmation of inferred truth --- not
+Aurex should primarily seek confirmation of inferred truth --- not
 manual population. Confirmation is the preferred interaction mode.
 
   -----------------------------------------------------------------------
@@ -17986,7 +17986,7 @@ manual population. Confirmation is the preferred interaction mode.
 
 **8. What Gets Entered Only If Needed --- Last Resort**
 
-CorpStage should request entry only when ALL conditions are true: cannot
+Aurex should request entry only when ALL conditions are true: cannot
 extract AND cannot retrieve AND cannot infer confidently AND materiality
 is meaningful AND confidence is insufficient.
 
@@ -18033,8 +18033,8 @@ is meaningful AND confidence is insufficient.
 
 **9. Business Question Architecture**
 
-CorpStage never asks framework questions. CorpStage never asks
-data-entry questions. CorpStage asks business understanding questions.
+Aurex never asks framework questions. Aurex never asks
+data-entry questions. Aurex asks business understanding questions.
 
   -----------------------------------------------------------------------
   **Principle**                   **Rule**
@@ -18052,7 +18052,7 @@ data-entry questions. CorpStage asks business understanding questions.
                                   workforce diversity data\" · ❌
                                   \"Complete Section 8\"
 
-  **CorpStage Questions**         ✅ \"Which suppliers would materially
+  **Aurex Questions**         ✅ \"Which suppliers would materially
                                   disrupt operations if unavailable?\" ·
                                   ✅ \"Which facilities are most critical
                                   to business continuity?\" · ✅ \"What
@@ -18117,7 +18117,7 @@ data-entry questions. CorpStage asks business understanding questions.
 |                                                                       |
 | Right question → right person → minimal effort → higher confidence    |
 |                                                                       |
-| When truth is distributed: CorpStage orchestrates multi-party routing |
+| When truth is distributed: Aurex orchestrates multi-party routing |
 | intelligently. Example: Supplier criticality requires Procurement +   |
 | Operations + Finance simultaneously. Not mandatory --- only when      |
 | confidence requires it.                                               |
@@ -18145,7 +18145,7 @@ data-entry questions. CorpStage asks business understanding questions.
   Deterministic**     
   -----------------------------------------------------------------------
 
-Principle: CorpStage earns trust by exposing uncertainty, not hiding it.
+Principle: Aurex earns trust by exposing uncertainty, not hiding it.
 
 **12--13. Guided Completion & Invisible Compliance**
 
@@ -18184,7 +18184,7 @@ Principle: CorpStage earns trust by exposing uncertainty, not hiding it.
   -----------------------------------------------------------------------
   **Output Category**             **What leadership receives**
   ------------------------------- ---------------------------------------
-  **Enterprise Understanding      What CorpStage understands about the
+  **Enterprise Understanding      What Aurex understands about the
   Summary**                       organization.
 
   **Enterprise Map**              Entities, operations, suppliers,
@@ -18209,7 +18209,7 @@ Principle: CorpStage earns trust by exposing uncertainty, not hiding it.
                                   Commitment Integrity · Supplier
                                   Ecosystem · Workforce Capability
 
-  **Executive Reflection**        \"CorpStage understands your
+  **Executive Reflection**        \"Aurex understands your
                                   organization sufficiently to begin
                                   meaningful enterprise intelligence,
                                   though supplier concentration and
@@ -18223,7 +18223,7 @@ Principle: CorpStage earns trust by exposing uncertainty, not hiding it.
 | Most important metric: Time-to-Intelligent-Cognition --- not          |
 | onboarding completion.                                                |
 |                                                                       |
-| This screen succeeds when: CorpStage understands enough to think      |
+| This screen succeeds when: Aurex understands enough to think      |
 | intelligently · Humans entered minimal data · Most intelligence was   |
 | extracted, retrieved, inferred, or confirmed · Sacred 12 can begin    |
 | meaningfully.                                                         |
@@ -18238,7 +18238,7 @@ Principle: CorpStage earns trust by exposing uncertainty, not hiding it.
 +==========+===========================================================+
 +----------+-----------------------------------------------------------+
 
-The continuous intelligence improvement engine of CorpStage. Not task
+The continuous intelligence improvement engine of Aurex. Not task
 management. Not questionnaire center. Not missing data form. Purpose:
 close the highest-value intelligence gaps with the least human effort.
 
@@ -18263,7 +18263,7 @@ close the highest-value intelligence gaps with the least human effort.
   Intent**                        confidence-building · intelligent
                                   momentum. Never: incomplete · guilty ·
                                   compliance pressure. User feels:
-                                  \"CorpStage is getting smarter.\" Not:
+                                  \"Aurex is getting smarter.\" Not:
                                   \"I have work to finish.\"
 
   **4. Intelligence Domains       Enterprise · Financial · Supplier ·
@@ -18324,7 +18324,7 @@ trusted intelligence.
   -----------------------------------------------------------------------
   **Section**                     **Definition**
   ------------------------------- ---------------------------------------
-  **1. Executive Purpose**        Help CorpStage defend what it believes.
+  **1. Executive Purpose**        Help Aurex defend what it believes.
                                   Every material intelligence point can
                                   answer: \"Why should I trust this?\"
                                   This screen strengthens: confidence ·
@@ -18343,9 +18343,9 @@ trusted intelligence.
                                   defensibility. Never: audit anxiety ·
                                   bureaucracy · compliance burden.
                                   Executives feel: \"We can explain why
-                                  CorpStage believes this.\"
+                                  Aurex believes this.\"
 
-  **9. AI-Derived Intelligence**  CorpStage infers: evidence quality ·
+  **9. AI-Derived Intelligence**  Aurex infers: evidence quality ·
                                   confidence strength · contradiction
                                   detection · corroboration quality ·
                                   missing evidence · evidence relevance ·
@@ -18356,7 +18356,7 @@ trusted intelligence.
   Logic**                         Confidence Score · Evidence Coverage %
                                   · Source Reliability · Freshness ·
                                   Human Validation Status · Contradiction
-                                  Status. Trust principle: CorpStage
+                                  Status. Trust principle: Aurex
                                   should reveal uncertainty, not hide it.
 
   **12. Minimal Human Ask**       Preferred order: Accept evidence →
@@ -18374,7 +18374,7 @@ trusted intelligence.
                                   · Contradictions · Audit Readiness ·
                                   High-Risk Evidence Gaps · Evidence
                                   Improvement Opportunities. Reflection:
-                                  \"CorpStage understanding is
+                                  \"Aurex understanding is
                                   directionally strong, though supplier
                                   dependency and operational resilience
                                   remain weakly evidenced.\"
@@ -18432,7 +18432,7 @@ Understand → Prioritize → Confront → Align → Commit → Prepare → Reso
   **Screen Purpose**            Provide leadership with situational
                                 clarity on what deserves attention right
                                 now. The executive orientation layer of
-                                CorpStage. Not dashboard, not KPI
+                                Aurex. Not dashboard, not KPI
                                 monitoring, not reporting. Purpose: turn
                                 enterprise complexity into executive
                                 intelligibility.
@@ -19222,7 +19222,7 @@ influence readiness.
 
 Executives do not think linearly --- they think through contextual
 cognitive journeys. A crisis executive journey differs from growth mode,
-transformation mode, compliance mode, or board review mode. CorpStage
+transformation mode, compliance mode, or board review mode. Aurex
 adapts navigation based on business context, executive role, signal
 materiality, and confidence level.
 
@@ -19540,7 +19540,7 @@ decisions remain explainable · enterprise trust increases.
 +----------+-----------------------------------------------------------+
 
 Governance, auditability, accountability, evidence, and compliance
-travel silently across CorpStage. The objective is enterprise trust
+travel silently across Aurex. The objective is enterprise trust
 without operational friction. Compliance never dominates the experience.
 Business-first execution with invisible trust architecture.
 
@@ -19599,7 +19599,7 @@ Business-first execution with invisible trust architecture.
 +==========+===========================================================+
 +----------+-----------------------------------------------------------+
 
-Every CorpStage screen follows the same anatomy. Consistent executive
+Every Aurex screen follows the same anatomy. Consistent executive
 cognition across the Sacred 12. Every screen should feel: familiar ·
 cognitively predictable · fast to understand · boardroom-grade · low
 cognitive load.
@@ -19709,13 +19709,13 @@ everything is loud, nothing is important.
   -----------------------------------------------------------------------
 
 +-----------------------------------------------------------------------+
-| **CorpStage Attention Optimization**                                  |
+| **Aurex Attention Optimization**                                  |
 |                                                                       |
 | Universal executive eye flow: Narrative headline → Materiality →      |
 | Recommended action → Confidence → Supporting intelligence → Evidence  |
 | drill-down.                                                           |
 |                                                                       |
-| CorpStage optimizes for: 5-second understanding.                      |
+| Aurex optimizes for: 5-second understanding.                      |
 +=======================================================================+
 +-----------------------------------------------------------------------+
 
@@ -19727,7 +19727,7 @@ everything is loud, nothing is important.
 +==========+===========================================================+
 +----------+-----------------------------------------------------------+
 
-CorpStage communicates intelligence as meaning, not metrics. The
+Aurex communicates intelligence as meaning, not metrics. The
 platform speaks like a trusted executive advisor --- not a dashboard.
 Every insight follows a sacred narrative formula.
 
@@ -19831,7 +19831,7 @@ Every insight follows a sacred narrative formula.
 +==========+===========================================================+
 +----------+-----------------------------------------------------------+
 
-CorpStage asks executives to act intelligently --- not through
+Aurex asks executives to act intelligently --- not through
 notification spam. Four escalation levels, each with proportional visual
 treatment and business consequence.
 
@@ -19885,7 +19885,7 @@ treatment and business consequence.
 +==========+===========================================================+
 +----------+-----------------------------------------------------------+
 
-Trust through transparent reasoning. CorpStage explains intelligence
+Trust through transparent reasoning. Aurex explains intelligence
 without overwhelming executives. Progressive disclosure: only reveal
 depth when needed. No black boxes --- ever.
 
@@ -19960,18 +19960,18 @@ how to interact. Consistency creates confidence.
   -----------------------------------------------------------------------
 
   -----------------------------------------------------------------------
-  **14.4.8 --- Sacred Design Principles Freeze --- CorpStage Executive
+  **14.4.8 --- Sacred Design Principles Freeze --- Aurex Executive
   Design Constitution**
   -----------------------------------------------------------------------
 
   -----------------------------------------------------------------------
 
-The non-negotiable design constitution of CorpStage. These principles
+The non-negotiable design constitution of Aurex. These principles
 protect executive cognition quality at scale. No screen, feature, or
-future module should violate them. This is the design law of CorpStage.
+future module should violate them. This is the design law of Aurex.
 
   ---------------------------------------------------------------------------
-  **P1**   **Cognition       CorpStage is a thinking system --- not a
+  **P1**   **Cognition       Aurex is a thinking system --- not a
            First**           dashboard. Every design decision must improve
                              executive understanding.
   -------- ----------------- ------------------------------------------------
@@ -20002,7 +20002,7 @@ future module should violate them. This is the design law of CorpStage.
   ---------------------------------------------------------------------------
 
   ---------------------------------------------------------------------------------
-  **P5**   **Human-in-the-Loop**   CorpStage recommends. Humans decide. Universal
+  **P5**   **Human-in-the-Loop**   Aurex recommends. Humans decide. Universal
                                    interaction: Confirm / Correct / Enter. Human
                                    accountability never removed.
   -------- ----------------------- ------------------------------------------------
@@ -20063,7 +20063,7 @@ future module should violate them. This is the design law of CorpStage.
 
 **Design Anti-Patterns --- Forbidden**
 
-CorpStage must never become any of the following. These are design
+Aurex must never become any of the following. These are design
 failures, not features.
 
   --------------------------------------------------------------------------
@@ -20338,7 +20338,7 @@ existing table in the 90+ table database. These are additive.
 | resolves them; fields: raw extracted value, source document,          |
 | page/section, extraction method, LLM label, extraction confidence     |
 | score). New columns on framework_registry: framework_tier (Tier       |
-| 1/2/3, per Section 5.0c Binding 2) and governed_by (CorpStage Admin / |
+| 1/2/3, per Section 5.0c Binding 2) and governed_by (Aurex Admin / |
 | Corporate Admin). New columns on metric_registry: sector_id,          |
 | industry_id, sub_industry_id (nullable FKs to                         |
 | industry_taxonomy_registry --- NULL means Global; non-null means      |

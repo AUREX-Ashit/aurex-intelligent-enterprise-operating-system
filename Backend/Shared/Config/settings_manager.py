@@ -1,5 +1,5 @@
 """
-CorpStage Shared Configuration Framework - Settings Manager Module.
+Aurex Shared Configuration Framework - Settings Manager Module.
 
 This module wraps raw nested configuration dictionaries into a highly-typed,
 immutable, dotted-attribute access interface (SettingsNode) to provide safe,
@@ -7,7 +7,7 @@ elegant, autocomplete-friendly, and secure consumption of configuration paramete
 """
 
 from typing import Dict, Any, Optional
-from corpstage.backend.shared.config.exceptions import ImmutableConfigError
+from aurex.backend.shared.config.exceptions import ImmutableConfigError
 
 
 class SettingsNode:
@@ -48,13 +48,13 @@ class SettingsNode:
     def __setattr__(self, name: str, value: Any) -> None:
         raise ImmutableConfigError(
             f"MUTATION SECURITY EXCEPTION: Configuration value '{name}' cannot be modified. "
-            "CorpStage Shared Configuration is strictly immutable after initialization."
+            "Aurex Shared Configuration is strictly immutable after initialization."
         )
 
     def __delattr__(self, name: str) -> None:
         raise ImmutableConfigError(
             f"MUTATION SECURITY EXCEPTION: Configuration value '{name}' cannot be deleted. "
-            "CorpStage Shared Configuration is strictly immutable after initialization."
+            "Aurex Shared Configuration is strictly immutable after initialization."
         )
 
     def __repr__(self) -> str:
@@ -65,7 +65,7 @@ class SettingsNode:
 class SettingsManager:
     """
     Acts as the state holder and single source of truth for loading, holding,
-    and serving the immutable CorpStage configurations across service boundary.
+    and serving the immutable Aurex configurations across service boundary.
     """
 
     _instance: Optional[SettingsNode] = None
@@ -80,7 +80,7 @@ class SettingsManager:
         """
         if cls._instance is None:
             raise RuntimeError(
-                "CorpStage Config Framework is uninitialized. "
+                "Aurex Config Framework is uninitialized. "
                 "Invoke ConfigLoader.initialize() during application startup before querying settings."
             )
         return cls._instance

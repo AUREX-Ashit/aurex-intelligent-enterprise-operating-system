@@ -28,7 +28,7 @@ class OrganizationStatus(str, Enum):
 class Organization(Base):
     """
     Organization represents a company, supplier, customer,
-    regulator, NGO, or any legal entity onboarded into CorpStage.
+    regulator, NGO, or any legal entity onboarded into Aurex.
     """
 
     __tablename__ = "organizations"

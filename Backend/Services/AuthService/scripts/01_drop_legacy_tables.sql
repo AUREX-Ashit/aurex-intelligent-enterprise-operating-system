@@ -1,6 +1,6 @@
 -- =============================================================================
 -- 01_drop_legacy_tables.sql
--- CorpStage AuthService — Option B: Drop Legacy Tables
+-- Aurex AuthService — Option B: Drop Legacy Tables
 -- =============================================================================
 -- PURPOSE
 --   Drop the 4 legacy tables that conflict with or are superseded by the
@@ -21,7 +21,7 @@
 --   4. permissions      — no remaining FK dependents after steps 1-2
 --
 -- HOW TO RUN
---   docker exec -it corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -it aurex-postgres psql -U postgres -d aurex \
 --     -f /path/to/01_drop_legacy_tables.sql
 -- =============================================================================
 

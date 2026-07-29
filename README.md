@@ -1,4 +1,4 @@
-# CorpStage Enterprise Operating System (EOS)
+# Aurex Enterprise Operating System (EOS)
 
 > **Enterprise Operating System for AI-Native, Capability-Driven
 > Enterprises**
@@ -7,7 +7,7 @@
 
 ## Overview
 
-The CorpStage Enterprise Operating System (EOS) is a modular,
+The Aurex Enterprise Operating System (EOS) is a modular,
 enterprise-grade platform for building, operating, and evolving
 intelligent business capabilities.
 
@@ -222,4 +222,4 @@ Primary objectives:
 
 ## License
 
-Copyright © CorpStage. All rights reserved unless otherwise specified.
+Copyright © Aurex. All rights reserved unless otherwise specified.

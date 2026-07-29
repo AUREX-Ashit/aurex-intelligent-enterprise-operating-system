@@ -1,6 +1,6 @@
-# CorpStage Frontend
+# Aurex Frontend
 
-Canonical frontend foundation for the CorpStage Enterprise Operating
+Canonical frontend foundation for the Aurex Enterprise Operating
 System, at `source/frontend`. Next.js (App Router) + TypeScript + Tailwind
 CSS.
 

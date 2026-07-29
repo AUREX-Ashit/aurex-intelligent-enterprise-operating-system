@@ -2,7 +2,7 @@
 Alembic migration environment file.
 
 Bridges SQLAlchemy schema metadata reflection with runtime migrations.
-Enables offline and online schema migrations for CorpStage.
+Enables offline and online schema migrations for Aurex.
 """
 
 from logging.config import fileConfig
@@ -14,7 +14,7 @@ from sqlalchemy import pool
 
 # Target Metadata for Auto-Generation
 # In a full deployment, import your declarative base here:
-# from corpstage.backend.shared.database import Base
+# from aurex.backend.shared.database import Base
 # target_metadata = Base.metadata
 target_metadata = None
 
@@ -30,7 +30,7 @@ def get_url() -> str:
     """Retrieves Database Connection URL from standard environment configurations."""
     return os.getenv(
         "DATABASE_URL", 
-        "postgresql://postgres:CorpStageMasterDatabasePass123!@localhost:5432/corpstage"
+        "postgresql://postgres:AurexMasterDatabasePass123!@localhost:5432/aurex"
     )
 
 

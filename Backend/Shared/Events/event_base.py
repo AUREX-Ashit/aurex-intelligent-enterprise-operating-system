@@ -1,8 +1,8 @@
 """
-CorpStage Shared Events Framework - Event Base Module.
+Aurex Shared Events Framework - Event Base Module.
 
 Declares the parent abstract class and dataclass constraints defining
-CorpStage messages, enforcing domain model versioning, state validation, and identity tracking.
+Aurex messages, enforcing domain model versioning, state validation, and identity tracking.
 """
 
 from abc import ABC, abstractmethod
@@ -10,13 +10,13 @@ import datetime
 from typing import Dict, Any, Optional
 import uuid
 
-from corpstage.backend.shared.events.exceptions import EventValidationError
-from corpstage.backend.shared.events.event_context import EventContext
+from aurex.backend.shared.events.exceptions import EventValidationError
+from aurex.backend.shared.events.event_context import EventContext
 
 
 class BaseEvent(ABC):
     """
-    Abstract Base Class for all CorpStage domain events.
+    Abstract Base Class for all Aurex domain events.
     Enforces unified tracking, standard naming schemas, and built-in contract validations.
     """
 
@@ -43,7 +43,7 @@ class BaseEvent(ABC):
     def event_name(self) -> str:
         """
         Unique, dot-notated logical name identifier for the event schema definition.
-        Example: "corpstage.auth.user.created" or "corpstage.ingestion.job.started"
+        Example: "aurex.auth.user.created" or "aurex.ingestion.job.started"
         """
         pass
 

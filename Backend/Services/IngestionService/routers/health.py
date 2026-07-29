@@ -14,7 +14,7 @@ class HealthCheckResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "status": "healthy",
-                "service": "corpstage-ingestion-service",
+                "service": "aurex-ingestion-service",
                 "dependencies": {"database": "online", "storage_provider": "ready"},
                 "timestamp": 1716943000.0
             }
@@ -34,7 +34,7 @@ async def perform_health_readiness():
     """
     return HealthCheckResponse(
         status="healthy",
-        service="corpstage-ingestion-service",
+        service="aurex-ingestion-service",
         dependencies={
             "postgresql_pool": "connected",
             "azure_blob_storage_stub": "ready",

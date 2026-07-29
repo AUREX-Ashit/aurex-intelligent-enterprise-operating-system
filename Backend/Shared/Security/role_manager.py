@@ -1,20 +1,20 @@
 """
-CorpStage Shared Security Framework - Role Manager Module.
+Aurex Shared Security Framework - Role Manager Module.
 
 Defines the roles matrix, structures, and hierarchical evaluations mapping to 
-Role-Based Access Control (RBAC) schemas across standard CorpStage microservices.
+Role-Based Access Control (RBAC) schemas across standard Aurex microservices.
 """
 
 import logging
 from enum import Enum
 from typing import Set, Dict, List, Optional
 
-logger = logging.getLogger("CorpStage.Security.RoleManager")
+logger = logging.getLogger("Aurex.Security.RoleManager")
 
 
 class UserRole(str, Enum):
     """
-    Standard Enterprise System Roles supported in the CorpStage Platform.
+    Standard Enterprise System Roles supported in the Aurex Platform.
     Using flat string mappings for JSON and JWT serialization compatibility.
     """
     SUPER_ADMIN = "SUPER_ADMIN"       # Full platform access across all tenant contexts

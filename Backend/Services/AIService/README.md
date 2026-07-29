@@ -1,4 +1,4 @@
-# CorpStage AIService Scaffolding
+# Aurex AIService Scaffolding
 
 An enterprise-grade, multi-tenant AI Orchestration and ESG compliance validation microservice engineered in FastAPI and Python 3.14.
 

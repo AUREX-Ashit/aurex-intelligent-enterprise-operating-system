@@ -7,7 +7,7 @@ REUSE NOTE (Mandatory Implementation Contract): Backend/Shared/Logging
 for exactly this purpose and were evaluated first, per Reuse before Create.
 They cannot currently be imported: every module in Backend/Shared/Logging
 and Backend/Shared/Events imports from the package path
-`corpstage.backend.shared...`, but no `corpstage` package exists anywhere
+`aurex.backend.shared...`, but no `aurex` package exists anywhere
 in this repository (no setup.py/pyproject.toml, no matching directory
 structure) — the import fails immediately (`ModuleNotFoundError`). This is
 a pre-existing defect, not introduced by WP-00. Fixing it is a platform-wide

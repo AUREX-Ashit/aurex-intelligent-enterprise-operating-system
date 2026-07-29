@@ -1,12 +1,12 @@
 """
-CorpStage Shared Security Framework.
+Aurex Shared Security Framework.
 
 A unified, multi-service security delivery mechanism built for Enterprise-grade
 resiliency, zero-trust token isolation, strict cryptographic password hashing,
 hierarchical RBAC permission evaluation, and multi-tenant security verification.
 """
 
-from corpstage.backend.shared.security.exceptions import (
+from aurex.backend.shared.security.exceptions import (
     SecurityError,
     AuthenticationError,
     InvalidTokenError,
@@ -19,17 +19,17 @@ from corpstage.backend.shared.security.exceptions import (
     TenantAuthorizationError,
     SecurityContextError
 )
-from corpstage.backend.shared.security.security_context import (
+from aurex.backend.shared.security.security_context import (
     SecurityPrincipal,
     SecurityContext,
     bound_security_context
 )
-from corpstage.backend.shared.security.jwt_manager import JWTManager
-from corpstage.backend.shared.security.password_manager import PasswordManager
-from corpstage.backend.shared.security.role_manager import UserRole, RoleManager
-from corpstage.backend.shared.security.permission_manager import PlatformPermission, PermissionManager
-from corpstage.backend.shared.security.tenant_authorization import TenantAuthorization
-from corpstage.backend.shared.security.authorization_manager import SecurityGuard, SecurityContextMiddleware
+from aurex.backend.shared.security.jwt_manager import JWTManager
+from aurex.backend.shared.security.password_manager import PasswordManager
+from aurex.backend.shared.security.role_manager import UserRole, RoleManager
+from aurex.backend.shared.security.permission_manager import PlatformPermission, PermissionManager
+from aurex.backend.shared.security.tenant_authorization import TenantAuthorization
+from aurex.backend.shared.security.authorization_manager import SecurityGuard, SecurityContextMiddleware
 
 __all__ = [
     # Exceptions

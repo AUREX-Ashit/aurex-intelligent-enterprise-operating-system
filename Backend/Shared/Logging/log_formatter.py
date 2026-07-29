@@ -1,5 +1,5 @@
 """
-CorpStage Shared Logging Framework - Structured JSON Log Formatter.
+Aurex Shared Logging Framework - Structured JSON Log Formatter.
 
 Implements highly-performant, failure-resilient JSON serialization for standard
 Python `logging.LogRecord` structures, enriching them with active thread/task contexts.
@@ -11,7 +11,7 @@ import datetime
 import traceback
 from typing import Any, Dict, Set
 
-from corpstage.backend.shared.logging.correlation_context import CorrelationContext
+from aurex.backend.shared.logging.correlation_context import CorrelationContext
 
 
 class JSONLogFormatter(logging.Formatter):

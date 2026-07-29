@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-This catalogue is the single entry point into the CorpStage Enterprise Operating System repository. It exists because the repository now spans 20+ registered architecture documents across four layers, and no single document previously told a reader which one to open first.
+This catalogue is the single entry point into the Aurex Enterprise Operating System repository. It exists because the repository now spans 20+ registered architecture documents across four layers, and no single document previously told a reader which one to open first.
 
 **How to use it:** find your role in Section 6, or your task in Section 5's "If I want to..." table, and go straight to the named document. Section 3 is the full reference catalogue; consult it when Sections 5–6 don't cover your case.
 

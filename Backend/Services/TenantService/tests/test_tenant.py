@@ -14,7 +14,7 @@ def test_root_endpoint():
     response = client.get("/")
     assert response.status_code == 200
     data = response.json()
-    assert data["platform"] == "CorpStage"
+    assert data["platform"] == "Aurex"
     assert data["service"] == "TenantService"
     assert "active_features" in data
 
@@ -108,5 +108,5 @@ def test_settings_overrides():
     Validates Pydantic settings loading and fallback values.
     """
     test_settings = Settings()
-    assert test_settings.platform.name == "CorpStage"
-    assert test_settings.database.postgresql.database_name == "corpstage"
+    assert test_settings.platform.name == "Aurex"
+    assert test_settings.database.postgresql.database_name == "aurex"

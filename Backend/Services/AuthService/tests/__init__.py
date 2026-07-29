@@ -1,1 +1,1 @@
-# Test suite initialization for CorpStage AuthService
+# Test suite initialization for Aurex AuthService

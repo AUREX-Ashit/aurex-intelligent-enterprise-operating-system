@@ -30,8 +30,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await db_manager.close()
 
 app = FastAPI(
-    title="CorpStage Authentication API",
-    description="Authentication and authorization APIs for CorpStage platform",
+    title="Aurex Authentication API",
+    description="Authentication and authorization APIs for Aurex platform",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",

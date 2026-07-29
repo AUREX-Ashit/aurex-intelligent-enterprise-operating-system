@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Password Manager Module.
+Aurex Shared Security Framework - Password Manager Module.
 
 Provides highly secure hashing, stretching (bcrypt), and complexity validation 
 routines for user passwords. Implements resilient fallbacks for robust 
@@ -19,12 +19,12 @@ try:
 except ImportError:
     _PASSLIB_AVAILABLE = False
 
-from corpstage.backend.shared.security.exceptions import (
+from aurex.backend.shared.security.exceptions import (
     PasswordHashingError,
     WeakPasswordError
 )
 
-logger = logging.getLogger("CorpStage.Security.PasswordManager")
+logger = logging.getLogger("Aurex.Security.PasswordManager")
 
 
 class PasswordManager:

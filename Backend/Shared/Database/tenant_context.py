@@ -1,5 +1,5 @@
 """
-CorpStage Shared Database Framework - Tenant Context Module.
+Aurex Shared Database Framework - Tenant Context Module.
 
 Provides asynchronous-safe task-local state isolation using ContextVars.
 Secures tenant isolation boundaries for multi-tenant query filtration across
@@ -11,12 +11,12 @@ from contextvars import ContextVar
 from contextlib import contextmanager
 from typing import Generator, Optional
 
-from corpstage.backend.shared.database.exceptions import TenantResolutionError
+from aurex.backend.shared.database.exceptions import TenantResolutionError
 
-logger = logging.getLogger("CorpStage.Database.TenantContext")
+logger = logging.getLogger("Aurex.Database.TenantContext")
 
 # Async-safe task-local variable for tracking currently active Tenant Identity
-_tenant_id_context_var: ContextVar[Optional[str]] = ContextVar("corpstage_tenant_id", default=None)
+_tenant_id_context_var: ContextVar[Optional[str]] = ContextVar("aurex_tenant_id", default=None)
 
 
 class TenantContext:

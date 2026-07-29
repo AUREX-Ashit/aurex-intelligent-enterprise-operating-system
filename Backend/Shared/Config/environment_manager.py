@@ -1,5 +1,5 @@
 """
-CorpStage Shared Configuration Framework - Environment Manager Module.
+Aurex Shared Configuration Framework - Environment Manager Module.
 
 This module provides enterprise-grade capabilities to read, normalize, and coerce
 environment variable overrides into the corporate configuration structure.
@@ -9,12 +9,12 @@ import os
 import logging
 from typing import Dict, Any, Optional, Set
 
-from corpstage.backend.shared.config.exceptions import (
+from aurex.backend.shared.config.exceptions import (
     TypeMismatchError,
     MissingRequiredValueError
 )
 
-logger = logging.getLogger("CorpStage.Config.EnvironmentManager")
+logger = logging.getLogger("Aurex.Config.EnvironmentManager")
 
 
 class EnvironmentManager:
@@ -23,22 +23,22 @@ class EnvironmentManager:
     environment-based configuration overrides on top of the base YAML configurations.
     """
 
-    PREFIX = "CORPSTAGE_"
-    SEPARATOR = "__"  # Double underscores for nesting: CORPSTAGE__DATABASE__POSTGRESQL__PORT
+    PREFIX = "AUREX_"
+    SEPARATOR = "__"  # Double underscores for nesting: AUREX__DATABASE__POSTGRESQL__PORT
 
     REQUIRED_ENV_SECRETS: Set[str] = {
-        "CORPSTAGE_JWT_SECRET",            # Maps to authentication.jwt.secret
-        "CORPSTAGE_DATABASE_PASSWORD"      # Map to database.postgresql.password fallback
+        "AUREX_JWT_SECRET",            # Maps to authentication.jwt.secret
+        "AUREX_DATABASE_PASSWORD"      # Map to database.postgresql.password fallback
     }
 
     @staticmethod
     def get_overrides() -> Dict[str, Any]:
         """
-        Scans all system environment variables, filters for CorpStage variables
-        (specifically starting with 'CORPSTAGE_'), and compiles them into a nested dictionary.
+        Scans all system environment variables, filters for Aurex variables
+        (specifically starting with 'AUREX_'), and compiles them into a nested dictionary.
         
         Example:
-            CORPSTAGE__DATABASE__POSTGRESQL__PORT = "5433"
+            AUREX__DATABASE__POSTGRESQL__PORT = "5433"
             becomes:
             {'database': {'postgresql': {'port': 5433}}} (after coercion)
         """
@@ -53,7 +53,7 @@ class EnvironmentManager:
                 continue
 
             # Parse path from variable
-            # Strip prefix (e.g., CORPSTAGE_DATABASE_POSTGRESQL_PORT -> DATABASE_POSTGRESQL_PORT)
+            # Strip prefix (e.g., AUREX_DATABASE_POSTGRESQL_PORT -> DATABASE_POSTGRESQL_PORT)
             path_str = env_key[len(EnvironmentManager.PREFIX):]
             
             # Determine separator (prefer double underscore __, fallback to single underscore if no double is found)
@@ -126,10 +126,10 @@ class EnvironmentManager:
         - Fails startup with precise instructions if required secrets are absent.
         - Inject secrets safely into the nested dictionary structure.
         """
-        jwt_secret = os.getenv("CORPSTAGE_JWT_SECRET")
+        jwt_secret = os.getenv("AUREX_JWT_SECRET")
         if not jwt_secret:
             raise MissingRequiredValueError(
-                "CRITICAL STARTUP FAILURE: Required environment variable 'CORPSTAGE_JWT_SECRET' "
+                "CRITICAL STARTUP FAILURE: Required environment variable 'AUREX_JWT_SECRET' "
                 "is missing! For enterprise compliance, JWT secrets must never be placed in source code or YAML."
             )
 
@@ -142,7 +142,7 @@ class EnvironmentManager:
         config["authentication"]["jwt"]["secret"] = jwt_secret
 
         # Check for Database Password safeguard
-        db_password_env = os.getenv("CORPSTAGE_DATABASE_PASSWORD")
+        db_password_env = os.getenv("AUREX_DATABASE_PASSWORD")
         if db_password_env:
             # Override database host password
             if "database" in config and "postgresql" in config["database"]:

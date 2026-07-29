@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: CorpStage Reporting API
+  title: Aurex Reporting API
   description: ESG reporting and disclosure APIs
   version: 1.0.0
 

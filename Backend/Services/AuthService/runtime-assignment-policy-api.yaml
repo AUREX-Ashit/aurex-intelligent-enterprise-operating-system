@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Runtime Assignment Policy API
+  title: Aurex Runtime Assignment Policy API
   description: >
     Runtime Assignment Policy establishment (C-003, WP-02 BA-05). Covers
     ERB-C003-01 / EX-C003-05 (Establish Runtime Assignment Policy) only —

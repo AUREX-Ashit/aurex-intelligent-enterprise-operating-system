@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class PlatformConfig(BaseModel):
-    name: str = "CorpStage"
+    name: str = "Aurex"
     environment: str = "development"
     region: str = "centralindia"
 
@@ -54,8 +54,8 @@ class PostgresConfig(BaseModel):
     version: str = "16"
     host: str = "localhost"
     port: int = 5432
-    database_name: str = "corpstage"
-    username: str = "corpstage"
+    database_name: str = "aurex"
+    username: str = "aurex"
     password: str = "CHANGE_IN_ENVIRONMENT"
     pool_size: int = 30
     max_overflow: int = 10
@@ -88,7 +88,7 @@ class Settings(BaseSettings):
     Initializes values from platform-config.yaml and allows overrides via ENV variables.
     """
     model_config = SettingsConfigDict(
-        env_prefix="CORPSTAGE_",
+        env_prefix="AUREX_",
         env_nested_delimiter="__",
         extra="ignore"
     )

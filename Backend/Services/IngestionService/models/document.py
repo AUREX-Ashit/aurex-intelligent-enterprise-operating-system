@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
 class Document(Base):
-    __tablename__ = "corpstage_documents"
+    __tablename__ = "aurex_documents"
 
     # Primary key UUID track reference
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
@@ -38,5 +38,5 @@ class Document(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Optional backref to transaction upload session records
-    upload_tracker_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("corpstage_upload_trackers.id", ondelete="SET NULL"), nullable=True)
+    upload_tracker_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("aurex_upload_trackers.id", ondelete="SET NULL"), nullable=True)
     upload_session = relationship("UploadTracker", back_populates="documents")

@@ -1,6 +1,6 @@
 # CLAUDE.md v2.0
 
-> CorpStage Enterprise Operating System (EOS)
+> Aurex Enterprise Operating System (EOS)
 >
 > AI Engineering Guide for Claude Code
 
@@ -8,7 +8,7 @@
 
 # 1. Repository Mission
 
-This repository implements the CorpStage Enterprise Operating System
+This repository implements the Aurex Enterprise Operating System
 (EOS).
 
 Claude Code is an engineering partner responsible for producing
@@ -316,7 +316,7 @@ Never resolve canonical architecture conflicts by assumption.
 
 # 17. Canonical Document Compliance (Mandatory)
 
-The CorpStage Enterprise Operating System has already completed its
+The Aurex Enterprise Operating System has already completed its
 Architecture and Design phases.
 
 The repository contains the approved canonical specifications for the
@@ -406,7 +406,7 @@ Never change architecture to make implementation easier.
 
 # 19. Implementation Start Checklist (Mandatory)
 
-The CorpStage Enterprise Operating System has entered **Architecture
+The Aurex Enterprise Operating System has entered **Architecture
 Implementation Mode**.
 
 Enterprise Architecture (ARCH-000), the Design System (DS-001),

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class Settings:
     """
-    Platform-wide configuration loader for all CorpStage services.
+    Platform-wide configuration loader for all Aurex services.
     Loads values from Config/platform-config.yaml with modern system overrides.
     """
     def __init__(self) -> None:

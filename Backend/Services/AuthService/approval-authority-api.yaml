@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Approval Authority API
+  title: Aurex Approval Authority API
   description: >
     Approval Authority establishment (C-003, WP-02 BA-03). Covers
     ERB-C003-01 / EX-C003-03 (Establish Approval Authority) only — see

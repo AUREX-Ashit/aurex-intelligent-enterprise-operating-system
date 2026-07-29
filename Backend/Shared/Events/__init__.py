@@ -1,11 +1,11 @@
 """
-CorpStage Shared Events Framework.
+Aurex Shared Events Framework.
 
 An enterprise-ready, CNCF CloudEvents-compatible, schema-validating,
 tenant-aware asynchronous event routing library designed for Apache Kafka and Azure Service Bus.
 """
 
-from corpstage.backend.shared.events.exceptions import (
+from aurex.backend.shared.events.exceptions import (
     EventError,
     EventValidationError,
     EventSerializationError,
@@ -13,30 +13,30 @@ from corpstage.backend.shared.events.exceptions import (
     EventPublishError,
     EventSubscriptionError,
 )
-from corpstage.backend.shared.events.event_context import (
+from aurex.backend.shared.events.event_context import (
     EventContext,
 )
-from corpstage.backend.shared.events.event_base import (
+from aurex.backend.shared.events.event_base import (
     BaseEvent,
 )
-from corpstage.backend.shared.events.cloud_event import (
+from aurex.backend.shared.events.cloud_event import (
     CloudEvent,
 )
-from corpstage.backend.shared.events.event_registry import (
+from aurex.backend.shared.events.event_registry import (
     EventRegistry,
 )
-from corpstage.backend.shared.events.event_serializer import (
+from aurex.backend.shared.events.event_serializer import (
     EventSerializer,
 )
-from corpstage.backend.shared.events.event_factory import (
+from aurex.backend.shared.events.event_factory import (
     EventFactory,
 )
-from corpstage.backend.shared.events.event_publisher import (
+from aurex.backend.shared.events.event_publisher import (
     EventPublisher,
     KafkaEventPublisher,
     AzureServiceBusEventPublisher,
 )
-from corpstage.backend.shared.events.event_subscriber import (
+from aurex.backend.shared.events.event_subscriber import (
     EventSubscriber,
 )
 

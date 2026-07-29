@@ -1,5 +1,5 @@
 """
-CorpStage Ingestion Service Business Layer & Abstract Infrastructure Providers.
+Aurex Ingestion Service Business Layer & Abstract Infrastructure Providers.
 """
 from .storage_provider import StorageProvider, AzureBlobStorageStub
 from .ocr_provider import OCRProvider, AzureDocumentIntelligenceStub

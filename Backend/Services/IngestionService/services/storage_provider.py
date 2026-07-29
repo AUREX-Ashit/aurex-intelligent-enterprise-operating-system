@@ -36,13 +36,13 @@ class AzureBlobStorageStub(StorageProvider):
     Mock/Stub production compliant implementation mapping to Azure Blob Storage configurations.
     Avoids SDK bloat during bootstrapping, allowing seamless local development, testing, and CI.
     """
-    def __init__(self, container_name: str = "corpstage-evidence"):
+    def __init__(self, container_name: str = "aurex-evidence"):
         self.container_name = container_name
         self.mock_db: Dict[str, Dict[str, Any]] = {}
 
     async def upload_file(self, file_object: BinaryIO, filename: str, tenant_id: str, content_type: str) -> str:
         # Create a unique virtual location mirroring tenant-isolated Azure containers
-        virtual_path = f"https://stcorpstage{settings.region}.blob.core.windows.net/{self.container_name}/{tenant_id}/{filename}"
+        virtual_path = f"https://staurex{settings.region}.blob.core.windows.net/{self.container_name}/{tenant_id}/{filename}"
         
         # Read the file to register metadata size in stub database
         content = file_object.read()
@@ -63,7 +63,7 @@ class AzureBlobStorageStub(StorageProvider):
 
     async def get_download_url(self, storage_path: str, tenant_id: str, expiry_seconds: int = 3600) -> str:
         # Appends a secure, mock SAS (Shared Access Signature) token ensuring tenant scope validation
-        if "stcorpstage" in storage_path and f"/{tenant_id}/" not in storage_path:
+        if "staurex" in storage_path and f"/{tenant_id}/" not in storage_path:
             raise PermissionError(f"Cross-tenant storage access denied. Tenant {tenant_id} is forbidden from accessing {storage_path}.")
             
         return f"{storage_path}?sv=2023-11-03&sr=b&sig=MOCK_SAS_SIG_EXPIRING_IN_{expiry_seconds}_SECONDS_TENANT_{tenant_id}"

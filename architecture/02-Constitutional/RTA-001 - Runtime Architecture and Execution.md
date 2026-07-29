@@ -20,14 +20,14 @@
 ## Section 1 — Runtime Philosophy
 
 ### 1.1 Purpose
-The Runtime Execution Architecture (REA) defines the canonical runtime operating model of the CorpStage Intelligent Operating Center.
+The Runtime Execution Architecture (REA) defines the canonical runtime operating model of the Aurex Intelligent Operating Center.
 While the constitutional architecture defines the platform's structural and behavioral principles, the Runtime Execution Architecture defines how those architectural capabilities collaborate during live system execution.
 It establishes the standardized runtime model governing request processing, Business Activity execution, workflow orchestration, event propagation, metadata resolution, authorization, enterprise context resolution, AI participation, persistence, observability, resilience, and external integration.
 The Runtime Execution Architecture is technology-independent and applies consistently across all deployment models, execution environments, and implementation technologies.
 
 
 ### 1.2 Architectural Principle
-CorpStage executes business intent through coordinated platform capabilities.
+Aurex executes business intent through coordinated platform capabilities.
 No platform capability executes in isolation.
 Every runtime operation shall be performed through the controlled collaboration of the platform's constitutional components.
 Runtime behavior shall be:
@@ -149,14 +149,14 @@ IMP-001
 Runtime Business Activity Execution
 RTA-001
 Runtime Collaboration between all constitutional components
-Together these documents define both the structure and behavior of the CorpStage platform.
+Together these documents define both the structure and behavior of the Aurex platform.
 
 
 ### 1.10 Runtime Constitutional Statement
-The Runtime Execution Architecture establishes the canonical operating model of the CorpStage Intelligent Operating Center.
+The Runtime Execution Architecture establishes the canonical operating model of the Aurex Intelligent Operating Center.
 All runtime behavior shall emerge from the governed collaboration of the constitutional platform capabilities rather than from implementation-specific logic.
 No runtime implementation shall bypass the Business Activity Engine, Authorization Framework, Metadata Framework, Enterprise Relationship Framework, or the governance principles established by the constitutional architecture.
-The Runtime Execution Architecture therefore serves as the operational constitution of the CorpStage platform, ensuring that every business operation executes consistently, securely, observably, and in accordance with the platform's architectural principles.
+The Runtime Execution Architecture therefore serves as the operational constitution of the Aurex platform, ensuring that every business operation executes consistently, securely, observably, and in accordance with the platform's architectural principles.
 
 Architect's Note
 This opening section deliberately avoids implementation details. Like your other constitutional documents, it establishes the philosophy, scope, and immutable principles first. From Section 2 onward, the document will progressively describe the runtime components, execution flows, orchestration patterns, and service interactions that bring the constitutional architecture to life.
@@ -165,7 +165,7 @@ This opening section deliberately avoids implementation details. Like your other
 ## Section 2 — Runtime Architecture Overview
 
 ### 2.1 Purpose
-The Runtime Architecture Overview defines the canonical runtime structure of the CorpStage Intelligent Operating Center.
+The Runtime Architecture Overview defines the canonical runtime structure of the Aurex Intelligent Operating Center.
 It establishes the major runtime capabilities, their responsibilities, interaction boundaries, and governing principles that collectively enable the execution of business intent.
 Unlike the constitutional architecture, which defines the platform's conceptual building blocks, the Runtime Architecture describes how these building blocks collaborate during system execution.
 
@@ -178,7 +178,7 @@ No runtime component shall assume the responsibilities of another component.
 
 
 ### 2.3 Runtime Architecture Model
-The CorpStage Runtime Execution Architecture is organized as a set of collaborating runtime capabilities.
+The Aurex Runtime Execution Architecture is organized as a set of collaborating runtime capabilities.
                      Users                       │                 Presentation Layer                       │                API / Interaction Layer                       │────────────────────────────────────────────────────────          Runtime Execution Platform────────────────────────────────────────────────────────Business Activity Engine (BAE)Workflow EngineAuthorization EngineMetadata EngineEnterprise Relationship EngineEvent BusKnowledge Graph EngineAI EngineNotification EngineAudit EngineObservability PlatformIntegration GatewayPersistence ServicesBusiness Activity RegistryCanonical Metadata RepositoryEnterprise Graph RepositoryBusiness Object Repository────────────────────────────────────────────────────────External Enterprise Systems
 Each runtime capability performs a specialized function while participating in a unified execution model.
 
@@ -373,14 +373,14 @@ scalable runtime architecture;
 technology independence; 
 deterministic runtime behavior; 
 maintainable platform evolution. 
-Every runtime capability within the CorpStage Intelligent Operating Center shall participate in the Runtime Execution Architecture according to these principles, ensuring a unified, governed, and extensible execution environment for all business operations.
+Every runtime capability within the Aurex Intelligent Operating Center shall participate in the Runtime Execution Architecture according to these principles, ensuring a unified, governed, and extensible execution environment for all business operations.
 
 ## Section 3 — Runtime Components
 
 ### 3.1 Purpose
-The Runtime Components define the canonical runtime capabilities that collectively execute, govern, coordinate, monitor, and support business operations within the CorpStage Intelligent Operating Center.
+The Runtime Components define the canonical runtime capabilities that collectively execute, govern, coordinate, monitor, and support business operations within the Aurex Intelligent Operating Center.
 Each Runtime Component represents a distinct platform capability with clearly defined responsibilities, interfaces, ownership, and lifecycle.
-Runtime Components collaborate to execute Business Activities while preserving the constitutional principles established by the CorpStage Architecture.
+Runtime Components collaborate to execute Business Activities while preserving the constitutional principles established by the Aurex Architecture.
 
 
 ### 3.2 Architectural Principle
@@ -640,12 +640,12 @@ independent scalability;
 independent evolution; 
 consistent governance; 
 complete runtime observability. 
-Every runtime capability within the CorpStage Intelligent Operating Center shall be implemented as a governed Runtime Component conforming to this architecture, ensuring a modular, scalable, resilient, and constitutionally compliant execution platform.
+Every runtime capability within the Aurex Intelligent Operating Center shall be implemented as a governed Runtime Component conforming to this architecture, ensuring a modular, scalable, resilient, and constitutionally compliant execution platform.
 
 ## Section 4 — Runtime Execution Pipeline
 
 ### 4.1 Purpose
-The Runtime Execution Pipeline defines the canonical end-to-end execution sequence for every runtime operation within the CorpStage Intelligent Operating Center.
+The Runtime Execution Pipeline defines the canonical end-to-end execution sequence for every runtime operation within the Aurex Intelligent Operating Center.
 It establishes how requests flow through the Runtime Execution Architecture, how runtime capabilities collaborate, and how governed business outcomes are produced.
 Every request, regardless of origin, shall execute through the same standardized runtime pipeline.
 This ensures predictable execution, consistent governance, operational transparency, and architectural compliance.
@@ -871,13 +871,13 @@ automatic Knowledge Graph synchronization;
 immutable audit recording; 
 comprehensive observability; 
 transport-independent response generation. 
-Every runtime request executed within the CorpStage Intelligent Operating Center shall follow the canonical Runtime Execution Pipeline, ensuring consistent collaboration among all Runtime Components, predictable business execution, complete governance, enterprise-wide traceability, and platform-wide operational integrity.
+Every runtime request executed within the Aurex Intelligent Operating Center shall follow the canonical Runtime Execution Pipeline, ensuring consistent collaboration among all Runtime Components, predictable business execution, complete governance, enterprise-wide traceability, and platform-wide operational integrity.
 
 
 ## Section 5 — Runtime Collaboration Model
 
 ### 5.1 Purpose
-The Runtime Collaboration Model defines the canonical interaction patterns between Runtime Components within the CorpStage Intelligent Operating Center.
+The Runtime Collaboration Model defines the canonical interaction patterns between Runtime Components within the Aurex Intelligent Operating Center.
 While individual Runtime Components own specific responsibilities, successful execution requires coordinated collaboration across the platform.
 This section establishes the architectural rules governing runtime communication, dependency management, execution ownership, service interaction, and platform coordination.
 The Runtime Collaboration Model ensures that platform capabilities remain loosely coupled while operating as a unified execution environment.
@@ -1111,7 +1111,7 @@ scalable synchronous and asynchronous collaboration;
 event-driven communication; 
 complete operational observability; 
 resilient runtime behavior. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall collaborate exclusively through the Runtime Collaboration Model, ensuring that business execution remains modular, governed, resilient, technology-independent, and fully aligned with the constitutional architecture.
+Every Runtime Component within the Aurex Intelligent Operating Center shall collaborate exclusively through the Runtime Collaboration Model, ensuring that business execution remains modular, governed, resilient, technology-independent, and fully aligned with the constitutional architecture.
 
 
 
@@ -1121,7 +1121,7 @@ Every Runtime Component within the CorpStage Intelligent Operating Center shall 
 The Business Activity Runtime defines how Business Activities execute within the Runtime Execution Architecture.
 While IMP-001 defines the canonical Business Activity Framework, this section defines how the Runtime Execution Architecture discovers, resolves, governs, executes, and monitors Business Activities during live platform operation.
 The Business Activity Runtime establishes the collaboration between the Business Activity Engine, Business Activity Registry, Canonical Business Activity Manifest, Runtime Components, and Business Objects.
-Every executable business operation within the CorpStage Intelligent Operating Center shall execute through the Business Activity Runtime.
+Every executable business operation within the Aurex Intelligent Operating Center shall execute through the Business Activity Runtime.
 
 
 ### 6.2 Architectural Principle
@@ -1317,12 +1317,12 @@ deterministic execution;
 platform-wide observability; 
 complete auditability; 
 resilient execution. 
-Every Business Activity executed within the CorpStage Intelligent Operating Center shall operate through the Business Activity Runtime, ensuring that business intent is transformed into governed business outcomes using the constitutional Business Activity Framework defined in IMP-001 and the Runtime Execution Architecture defined in RTA-001.
+Every Business Activity executed within the Aurex Intelligent Operating Center shall operate through the Business Activity Runtime, ensuring that business intent is transformed into governed business outcomes using the constitutional Business Activity Framework defined in IMP-001 and the Runtime Execution Architecture defined in RTA-001.
 
 ## Section 7 — Workflow Runtime
 
 ### 7.1 Purpose
-The Workflow Runtime defines the canonical runtime architecture governing the orchestration of Business Activities within the CorpStage Intelligent Operating Center.
+The Workflow Runtime defines the canonical runtime architecture governing the orchestration of Business Activities within the Aurex Intelligent Operating Center.
 While Business Activities execute business intent, Workflows coordinate the sequence, timing, participants, approvals, escalations, and dependencies required to achieve larger business outcomes.
 The Workflow Runtime ensures that business processes remain configurable, metadata-driven, observable, resilient, and independent of Business Activity implementations.
 
@@ -1537,10 +1537,10 @@ deterministic workflow progression;
 resilient execution and recovery; 
 complete observability; 
 platform-wide process consistency. 
-Every Business Process executed within the CorpStage Intelligent Operating Center shall be coordinated through the Workflow Runtime, ensuring that Business Activities remain independently executable while workflows provide configurable, governed, observable, and resilient orchestration across all Business Domains.
+Every Business Process executed within the Aurex Intelligent Operating Center shall be coordinated through the Workflow Runtime, ensuring that Business Activities remain independently executable while workflows provide configurable, governed, observable, and resilient orchestration across all Business Domains.
 
 ### 8.1 Purpose
-The Event Runtime defines the canonical architecture governing the creation, publication, distribution, consumption, and lifecycle management of events within the CorpStage Intelligent Operating Center.
+The Event Runtime defines the canonical architecture governing the creation, publication, distribution, consumption, and lifecycle management of events within the Aurex Intelligent Operating Center.
 Events provide the primary mechanism for communicating business outcomes across Runtime Components while preserving loose coupling, scalability, resiliency, and independent evolution.
 The Event Runtime enables Runtime Components to collaborate through business semantics rather than implementation dependencies.
 
@@ -1781,7 +1781,7 @@ independent Runtime Component collaboration;
 replayable execution history; 
 secure Event propagation; 
 complete operational observability. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall communicate business outcomes through the Event Runtime, ensuring loosely coupled, resilient, scalable, and governed collaboration across Business Activities, Workflows, AI services, integrations, and platform capabilities.
+Every Runtime Component within the Aurex Intelligent Operating Center shall communicate business outcomes through the Event Runtime, ensuring loosely coupled, resilient, scalable, and governed collaboration across Business Activities, Workflows, AI services, integrations, and platform capabilities.
 
 *(CERT-022 correction, per ARP-001 WP-4: this document's section numbering proceeds directly from Section 7 to Section 9, with no Section 8, anywhere in the source docx this file was converted from. No corresponding CERT note existed for this gap prior to this correction. No content is missing between these points — Section 8 was never authored under this numbering and no reference to a "Section 8" exists elsewhere in this document or in any document that cites RTA-001. Section numbers are not renumbered here to avoid invalidating this LOCKED document's existing internal and external Section 9–20 references; this note exists solely so the gap is documented rather than silently present.)*
 
@@ -1789,7 +1789,7 @@ Every Runtime Component within the CorpStage Intelligent Operating Center shall 
 
 ### 9.1 Purpose
 The Metadata Runtime defines the canonical runtime architecture for discovering, resolving, evaluating, caching, governing, and applying metadata during Business Activity execution.
-Within the CorpStage Intelligent Operating Center, metadata governs runtime behavior.
+Within the Aurex Intelligent Operating Center, metadata governs runtime behavior.
 Business Activities shall never embed configurable business behavior.
 Instead, all configurable behavior shall be resolved dynamically through the Metadata Runtime.
 The Metadata Runtime transforms the Canonical Metadata Dictionary (CMD-001) into executable runtime intelligence.
@@ -1994,7 +1994,7 @@ version-aware metadata resolution;
 secure scope evaluation; 
 high-performance metadata access; 
 complete operational observability. 
-Every Business Activity executed within the CorpStage Intelligent Operating Center shall receive its governing configuration, policies, rules, reference data, and execution parameters exclusively through the Metadata Runtime, ensuring that platform behavior remains configurable, consistent, governed, and fully aligned with the canonical metadata architecture defined in CMD-001.
+Every Business Activity executed within the Aurex Intelligent Operating Center shall receive its governing configuration, policies, rules, reference data, and execution parameters exclusively through the Metadata Runtime, ensuring that platform behavior remains configurable, consistent, governed, and fully aligned with the canonical metadata architecture defined in CMD-001.
 
 ## Section 10 — Enterprise Context Runtime
 
@@ -2201,7 +2201,7 @@ immutable execution context;
 consistent Enterprise Context propagation; 
 platform-wide organizational awareness; 
 complete operational observability. 
-Every Business Activity executed within the CorpStage Intelligent Operating Center shall operate within a fully resolved Enterprise Context supplied by the Enterprise Relationship Engine, ensuring that business execution consistently respects organizational structure, reporting boundaries, ownership relationships, governance policies, and enterprise scope as defined by ERG-001.
+Every Business Activity executed within the Aurex Intelligent Operating Center shall operate within a fully resolved Enterprise Context supplied by the Enterprise Relationship Engine, ensuring that business execution consistently respects organizational structure, reporting boundaries, ownership relationships, governance policies, and enterprise scope as defined by ERG-001.
 
 ## Section 11 — Authorization Runtime
 
@@ -2426,13 +2426,13 @@ metadata-driven policy enforcement;
 immutable Authorization Context during execution; 
 comprehensive authorization observability; 
 complete auditability of authorization decisions. 
-Every Business Activity executed within the CorpStage Intelligent Operating Center shall execute only after successful authorization evaluation by the Authorization Engine, ensuring that access decisions are consistent, governed, enterprise-aware, auditable, and fully aligned with the canonical authorization architecture defined in URA-001.
+Every Business Activity executed within the Aurex Intelligent Operating Center shall execute only after successful authorization evaluation by the Authorization Engine, ensuring that access decisions are consistent, governed, enterprise-aware, auditable, and fully aligned with the canonical authorization architecture defined in URA-001.
 
 
 ## Section 12 — Knowledge Graph Runtime
 
 ### 12.1 Purpose
-The Knowledge Graph Runtime defines the canonical runtime architecture governing the creation, enrichment, maintenance, synchronization, querying, and evolution of the CorpStage Enterprise Knowledge Graph.
+The Knowledge Graph Runtime defines the canonical runtime architecture governing the creation, enrichment, maintenance, synchronization, querying, and evolution of the Aurex Enterprise Knowledge Graph.
 The Enterprise Knowledge Graph is the semantic representation of enterprise intelligence.
 It is not the system of record.
 It is the system of understanding.
@@ -2659,14 +2659,14 @@ AI-assisted but governed knowledge evolution;
 enterprise-wide semantic consistency; 
 complete graph observability; 
 auditable knowledge lifecycle. 
-Every successful Business Activity executed within the CorpStage Intelligent Operating Center shall contribute to the Enterprise Knowledge Graph through the Knowledge Graph Runtime, ensuring that governed business execution continuously evolves into trusted enterprise knowledge without compromising transactional integrity, architectural consistency, or platform governance.
+Every successful Business Activity executed within the Aurex Intelligent Operating Center shall contribute to the Enterprise Knowledge Graph through the Knowledge Graph Runtime, ensuring that governed business execution continuously evolves into trusted enterprise knowledge without compromising transactional integrity, architectural consistency, or platform governance.
 Top of Form
 Bottom of Form
 
 ## Section 13 — AI Runtime
 
 ### 13.1 Purpose
-The AI Runtime defines the canonical runtime architecture governing the orchestration, execution, governance, monitoring, and lifecycle management of Artificial Intelligence capabilities within the CorpStage Intelligent Operating Center.
+The AI Runtime defines the canonical runtime architecture governing the orchestration, execution, governance, monitoring, and lifecycle management of Artificial Intelligence capabilities within the Aurex Intelligent Operating Center.
 The AI Runtime enables Business Activities, Workflows, Knowledge Graph services, and Enterprise Intelligence capabilities to leverage AI in a controlled, secure, explainable, and governable manner.
 The AI Runtime is an execution service.
 It is not an autonomous decision-making authority.
@@ -2965,7 +2965,7 @@ human accountability for governed decisions;
 complete AI observability; 
 explainable and auditable AI execution; 
 technology-independent AI integration. 
-Every AI capability within the CorpStage Intelligent Operating Center shall execute through the AI Runtime, ensuring that artificial intelligence consistently operates as a governed, observable, secure, and accountable platform service that enhances Business Activities without replacing enterprise governance or human responsibility.
+Every AI capability within the Aurex Intelligent Operating Center shall execute through the AI Runtime, ensuring that artificial intelligence consistently operates as a governed, observable, secure, and accountable platform service that enhances Business Activities without replacing enterprise governance or human responsibility.
 
 ## Section 14 — Transaction Runtime
 
@@ -3173,12 +3173,12 @@ reliable post-commit event publication;
 resilient transaction recovery; 
 comprehensive transaction observability; 
 complete auditability of transactional execution. 
-Every Business Activity executed within the CorpStage Intelligent Operating Center shall execute within the Transaction Runtime, ensuring that business consistency is preserved across Business Objects, Workflows, Domain Events, AI-assisted operations, Knowledge Graph updates, and external integrations while maintaining resilience, recoverability, and enterprise governance.
+Every Business Activity executed within the Aurex Intelligent Operating Center shall execute within the Transaction Runtime, ensuring that business consistency is preserved across Business Objects, Workflows, Domain Events, AI-assisted operations, Knowledge Graph updates, and external integrations while maintaining resilience, recoverability, and enterprise governance.
 
 ## Section 15 — Caching & Performance Runtime
 
 ### 15.1 Purpose
-The Caching & Performance Runtime defines the canonical runtime architecture governing caching, performance optimization, resource utilization, scalability, workload management, and runtime efficiency within the CorpStage Intelligent Operating Center.
+The Caching & Performance Runtime defines the canonical runtime architecture governing caching, performance optimization, resource utilization, scalability, workload management, and runtime efficiency within the Aurex Intelligent Operating Center.
 The objective of the Caching & Performance Runtime is to improve runtime responsiveness without compromising business correctness, governance, consistency, or auditability.
 Performance optimization shall always preserve business semantics.
 
@@ -3405,13 +3405,13 @@ scalable runtime execution;
 governed resource utilization; 
 comprehensive performance observability; 
 technology-independent optimization strategies. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall utilize the Caching & Performance Runtime to improve responsiveness, scalability, and operational efficiency while ensuring that business correctness, governance, consistency, and auditability remain uncompromised across all Business Activities and platform services.
+Every Runtime Component within the Aurex Intelligent Operating Center shall utilize the Caching & Performance Runtime to improve responsiveness, scalability, and operational efficiency while ensuring that business correctness, governance, consistency, and auditability remain uncompromised across all Business Activities and platform services.
 
 ## Section 16 — Integration Runtime
 
 ### 16.1 Purpose
-The Integration Runtime defines the canonical runtime architecture governing communication between the CorpStage Intelligent Operating Center and external systems.
-The Integration Runtime enables secure, governed, resilient, and observable exchange of business information while preserving the independence of the CorpStage constitutional architecture.
+The Integration Runtime defines the canonical runtime architecture governing communication between the Aurex Intelligent Operating Center and external systems.
+The Integration Runtime enables secure, governed, resilient, and observable exchange of business information while preserving the independence of the Aurex constitutional architecture.
 External systems participate in business processes through governed integrations.
 They do not participate directly in Business Activity execution.
 
@@ -3606,7 +3606,7 @@ Only approved integrations may participate in runtime execution.
 
 
 ### 16.16 Relationship with the Event Runtime
-The Event Runtime governs communication within the CorpStage platform.
+The Event Runtime governs communication within the Aurex platform.
 The Integration Runtime governs communication with external platforms.
 Domain Events may be translated into Integration Events where external communication is required.
 Internal and external event models shall remain independent to preserve loose coupling and architectural flexibility.
@@ -3622,12 +3622,12 @@ resilient and recoverable integrations;
 complete operational observability; 
 technology-independent integration patterns; 
 governed lifecycle management. 
-Every interaction between the CorpStage Intelligent Operating Center and external systems shall occur exclusively through the Integration Runtime, ensuring secure, resilient, observable, and governed communication while preserving the constitutional integrity, business consistency, and technology independence of the platform.
+Every interaction between the Aurex Intelligent Operating Center and external systems shall occur exclusively through the Integration Runtime, ensuring secure, resilient, observable, and governed communication while preserving the constitutional integrity, business consistency, and technology independence of the platform.
 
 ## Section 17 — Observability Runtime
 
 ### 17.1 Purpose
-The Observability Runtime defines the canonical runtime architecture governing monitoring, telemetry, diagnostics, tracing, logging, health management, analytics, and operational intelligence across the CorpStage Intelligent Operating Center.
+The Observability Runtime defines the canonical runtime architecture governing monitoring, telemetry, diagnostics, tracing, logging, health management, analytics, and operational intelligence across the Aurex Intelligent Operating Center.
 Observability enables the platform to understand the operational behavior of every Runtime Component, Business Activity, Workflow, AI interaction, Integration, and Enterprise operation.
 The Observability Runtime provides operational intelligence without influencing business execution.
 
@@ -3867,12 +3867,12 @@ structured and searchable diagnostics;
 proactive health monitoring and alerting; 
 governed operational analytics; 
 complete runtime transparency. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall participate in the Observability Runtime, ensuring that every business operation, platform service, workflow, integration, AI interaction, and enterprise process is continuously observable, diagnosable, measurable, and governable throughout its complete runtime lifecycle.
+Every Runtime Component within the Aurex Intelligent Operating Center shall participate in the Observability Runtime, ensuring that every business operation, platform service, workflow, integration, AI interaction, and enterprise process is continuously observable, diagnosable, measurable, and governable throughout its complete runtime lifecycle.
 
 ## Section 18 — Failure & Recovery Runtime
 
 ### 18.1 Purpose
-The Failure & Recovery Runtime defines the canonical runtime architecture governing failure detection, classification, containment, recovery, compensation, resilience, continuity, and operational restoration within the CorpStage Intelligent Operating Center.
+The Failure & Recovery Runtime defines the canonical runtime architecture governing failure detection, classification, containment, recovery, compensation, resilience, continuity, and operational restoration within the Aurex Intelligent Operating Center.
 Failures are an inevitable characteristic of distributed enterprise platforms.
 The Runtime Execution Architecture shall therefore be designed to anticipate, isolate, recover from, and learn from failures while preserving business consistency, governance, and audit integrity.
 The objective of the Failure & Recovery Runtime is not to eliminate failures, but to ensure predictable and governed recovery.
@@ -4104,12 +4104,12 @@ isolation of external and AI failures;
 comprehensive recovery observability; 
 business continuity under adverse conditions; 
 complete auditability of recovery operations. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall participate in the Failure & Recovery Runtime, ensuring that failures are detected, classified, recovered, and governed through a consistent, resilient, and business-centric architecture that preserves enterprise integrity, operational continuity, and constitutional compliance.
+Every Runtime Component within the Aurex Intelligent Operating Center shall participate in the Failure & Recovery Runtime, ensuring that failures are detected, classified, recovered, and governed through a consistent, resilient, and business-centric architecture that preserves enterprise integrity, operational continuity, and constitutional compliance.
 
 ## Section 19 — Deployment Runtime
 
 ### 19.1 Purpose
-The Deployment Runtime defines the canonical runtime architecture governing deployment topology, runtime isolation, scalability, availability, portability, resiliency, and operational hosting of the CorpStage Intelligent Operating Center.
+The Deployment Runtime defines the canonical runtime architecture governing deployment topology, runtime isolation, scalability, availability, portability, resiliency, and operational hosting of the Aurex Intelligent Operating Center.
 The Runtime Execution Architecture shall remain independent of deployment technologies.
 Business execution shall behave identically regardless of cloud provider, infrastructure platform, deployment model, geographic location, or scaling strategy.
 Deployment is an operational concern.
@@ -4311,12 +4311,12 @@ governed configuration management;
 secure runtime isolation; 
 technology-neutral deployment strategies; 
 enterprise-grade operational continuity. 
-Every Runtime Component within the CorpStage Intelligent Operating Center shall execute within the Deployment Runtime, ensuring that business execution remains consistent, resilient, scalable, portable, and independent of deployment technologies while preserving the constitutional principles established by the Runtime Execution Architecture.
+Every Runtime Component within the Aurex Intelligent Operating Center shall execute within the Deployment Runtime, ensuring that business execution remains consistent, resilient, scalable, portable, and independent of deployment technologies while preserving the constitutional principles established by the Runtime Execution Architecture.
 
 ## Section 20 — Runtime Constitutional Principles
 
 ### 20.1 Purpose
-The Runtime Constitutional Principles establish the immutable laws governing runtime behavior within the CorpStage Intelligent Operating Center.
+The Runtime Constitutional Principles establish the immutable laws governing runtime behavior within the Aurex Intelligent Operating Center.
 These principles define the non-negotiable architectural constraints that ensure every Runtime Component, Business Activity, Workflow, Event, AI capability, Integration, and platform service operates consistently with the constitutional architecture.
 These principles are technology-independent and shall remain valid regardless of implementation language, deployment topology, cloud provider, or runtime infrastructure.
 
@@ -4440,7 +4440,7 @@ RTA-001
 No Runtime Component may implement behavior inconsistent with any constitutional document.
 
 Law 20 — Runtime Integrity
-The Runtime Execution Architecture shall remain the single canonical operating model for all runtime execution within the CorpStage Intelligent Operating Center.
+The Runtime Execution Architecture shall remain the single canonical operating model for all runtime execution within the Aurex Intelligent Operating Center.
 No alternative runtime execution model shall exist within the platform.
 
 
@@ -4467,17 +4467,17 @@ IMP-001
 Business Activity Framework
 RTA-001
 Runtime Execution Architecture
-Collectively, these documents establish the immutable constitutional foundation of the CorpStage Intelligent Operating Center.
+Collectively, these documents establish the immutable constitutional foundation of the Aurex Intelligent Operating Center.
 
 
 ### 20.5 Runtime Constitutional Statement
-The Runtime Execution Architecture defines the canonical operational model of the CorpStage Intelligent Operating Center.
+The Runtime Execution Architecture defines the canonical operational model of the Aurex Intelligent Operating Center.
 Every Runtime Component, Business Activity, Workflow, Event, AI capability, Integration, Knowledge Graph operation, Transaction, and Deployment shall execute in accordance with these constitutional principles.
 Platform implementations may evolve.
 Technologies may change.
 Infrastructure may be replaced.
 Operational requirements may expand.
-The constitutional runtime principles established in this document shall remain stable, ensuring that CorpStage preserves a consistent, governed, observable, resilient, and enterprise-centric execution model throughout the lifetime of the platform.
+The constitutional runtime principles established in this document shall remain stable, ensuring that Aurex preserves a consistent, governed, observable, resilient, and enterprise-centric execution model throughout the lifetime of the platform.
 
 ## Section 21 — Memory Runtime *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 2, AMD-012)*
 
@@ -4585,5 +4585,5 @@ CMD-001 – Canonical Metadata Architecture
 IMP-001 – Canonical Business Activity Implementation Pattern 
 RTA-001 – Runtime Execution Architecture 
 This set establishes the platform's business, governance, execution, and runtime constitutions.
-My recommendation is to freeze these nine documents as Version 1.0 before moving into engineering standards such as IMP-002 (Canonical Business Activity Development Standard). From this point onward, implementation standards should derive from these constitutional documents rather than introducing new architectural principles. This gives CorpStage a stable architectural baseline that developers, architects, and AI-assisted code generation can consistently rely upon.
+My recommendation is to freeze these nine documents as Version 1.0 before moving into engineering standards such as IMP-002 (Canonical Business Activity Development Standard). From this point onward, implementation standards should derive from these constitutional documents rather than introducing new architectural principles. This gives Aurex a stable architectural baseline that developers, architects, and AI-assisted code generation can consistently rely upon.
 

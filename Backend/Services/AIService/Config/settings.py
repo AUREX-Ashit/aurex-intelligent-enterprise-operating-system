@@ -8,15 +8,15 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Platform Core
-    platform_name: str = "CorpStage"
+    platform_name: str = "Aurex"
     environment: str = "development"
     region: str = "centralindia"
 
     # Database Settings
     db_host: str = "localhost"
     db_port: int = 5432
-    db_name: str = "corpstage"
-    db_user: str = "corpstage"
+    db_name: str = "aurex"
+    db_user: str = "aurex"
     db_pass: str = "CHANGE_IN_ENVIRONMENT"
     db_pool_size: int = 30
     db_max_overflow: int = 10
@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # Storage and queues
     storage_provider: str = "azure_blob_storage"
-    storage_container: str = "corpstage-evidence"
+    storage_container: str = "aurex-evidence"
     queue_provider: str = "azure_service_bus"
 
     # Security and MFA
@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     enable_bulk_validation: bool = True
 
     class Config:
-        env_prefix = "CORPSTAGE_"
+        env_prefix = "AUREX_"
         case_sensitive = False
 
     @classmethod
@@ -155,30 +155,30 @@ class Settings(BaseSettings):
             if "human_review_required" in g_block: init_kwargs["human_review_required"] = g_block["human_review_required"]
 
         # Extract JWT Secret Key directly from Environment only. Throw error if missing.
-        jwt_key = os.getenv("CORPSTAGE_JWT_SECRET_KEY") or os.getenv("JWT_SECRET_KEY")
+        jwt_key = os.getenv("AUREX_JWT_SECRET_KEY") or os.getenv("JWT_SECRET_KEY")
         if not jwt_key:
             # Fallback for local simulation or testing so it doesn't instantly block developers,
             # but in production, we fail application startup if missing.
-            if os.getenv("CORPSTAGE_ENVIRONMENT", "development") == "production":
+            if os.getenv("AUREX_ENVIRONMENT", "development") == "production":
                 raise ValueError("CRITICAL CONFIGURATION ERROR: JWT_SECRET_KEY must be provided via environments!")
-            jwt_key = "corpstage-development-secret-key-safe-fallback"
+            jwt_key = "aurex-development-secret-key-safe-fallback"
 
         init_kwargs["jwt_secret_key"] = jwt_key
 
         # Environment variable overrides for DB details (Standard practice)
-        db_user = os.getenv("CORPSTAGE_DB_USER", init_kwargs.get("db_user", "corpstage"))
-        db_pass = os.getenv("CORPSTAGE_DB_PASS", init_kwargs.get("db_pass", "CHANGE_IN_ENVIRONMENT"))
-        db_host = os.getenv("CORPSTAGE_DB_HOST", init_kwargs.get("db_host", "localhost"))
-        db_port = int(os.getenv("CORPSTAGE_DB_PORT", str(init_kwargs.get("db_port", 5432))))
-        db_name = os.getenv("CORPSTAGE_DB_NAME", init_kwargs.get("db_name", "corpstage"))
+        db_user = os.getenv("AUREX_DB_USER", init_kwargs.get("db_user", "aurex"))
+        db_pass = os.getenv("AUREX_DB_PASS", init_kwargs.get("db_pass", "CHANGE_IN_ENVIRONMENT"))
+        db_host = os.getenv("AUREX_DB_HOST", init_kwargs.get("db_host", "localhost"))
+        db_port = int(os.getenv("AUREX_DB_PORT", str(init_kwargs.get("db_port", 5432))))
+        db_name = os.getenv("AUREX_DB_NAME", init_kwargs.get("db_name", "aurex"))
 
         # Build Database URL
         # For our scaffolding / SQLite testing base, support sqlite+aiosqlite if specified, otherwise asyncpg
-        db_url = os.getenv("CORPSTAGE_DATABASE_URL")
+        db_url = os.getenv("AUREX_DATABASE_URL")
         if not db_url:
-            if db_pass == "CHANGE_IN_ENVIRONMENT" and os.getenv("CORPSTAGE_ENVIRONMENT") != "production":
+            if db_pass == "CHANGE_IN_ENVIRONMENT" and os.getenv("AUREX_ENVIRONMENT") != "production":
                 # Development safe fallback: SQLite in-memory or file-based for instant testing
-                init_kwargs["database_url"] = "sqlite+aiosqlite:///corpstage.db"
+                init_kwargs["database_url"] = "sqlite+aiosqlite:///aurex.db"
             else:
                 init_kwargs["database_url"] = f"postgresql+asyncpg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
         else:

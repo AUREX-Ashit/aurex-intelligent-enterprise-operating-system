@@ -1,13 +1,13 @@
 -- =============================================================================
 -- 06_bootstrap_verify.sql
--- CorpStage AuthService — Bootstrap Verification
+-- Aurex AuthService — Bootstrap Verification
 -- =============================================================================
 -- PURPOSE
 --   Verifies the bootstrap entity graph is complete and internally consistent
 --   before login testing begins. Run after 05_bootstrap_first_user.sql.
 --
 -- HOW TO RUN
---   docker exec -i corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -i aurex-postgres psql -U postgres -d aurex \
 --     < scripts/06_bootstrap_verify.sql
 -- =============================================================================
 
@@ -157,6 +157,6 @@ WHERE r.id IS NULL;
 \echo ''
 \echo 'Ready for login testing:'
 \echo '  POST /auth/login'
-\echo '  Body: { email: admin@corpstage.com, password: CorpStage#Admin2026! }'
+\echo '  Body: { email: admin@corpstage.com, password: Aurex#Admin2026! }'
 \echo '  Expected: TokenResponse with all 5 R-001 JWT claims'
 \echo '======================================='

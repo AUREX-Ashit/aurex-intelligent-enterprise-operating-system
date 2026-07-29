@@ -1,5 +1,5 @@
 """
-CorpStage Shared Configuration Framework - YAML Parser Module.
+Aurex Shared Configuration Framework - YAML Parser Module.
 
 This module handles safe and deterministic parsing of YAML config files.
 In order to be extremely resilient, it imports the standard 'yaml' package
@@ -13,12 +13,12 @@ import re
 import logging
 from typing import Dict, Any
 
-from corpstage.backend.shared.config.exceptions import (
+from aurex.backend.shared.config.exceptions import (
     ConfigFileNotFoundError,
     YAMLValidationError
 )
 
-logger = logging.getLogger("CorpStage.Config.YAMLParser")
+logger = logging.getLogger("Aurex.Config.YAMLParser")
 
 class YAMLParser:
     """

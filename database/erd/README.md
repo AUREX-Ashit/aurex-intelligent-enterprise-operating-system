@@ -1,6 +1,6 @@
-# CorpStage Enterprise Database Entity-Relationship Diagram (ERD)
+# Aurex Enterprise Database Entity-Relationship Diagram (ERD)
 
-This directory documents the structural data models designed for the **CorpStage Multi-Tenant SaaS platform**. The architecture employs a **bridged shared-database, isolated-schema** model enabling strict multi-tenant Row-Level Security (RLS).
+This directory documents the structural data models designed for the **Aurex Multi-Tenant SaaS platform**. The architecture employs a **bridged shared-database, isolated-schema** model enabling strict multi-tenant Row-Level Security (RLS).
 
 ---
 

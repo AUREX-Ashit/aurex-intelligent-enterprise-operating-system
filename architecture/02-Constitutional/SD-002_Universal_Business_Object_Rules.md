@@ -2,9 +2,9 @@
 ### Version 2.2 — GOLD STANDARD (Supersedes v2.1)
 
 **Status:** LOCKED
-**Scope:** Defines what business objects are and their universal behaviors across the CorpStage Enterprise Intelligence Platform.
+**Scope:** Defines what business objects are and their universal behaviors across the Aurex Enterprise Intelligence Platform.
 **Companion documents:** SD-001 (Screen Design Principles, v2.0 GOLD STANDARD), SD-003 (Interaction Laws)
-**Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
+**Governing framework:** Aurex Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
 
@@ -41,15 +41,15 @@
 
 ## SECTION 1: Purpose & Philosophy
 
-SD-002 defines what a business object is, and the behaviors every business object in CorpStage must support regardless of its type, industry, customer, or the screen that eventually renders it.
+SD-002 defines what a business object is, and the behaviors every business object in Aurex must support regardless of its type, industry, customer, or the screen that eventually renders it.
 
 **SD-002-001: Everything Important Is a Business Object**
 
-Traditional enterprise systems model users, tables, forms, and workflows. CorpStage models Business Activities, Canonical Data Elements, Evidence, Approvals, Assignments, Reports, Frameworks, Departments, and Events — every one of them a first-class business object, not an application artifact. This is what makes consistency, traceability, reuse, and governance possible across the entire platform rather than per-module.
+Traditional enterprise systems model users, tables, forms, and workflows. Aurex models Business Activities, Canonical Data Elements, Evidence, Approvals, Assignments, Reports, Frameworks, Departments, and Events — every one of them a first-class business object, not an application artifact. This is what makes consistency, traceability, reuse, and governance possible across the entire platform rather than per-module.
 
 **SD-002-002: No Object Is a Special Case**
 
-Every business object — a CDE, a Business Question, a Business Activity, an Evidence record, a Report, a Framework — inherits the same universal capabilities defined in Section 2. There is no object type in CorpStage that is exempt from identity, ownership, evidence, versioning, events, audit, or governance. Object-type sections (3, 4, 5) define only what is *additional and distinctive* to that type — never a restatement of what Section 2 already guarantees.
+Every business object — a CDE, a Business Question, a Business Activity, an Evidence record, a Report, a Framework — inherits the same universal capabilities defined in Section 2. There is no object type in Aurex that is exempt from identity, ownership, evidence, versioning, events, audit, or governance. Object-type sections (3, 4, 5) define only what is *additional and distinctive* to that type — never a restatement of what Section 2 already guarantees.
 
 **SD-002-003: Objects Must Be Future-Proof**
 
@@ -59,7 +59,7 @@ Every object must support new frameworks, new industries, new AI models, and new
 
 ## SECTION 2: The Universal Business Object Model
 
-This section is the single inheritance contract for every business object in CorpStage. It is stated exactly once. Sections 3–5 (CDE, BQ, BA) do not repeat any capability defined here — they declare inheritance from this contract and add only what is genuinely distinctive to their type.
+This section is the single inheritance contract for every business object in Aurex. It is stated exactly once. Sections 3–5 (CDE, BQ, BA) do not repeat any capability defined here — they declare inheritance from this contract and add only what is genuinely distinctive to their type.
 
 **SD-002-004: Universal Identity**
 
@@ -69,7 +69,7 @@ Every business object possesses a globally unique, permanent identity (`CDE-0000
 
 **SD-002-005: Canonical Definition, Independent of Presentation**
 
-Every object maintains a global definition independent of any customer's terminology. *Example: canonically "Revenue"; a customer may label it "Net Sales" in their Sales department view. The underlying object remains Revenue.* This is the foundation of MDM (Master Data Management) discipline within CorpStage: one golden record, unlimited local labels.
+Every object maintains a global definition independent of any customer's terminology. *Example: canonically "Revenue"; a customer may label it "Net Sales" in their Sales department view. The underlying object remains Revenue.* This is the foundation of MDM (Master Data Management) discipline within Aurex: one golden record, unlimited local labels.
 
 **SD-002-006: Metadata Extensions Without Canonical Pollution**
 
@@ -85,7 +85,7 @@ Every object supports a configurable lifecycle. Default: `CREATED → DISCOVERED
 
 **SD-002-009: Every State Transition Is an Event — Nothing Is Overwritten**
 
-No lifecycle transition occurs silently. Every state change generates an immutable business event (`DISCOVERED`, `REVIEWED`, `APPROVED`, `REJECTED`, `ASSIGNED`, `SUPERSEDED`, `ARCHIVED`). **This is CorpStage's event-sourcing model, stated explicitly by name:** the current state of any object is not stored as ground truth — it is a computed projection of that object's full historical event stream. History is the source of truth; current state is a view of it.
+No lifecycle transition occurs silently. Every state change generates an immutable business event (`DISCOVERED`, `REVIEWED`, `APPROVED`, `REJECTED`, `ASSIGNED`, `SUPERSEDED`, `ARCHIVED`). **This is Aurex's event-sourcing model, stated explicitly by name:** the current state of any object is not stored as ground truth — it is a computed projection of that object's full historical event stream. History is the source of truth; current state is a view of it.
 
 **SD-002-010: Universal Versioning**
 
@@ -93,7 +93,7 @@ Every object preserves its full historical state across versions, supporting com
 
 **SD-002-011: The Canonical Temporal Model**
 
-*(Consolidates six scattered v1.0 references into one statement.)* Every business object supports **Effective From**, **Effective To**, **Version**, **Status**, and **Approval Reference** as universal temporal properties. This is the single mechanism by which CorpStage answers "what did this look like on any past date" for any object of any type — CDEs, organizational structures, governance policies, and reports all use this same temporal model, not type-specific variants of it.
+*(Consolidates six scattered v1.0 references into one statement.)* Every business object supports **Effective From**, **Effective To**, **Version**, **Status**, and **Approval Reference** as universal temporal properties. This is the single mechanism by which Aurex answers "what did this look like on any past date" for any object of any type — CDEs, organizational structures, governance policies, and reports all use this same temporal model, not type-specific variants of it.
 
 **SD-002-012: Universal Evidence Support**
 
@@ -101,7 +101,7 @@ Every object may attach evidence — documents, web sources, ERP exports, user i
 
 **SD-002-013: Universal Relationships and the Enterprise Knowledge Graph**
 
-Every object may participate in typed relationships (`DEPENDS_ON`, `USES`, `REQUIRES`, `SUPPORTS`, `DERIVED_FROM`, `PART_OF`, `MAPS_TO`) with any other object. Collectively, these relationships form CorpStage's enterprise knowledge graph — this is named explicitly here as the platform's knowledge-graph architecture, not merely "relationships between records."
+Every object may participate in typed relationships (`DEPENDS_ON`, `USES`, `REQUIRES`, `SUPPORTS`, `DERIVED_FROM`, `PART_OF`, `MAPS_TO`) with any other object. Collectively, these relationships form Aurex's enterprise knowledge graph — this is named explicitly here as the platform's knowledge-graph architecture, not merely "relationships between records."
 
 **SD-002-014: One Truth, Multiple Views — Multi-View Consumption**
 
@@ -340,7 +340,7 @@ The platform preserves who owned, reviewed, approved, delegated, escalated, and 
 
 **SD-002-056: Governance Actions Are Always Evidence-First**
 
-No approval exists without a referenced evidence basis, a stated business justification, an audit record, and a named responsible individual. Governance without evidence is opinion; CorpStage governs evidence-backed truth only.
+No approval exists without a referenced evidence basis, a stated business justification, an audit record, and a named responsible individual. Governance without evidence is opinion; Aurex governs evidence-backed truth only.
 
 **SD-002-057: Governance Intensity Reflects Materiality, Not Object Type**
 
@@ -360,7 +360,7 @@ Global CIL → Industry CIL → Company CIL → Workspace Extensions. Each layer
 
 **SD-002-060: The Global CIL Is Immutable to Customers — Stewardship Is Named**
 
-Customers may consume, extend, hide locally, override labels on, and add company-specific metadata to Global CIL objects. Customers may never delete, modify, or purge them directly. **Authority to change the Global CIL itself rests with the CorpStage Governance Board** (see the stewardship table in SD-002-066) — this closes a gap in v1.0, where "immutable to customers" was stated without stating who *could* change it.
+Customers may consume, extend, hide locally, override labels on, and add company-specific metadata to Global CIL objects. Customers may never delete, modify, or purge them directly. **Authority to change the Global CIL itself rests with the Aurex Governance Board** (see the stewardship table in SD-002-066) — this closes a gap in v1.0, where "immutable to customers" was stated without stating who *could* change it.
 
 **SD-002-061: Industry CIL Enables Sector Intelligence**
 
@@ -384,7 +384,7 @@ AI discovery produces a candidate object — with discovery method, evidence, co
 |---|---|
 | Workspace → Company | Company Steward |
 | Company → Industry | Industry Council |
-| Industry → Global | CorpStage Governance Board |
+| Industry → Global | Aurex Governance Board |
 
 Each promotion level requires its own explicit approval; no object skips a tier.
 
@@ -392,7 +392,7 @@ Each promotion level requires its own explicit approval; no object skips a tier.
 
 | Layer | Steward |
 |---|---|
-| Global | CorpStage Governance Board |
+| Global | Aurex Governance Board |
 | Industry | Industry Intelligence Council |
 | Company | Enterprise Data Council |
 | Workspace | Workspace Administrator |
@@ -475,7 +475,7 @@ Every metadata change (`ROLE_CREATED`, `DOMAIN_ARCHIVED`, `QUESTION_UPDATED`, `A
 
 **SD-002-085: Extensibility Preserves Canonical Integrity**
 
-Every customer or partner extension must remain safe (cannot alter global definitions), versioned, upgradeable, and portable across tenants — extensibility that fragments canonical truth is, by definition, not extensibility CorpStage supports.
+Every customer or partner extension must remain safe (cannot alter global definitions), versioned, upgradeable, and portable across tenants — extensibility that fragments canonical truth is, by definition, not extensibility Aurex supports.
 
 ---
 
@@ -495,7 +495,7 @@ The same underlying object participates in Executive Views, Department Views, Ro
 
 **SD-002-089: Enterprise Intelligence Is a Connected Knowledge System, Not a Record Collection**
 
-Enterprise understanding emerges from the combination of Objects + Relationships + Evidence + Events + Ownership + Business Consequences functioning together — CorpStage is architected as a connected intelligence network, and any feature that treats objects as independent records rather than nodes in this network is a design deviation from this principle.
+Enterprise understanding emerges from the combination of Objects + Relationships + Evidence + Events + Ownership + Business Consequences functioning together — Aurex is architected as a connected intelligence network, and any feature that treats objects as independent records rather than nodes in this network is a design deviation from this principle.
 
 ---
 
@@ -523,7 +523,7 @@ This section crystallizes the non-negotiable constitutional laws governing every
 
 **SD-002-099: Relationships Are Enterprise Assets** — governed as carefully as the facts they connect.
 
-**SD-002-100: Organizational Memory Is Permanent** — CorpStage is a living organizational memory, not a transactional application.
+**SD-002-100: Organizational Memory Is Permanent** — Aurex is a living organizational memory, not a transactional application.
 
 **SD-002-101: Governance Intensity Reflects Materiality** — governance effort remains proportional to business impact, never uniform.
 

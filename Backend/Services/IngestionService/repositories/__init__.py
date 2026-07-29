@@ -1,5 +1,5 @@
 """
-CorpStage Ingestion Database Repositories.
+Aurex Ingestion Database Repositories.
 """
 from .base_repository import BaseRepository
 from .document_repository import DocumentRepository

@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Subscriber Module.
+Aurex Shared Events Framework - Event Subscriber Module.
 
 Defines the abstract interface for consuming event streams, establishing
 thread-safe callback dispatch pipelines, auto-rehydration of telemetry contexts, and DLQ gates.
@@ -9,11 +9,11 @@ from abc import ABC, abstractmethod
 import logging
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from corpstage.backend.shared.events.event_base import BaseEvent
-from corpstage.backend.shared.events.event_serializer import EventSerializer
-from corpstage.backend.shared.events.event_registry import EventRegistry
-from corpstage.backend.shared.events.event_context import EventContext
-from corpstage.backend.shared.events.exceptions import EventSubscriptionError
+from aurex.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.event_serializer import EventSerializer
+from aurex.backend.shared.events.event_registry import EventRegistry
+from aurex.backend.shared.events.event_context import EventContext
+from aurex.backend.shared.events.exceptions import EventSubscriptionError
 
 logger = logging.getLogger("cs.events.subscriber")
 

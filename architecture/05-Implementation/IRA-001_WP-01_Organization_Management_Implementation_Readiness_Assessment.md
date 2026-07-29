@@ -87,7 +87,7 @@ See Database Impact Matrix (§7).
 ### 2.8 Integration Assessment
 - **External Systems:** None identified for C-004 specifically.
 - **Internal Services:** TenantService overlap resolved by ADR-003 (TenantService remains scaffolding, untouched by WP-01). Membership (WP-00, AuthService) already FK-depends on `organizations.id` — must not be broken.
-- **Events/Queues:** `docker-compose.yml` declares a Kafka topic `corpstage.tenant.provisioning` that nothing in the codebase currently publishes or consumes — not a WP-01 dependency, but worth noting as a likely-related, currently-dead integration point.
+- **Events/Queues:** `docker-compose.yml` declares a Kafka topic `aurex.tenant.provisioning` that nothing in the codebase currently publishes or consumes — not a WP-01 dependency, but worth noting as a likely-related, currently-dead integration point.
 - **Notifications/Search/AI:** None identified as in-scope for C-004's approved WP-01 boundary.
 
 ### 2.9 Vertical Slice Assessment

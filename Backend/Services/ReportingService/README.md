@@ -1,4 +1,4 @@
-# CorpStage ReportingService
+# Aurex ReportingService
 
 Enterprise ESG (Environmental, Social, Governance), BRSR (India SEBI), GRI, and CSRD (European Union) disclosure reporting microservice built with **Python 3.14**, **FastAPI**, **Pydantic v2**, and **SQLAlchemy 2.0 Async** engines.
 
@@ -7,7 +7,7 @@ Enterprise ESG (Environmental, Social, Governance), BRSR (India SEBI), GRI, and 
 The system utilizes the classic **Repository Pattern** paired with **Abstract Provider Contexts** to guarantee modularity and compliance validation.
 
 ```
-CorpStage ReportingService/
+Aurex ReportingService/
 ├── main.py                     # Microservice entrypoint & lifespans
 ├── requirements.txt            # Dependency listings (SQLAlchemy 2.0, FastAPI, jose, structlog)
 ├── Dockerfile                  # Secure, multi-stage non-root container builder
@@ -68,6 +68,6 @@ CorpStage ReportingService/
 This repository includes a multi-stage Dockerfile that builds a secure, non-root runner:
 
 ```bash
-docker build -t corpstage-reporting-service .
-docker run -p 8000:8000 -e JWT_SECRET_KEY="supersecret" corpstage-reporting-service
+docker build -t aurex-reporting-service .
+docker run -p 8000:8000 -e JWT_SECRET_KEY="supersecret" aurex-reporting-service
 ```

@@ -13,8 +13,8 @@ API Contract:
 openapi: 3.0.3
 
 info:
-  title: CorpStage Authentication API
-  description: Authentication and authorization APIs for CorpStage platform
+  title: Aurex Authentication API
+  description: Authentication and authorization APIs for Aurex platform
   version: 1.0.0
 
 servers:

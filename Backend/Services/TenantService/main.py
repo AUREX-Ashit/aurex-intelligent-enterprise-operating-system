@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="CorpStage TenantService",
+    title="Aurex TenantService",
     description="Production-grade, asynchronous SaaS Tenant & Organization Provisioning Microservice.",
     version="1.0.0",
     lifespan=lifespan,
@@ -104,7 +104,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": "InternalServerError",
-            "message": "A critical system error occurred. Please contact CorpStage Operations.",
+            "message": "A critical system error occurred. Please contact Aurex Operations.",
             "details": str(exc) if settings.platform.environment == "development" else None
         }
     )

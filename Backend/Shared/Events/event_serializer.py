@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Serializer.
+Aurex Shared Events Framework - Event Serializer.
 
 Implements highly-performant JSON serialization and deserialization adapters for
 structured event envelopes, protecting transport streams from binary conversion failures.
@@ -9,10 +9,10 @@ import json
 import datetime
 from typing import Any, Dict, Optional, Union
 
-from corpstage.backend.shared.events.event_base import BaseEvent
-from corpstage.backend.shared.events.cloud_event import CloudEvent
-from corpstage.backend.shared.events.event_registry import EventRegistry
-from corpstage.backend.shared.events.exceptions import EventSerializationError
+from aurex.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.cloud_event import CloudEvent
+from aurex.backend.shared.events.event_registry import EventRegistry
+from aurex.backend.shared.events.exceptions import EventSerializationError
 
 
 class DecimalAndDateEncoder(json.JSONEncoder):

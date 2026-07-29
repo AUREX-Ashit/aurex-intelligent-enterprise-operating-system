@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
 # Instantiate primary FastAPI Core 
 app = FastAPI(
     title=settings.app_name,
-    description="CorpStage Enterprise ESG & Auditing Ingestion Pipeline Microservice.",
+    description="Aurex Enterprise ESG & Auditing Ingestion Pipeline Microservice.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",

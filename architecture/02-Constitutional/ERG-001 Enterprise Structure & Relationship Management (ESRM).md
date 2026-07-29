@@ -2,9 +2,9 @@
 ### Version 2.0 — GOLD STANDARD (Supersedes v1.0 Draft)
 
 **Status:** LOCKED
-**Scope:** Defines the canonical Enterprise Relationship Graph (ERG) — nodes, relationships, views, financial consolidation, and node-based authorization — within CorpStage.
+**Scope:** Defines the canonical Enterprise Relationship Graph (ERG) — nodes, relationships, views, financial consolidation, and node-based authorization — within Aurex.
 **Companion documents:** SD-001, SD-002, SD-003, URA-001 (all v2.0/v2.1, locked)
-**Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
+**Governing framework:** Aurex Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
 
@@ -26,7 +26,7 @@
 
 ## SECTION 1: Purpose & Universal Design Principles
 
-ESRM provides the canonical foundation for representing, governing, and evolving enterprise structures within CorpStage as a metadata-driven Enterprise Relationship Graph (ERG) — modeling any organizational ecosystem (legal structures, operating models, financial consolidation, management hierarchies, supply chains, shared services, brands, joint ventures, franchises, alliances, regulatory boundaries, geographic structures, and future constructs not yet known) without future schema redesign.
+ESRM provides the canonical foundation for representing, governing, and evolving enterprise structures within Aurex as a metadata-driven Enterprise Relationship Graph (ERG) — modeling any organizational ecosystem (legal structures, operating models, financial consolidation, management hierarchies, supply chains, shared services, brands, joint ventures, franchises, alliances, regulatory boundaries, geographic structures, and future constructs not yet known) without future schema redesign.
 
 **ERG-001-01 [amended]: The ERG Is Enterprise Infrastructure, Not an Application Feature**
 
@@ -134,7 +134,7 @@ A prospective change creates a new effective-dated version starting today or a f
 
 ## SECTION 9: URA-001 Integration — Node-Based Access Control & Inheritance
 
-The ERG serves as the canonical authorization boundary for CorpStage, extending — never replacing — URA-001's identity and role model. Node-Based Authorization principles U1–U10 (retained from v1.0): EnterpriseNode is the fundamental authorization boundary; permissions are granted against nodes, not organizational trees; inheritance policies are metadata-driven; access propagation is view-aware; multiple-parent structures are supported; temporal states reconstruct historical permissions; authorization decisions are fully auditable; customer-specific inheritance requires no code change; relationship semantics influence propagation (now governed independently per ERG-001-04); access control supports both graph traversal and explicit assignment.
+The ERG serves as the canonical authorization boundary for Aurex, extending — never replacing — URA-001's identity and role model. Node-Based Authorization principles U1–U10 (retained from v1.0): EnterpriseNode is the fundamental authorization boundary; permissions are granted against nodes, not organizational trees; inheritance policies are metadata-driven; access propagation is view-aware; multiple-parent structures are supported; temporal states reconstruct historical permissions; authorization decisions are fully auditable; customer-specific inheritance requires no code change; relationship semantics influence propagation (now governed independently per ERG-001-04); access control supports both graph traversal and explicit assignment.
 
 **ERG-001-10 [amended]: Node Permission Assignment Resolves Into URA-001's Existing Precedence Chain**
 
@@ -201,7 +201,7 @@ The platform monitors three concrete thresholds against the current PostgreSQL-b
 
 ## Freeze Statement
 
-ERG-001 v2.0 is ready for lock. The structural ESG-embedding problem — the most severe finding across every CorpStage architecture document reviewed to date — is resolved at the root: Enterprise Views are now fully generic, with no view type named in the canonical model, and the falsifiable test in ERG-001-06 is designed to prevent this class of defect from recurring in any future version. The precedence conflict with URA-001 is resolved jointly in both documents — node-based access is confirmed to feed URA-001-76's existing chain, never to compete with it. The EnterpriseView/SD-002-014 relationship is now explicit. Consolidation method is decoupled from ownership. Cycle detection, retroactive-correction handling, TraversalPolicy independence, and a concrete graph-database migration trigger are all newly stated.
+ERG-001 v2.0 is ready for lock. The structural ESG-embedding problem — the most severe finding across every Aurex architecture document reviewed to date — is resolved at the root: Enterprise Views are now fully generic, with no view type named in the canonical model, and the falsifiable test in ERG-001-06 is designed to prevent this class of defect from recurring in any future version. The precedence conflict with URA-001 is resolved jointly in both documents — node-based access is confirmed to feed URA-001-76's existing chain, never to compete with it. The EnterpriseView/SD-002-014 relationship is now explicit. Consolidation method is decoupled from ownership. Cycle detection, retroactive-correction handling, TraversalPolicy independence, and a concrete graph-database migration trigger are all newly stated.
 
 **The membership-to-node linkage identified during this joint review is fixed in both documents simultaneously** — URA-001 v2.1's URA-001-17b and this document's ERG-001-03 are two halves of one integration contract and must be read together.
 

@@ -1,12 +1,12 @@
 """
-CorpStage Shared Logging Framework - Exceptions Module.
+Aurex Shared Logging Framework - Exceptions Module.
 
 Provides custom, strongly-typed enterprise exceptions for structured logging,
 context propagation, and telemetry configuration boundaries.
 """
 
 class LoggingError(Exception):
-    """Base exception for all logging and telemetry-related errors in CorpStage."""
+    """Base exception for all logging and telemetry-related errors in Aurex."""
     pass
 
 

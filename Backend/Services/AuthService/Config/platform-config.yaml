@@ -9,12 +9,12 @@ cors:
     - "*"
 
 database:
-  # Local development — postgres superuser against the corpstage-postgres Docker container.
+  # Local development — postgres superuser against the aurex-postgres Docker container.
   # USER: postgres (superuser, required until auth_service_user is granted CREATE on public schema)
   # WARNING: Do not use superuser credentials in staging or production.
   #          Replace with auth_service_user once service-user password is retrieved
   #          and GRANT CREATE ON SCHEMA public TO auth_service_user has been applied.
-  url: "postgresql+asyncpg://postgres:CorpStageMasterDatabasePass123!@localhost:5432/corpstage"
+  url: "postgresql+asyncpg://postgres:AurexMasterDatabasePass123!@localhost:5432/aurex"
 
 auth:
   jwt_algorithm: "HS256"

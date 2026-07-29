@@ -37,7 +37,7 @@ async def health_check(
         status_code=status.HTTP_200_OK if overall_healthy else status.HTTP_503_SERVICE_UNAVAILABLE,
         content={
             "status": "healthy" if overall_healthy else "unhealthy",
-            "service": "CorpStage AuthService",
+            "service": "Aurex AuthService",
             "dependencies": {"database": db_status},
         },
     )
@@ -81,7 +81,7 @@ async def readiness_check(
         status_code=status.HTTP_200_OK,
         content={
             "status": "ready",
-            "service": "CorpStage AuthService",
+            "service": "Aurex AuthService",
             "bootstrap": "complete",
             "feature_flags": feature_flags.all_flags(),
         },

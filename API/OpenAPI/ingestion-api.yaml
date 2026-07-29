@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: CorpStage Ingestion API
+  title: Aurex Ingestion API
   description: Document ingestion and OCR APIs
   version: 1.0.0
 

@@ -115,7 +115,7 @@ async def get_tenant_users(
             id=uuid.uuid4(),
             tenant_id=tenant_id,
             email="admin.workspace@corpstage.com",
-            full_name="CorpStage Administrator",
+            full_name="Aurex Administrator",
             role="admin",
             is_active=True,
             created_at="2026-05-29T00:00:00Z",
@@ -145,7 +145,7 @@ async def get_tenant(
     # Scaffold response
     return TenantResponse(
         id=id,
-        name="Mock CorpStage Enterprise",
+        name="Mock Aurex Enterprise",
         domain="enterprise.corpstage.com",
         subscription_tier="enterprise",
         is_active=True,

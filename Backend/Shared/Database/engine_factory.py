@@ -1,8 +1,8 @@
 """
-CorpStage Shared Database Framework - Engine Factory Module.
+Aurex Shared Database Framework - Engine Factory Module.
 
 Handles building and configuring the asynchronous database engines for SQLAlchemy 2.x.
-Ensures integration with the CorpStage Shared Configuration Framework for pool sizes,
+Ensures integration with the Aurex Shared Configuration Framework for pool sizes,
 timeouts, and cluster configurations.
 """
 
@@ -11,10 +11,10 @@ from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from corpstage.backend.shared.config import SettingsManager
-from corpstage.backend.shared.database.exceptions import DatabaseInitializationError
+from aurex.backend.shared.config import SettingsManager
+from aurex.backend.shared.database.exceptions import DatabaseInitializationError
 
-logger = logging.getLogger("CorpStage.Database.EngineFactory")
+logger = logging.getLogger("Aurex.Database.EngineFactory")
 
 
 class EngineFactory:
@@ -45,14 +45,14 @@ class EngineFactory:
         # Build clean string
         host = db_params.get("host", "localhost")
         port = db_params.get("port", 5432)
-        user = db_params.get("username", "corpstage")
+        user = db_params.get("username", "aurex")
         password = db_params.get("password")
-        dbname = db_params.get("database_name", "corpstage")
+        dbname = db_params.get("database_name", "aurex")
 
         if not password or password == "CHANGE_IN_ENVIRONMENT":
             raise DatabaseInitializationError(
                 "CRITICAL STARTUP FAILURE: Database password is unconfigured or carries default credentials. "
-                "Ensure CORPSTAGE_DATABASE_PASSWORD is set in environment."
+                "Ensure AUREX_DATABASE_PASSWORD is set in environment."
             )
 
         return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{dbname}"

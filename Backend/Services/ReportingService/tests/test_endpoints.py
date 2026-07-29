@@ -12,7 +12,7 @@ def test_health_check_endpoint():
     assert response.status_code == 200
     json_data = response.json()
     assert json_data["status"] == "healthy"
-    assert json_data["service"] == "corpstage-reporting"
+    assert json_data["service"] == "aurex-reporting"
 
 
 def test_missing_tenant_header_raises_isolation_error():

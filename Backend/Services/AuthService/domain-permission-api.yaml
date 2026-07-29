@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Domain Permission API
+  title: Aurex Domain Permission API
   description: >
     Domain Permission establishment (C-003, WP-02 BA-02). Covers
     ERB-C003-01 / EX-C003-02 (Establish Domain Permission) only — see

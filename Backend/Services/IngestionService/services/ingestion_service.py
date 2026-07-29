@@ -79,7 +79,7 @@ class IngestionService:
         
         # Step 3: Broadcast file ingress transaction event to Service Bus
         await self.publisher.publish_event(
-            topic_or_queue="corpstage-document-ingress",
+            topic_or_queue="aurex-document-ingress",
             event_type="document.uploaded",
             payload={
                 "document_id": str(document_orm.id),
@@ -131,7 +131,7 @@ class IngestionService:
         
         # Step 5: Post Event Outflow
         await self.publisher.publish_event(
-            topic_or_queue="corpstage-ocr-pipelines",
+            topic_or_queue="aurex-ocr-pipelines",
             event_type="ocr.started",
             payload={
                 "document_id": str(doc.id),

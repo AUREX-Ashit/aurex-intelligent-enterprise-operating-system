@@ -1,4 +1,4 @@
-# CorpStage Ingestion Service
+# Aurex Ingestion Service
 
 An enterprise-grade, high-performance, multi-tenant document ingestion and OCR scheduling service built with Python 3.14 and FastAPI.
 
@@ -79,7 +79,7 @@ IngestionService/
 Create a local `.env` overriding platform-config.yaml:
 ```bash
 ENVIRONMENT=development
-DATABASE_URL=postgresql+asyncpg://corpstage:localpassword@localhost:5432/corpstage
+DATABASE_URL=postgresql+asyncpg://aurex:localpassword@localhost:5432/aurex
 JWT_SECRET_KEY=super-secured-64-bit-production-secret-key-do-not-reveal
 PORT=3000
 ```
@@ -92,6 +92,6 @@ uvicorn main:app --host 0.0.0.0 --port 3000 --reload
 
 ### 4. Direct Docker Execution
 ```bash
-docker build -t corpstage-ingestion-service .
-docker run -p 3000:3000 --env-file=.env corpstage-ingestion-service
+docker build -t aurex-ingestion-service .
+docker run -p 3000:3000 --env-file=.env aurex-ingestion-service
 ```

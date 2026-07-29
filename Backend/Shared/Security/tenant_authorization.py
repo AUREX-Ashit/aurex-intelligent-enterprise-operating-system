@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Tenant Authorization Module.
+Aurex Shared Security Framework - Tenant Authorization Module.
 
 Maintains multi-tenant separation at the API boundary, validating individual 
 principal scopes relative to requested resource tenants. Automatically synchronizes
@@ -9,17 +9,17 @@ verified states with the database TenantContext container.
 import logging
 from typing import Optional
 
-from corpstage.backend.shared.security.exceptions import TenantAuthorizationError
-from corpstage.backend.shared.security.security_context import SecurityPrincipal, SecurityContext
-from corpstage.backend.shared.security.role_manager import UserRole
+from aurex.backend.shared.security.exceptions import TenantAuthorizationError
+from aurex.backend.shared.security.security_context import SecurityPrincipal, SecurityContext
+from aurex.backend.shared.security.role_manager import UserRole
 # Circular-dependency resilient import or usage of database context
 try:
-    from corpstage.backend.shared.database.tenant_context import TenantContext
+    from aurex.backend.shared.database.tenant_context import TenantContext
     _DB_TENANT_CONTEXT_AVAILABLE = True
 except ImportError:
     _DB_TENANT_CONTEXT_AVAILABLE = False
 
-logger = logging.getLogger("CorpStage.Security.TenantAuthorization")
+logger = logging.getLogger("Aurex.Security.TenantAuthorization")
 
 
 class TenantAuthorization:

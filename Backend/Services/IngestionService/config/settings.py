@@ -13,8 +13,8 @@ class DatabaseConfig(BaseSettings):
     primary_engine: str = "postgresql"
     host: str = "localhost"
     port: int = 5432
-    database_name: str = "corpstage"
-    username: str = "corpstage"
+    database_name: str = "aurex"
+    username: str = "aurex"
     password: Optional[str] = None
     pool_size: int = 30
     max_overflow: int = 10
@@ -28,7 +28,7 @@ class JWTConfig(BaseSettings):
 
 class StorageConfig(BaseSettings):
     primary_provider: str = "azure_blob_storage"
-    azure_container: str = "corpstage-evidence"
+    azure_container: str = "aurex-evidence"
 
 class OCRConfig(BaseSettings):
     primary_provider: str = "azure_document_intelligence"
@@ -39,7 +39,7 @@ class QueueConfig(BaseSettings):
 
 class Settings(BaseSettings):
     # App Settings
-    app_name: str = "CorpStage Ingestion Service"
+    app_name: str = "Aurex Ingestion Service"
     environment: str = "development"
     region: str = "centralindia"
     debug: bool = False
@@ -115,7 +115,7 @@ def load_from_yaml_and_env() -> Settings:
     
     # Resolve platform-config.yaml
     possible_yaml_paths = [
-        Path("/Corpstage/Config/platform-config.yaml"),
+        Path("/Aurex/Config/platform-config.yaml"),
         Path(__file__).parents[2] / "Config" / "platform-config.yaml",
         Path(__file__).parents[3] / "Config" / "platform-config.yaml",
         Path("platform-config.yaml")
@@ -152,7 +152,7 @@ def load_from_yaml_and_env() -> Settings:
     
     # Build a combined dictionary prioritizing Environment variables
     combined_setup = {
-        "app_name": os.getenv("APP_NAME") or platform_data.get("name") or "CorpStage Ingestion Service",
+        "app_name": os.getenv("APP_NAME") or platform_data.get("name") or "Aurex Ingestion Service",
         "environment": os.getenv("ENVIRONMENT") or platform_data.get("environment") or "development",
         "region": os.getenv("REGION") or platform_data.get("region") or "centralindia",
         "debug": os.getenv("DEBUG", "false").lower() == "true",
@@ -169,8 +169,8 @@ def load_from_yaml_and_env() -> Settings:
             "primary_engine": os.getenv("DATABASE_ENGINE") or db_yaml.get("primary_engine") or "postgresql",
             "host": os.getenv("DATABASE_HOST") or pg_yaml.get("host") or "localhost",
             "port": int(os.getenv("DATABASE_PORT") or pg_yaml.get("port") or 5432),
-            "database_name": os.getenv("DATABASE_NAME") or pg_yaml.get("database_name") or "corpstage",
-            "username": os.getenv("DATABASE_USERNAME") or pg_yaml.get("username") or "corpstage",
+            "database_name": os.getenv("DATABASE_NAME") or pg_yaml.get("database_name") or "aurex",
+            "username": os.getenv("DATABASE_USERNAME") or pg_yaml.get("username") or "aurex",
             "password": os.getenv("DATABASE_PASSWORD") or pg_yaml.get("password"),
             "pool_size": int(os.getenv("DATABASE_POOL_SIZE") or pg_yaml.get("pool_size") or 30),
             "max_overflow": int(os.getenv("DATABASE_MAX_OVERFLOW") or pg_yaml.get("max_overflow") or 10),
@@ -179,7 +179,7 @@ def load_from_yaml_and_env() -> Settings:
         
         "storage": {
             "primary_provider": os.getenv("STORAGE_PROVIDER") or storage_yaml.get("primary_provider") or "azure_blob_storage",
-            "azure_container": os.getenv("AZURE_STORAGE_CONTAINER") or az_blob.get("container") or "corpstage-evidence",
+            "azure_container": os.getenv("AZURE_STORAGE_CONTAINER") or az_blob.get("container") or "aurex-evidence",
         },
         
         "ocr": {
@@ -202,7 +202,7 @@ def load_from_yaml_and_env() -> Settings:
         return Settings(**combined_setup)
     except ValidationError as e:
         print("\n" + "="*80)
-        print("CRITICAL: CorpStage IngestionService startup blocked! Mandatory configuration missing.")
+        print("CRITICAL: Aurex IngestionService startup blocked! Mandatory configuration missing.")
         print(f"Details: {e}")
         print("Please configure active Environment variables for required parameters like JWT_SECRET_KEY and DB constraints.")
         print("="*80 + "\n")

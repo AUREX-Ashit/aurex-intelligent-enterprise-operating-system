@@ -14,7 +14,7 @@ class ESGExtractionEngine:
         """OCR processes files via Document Intelligence and translates text with LLM."""
         # Simulated Document intelligence layout readings
         raw_text_extracted = (
-            f"CorpStage Document Intelligence Layout Extraction:\n"
+            f"Aurex Document Intelligence Layout Extraction:\n"
             f"Filing Corporate Source: {tenant_context} - {document_name}\n"
             f"Scope 1 direct greenhouse gas metrics report: 4200.5 Metric Tons of CO2 emitted.\n"
             f"Scope 2 emissions: 1850.3 Metric Tons of CO2.\n"

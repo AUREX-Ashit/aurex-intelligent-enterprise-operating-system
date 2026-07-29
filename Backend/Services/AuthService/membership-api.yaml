@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Membership Management API
+  title: Aurex Membership Management API
   description: >
-    Membership Management (C-007, WP-03) endpoints for the CorpStage
+    Membership Management (C-007, WP-03) endpoints for the Aurex
     AuthService. Covers BA-01 (Establish Membership Context), BA-02
     (Understand Membership Context), BA-03 (Maintain Membership
     Terms — EX-C007-04/05 only; EX-C007-06 Reconfirm Home-Node

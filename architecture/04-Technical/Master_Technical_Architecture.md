@@ -1,4 +1,4 @@
-CORPSTAGE 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.1)
+AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.1)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -398,7 +398,7 @@ ASSUMPTIONS AND FLAGGED ITEMS (not silently resolved):
      for consistency with consolidation_determination's policy. Zero tables
      anywhere in the document — AMD-011 or pre-existing — are now left with
      an unresolved RLS decision (implemented, or intentionally exempt).
-  5. The amendment's closing note also flags CorpStage_Complete_Blueprint.docx
+  5. The amendment's closing note also flags Aurex_Complete_Blueprint.docx
      (86,000 words, 134 raw language-violation hits) as NOT YET addressed and
      recommends treating it as a separate, explicitly-scoped pass. That work
      is out of scope for this merge and is carried forward here, unresolved,
@@ -619,7 +619,7 @@ BLUEPRINT v2.2 ALIGNMENT SUMMARY (v5.0 changes)
     with no matching CDE. Never discards a discovered fact (Blueprint Binding 5).
   AMD-006: framework_tier + governed_by + parent_framework_id added to
     framework_registry. Implements the 3-tier framework governance model
-    (Tier 1=Standard/CorpStage Admin, Tier 2=Custom/Corporate Admin,
+    (Tier 1=Standard/Aurex Admin, Tier 2=Custom/Corporate Admin,
     Tier 3=Extended/Corporate Admin additive only) (Blueprint Binding 2).
   AMD-007: Hide/Purge governance columns added to metric_registry and
     customer_metric_registry. New purge_audit_log table for the immutable
@@ -688,7 +688,7 @@ FINAL VERIFIED STATE (v6.7, mechanically checked):
 
 DOCUMENT SCOPE AND AUTHORITY
 
-This document is the authoritative schema definition for the CorpStage 360
+This document is the authoritative schema definition for the Aurex 360
 Intelligent Enterprise Operating Center platform. It defines all 136 tables,
 their column-level DDL with data types, primary keys, foreign keys, and
 PostgreSQL Row-Level Security policies (95 policies covering 96 tables of the
@@ -965,7 +965,7 @@ CREATE TABLE node_permission_assignment (
 
 -- =========================================================================
 -- user_registry
--- PURPOSE: Canonical user identity layer. Stores who interacts with CorpStage. Identity intentionally separated from permissions. Examples: - CFO - CSO - Plant Manager - Risk Head - Resilience Analyst - Board Member - Auditor - External Consultant
+-- PURPOSE: Canonical user identity layer. Stores who interacts with Aurex. Identity intentionally separated from permissions. Examples: - CFO - CSO - Plant Manager - Risk Head - Resilience Analyst - Board Member - Auditor - External Consultant
 -- FK (per Chapter 9 — authoritative): default_node_scope -> organization_node | organization_id -> organization_master
 -- =========================================================================
 CREATE TABLE user_registry (
@@ -1132,7 +1132,7 @@ ALTER TABLE consolidation_determination
 -- =========================================================================
 CREATE TABLE system_role_registry (
     system_role_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    role_code VARCHAR(100), -- CORPSTAGE_ADMIN / CORPORATE_ADMIN / USER_ADMIN / SECURITY_ADMIN / DOMAIN_ADMIN
+    role_code VARCHAR(100), -- AUREX_ADMIN / CORPORATE_ADMIN / USER_ADMIN / SECURITY_ADMIN / DOMAIN_ADMIN
     role_name VARCHAR(255)
 );
 
@@ -2121,7 +2121,7 @@ CREATE TABLE executive_insight_registry (
 
 -- =========================================================================
 -- recommendation_registry
--- PURPOSE: Defines what CorpStage recommends doing. Moves platform from reporting → actionability. Example: Insight: Energy price risk ↑ Recommendation: Increase renewable sourcing by 18% Expected savings = $2.7M
+-- PURPOSE: Defines what Aurex recommends doing. Moves platform from reporting → actionability. Example: Insight: Energy price risk ↑ Recommendation: Increase renewable sourcing by 18% Expected savings = $2.7M
 -- FK (per Chapter 9 — authoritative): executive_insight_id -> executive_insight_registry | organization_id -> organization_master
 -- =========================================================================
 CREATE TABLE recommendation_registry (
@@ -2490,7 +2490,7 @@ CREATE TABLE narrative_feedback_learning (
 
 -- =========================================================================
 -- predictive_model_registry
--- PURPOSE: Defines predictive models available in CorpStage. Supports: - risk forecasting - financial forecasting - Business Resilience forecasting - anomaly prediction - scenario prediction Governed AI model registry.
+-- PURPOSE: Defines predictive models available in Aurex. Supports: - risk forecasting - financial forecasting - Business Resilience forecasting - anomaly prediction - scenario prediction Governed AI model registry.
 -- FK (per Chapter 9 — authoritative): none (master reference table)
 -- =========================================================================
 CREATE TABLE predictive_model_registry (
@@ -2685,7 +2685,7 @@ CREATE TABLE competitor_profile_registry (
 
 -- =========================================================================
 -- competitor_metric_mapping
--- PURPOSE: Maps competitor performance metrics. Allows CorpStage to compare: - organization KPI vs competitor KPI
+-- PURPOSE: Maps competitor performance metrics. Allows Aurex to compare: - organization KPI vs competitor KPI
 -- FK (per Chapter 9 — authoritative): competitor_id -> competitor_profile_registry | metric_id -> metric_registry | benchmark_id -> benchmark_registry
 -- =========================================================================
 CREATE TABLE competitor_metric_mapping (
@@ -2937,7 +2937,7 @@ CREATE TABLE resilience_response_tracker (
 
 -- =========================================================================
 -- resilience_learning_registry
--- PURPOSE: Captures: lessons learned after disruptions Critical for: continuous resilience improvement Example: After flood disruption: CorpStage learns: backup supplier worked insurance response slow plant redundancy insufficient recovery took too long Future recommendations improve.
+-- PURPOSE: Captures: lessons learned after disruptions Critical for: continuous resilience improvement Example: After flood disruption: Aurex learns: backup supplier worked insurance response slow plant redundancy insufficient recovery took too long Future recommendations improve.
 -- FK (per Chapter 9 — authoritative): incident_id -> incident_registry | organization_id -> organization_master
 -- =========================================================================
 CREATE TABLE resilience_learning_registry (
@@ -2959,7 +2959,7 @@ CREATE TABLE resilience_learning_registry (
 
 -- =========================================================================
 -- master_entity_registry
--- PURPOSE: Defines: canonical enterprise entity identity Creates: one trusted reference layer for all objects across CorpStage. Supports: organization units KPIs risks stakeholders frameworks events reports suppliers facilities business units
+-- PURPOSE: Defines: canonical enterprise entity identity Creates: one trusted reference layer for all objects across Aurex. Supports: organization units KPIs risks stakeholders frameworks events reports suppliers facilities business units
 -- FK (per Chapter 9 — authoritative): none (platform-wide entity resolution table)
 -- =========================================================================
 CREATE TABLE master_entity_registry (
@@ -3302,7 +3302,7 @@ CREATE TABLE discovery_strategy_registry (
 );
 
 -- architecture_health_registry
--- PURPOSE: Measures: whether CorpStage architecture itself is healthy Tracks: missing evidence broken workflows stale predictions trust degradation orphan relationships
+-- PURPOSE: Measures: whether Aurex architecture itself is healthy Tracks: missing evidence broken workflows stale predictions trust degradation orphan relationships
 -- FK (per Chapter 9 — authoritative): polymorphic (linked_entity_type/linked_entity_id)
 -- =========================================================================
 CREATE TABLE architecture_health_registry (
@@ -3340,7 +3340,7 @@ CREATE TABLE architecture_version_registry (
 
 -- =========================================================================
 -- orchestration_trigger_registry
--- PURPOSE: Defines: enterprise automation logic Controls: what triggers what across CorpStage. Enables: event-driven intelligence orchestration
+-- PURPOSE: Defines: enterprise automation logic Controls: what triggers what across Aurex. Enables: event-driven intelligence orchestration
 -- FK (per Chapter 9 — authoritative): polymorphic (trigger_entity_id, target_entity_reference)
 -- =========================================================================
 CREATE TABLE orchestration_trigger_registry (
@@ -3406,7 +3406,7 @@ CREATE TABLE event_acceptance_log (
 
 -- =========================================================================
 -- llm_prompt_registry
--- PURPOSE: Defines: every AI prompt template in CorpStage Controls: what data the LLM may use what the LLM is forbidden from doing what format output must return in which Azure OpenAI model and region to use Enables: versioned, governed, auditable AI behaviour
+-- PURPOSE: Defines: every AI prompt template in Aurex Controls: what data the LLM may use what the LLM is forbidden from doing what format output must return in which Azure OpenAI model and region to use Enables: versioned, governed, auditable AI behaviour
 -- FK (per Chapter 9 — authoritative): deprecated_by_prompt_id -> llm_prompt_registry (self-referencing)
 -- =========================================================================
 CREATE TABLE llm_prompt_registry (
@@ -3439,7 +3439,7 @@ CREATE TABLE llm_execution_log (
     execution_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prompt_id UUID REFERENCES llm_prompt_registry(prompt_id)  -- which prompt template,
     prompt_version VARCHAR(255)  -- exact version used — immutable,
-    called_by_service VARCHAR(255)  -- which CorpStage service triggered this,
+    called_by_service VARCHAR(255)  -- which Aurex service triggered this,
     called_for_entity_type VARCHAR(255)  -- narrative/insight/extraction/recommendation,
     called_for_entity_id UUID  -- specific narrative_id or report_id,
     input_data_points_json JSONB  -- canonical data point IDs passed as verified numbers,
@@ -3577,7 +3577,7 @@ CREATE TABLE tenant_registry (
 
 -- =========================================================================
 -- api_credential_registry
--- PURPOSE: Defines: every entity allowed to call the CorpStage API Controls: who can call what they can access how many times what happens when they exceed limits Enables: rate limit governance stale credential detection API security audit trail
+-- PURPOSE: Defines: every entity allowed to call the Aurex API Controls: who can call what they can access how many times what happens when they exceed limits Enables: rate limit governance stale credential detection API security audit trail
 -- FK (per Chapter 9 — authoritative): organization_id -> organization_master | issued_by_user_id -> user_registry
 -- =========================================================================
 CREATE TABLE api_credential_registry (
@@ -3602,7 +3602,7 @@ CREATE TABLE api_credential_registry (
 
 -- =========================================================================
 -- api_call_log
--- PURPOSE: Tracks: every API call that enters CorpStage Records: who called what endpoint what response was returned whether rate limit was breached Enables: full API audit trail data lineage from call to metric_record billing for API usage bad data source identification
+-- PURPOSE: Tracks: every API call that enters Aurex Records: who called what endpoint what response was returned whether rate limit was breached Enables: full API audit trail data lineage from call to metric_record billing for API usage bad data source identification
 -- FK (per Chapter 9 — authoritative): credential_id -> api_credential_registry | organization_id -> organization_master | ingestion_id -> data_ingestion_registry
 -- =========================================================================
 CREATE TABLE api_call_log (
@@ -3624,7 +3624,7 @@ CREATE TABLE api_call_log (
 
 -- =========================================================================
 -- notification_template_registry
--- PURPOSE: Defines: every notification type in CorpStage Controls: what triggers each notification which channel it goes to how often it can fire when it must not fire Enables: governed versioned auditable notifications UX/CX rule enforcement in the data model duplicate suppression quiet hours compliance
+-- PURPOSE: Defines: every notification type in Aurex Controls: what triggers each notification which channel it goes to how often it can fire when it must not fire Enables: governed versioned auditable notifications UX/CX rule enforcement in the data model duplicate suppression quiet hours compliance
 -- FK (per Chapter 9 — authoritative): none (master reference table)
 -- =========================================================================
 CREATE TABLE notification_template_registry (
@@ -3646,7 +3646,7 @@ CREATE TABLE notification_template_registry (
 
 -- =========================================================================
 -- notification_log
--- PURPOSE: Tracks: every notification sent by CorpStage Records: delivery status read status dismissal action taken Enables: proof of delivery audit trail duplicate suppression evidence quiet hours enforcement record engagement analytics UX/CX compliance verification
+-- PURPOSE: Tracks: every notification sent by Aurex Records: delivery status read status dismissal action taken Enables: proof of delivery audit trail duplicate suppression evidence quiet hours enforcement record engagement analytics UX/CX compliance verification
 -- FK (per Chapter 9 — authoritative): template_id -> notification_template_registry | recipient_user_id -> user_registry | organization_id -> organization_master
 -- =========================================================================
 CREATE TABLE notification_log (
@@ -3673,7 +3673,7 @@ CREATE TABLE notification_log (
 
 -- =========================================================================
 -- audit_package_registry
--- PURPOSE: Defines: every audit evidence package generated by CorpStage Tracks: who requested it what it covers what it contains whether it was delivered and acknowledged Enables: one-click audit export regulatory filing evidence investor due diligence response tamper detection via integrity hash BRSR Core reasonable assurance readiness ESRS limited assurance readiness
+-- PURPOSE: Defines: every audit evidence package generated by Aurex Tracks: who requested it what it covers what it contains whether it was delivered and acknowledged Enables: one-click audit export regulatory filing evidence investor due diligence response tamper detection via integrity hash BRSR Core reasonable assurance readiness ESRS limited assurance readiness
 -- FK (per Chapter 9 — authoritative): requested_by_user_id -> user_registry | organization_id -> organization_master | framework_id -> framework_registry
 -- =========================================================================
 CREATE TABLE audit_package_registry (
@@ -3762,7 +3762,7 @@ CREATE TABLE enterprise_memory_registry (
 
 -- =========================================================================
 -- decision_outcome_registry
--- PURPOSE: Tracks: every recommendation CorpStage made and its real-world outcome Enables: recommendation calibration — CorpStage improves accuracy over time trust building — CFO sees historical recommendation accuracy score learning loop — outcomes feed back into future recommendation confidence Operating Rule: Every recommendation made by CorpStage must have a corresponding outcome row created at the time ...
+-- PURPOSE: Tracks: every recommendation Aurex made and its real-world outcome Enables: recommendation calibration — Aurex improves accuracy over time trust building — CFO sees historical recommendation accuracy score learning loop — outcomes feed back into future recommendation confidence Operating Rule: Every recommendation made by Aurex must have a corresponding outcome row created at the time ...
 -- FK (per Chapter 9 — authoritative): organization_id -> organization_master | recommendation_id -> recommendation_registry | decision_maker_user_id -> user_registry | memory_id -> enterprise_memory_registry | accuracy_scoring_rule_id -> scoring_rule_registry
 -- =========================================================================
 CREATE TABLE decision_outcome_registry (
@@ -5262,12 +5262,12 @@ itself never names it. 9 of 13 reviewed items had no discrepancy.
 ALTER TABLE metric_registry
     ADD COLUMN cde_tier VARCHAR(20) NOT NULL DEFAULT 'CANONICAL'
         CHECK (cde_tier IN ('CANONICAL','INDUSTRY','TENANT','TEMPORARY')),
-    ADD COLUMN tier_governed_by VARCHAR(50) NOT NULL DEFAULT 'CORPSTAGE_ADMIN'
-        CHECK (tier_governed_by IN ('CORPSTAGE_ADMIN','CORPORATE_ADMIN'));
+    ADD COLUMN tier_governed_by VARCHAR(50) NOT NULL DEFAULT 'AUREX_ADMIN'
+        CHECK (tier_governed_by IN ('AUREX_ADMIN','CORPORATE_ADMIN'));
 
 COMMENT ON COLUMN metric_registry.cde_tier IS
-    'CANONICAL = CorpStage Global standard (default, applies to all 2356 locked CIL CDEs).
-     INDUSTRY  = CorpStage Admin adds for a specific SASB Sub-Industry.
+    'CANONICAL = Aurex Global standard (default, applies to all 2356 locked CIL CDEs).
+     INDUSTRY  = Aurex Admin adds for a specific SASB Sub-Industry.
      TENANT    = Corporate Admin created, visible within their instance only.
      TEMPORARY = Discovered fact with no CDE match yet; awaiting resolution.';
 
@@ -5301,7 +5301,7 @@ COMMENT ON COLUMN customer_metric_registry.semantic_match_result_metric_id IS
      (Blueprint v2.2 Section 5.0c Binding 3).';
 COMMENT ON COLUMN customer_metric_registry.convergence_count IS
     'How many independent customers have created a materially identical
-     Corporate-Scoped CDE. When this count crosses a CorpStage Admin-
+     Corporate-Scoped CDE. When this count crosses a Aurex Admin-
      configured threshold, a promotion review is triggered automatically.';
 
 -- =========================================================================
@@ -5354,7 +5354,7 @@ CREATE POLICY org_isolation ON unclassified_intelligence_registry
 -- =========================================================================
 -- AMD-006: FRAMEWORK TIER + GOVERNED_BY ON framework_registry
 -- Blueprint v2.2 Section 5.0c Binding 2: three framework tiers, three
--- governance owners. Tier 1 = Standard (CorpStage Admin only).
+-- governance owners. Tier 1 = Standard (Aurex Admin only).
 -- Tier 2 = Custom (Corporate Admin, fully bespoke).
 -- Tier 3 = Extended (Corporate Admin, additive on top of a Tier 1 clone).
 -- =========================================================================
@@ -5362,13 +5362,13 @@ CREATE POLICY org_isolation ON unclassified_intelligence_registry
 ALTER TABLE framework_registry
     ADD COLUMN framework_tier INTEGER NOT NULL DEFAULT 1
         CHECK (framework_tier IN (1,2,3)),
-    ADD COLUMN tier_governed_by VARCHAR(50) NOT NULL DEFAULT 'CORPSTAGE_ADMIN'
-        CHECK (tier_governed_by IN ('CORPSTAGE_ADMIN','CORPORATE_ADMIN')),
+    ADD COLUMN tier_governed_by VARCHAR(50) NOT NULL DEFAULT 'AUREX_ADMIN'
+        CHECK (tier_governed_by IN ('AUREX_ADMIN','CORPORATE_ADMIN')),
     ADD COLUMN parent_framework_id UUID REFERENCES framework_registry(framework_id),
     ADD COLUMN organization_id UUID REFERENCES organization_master(organization_id);
 
 COMMENT ON COLUMN framework_registry.framework_tier IS
-    '1 = Standard: externally governed (GRI, BRSR, ISSB etc.) — CorpStage Admin only.
+    '1 = Standard: externally governed (GRI, BRSR, ISSB etc.) — Aurex Admin only.
      2 = Custom: fully bespoke, owned by one customer, never shared.
      3 = Extended: clone of a Tier 1 framework with additive customer BQs/CDEs.
        Standard mappings in the clone are NEVER overridden (Blueprint Binding 2).';
@@ -5543,7 +5543,7 @@ COMMENT ON TABLE guided_completion_task IS
      Each row is one named business-activity grouping (e.g. "Delivery Cost
      Analysis") containing 3-10 related Business Questions. The platform
      presents these as a single coherent task, never as a question list.
-     is_platform_default=TRUE rows are CorpStage-seeded; FALSE rows are
+     is_platform_default=TRUE rows are Aurex-seeded; FALSE rows are
      customer-configured. NULL organization_id = platform default.';
 
 COMMENT ON COLUMN guided_completion_task.intelligence_gain_statement IS

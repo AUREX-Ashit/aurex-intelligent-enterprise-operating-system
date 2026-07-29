@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Security Context Module.
+Aurex Shared Security Framework - Security Context Module.
 
 Provides asynchronous, asyncio task-local encapsulation of security context.
 Ensures that user identities, roles, permissions, and tenant scope bindings are 
@@ -12,9 +12,9 @@ from contextvars import ContextVar
 from contextlib import contextmanager
 from typing import Generator, Optional, Set, List, Dict, Any
 
-from corpstage.backend.shared.security.exceptions import SecurityContextError
+from aurex.backend.shared.security.exceptions import SecurityContextError
 
-logger = logging.getLogger("CorpStage.Security.Context")
+logger = logging.getLogger("Aurex.Security.Context")
 
 
 class SecurityPrincipal:
@@ -66,7 +66,7 @@ class SecurityPrincipal:
 
 # Thread/Task local isolated state using ContextVars
 _security_principal_context_var: ContextVar[Optional[SecurityPrincipal]] = ContextVar(
-    "corpstage_security_principal", default=None
+    "aurex_security_principal", default=None
 )
 
 

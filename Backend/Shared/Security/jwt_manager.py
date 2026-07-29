@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - JWT Manager Module.
+Aurex Shared Security Framework - JWT Manager Module.
 
 Handles robust cryptographic token operations: compilation, digital signing, 
 decoding, claims evaluation, and error translation utilizing custom exceptions.
@@ -19,15 +19,15 @@ try:
 except ImportError:
     _JWT_LIB_AVAILABLE = False
 
-from corpstage.backend.shared.config import SettingsManager
-from corpstage.backend.shared.security.exceptions import (
+from aurex.backend.shared.config import SettingsManager
+from aurex.backend.shared.security.exceptions import (
     AuthenticationError,
     InvalidTokenError,
     TokenExpiredError,
     MissingRequiredValueError
 )
 
-logger = logging.getLogger("CorpStage.Security.JWTManager")
+logger = logging.getLogger("Aurex.Security.JWTManager")
 
 
 class JWTManager:
@@ -43,7 +43,7 @@ class JWTManager:
         Shared Config SettingsManager or system environment variables fallbacks.
         """
         # Resolve Jwt secret. Production requirement restricts using defaults in code.
-        secret = os.getenv("CORPSTAGE_JWT_SECRET")
+        secret = os.getenv("AUREX_JWT_SECRET")
         
         algorithm = "HS256"
         access_expiry = 60
@@ -69,7 +69,7 @@ class JWTManager:
         if not secret or secret == "CHANGE_IN_ENVIRONMENT":
             raise MissingRequiredValueError(
                 "CRITICAL SECURITY FAILURE: Active JWT secret payload is missing or unconfigured. "
-                "Ensure CORPSTAGE_JWT_SECRET is populated in system execution parameters."
+                "Ensure AUREX_JWT_SECRET is populated in system execution parameters."
             )
 
         return {

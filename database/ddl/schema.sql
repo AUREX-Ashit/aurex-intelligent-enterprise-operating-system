@@ -1,5 +1,5 @@
 -- ==============================================================================
--- CorpStage Enterprise SaaS Platform - Core Database Physical Schema (DDL)
+-- Aurex Enterprise SaaS Platform - Core Database Physical Schema (DDL)
 -- Target Platform: PostgreSQL 16+
 -- Robust design featuring UUID Primary Keys, Audit Columns, Triggers,
 -- Foreign Key Indexes, and Tenant Row-Level Security (RLS) Configuration.
@@ -141,7 +141,7 @@ CREATE TABLE document_versions (
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     tenant_id VARCHAR(64) NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
     version_number INT NOT NULL,
-    s3_uri VARCHAR(512) NOT NULL, -- Location inside MinIO (e.g. s3://corpstage-payloads/tenant-1/file.pdf)
+    s3_uri VARCHAR(512) NOT NULL, -- Location inside MinIO (e.g. s3://aurex-payloads/tenant-1/file.pdf)
     checksum VARCHAR(256) NOT NULL,
     created_by VARCHAR(255) DEFAULT 'SYSTEM',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

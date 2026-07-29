@@ -1,5 +1,5 @@
 """
-CorpStage Shared Database Framework - Session Manager Module.
+Aurex Shared Database Framework - Session Manager Module.
 
 Manages scoped asynchronous database sessions, transactions, and event listeners
 to enforce multi-tenant lifecycle hooks automatically on flush.
@@ -15,11 +15,11 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy import event
 
-from corpstage.backend.shared.database.engine_factory import EngineFactory
-from corpstage.backend.shared.database.base_model import TenantScopedModel
-from corpstage.backend.shared.database.exceptions import TransactionError
+from aurex.backend.shared.database.engine_factory import EngineFactory
+from aurex.backend.shared.database.base_model import TenantScopedModel
+from aurex.backend.shared.database.exceptions import TransactionError
 
-logger = logging.getLogger("CorpStage.Database.SessionManager")
+logger = logging.getLogger("Aurex.Database.SessionManager")
 
 
 class SessionManager:

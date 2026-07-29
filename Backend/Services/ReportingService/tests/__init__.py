@@ -1,1 +1,1 @@
-# CorpStage ReportingService integration test package
+# Aurex ReportingService integration test package

@@ -1,6 +1,6 @@
 **IMP-001**
 
-**CorpStage Implementation Playbook**
+**Aurex Implementation Playbook**
 
 **Classification:** Enterprise Engineering Architecture (Layer 3, per ARCH-000)
 **Status:** Active — governs current engineering practice; evolves via Controlled Evolution (ARCH-000 §12.6)
@@ -10,7 +10,7 @@
 
 IMP-001 defines the mandatory engineering standards, implementation
 methodology, coding patterns, quality gates, and delivery lifecycle for
-implementing the CorpStage Intelligent Operating Center.
+implementing the Aurex Intelligent Operating Center.
 
 It translates the Enterprise Architecture into a consistent, repeatable
 engineering process, ensuring every Business Domain, Business Object,
@@ -18,13 +18,13 @@ API, workflow, event, screen, and AI capability is implemented in
 accordance with the approved architecture.
 
 IMP-001 is the authoritative engineering implementation standard for
-CorpStage.
+Aurex.
 
 **Design Philosophy**
 
 IMP-001 is built upon the principles established by:
 
--   CorpStage Enterprise Blueprint
+-   Aurex Enterprise Blueprint
 
 -   Master Technical Architecture
 
@@ -55,7 +55,7 @@ Section 1 — Purpose & Guiding Principles. Section 2 — Canonical Implementati
 
 **1.1 Objectives**
 
-IMP-001 defines the mandatory engineering standard for implementing the CorpStage Intelligent Operating Center. It exists so that any engineering team, or any AI coding platform, produces the same architecturally-compliant result from the same starting specification — the Business Object, Interaction, Authorization, and Structure principles already locked in SD-002, SD-003, URA-001, and ERG-001.
+IMP-001 defines the mandatory engineering standard for implementing the Aurex Intelligent Operating Center. It exists so that any engineering team, or any AI coding platform, produces the same architecturally-compliant result from the same starting specification — the Business Object, Interaction, Authorization, and Structure principles already locked in SD-002, SD-003, URA-001, and ERG-001.
 
 **1.2 Scope**
 
@@ -63,7 +63,7 @@ IMP-001 governs *how* the platform is built: repository structure, the Business 
 
 **1.3 Engineering Philosophy**
 
-Implementation follows the same discipline the constitutional architecture already establishes: metadata over hardcoding, canonical patterns over ad-hoc solutions, and explicit contracts (the Business Activity Contract, Appendix A.5) over implicit convention. An engineer or AI tool implementing any Business Object or Business Activity should be able to do so correctly from the pattern alone, without needing to ask a human what "the CorpStage way" is for a case not yet built.
+Implementation follows the same discipline the constitutional architecture already establishes: metadata over hardcoding, canonical patterns over ad-hoc solutions, and explicit contracts (the Business Activity Contract, Appendix A.5) over implicit convention. An engineer or AI tool implementing any Business Object or Business Activity should be able to do so correctly from the pattern alone, without needing to ask a human what "the Aurex way" is for a case not yet built.
 
 **1.4 Relationship with Architecture Documents**
 
@@ -84,7 +84,7 @@ Per Section 1's own downstream consequence in Section 8 (API Standards, IMP-API-
 **One Major Enhancement**
 
 I recommend adding something that is rarely found in implementation
-guides but would be extremely valuable for CorpStage:
+guides but would be extremely valuable for Aurex:
 
 **Implementation Contract**
 
@@ -148,7 +148,7 @@ practical, and directly aligned with real engineering practices.
 
 This is **not** a software development lifecycle.
 
-It is the **CorpStage implementation lifecycle**.
+It is the **Aurex implementation lifecycle**.
 
 **IMP-001**
 
@@ -158,7 +158,7 @@ It is the **CorpStage implementation lifecycle**.
 
 The Canonical Implementation Lifecycle (CIL) defines the mandatory
 engineering sequence for implementing every capability within the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 Its purpose is to ensure that all implementations:
 
@@ -179,7 +179,7 @@ technology, team, or deployment model.
 
 **2.2 Core Principle**
 
-CorpStage shall never be implemented using a traditional CRUD-first
+Aurex shall never be implemented using a traditional CRUD-first
 methodology.
 
 Instead, implementation shall always proceed from business intent to
@@ -277,7 +277,7 @@ have been completed.
 
 **2.5 Canonical Implementation Unit (CIU)**
 
-The smallest independently implementable unit within CorpStage is the
+The smallest independently implementable unit within Aurex is the
 **Canonical Implementation Unit (CIU)**.
 
 A CIU consists of:
@@ -501,7 +501,7 @@ However:
 
 -   AI-generated code shall be reviewed by a human before acceptance.
 
-This preserves the CorpStage principle of **Human Governed, AI
+This preserves the Aurex principle of **Human Governed, AI
 Assisted**.
 
 **2.13 Completion Criteria**
@@ -568,7 +568,7 @@ backlog rather than disconnected tasks.
 **My Assessment**
 
 I believe this section is one of the most important documents in the
-entire CorpStage framework because it defines **how implementation
+entire Aurex framework because it defines **how implementation
 happens**, not just **what should be built**. It ensures that Claude
 Code remains architecture-driven rather than database-driven or
 UI-driven, minimizes architectural drift, and establishes a repeatable
@@ -585,7 +585,7 @@ a single canonical architecture.
 
 The Canonical Implementation Unit (CIU) is the smallest independently
 implementable, testable, deployable, and governable unit within the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 A CIU is not a database table, API, screen, microservice, or user story.
 
@@ -598,7 +598,7 @@ capabilities.
 
 **3.2 Architectural Principle**
 
-CorpStage follows the principle:
+Aurex follows the principle:
 
 **One Canonical Business Object = One Canonical Implementation Unit**
 
@@ -1002,7 +1002,7 @@ documents independently.
 **My Assessment**
 
 I believe this section is one of the defining innovations of the
-CorpStage engineering methodology. By making the **Canonical
+Aurex engineering methodology. By making the **Canonical
 Implementation Unit (CIU)** the fundamental unit of implementation, the
 platform becomes architecture-centric rather than technology-centric.
 Every Business Object is implemented using a consistent, repeatable
@@ -1015,7 +1015,7 @@ agents to work in parallel while preserving architectural integrity.
 
 **4.1 Purpose**
 
-The CorpStage repository structure shall organize source code according
+The Aurex repository structure shall organize source code according
 to **Business Domains** and **Canonical Business Objects**, ensuring
 that the physical implementation reflects the enterprise architecture.
 
@@ -1103,9 +1103,9 @@ Instead, each Business Domain encapsulates its own implementation.
 
 **4.3 Monorepo Structure**
 
-CorpStage shall use a single governed monorepository.
+Aurex shall use a single governed monorepository.
 
-corpstage/\
+aurex/\
 │\
 ├── platform/\
 ├── enterprise/\
@@ -1397,7 +1397,7 @@ Before writing **Section 5 -- Business Domain Implementation Pattern**,
 I recommend we make one strategic decision that will influence the
 entire implementation:
 
-**Should CorpStage be implemented as:**
+**Should Aurex be implemented as:**
 
 1.  **A Modular Monolith** (one deployable application composed of
     well-defined Business Domain modules), with the option to extract
@@ -1417,7 +1417,7 @@ reduces operational complexity, and still allows individual Business
 Domains to be extracted into microservices in the future if scale or
 organizational needs require it. I believe this approach offers the best
 balance between architectural purity and practical execution for
-CorpStage Version 1.0.
+Aurex Version 1.0.
 
 **IMP-001**
 
@@ -1428,7 +1428,7 @@ CorpStage Version 1.0.
 
 The Canonical Business Object Implementation Pattern (CBIP) defines the
 mandatory engineering blueprint for implementing every Canonical
-Business Object within the CorpStage Intelligent Operating Center.
+Business Object within the Aurex Intelligent Operating Center.
 
 The objective is to ensure that every Business Object:
 
@@ -1831,7 +1831,7 @@ delivery.
 
 I believe this is the **single most valuable section of IMP-001**
 because it defines the universal engineering pattern for every Business
-Object in CorpStage. If every implementation follows this Canonical
+Object in Aurex. If every implementation follows this Canonical
 Business Object Implementation Pattern and is driven by a **Canonical
 Business Object Manifest**, Claude Code can generate highly consistent,
 architecture-compliant code across the entire platform with minimal
@@ -1852,7 +1852,7 @@ integrity as the platform grows.
 
 The Canonical Business Activity Implementation Pattern (CBAIP) defines
 the mandatory engineering methodology for implementing every Business
-Activity within the CorpStage Intelligent Operating Center.
+Activity within the Aurex Intelligent Operating Center.
 
 Business Activities are the executable realization of business intent.
 
@@ -1879,7 +1879,7 @@ recommendation shall ultimately execute one or more Business Activities.
 
 **6.2 Architectural Principle**
 
-CorpStage is an **Activity-Driven Platform**.
+Aurex is an **Activity-Driven Platform**.
 
 Implementation shall be organized around Business Activities rather than
 CRUD operations.
@@ -2219,14 +2219,14 @@ Business Activities.
 
 **Editorial Note (WP-7 Repository Hygiene):** Sections 6.15 through 6.30 originally appeared twice in this document — first as an architect's restructuring recommendation and outline summary, then again as the fully detailed specification. The two copies shared section numbers (6.15–6.30), which CR-3.0 identified as a duplicate-numbering defect. The recommendation was accepted and fully realized in the detailed sections below; the outline copy added no content beyond what the detailed sections already state in full, and has been removed here as superseded scaffolding. The recommendation's original rationale is preserved below.
 
-*Rationale (originally recorded alongside the recommendation to introduce the Business Activity Engine as a core platform capability, rather than having each domain implement activity execution independently): this is one of the defining differentiators of CorpStage. Most enterprise systems are entity-centric or CRUD-centric; CorpStage is Business Activity-centric. Standardizing every executable operation through the Canonical Business Activity Implementation Pattern and the Business Activity Engine gives the platform consistent behavior, centralized governance, and a predictable execution model aligned with SD-002, SD-003, URA-001, ERG-001, and CMD-001. SD-002 defines what the platform manages (Business Objects); URA-001 defines who can perform operations; ERG-001 defines where operations occur; CMD-001 defines what data is manipulated; IMP-001 defines how business intent is executed — completing the architectural foundation.*
+*Rationale (originally recorded alongside the recommendation to introduce the Business Activity Engine as a core platform capability, rather than having each domain implement activity execution independently): this is one of the defining differentiators of Aurex. Most enterprise systems are entity-centric or CRUD-centric; Aurex is Business Activity-centric. Standardizing every executable operation through the Canonical Business Activity Implementation Pattern and the Business Activity Engine gives the platform consistent behavior, centralized governance, and a predictable execution model aligned with SD-002, SD-003, URA-001, ERG-001, and CMD-001. SD-002 defines what the platform manages (Business Objects); URA-001 defines who can perform operations; ERG-001 defines where operations occur; CMD-001 defines what data is manipulated; IMP-001 defines how business intent is executed — completing the architectural foundation.*
 
 **6.15 Business Activity Engine (BAE)**
 
 **6.15.1 Purpose**
 
 The **Business Activity Engine (BAE)** is the canonical execution engine
-for all Business Activities within the CorpStage Intelligent Operating
+for all Business Activities within the Aurex Intelligent Operating
 Center.
 
 The BAE provides a standardized execution pipeline that ensures every
@@ -2548,7 +2548,7 @@ This guarantees:
 -   Uniform business behavior
 
 The Business Activity Engine establishes the canonical execution model
-for the CorpStage Intelligent Operating Center and is mandatory for
+for the Aurex Intelligent Operating Center and is mandatory for
 every Business Activity implementation.
 
 **6.16 Business Activity Execution Pipeline**
@@ -2985,7 +2985,7 @@ The Business Activity Execution Pipeline guarantees:
 
 -   Platform-wide governance
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall follow this canonical execution pipeline without
 exception.
 
@@ -3385,7 +3385,7 @@ This enables complete observability across distributed execution.
 
 **6.17.18 Architectural Guarantee**
 
-Every Business Activity within the CorpStage Intelligent Operating
+Every Business Activity within the Aurex Intelligent Operating
 Center shall execute with a complete, validated, and standardized
 Business Activity Context.
 
@@ -3760,7 +3760,7 @@ Recovery shall never compromise business consistency or audit integrity.
 
 **6.18.16 Architectural Guarantee**
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall follow the canonical Business Activity State
 Model.
 
@@ -4126,7 +4126,7 @@ The Business Activity Transaction Management model guarantees:
 
 -   Platform-wide consistency
 
-All Business Activities within the CorpStage Intelligent Operating
+All Business Activities within the Aurex Intelligent Operating
 Center shall execute under the governance of the Business Activity
 Engine\'s transaction management framework, ensuring reliable,
 auditable, and resilient execution across all Business Domains.
@@ -4458,7 +4458,7 @@ guarantees:
 
 -   Complete execution traceability
 
-Every externally invocable Business Activity within the CorpStage
+Every externally invocable Business Activity within the Aurex
 Intelligent Operating Center shall execute under the governance of the
 Business Activity Engine\'s idempotency framework, ensuring reliable and
 deterministic business outcomes across all interfaces, workflows,
@@ -4806,7 +4806,7 @@ The Business Activity Compensation and Recovery model guarantees:
 
 -   Platform-wide operational resilience
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall be recoverable through standardized rollback,
 compensation, retry, resume, or manual recovery strategies governed
 exclusively by the Business Activity Engine, ensuring consistent and
@@ -4817,7 +4817,7 @@ resilient business execution across all Business Domains.
 **6.22.1 Purpose**
 
 The Business Activity Registry (BAR) is the canonical metadata
-repository for all Business Activities within the CorpStage Intelligent
+repository for all Business Activities within the Aurex Intelligent
 Operating Center.
 
 Rather than discovering Business Activities through application code,
@@ -5265,7 +5265,7 @@ The Business Activity Registry guarantees:
 
 -   Complete auditability
 
-Every executable Business Activity within the CorpStage Intelligent
+Every executable Business Activity within the Aurex Intelligent
 Operating Center shall be registered in the Business Activity Registry
 before becoming available for execution, ensuring consistent governance,
 discoverability, lifecycle management, and operational control across
@@ -5596,7 +5596,7 @@ The Business Activity Versioning model guarantees:
 
 -   Platform-wide operational stability
 
-Every Business Activity within the CorpStage Intelligent Operating
+Every Business Activity within the Aurex Intelligent Operating
 Center shall be versioned, governed, and executed through an explicitly
 managed lifecycle, ensuring that business capabilities evolve
 predictably without compromising execution consistency, historical
@@ -5952,7 +5952,7 @@ The Business Activity Composition model guarantees:
 
 -   Platform-wide composability
 
-Every composite business capability within the CorpStage Intelligent
+Every composite business capability within the Aurex Intelligent
 Operating Center shall be constructed through the governed composition
 of independently executable Business Activities, ensuring maximum reuse,
 maintainability, scalability, and consistent execution across all
@@ -5979,7 +5979,7 @@ covering:
     laws governing Business Activity execution)
 
 These final six sections will complete what is effectively the
-**Business Activity Framework (BAF)** for CorpStage, making IMP-001 one
+**Business Activity Framework (BAF)** for Aurex, making IMP-001 one
 of the platform\'s foundational constitutional documents alongside
 SD-002, URA-001, ERG-001, and CMD-001.
 
@@ -6362,7 +6362,7 @@ The Business Activity Execution Policy model guarantees:
 
 -   Platform-wide operational consistency
 
-Every Business Activity within the CorpStage Intelligent Operating
+Every Business Activity within the Aurex Intelligent Operating
 Center shall execute under an explicitly resolved Execution Policy
 enforced by the Business Activity Engine, ensuring that runtime behavior
 remains configurable, governed, observable, and independent of Business
@@ -6749,7 +6749,7 @@ guarantees:
 
 -   Platform-wide performance transparency
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall operate under explicitly defined service
 objectives monitored by the Business Activity Engine, ensuring
 consistent business responsiveness, operational reliability, measurable
@@ -6762,7 +6762,7 @@ Domains.
 
 The Business Activity Observability and Telemetry model defines the
 canonical framework for monitoring, diagnosing, tracing, and analyzing
-Business Activity execution throughout the CorpStage Intelligent
+Business Activity execution throughout the Aurex Intelligent
 Operating Center.
 
 Observability enables the platform to understand not only **what**
@@ -7179,7 +7179,7 @@ The Business Activity Observability and Telemetry model guarantees:
 
 -   Platform-wide operational intelligence
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall generate standardized telemetry through the
 Business Activity Engine, ensuring complete observability,
 diagnosability, traceability, and operational transparency across all
@@ -7193,7 +7193,7 @@ environments.
 The Business Activity Error Classification and Exception Handling model
 defines the canonical approach for detecting, classifying, managing,
 recovering from, and communicating execution failures throughout the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 Consistent error management ensures that Business Activities fail
 predictably, preserve business integrity, generate meaningful
@@ -7592,7 +7592,7 @@ guarantees:
 
 -   Full auditability of execution failures
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall manage execution failures through the
 standardized error handling capabilities of the Business Activity
 Engine, ensuring deterministic behavior, consistent diagnostics,
@@ -7618,7 +7618,7 @@ The remaining two sections will complete the document:
     principles in SD-002, URA-001, and ERG-001.
 
 These final sections will formally complete IMP-001 as the **execution
-constitution** of the CorpStage platform.
+constitution** of the Aurex platform.
 
 **6.29 Enhanced Canonical Business Activity Manifest (CBAM v2)**
 
@@ -7626,7 +7626,7 @@ constitution** of the CorpStage platform.
 
 The **Canonical Business Activity Manifest (CBAM)** is the
 authoritative, machine-readable implementation contract for every
-Business Activity within the CorpStage Intelligent Operating Center.
+Business Activity within the Aurex Intelligent Operating Center.
 
 The CBAM serves as the bridge between business architecture and
 implementation by providing a complete declarative specification of a
@@ -8076,7 +8076,7 @@ The Enhanced Canonical Business Activity Manifest guarantees:
 
 -   Complete architectural alignment
 
-Every Business Activity within the CorpStage Intelligent Operating
+Every Business Activity within the Aurex Intelligent Operating
 Center shall be governed by a Canonical Business Activity Manifest that
 serves as the authoritative specification for implementation, execution,
 testing, observability, governance, and AI-assisted development,
@@ -8096,7 +8096,7 @@ software.
 
 The only remaining section, **6.30 -- Constitutional Architectural
 Principles**, will crystallize these concepts into the immutable
-execution laws that govern every Business Activity across the CorpStage
+execution laws that govern every Business Activity across the Aurex
 platform, completing IMP-001 as the platform\'s **execution
 constitution**.
 
@@ -8105,7 +8105,7 @@ constitution**.
 **6.30.1 Purpose**
 
 The Constitutional Architectural Principles establish the immutable
-execution laws governing every Business Activity within the CorpStage
+execution laws governing every Business Activity within the Aurex
 Intelligent Operating Center.
 
 These principles define **how business intent is executed**, independent
@@ -8121,7 +8121,7 @@ non-compliant.
 
 **Business Intent Before Technology**
 
-CorpStage is a Business Activity-driven platform.
+Aurex is a Business Activity-driven platform.
 
 Business Activities represent business intent.
 
@@ -8472,7 +8472,7 @@ Platform integrity takes precedence over localized optimization.
 
 **Business Activity as the Fundamental Unit of Execution**
 
-Within the CorpStage Intelligent Operating Center, the **Business
+Within the Aurex Intelligent Operating Center, the **Business
 Activity** is the smallest governed unit of business execution.
 
 Every business capability, regardless of complexity, shall ultimately be
@@ -8491,7 +8491,7 @@ Activity Implementation Pattern (CBAIP) together establish the
 **Business Activity Framework (BAF)**.
 
 The Business Activity Framework is the constitutional execution
-architecture of the CorpStage Intelligent Operating Center.
+architecture of the Aurex Intelligent Operating Center.
 
 It defines:
 
@@ -8519,7 +8519,7 @@ Activity Framework.
 **6.30.20 Final Architectural Statement**
 
 The Canonical Business Activity Implementation Pattern establishes the
-definitive execution architecture for the CorpStage Intelligent
+definitive execution architecture for the Aurex Intelligent
 Operating Center.
 
 Together with:
@@ -8544,7 +8544,7 @@ orchestration, event-driven communication, AI governance, observability,
 auditability, recoverability, and lifecycle management.
 
 The Business Activity Framework therefore constitutes the immutable
-execution foundation of the CorpStage Intelligent Operating Center and
+execution foundation of the Aurex Intelligent Operating Center and
 shall govern all present and future Business Activity implementations
 across the platform.
 
@@ -8570,7 +8570,7 @@ Together with your other foundational documents:
     (**Business Activity Framework**).
 
 These five documents collectively form the **constitutional core** of
-the CorpStage platform. Everything else---microservices, APIs,
+the Aurex platform. Everything else---microservices, APIs,
 workflows, screens, AI agents, integrations, and even Claude
 Code--generated implementations---becomes a compliant realization of
 this architecture rather than defining the architecture itself.
@@ -8580,10 +8580,10 @@ complete and ready for constitutional freeze (v1.0)**.
 
 **Section 7 --- Architectural Alignment & Implementation Guidance**
 
-**7.1 Position within the CorpStage Constitutional Architecture**
+**7.1 Position within the Aurex Constitutional Architecture**
 
 The Canonical Business Activity Implementation Pattern (IMP-001) defines
-the execution architecture of the CorpStage Intelligent Operating
+the execution architecture of the Aurex Intelligent Operating
 Center.
 
 It complements the platform\'s constitutional architecture by defining
@@ -9153,7 +9153,7 @@ The BAC remains a **technology-neutral constitutional contract**,
 ensuring that every implementation---whether produced by human
 developers or AI coding agents---begins from the same authoritative
 business specification. I believe this separation is one of the
-strongest aspects of the CorpStage architecture because it keeps
+strongest aspects of the Aurex architecture because it keeps
 business intent independent from implementation technology.
 
 **A.6 Canonical Business Activity Manifest (CBAM) — Superseded, Retained for Historical Record**
@@ -9163,7 +9163,7 @@ business intent independent from implementation technology.
 **A.6.1 Purpose**
 
 The Canonical Business Activity Manifest (CBAM) is the machine-readable
-implementation contract for every Business Activity within the CorpStage
+implementation contract for every Business Activity within the Aurex
 Intelligent Operating Center.
 
 Where the Business Activity Contract (BAC) serves as the authoritative
@@ -9478,7 +9478,7 @@ The Canonical Business Activity Manifest guarantees:
 
 -   standardized AI-assisted software generation.
 
-Every Business Activity within the CorpStage Intelligent Operating
+Every Business Activity within the Aurex Intelligent Operating
 Center shall possess a governed Canonical Business Activity Manifest,
 ensuring that implementation remains consistent, automatable, auditable,
 and fully aligned with the constitutional principles established
@@ -9490,7 +9490,7 @@ throughout IMP-001.
 
 The Canonical Business Activity Context (BACX) defines the complete
 execution context supplied to every Business Activity within the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 The BACX represents the runtime realization of the Business Activity
 Contract and serves as the single source of execution context throughout
@@ -9768,7 +9768,7 @@ The Canonical Business Activity Context guarantees:
 
 -   complete traceability and observability.
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall receive a fully resolved and immutable Business
 Activity Context from the Business Activity Engine, ensuring consistent,
 governed, and reproducible execution independent of implementation
@@ -9798,14 +9798,14 @@ I believe this separation is elegant, easy to understand, and highly
 scalable. It creates a clear boundary between business specification,
 implementation specification, and runtime execution without introducing
 unnecessary complexity. This is the kind of pattern that can remain
-stable for many years as the CorpStage platform evolves.
+stable for many years as the Aurex platform evolves.
 
 **A.8 Canonical Runtime Execution Pipeline**
 
 **A.8.1 Purpose**
 
 The Canonical Runtime Execution Pipeline defines the normative execution
-sequence for every Business Activity within the CorpStage Intelligent
+sequence for every Business Activity within the Aurex Intelligent
 Operating Center.
 
 It demonstrates how the Business Activity Engine transforms a Business
@@ -10125,7 +10125,7 @@ The Canonical Runtime Execution Pipeline guarantees:
 
 -   technology-independent runtime execution.
 
-Every Business Activity executed within the CorpStage Intelligent
+Every Business Activity executed within the Aurex Intelligent
 Operating Center shall follow the Canonical Runtime Execution Pipeline,
 ensuring that business execution remains consistent, governed,
 predictable, and fully aligned with the constitutional principles
@@ -10226,7 +10226,7 @@ Example request information may include:
   -----------------------------------------------------------------------
   **Input**                  **Example**
   -------------------------- --------------------------------------------
-  Organization               CorpStage Demo Organization
+  Organization               Aurex Demo Organization
 
   Enterprise Name            India Manufacturing Division
 
@@ -10438,7 +10438,7 @@ event publication, auditing, and observability---are provided by the
 Business Activity Engine.
 
 This separation of responsibilities is the defining implementation
-principle of the CorpStage Intelligent Operating Center and shall be
+principle of the Aurex Intelligent Operating Center and shall be
 preserved across all Business Activities.
 
 **Architect\'s Recommendation**
@@ -10468,7 +10468,7 @@ into many more architecture-heavy sections.
 **A.10.1 Purpose**
 
 This section defines the canonical project organization for implementing
-Business Activities within the CorpStage Intelligent Operating Center.
+Business Activities within the Aurex Intelligent Operating Center.
 
 The objective is to ensure that every Business Activity is implemented
 using a consistent, discoverable, maintainable, and
@@ -10731,7 +10731,7 @@ The Canonical Business Activity Project Structure guarantees:
 
 -   technology-independent implementation organization.
 
-Every Business Activity implemented within the CorpStage Intelligent
+Every Business Activity implemented within the Aurex Intelligent
 Operating Center shall conform to the Canonical Business Activity
 Project Structure, ensuring that all implementations remain
 architecturally consistent, discoverable, maintainable, and aligned with
@@ -10761,7 +10761,7 @@ balance between architectural purity and engineering pragmatism.
 
 The Canonical AI Code Generation Contract (AICGC) defines the mandatory
 engineering contract governing AI-assisted generation of Business
-Activities within the CorpStage Intelligent Operating Center.
+Activities within the Aurex Intelligent Operating Center.
 
 The objective of the AICGC is to ensure that every AI-generated
 implementation conforms to the constitutional architecture established
@@ -11009,7 +11009,7 @@ The Canonical AI Code Generation Contract guarantees:
 
 -   complete traceability between architecture and implementation.
 
-Every AI-assisted implementation within the CorpStage Intelligent
+Every AI-assisted implementation within the Aurex Intelligent
 Operating Center shall conform to the Canonical AI Code Generation
 Contract, ensuring that generated software faithfully realizes the
 constitutional architecture without introducing unintended business
@@ -11047,7 +11047,7 @@ for a platform intended to evolve over many years.
 The Engineering Readiness Standard (ERS) defines the mandatory readiness
 criteria that shall be satisfied before a Business Activity proceeds
 through implementation, testing, deployment, and production release
-within the CorpStage Intelligent Operating Center.
+within the Aurex Intelligent Operating Center.
 
 The objective of the ERS is to ensure that every Business Activity is:
 
@@ -11312,7 +11312,7 @@ The Engineering Readiness Standard guarantees:
 
 -   human accountability for AI-assisted engineering.
 
-Every Business Activity implemented within the CorpStage Intelligent
+Every Business Activity implemented within the Aurex Intelligent
 Operating Center shall satisfy the Engineering Readiness Standard before
 progressing through implementation, verification, deployment, and
 production release, ensuring that all engineering activities remain
@@ -11341,7 +11341,7 @@ Then **freeze IMP-001 Version 1.0**.
 
 I would resist adding anything beyond that. At that point, the document
 is no longer missing implementation guidance---it has become a complete
-implementation constitution for the CorpStage platform.
+implementation constitution for the Aurex platform.
 
 **A.13 Constitutional Adoption & Evolution**
 
@@ -11349,7 +11349,7 @@ implementation constitution for the CorpStage platform.
 
 This appendix formally establishes the Canonical Business Activity
 Implementation Pattern (IMP-001) as the authoritative implementation
-standard for the CorpStage Intelligent Operating Center.
+standard for the Aurex Intelligent Operating Center.
 
 It defines the governance principles for adopting, maintaining,
 evolving, and enforcing the implementation architecture throughout the
@@ -11362,7 +11362,7 @@ development platforms.
 
 **A.13.2 Constitutional Adoption**
 
-The CorpStage Intelligent Operating Center adopts IMP-001 as the
+The Aurex Intelligent Operating Center adopts IMP-001 as the
 mandatory implementation constitution for Business Activity realization.
 
 Every Business Activity shall be designed, implemented, tested,
@@ -11375,7 +11375,7 @@ constitutional principles defined herein.
 **A.13.3 Scope of Applicability**
 
 IMP-001 applies to all Business Activities implemented within the
-CorpStage Intelligent Operating Center, including but not limited to:
+Aurex Intelligent Operating Center, including but not limited to:
 
 -   Enterprise Management
 
@@ -11412,7 +11412,7 @@ The standard applies equally to:
 **A.13.4 Relationship with the Constitutional Architecture**
 
 IMP-001 derives its authority from, and shall remain consistent with,
-the constitutional architecture of the CorpStage platform.
+the constitutional architecture of the Aurex platform.
 
 The constitutional documents collectively define:
 
@@ -11439,14 +11439,14 @@ The constitutional documents collectively define:
   -----------------------------------------------------------------------
 
 Together, these documents constitute the authoritative architectural
-foundation of the CorpStage Intelligent Operating Center.
+foundation of the Aurex Intelligent Operating Center.
 
 Implementation shall conform to all constitutional documents
 simultaneously.
 
 **A.13.5 Governance**
 
-Ownership of IMP-001 shall reside with the CorpStage Architecture
+Ownership of IMP-001 shall reside with the Aurex Architecture
 Governance Board.
 
 Governance responsibilities include:
@@ -11549,7 +11549,7 @@ Implementation principles shall remain stable.
 
 The Canonical Business Activity Implementation Pattern establishes the
 immutable implementation principles governing the realization of
-business capabilities within the CorpStage Intelligent Operating Center.
+business capabilities within the Aurex Intelligent Operating Center.
 
 Every Business Activity, irrespective of Business Domain, implementation
 technology, engineering methodology, or AI-assisted development
@@ -11566,7 +11566,7 @@ Architecture shall govern implementation.
 
 Technology shall serve architecture.
 
-Through these principles, the CorpStage Intelligent Operating Center
+Through these principles, the Aurex Intelligent Operating Center
 preserves a consistent, governed, scalable, observable, and
 technology-independent implementation model capable of supporting the
 long-term evolution of the enterprise platform.
@@ -11616,7 +11616,7 @@ which to transition from design to delivery.
 
 **8.1 Purpose**
 
-This section defines the mandatory standard for every API endpoint exposed by the CorpStage platform. It exists to close a gap identified during the Version 1.0 constitutional validation: the original document specified how Business Objects and Business Activities are implemented internally, but not how they are exposed for consumption by the frontend, external integrations, or AI-assisted development tools.
+This section defines the mandatory standard for every API endpoint exposed by the Aurex platform. It exists to close a gap identified during the Version 1.0 constitutional validation: the original document specified how Business Objects and Business Activities are implemented internally, but not how they are exposed for consumption by the frontend, external integrations, or AI-assisted development tools.
 
 **8.2 Every Endpoint Maps to Exactly One Business Activity**
 
@@ -11720,7 +11720,7 @@ This section defines the mandatory test strategy. It closes a fourth gap: the do
 
 **IMP-TEST-001**
 
-The primary test layer for CorpStage is not conventional unit testing of internal functions — it is **Business Activity Contract testing**: for every Business Activity, a test suite verifies that its behavior matches its approved BAC (Appendix A.5) exactly, including every stated precondition, every side effect, and every terminal event. A Business Activity with passing unit tests but no BAC-conformance test is not done, per the Definition of Done this section extends.
+The primary test layer for Aurex is not conventional unit testing of internal functions — it is **Business Activity Contract testing**: for every Business Activity, a test suite verifies that its behavior matches its approved BAC (Appendix A.5) exactly, including every stated precondition, every side effect, and every terminal event. A Business Activity with passing unit tests but no BAC-conformance test is not done, per the Definition of Done this section extends.
 
 **11.3 Authorization Boundary Tests Are Mandatory and Independent**
 

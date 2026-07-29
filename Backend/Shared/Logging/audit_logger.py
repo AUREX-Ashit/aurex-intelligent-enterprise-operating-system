@@ -1,5 +1,5 @@
 """
-CorpStage Shared Logging Framework - Audit Logger Module.
+Aurex Shared Logging Framework - Audit Logger Module.
 
 Provides compliance-grade immutable audit trails capturing security-sensitive actions,
 system administration operations, identity challenges, and data modifications.
@@ -8,8 +8,8 @@ system administration operations, identity challenges, and data modifications.
 from typing import Any, Dict, Optional
 from enum import Enum
 
-from corpstage.backend.shared.logging.logger_factory import LoggerFactory
-from corpstage.backend.shared.logging.correlation_context import CorrelationContext
+from aurex.backend.shared.logging.logger_factory import LoggerFactory
+from aurex.backend.shared.logging.correlation_context import CorrelationContext
 
 # Fetch dedicated audit logger. In high-security systems, this logger can be
 # routed to specialized append-only systems or secure SIEM channels like Azure Monitor.

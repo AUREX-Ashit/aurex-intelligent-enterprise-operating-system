@@ -1,5 +1,5 @@
 """
-CorpStage Shared Logging Framework - Correlation Context Module.
+Aurex Shared Logging Framework - Correlation Context Module.
 
 Manages task-local context variables (correlation IDs, tenant contexts,
 user identifiers, and OpenTelemetry trace bounds) safely across synchronous

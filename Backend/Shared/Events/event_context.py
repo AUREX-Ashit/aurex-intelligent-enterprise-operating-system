@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Context Module.
+Aurex Shared Events Framework - Event Context Module.
 
 Bridges distributed-tracing correlation context with event telemetry.
 Allows capturing, storing, and loading context variables safely during event execution.
@@ -71,9 +71,9 @@ class EventContext:
         Gathers active event context for envelope injection.
         Tries to import from Shared Logging CorrelationContext first if available.
         """
-        # Try to hot-resolve from CorpStage Logging correlation context if it exists
+        # Try to hot-resolve from Aurex Logging correlation context if it exists
         try:
-            from corpstage.backend.shared.logging.correlation_context import CorrelationContext
+            from aurex.backend.shared.logging.correlation_context import CorrelationContext
             log_ctx = CorrelationContext.load_context_dict()
             return {
                 "correlation_id": log_ctx.get("correlation_id") or cls.get_correlation_id(),
@@ -103,7 +103,7 @@ class EventContext:
             
         # Re-inject to Logging context if possible
         try:
-            from corpstage.backend.shared.logging.correlation_context import CorrelationContext
+            from aurex.backend.shared.logging.correlation_context import CorrelationContext
             CorrelationContext.set_context_from_dict(context_dict)
         except ImportError:
             pass

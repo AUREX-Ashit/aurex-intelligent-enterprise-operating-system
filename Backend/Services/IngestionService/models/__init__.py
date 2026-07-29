@@ -1,5 +1,5 @@
 """
-CorpStage SQLAlchemy Database Models & Persistence Engine lifecycle.
+Aurex SQLAlchemy Database Models & Persistence Engine lifecycle.
 """
 from .database import Base, get_db_session, async_session_factory, engine
 from .document import Document

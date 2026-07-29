@@ -1,12 +1,12 @@
-# CorpStage Enterprise Platform Docker Infrastructure
+# Aurex Enterprise Platform Docker Infrastructure
 
-This repository encapsulates the standard local development, testing, and integration infrastructure for the CorpStage Multi-Tenant SaaS platform. It leverages **Docker Compose v3.9+** to orchestrate high-fidelity database structures, caching proxies, telemetry queues, object storage vaults, and core application services.
+This repository encapsulates the standard local development, testing, and integration infrastructure for the Aurex Multi-Tenant SaaS platform. It leverages **Docker Compose v3.9+** to orchestrate high-fidelity database structures, caching proxies, telemetry queues, object storage vaults, and core application services.
 
 ---
 
 ## 🏛️ System Architecture Layout
 
-The CorpStage architecture runs inside a dedicated isolated bridge network (`corpstage-network`), restricting cross-service queries whilst providing granular pathways for microservice integrations:
+The Aurex architecture runs inside a dedicated isolated bridge network (`aurex-network`), restricting cross-service queries whilst providing granular pathways for microservice integrations:
 
 ```
   ◄── External client APIs port ingress ────────────────────────────────────►
@@ -43,7 +43,7 @@ To preserve modularity and security, each microservice connects using specific d
 ### 1. AuthService
 * **PostgreSQL:** Injects user `auth_service_user` targeting schema `auth_schema`.
   ```ini
-  DATABASE_URL=postgresql://auth_service_user:AuthServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+  DATABASE_URL=postgresql://auth_service_user:AuthServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
   ```
 * **Redis:** Connects to cache pools on database `0`.
   ```ini
@@ -54,9 +54,9 @@ To preserve modularity and security, each microservice connects using specific d
 ### 2. TenantService
 * **PostgreSQL:** Injects user `tenant_service_user` targeting schema `tenant_schema`.
   ```ini
-  DATABASE_URL=postgresql://tenant_service_user:TenantServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+  DATABASE_URL=postgresql://tenant_service_user:TenantServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
   ```
-* **Kafka:** Publishes tenant creation events `corpstage.tenant.provisioning` on topic stream.
+* **Kafka:** Publishes tenant creation events `aurex.tenant.provisioning` on topic stream.
   ```ini
   KAFKA_BOOTSTRAP_SERVERS=kafka:9092
   ```
@@ -64,30 +64,30 @@ To preserve modularity and security, each microservice connects using specific d
 ### 3. IngestionService
 * **PostgreSQL:** Injects user `ingestion_service_user` targeting schema `ingestion_schema`.
   ```ini
-  DATABASE_URL=postgresql://ingestion_service_user:IngestionServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+  DATABASE_URL=postgresql://ingestion_service_user:IngestionServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
   ```
 * **Kafka:** Subscribes to ingestion topic schemas.
   ```ini
   KAFKA_BOOTSTRAP_SERVERS=kafka:9092
   ```
-* **MinIO Object Vault:** Accesses `corpstage-ingestion-payloads` bucket over S3 API.
+* **MinIO Object Vault:** Accesses `aurex-ingestion-payloads` bucket over S3 API.
   ```ini
   MINIO_ENDPOINT=http://minio:9000
-  MINIO_ACCESS_KEY=corpstage_admin
-  MINIO_SECRET_KEY=CorpStageAdminPass123!
+  MINIO_ACCESS_KEY=aurex_admin
+  MINIO_SECRET_KEY=AurexAdminPass123!
   ```
 
 ### 4. AIService
 * **PostgreSQL:** Injects user `ai_service_user` targeting schema `ai_schema`.
   ```ini
-  DATABASE_URL=postgresql://ai_service_user:AIServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+  DATABASE_URL=postgresql://ai_service_user:AIServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
   ```
 * **Redis:** Caches embedding patterns.
   ```ini
   REDIS_HOST=redis
   REDIS_PORT=6379
   ```
-* **Kafka:** Outputs audit telemetry events to `corpstage.ai.inference.logs`.
+* **Kafka:** Outputs audit telemetry events to `aurex.ai.inference.logs`.
   ```ini
   KAFKA_BOOTSTRAP_SERVERS=kafka:9092
   ```
@@ -95,7 +95,7 @@ To preserve modularity and security, each microservice connects using specific d
 ### 5. ReportingService
 * **PostgreSQL:** Injects user `reporting_service_user` targeting schema `reporting_schema`.
   ```ini
-  DATABASE_URL=postgresql://reporting_service_user:ReportingServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+  DATABASE_URL=postgresql://reporting_service_user:ReportingServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
   ```
 * **Kafka:** Reads cross-service events to build reports.
   ```ini

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: CorpStage Tenant API
+  title: Aurex Tenant API
   description: Tenant and organization management APIs
   version: 1.0.0
 

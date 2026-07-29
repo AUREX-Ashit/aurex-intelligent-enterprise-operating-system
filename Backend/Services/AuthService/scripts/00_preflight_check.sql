@@ -1,6 +1,6 @@
 -- =============================================================================
 -- 00_preflight_check.sql
--- CorpStage AuthService — Option B Pre-flight Verification
+-- Aurex AuthService — Option B Pre-flight Verification
 -- =============================================================================
 -- PURPOSE
 --   Run this script FIRST, before any drops or migrations.
@@ -8,7 +8,7 @@
 --   Abort the entire sequence if ANY result differs.
 --
 -- HOW TO RUN
---   docker exec -it corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -it aurex-postgres psql -U postgres -d aurex \
 --     -f /path/to/00_preflight_check.sql
 -- =============================================================================
 
@@ -27,7 +27,7 @@ SELECT version();
 
 -- -----------------------------------------------------------------------------
 -- CHECK 2: Current database
--- Expected: corpstage
+-- Expected: aurex
 -- -----------------------------------------------------------------------------
 \echo ''
 \echo 'CHECK 2: Current database'

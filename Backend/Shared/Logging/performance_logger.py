@@ -1,5 +1,5 @@
 """
-CorpStage Shared Logging Framework - Performance Logger Module.
+Aurex Shared Logging Framework - Performance Logger Module.
 
 Provides precise runtime execution timing instrumentation via Context Managers,
 synchronous/asynchronous Function Decorators, and direct performance logger APIs.
@@ -11,7 +11,7 @@ import inspect
 from typing import Any, Dict, Callable, Optional, TypeVar, cast
 from types import TracebackType
 
-from corpstage.backend.shared.logging.logger_factory import LoggerFactory
+from aurex.backend.shared.logging.logger_factory import LoggerFactory
 
 logger = LoggerFactory.get_logger("cs.telemetry.performance")
 

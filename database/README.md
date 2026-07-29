@@ -1,6 +1,6 @@
-# CorpStage Enterprise SaaS - Relational Database Platform
+# Aurex Enterprise SaaS - Relational Database Platform
 
-This directory contains the core physical data architectures and schema controls required for the Core CorpStage Plattform. It provides a highly partitionable, audit-tracked relational core modeling tenant directories, access frameworks, file metadata structures, UN Sustainable Development Goals (SDGs), and ESG metrics compliance pipelines.
+This directory contains the core physical data architectures and schema controls required for the Core Aurex Plattform. It provides a highly partitionable, audit-tracked relational core modeling tenant directories, access frameworks, file metadata structures, UN Sustainable Development Goals (SDGs), and ESG metrics compliance pipelines.
 
 ---
 
@@ -24,7 +24,7 @@ Database/
 
 ## 🏛️ Tenant-Isolation Model & RLS Architecture
 
-CorpStage utilizes a **shared-database, isolated-schema** multi-tenant paradigm. This model enforces logical isolation of sensitive tenant details using **PostgreSQL Row-Level Security (RLS) policies** combined with foreign key indices.
+Aurex utilizes a **shared-database, isolated-schema** multi-tenant paradigm. This model enforces logical isolation of sensitive tenant details using **PostgreSQL Row-Level Security (RLS) policies** combined with foreign key indices.
 
 ### How Row-Level Security (RLS) Works
 Every tenant-scoped table features a non-nullable `tenant_id` field. Rather than adding tedious `WHERE tenant_id = ?` bounds manually inside each CRUD database query, PostgreSQL filters rows automatically at the engine layer based on a session context token.
@@ -67,7 +67,7 @@ Ensure you set the target `DATABASE_URL` context variable and carry out the stan
 
 ```bash
 # Export the matching environment connection parameters
-export DATABASE_URL="postgresql://postgres:CorpStageMasterDatabasePass123!@localhost:5432/corpstage?sslmode=disable"
+export DATABASE_URL="postgresql://postgres:AurexMasterDatabasePass123!@localhost:5432/aurex?sslmode=disable"
 
 # Run alembic upgrade to the head revision
 alembic upgrade head
@@ -84,7 +84,7 @@ alembic downgrade base
 
 ## 🧬 Taxonomy & Metric Standards (Master Seeds)
 
-CorpStage incorporates standard corporate governance taxonomies out-of-the-box. Running `/corpstage/database/seeds/seed_data.sql` populates:
+Aurex incorporates standard corporate governance taxonomies out-of-the-box. Running `/aurex/database/seeds/seed_data.sql` populates:
 
 1. **UN Sustainable Development Goals (SDGs):** Immutable database representation of Goals 1 through 17 which can be linked to metrics profiles via the `sdg_mappings` join table.
 2. **ESG Metric Rules Catalog:** Predefined taxonomy indexes mapped directly to standard disclosure standards such as the **GRI (Global Reporting Initiative)** index and **SASB (Sustainability Accounting Standards Board)** codes, including:

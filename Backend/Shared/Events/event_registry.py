@@ -1,5 +1,5 @@
 """
-CorpStage Shared Events Framework - Event Registry.
+Aurex Shared Events Framework - Event Registry.
 
 Secures and manages physical-to-logical type mapping, ensuring any subscriber daemon thread
 can look up appropriate schemas to rehydrate incoming byte payloads.
@@ -8,14 +8,14 @@ can look up appropriate schemas to rehydrate incoming byte payloads.
 import threading
 from typing import Dict, Any, Type, Optional, Tuple
 
-from corpstage.backend.shared.events.event_base import BaseEvent
-from corpstage.backend.shared.events.exceptions import EventRegistryError
+from aurex.backend.shared.events.event_base import BaseEvent
+from aurex.backend.shared.events.exceptions import EventRegistryError
 
 
 class EventRegistry:
     """
     Thread-safe schemas registry binding event string signifiers
-    (e.g., 'corpstage.auth.user.created') and version constraints to their Python representations.
+    (e.g., 'aurex.auth.user.created') and version constraints to their Python representations.
     """
 
     _instance: Optional["EventRegistry"] = None

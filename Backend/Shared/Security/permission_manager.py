@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Permission Manager Module.
+Aurex Shared Security Framework - Permission Manager Module.
 
 Provides granular permission-based authorization checks with advanced wildcard (*), 
 part-matching, and resource-scoping support. Emplements fail-fast, immutable 
@@ -10,13 +10,13 @@ import logging
 from enum import Enum
 from typing import Set, List, Union
 
-logger = logging.getLogger("CorpStage.Security.PermissionManager")
+logger = logging.getLogger("Aurex.Security.PermissionManager")
 
 
 class PlatformPermission(str, Enum):
     """
     Standard Enterprise Permission list governing actions across 
-    CorpStage services (Auth, Tenant, Ingestion, AI, Reporting).
+    Aurex services (Auth, Tenant, Ingestion, AI, Reporting).
     """
     # Tenant Operations
     TENANT_CREATE = "tenant:create"

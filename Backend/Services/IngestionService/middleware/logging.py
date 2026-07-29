@@ -7,7 +7,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from config.settings import settings
 
 # Configure standard logger to write structured format
-logger = logging.getLogger("corpstage.ingestion")
+logger = logging.getLogger("aurex.ingestion")
 logger.setLevel(logging.INFO if not settings.debug else logging.DEBUG)
 
 # Basic Stream Handler if not configured

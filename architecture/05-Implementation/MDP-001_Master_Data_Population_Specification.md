@@ -2,7 +2,7 @@
 ### Version 1.2 — GOLD STANDARD (Supersedes v1.1)
 
 **Status:** LOCKED
-**Purpose:** Execution-level instructions for Claude Code to populate CorpStage's platform-seed master data tables at build time, reading directly from the 23 Domain CILs, 7 Industry Extension Packs, and the locked architecture documents (SD-001 v2.0, SD-002 v2.0, SD-003 v2.0, URA-001 v2.1, ERG-001 v2.0).
+**Purpose:** Execution-level instructions for Claude Code to populate Aurex's platform-seed master data tables at build time, reading directly from the 23 Domain CILs, 7 Industry Extension Packs, and the locked architecture documents (SD-001 v2.0, SD-002 v2.0, SD-003 v2.0, URA-001 v2.1, ERG-001 v2.0).
 **Not this document's job:** CMD-001 defines what a table *is* and how it's classified. The Technical Architecture defines the physical schema. This document defines what *data* goes in, from where, and how — the layer CMD-001 and the Technical Architecture deliberately don't cover.
 **Every mapping below is verified against the actual locked Technical Architecture schema, not assumed from an earlier unverified table list.**
 
@@ -137,7 +137,7 @@ Source: each of the 7 IEP's `01_Sector_Profile` sheet (SASB SICS Sector/Sub-Indu
 ## B. Identity & Access Tables (URA-001 v2.1-sourced, global scope only)
 
 ### B1. `system_role_registry`
-Source: URA-001-29, verbatim. Exactly 5 rows: `CORPSTAGE_ADMIN`, `CORPORATE_ADMIN`, `USER_ADMIN`, `SECURITY_ADMIN`, `DOMAIN_ADMIN`. Fixed, stable — this table's content will not change based on CIL updates.
+Source: URA-001-29, verbatim. Exactly 5 rows: `AUREX_ADMIN`, `CORPORATE_ADMIN`, `USER_ADMIN`, `SECURITY_ADMIN`, `DOMAIN_ADMIN`. Fixed, stable — this table's content will not change based on CIL updates.
 
 ### B2. `business_role_registry` (global rows only)
 Source: URA-001-30's named examples (CEO, CFO, COO, CHRO, CSO, CISO, Company Secretary, Finance Manager, Plant Head, Board Member) — populate with `organization_id = NULL`. Tenant-specific custom roles (URA-001-38) are created during onboarding, not seeded here.

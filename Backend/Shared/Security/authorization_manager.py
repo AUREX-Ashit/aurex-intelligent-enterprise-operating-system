@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Authorization Manager Module.
+Aurex Shared Security Framework - Authorization Manager Module.
 
 High-level security coordinator. Exposes elite FastAPI dependency injections (Guards)
 governing RBAC, Permission arrays, and Tenant scope claims. Integrates with task-local
@@ -17,19 +17,19 @@ try:
 except ImportError:
     _FASTAPI_AVAILABLE = False
 
-from corpstage.backend.shared.security.exceptions import (
+from aurex.backend.shared.security.exceptions import (
     AuthenticationError,
     InvalidTokenError,
     PermissionDeniedError,
     TenantAuthorizationError
 )
-from corpstage.backend.shared.security.security_context import SecurityPrincipal, SecurityContext
-from corpstage.backend.shared.security.jwt_manager import JWTManager
-from corpstage.backend.shared.security.role_manager import RoleManager, UserRole
-from corpstage.backend.shared.security.permission_manager import PermissionManager
-from corpstage.backend.shared.security.tenant_authorization import TenantAuthorization
+from aurex.backend.shared.security.security_context import SecurityPrincipal, SecurityContext
+from aurex.backend.shared.security.jwt_manager import JWTManager
+from aurex.backend.shared.security.role_manager import RoleManager, UserRole
+from aurex.backend.shared.security.permission_manager import PermissionManager
+from aurex.backend.shared.security.tenant_authorization import TenantAuthorization
 
-logger = logging.getLogger("CorpStage.Security.AuthorizationManager")
+logger = logging.getLogger("Aurex.Security.AuthorizationManager")
 
 
 class SecurityGuard:
@@ -193,7 +193,7 @@ if _FASTAPI_AVAILABLE:
                 SecurityContext.clear()
                 # Clear Database tenant context if it was set
                 try:
-                    from corpstage.backend.shared.database.tenant_context import TenantContext
+                    from aurex.backend.shared.database.tenant_context import TenantContext
                     TenantContext.clear_tenant_id()
                 except ImportError:
                     pass

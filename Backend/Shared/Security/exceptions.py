@@ -1,5 +1,5 @@
 """
-CorpStage Shared Security Framework - Exceptions Module.
+Aurex Shared Security Framework - Exceptions Module.
 
 Provides custom, strongly-typed enterprise exceptions for the security,
 authentication, role management, and tenant authorization boundaries.
@@ -7,7 +7,7 @@ Supports detailed telemetry logging and precise API response formatting.
 """
 
 class SecurityError(Exception):
-    """Base exception for all security-related errors in the CorpStage platform."""
+    """Base exception for all security-related errors in the Aurex platform."""
     pass
 
 

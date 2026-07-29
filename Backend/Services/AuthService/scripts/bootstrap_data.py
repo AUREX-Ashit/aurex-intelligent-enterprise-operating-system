@@ -86,7 +86,7 @@ ROLES: list[RoleSeed] = [
         role_code="PLATFORM_ADMIN",
         role_name="Platform Administrator",
         description=(
-            "CorpStage platform operator. Manages all organizations, system "
+            "Aurex platform operator. Manages all organizations, system "
             "configuration, and platform-level settings. Operates across all "
             "organization boundaries."
         ),
@@ -199,7 +199,7 @@ ROLE_PERMISSIONS: dict[UUID, list[UUID]] = {
 DEMO_ORGANIZATION = OrganizationSeed(
     id=UUID("5466c6bf-67b2-52ac-ba83-a8cff7b8b42e"),
     organization_code="CORP-DEMO-001",
-    organization_name="CorpStage Demo Organization",
+    organization_name="Aurex Demo Organization",
     organization_type="CORPORATE",
 )
 
@@ -214,7 +214,7 @@ DEMO_ADMIN_IDENTITY = IdentitySeed(
     id=UUID("69a5c359-8a90-5274-9835-c0636e415873"),
     person_id=DEMO_ADMIN_PERSON.id,
     email="admin@corpstage.com",
-    # bcrypt cost-12 hash of CorpStage#Admin2026! — pre-computed and verified
+    # bcrypt cost-12 hash of Aurex#Admin2026! — pre-computed and verified
     # round-trip in the original 05_bootstrap_first_user.sql; reused verbatim.
     password_hash="$2b$12$BhF.jMSngAwyXAmmREe6BeB53viDBigLvJ7j76pyWHCpq/CvZd7AK",
 )
@@ -243,7 +243,7 @@ PLATFORM_ADMIN_IDENTITY = IdentitySeed(
     id=UUID("4663ad18-6b14-5dd1-84c0-dbce51714d5f"),
     person_id=PLATFORM_ADMIN_PERSON.id,
     email="platform.admin@corpstage.com",
-    # bcrypt cost-12 hash of CorpStage#PlatformAdmin2026! — pre-computed and
+    # bcrypt cost-12 hash of Aurex#PlatformAdmin2026! — pre-computed and
     # verified round-trip in the original 07_bootstrap_platform_admin.sql.
     password_hash="$2b$12$IGo4i.zyAUgt2lyGul.LauAUOD1.6F.1LZfhtyrPYV/LKd1Jp4BCC",
 )

@@ -42,7 +42,7 @@ async def test_health_check_exempt_from_tenant_isolation(client: AsyncClient):
     assert response.status_code == 200
     payload = response.json()
     assert payload["status"] == "healthy"
-    assert payload["service"] == "corpstage-ingestion-service"
+    assert payload["service"] == "aurex-ingestion-service"
 
 
 async def test_successful_document_upload(client: AsyncClient):
@@ -68,7 +68,7 @@ async def test_successful_document_upload(client: AsyncClient):
     assert data["tenant_id"] == "tenant_abc_corp_01"
     assert data["document_type"] == "esg_report"
     assert data["content_type"] == "application/pdf"
-    assert "stcorpstage" in data["storage_path"]
+    assert "staurex" in data["storage_path"]
     assert data["status"] == "uploaded"
     assert data["metadata_json"]["year"] == 2026
     assert data["metadata_json"]["audited"] is True

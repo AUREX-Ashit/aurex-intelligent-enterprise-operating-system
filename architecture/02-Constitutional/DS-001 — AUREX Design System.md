@@ -142,7 +142,7 @@ The document architecture above — Table of Contents, Ownership Matrix, Compone
 
 ### 1.1 Purpose
 
-This document defines the canonical Visual Language of AUREX, the Intelligent Enterprise Operating Center delivered by the CorpStage Enterprise Operating System.
+This document defines the canonical Visual Language of AUREX, the Intelligent Enterprise Operating Center delivered by the Aurex Enterprise Operating System.
 
 It establishes the brand identity, color system, typography, iconography, design tokens, theme architecture, component visual standards, and domain-specific visual language through which every presentation surface governed by SD-001 (Enterprise Presentation Architecture) is rendered.
 
@@ -3035,7 +3035,7 @@ Contribution Process governs proposals only, throughout: every principle above c
 
 **DS-001-361: A Named Constitutional Authority Reviews Every Proposed Change**
 *Statement.* Every proposed change to this document — a new token, theme class, component category, brand tier, or any other closed set this document establishes — is reviewed by a named constitutional authority before it may be approved. No change is self-reviewing.
-*Architectural Rationale.* This document has cited "constitutional review" roughly twenty times across Chapters 5 through 21 without ever naming who performs it. `SD-002-060` establishes the precedent this section follows: Global CIL changes rest with a named authority (the CorpStage Governance Board), not an unnamed process. This section does not invent a new committee or organizational structure — DS-001 defines that a named constitutional authority must exist and what it must never be (below), not the org chart that seats it, consistent with this document's constitutional-not-organizational character throughout.
+*Architectural Rationale.* This document has cited "constitutional review" roughly twenty times across Chapters 5 through 21 without ever naming who performs it. `SD-002-060` establishes the precedent this section follows: Global CIL changes rest with a named authority (the Aurex Governance Board), not an unnamed process. This section does not invent a new committee or organizational structure — DS-001 defines that a named constitutional authority must exist and what it must never be (below), not the org chart that seats it, consistent with this document's constitutional-not-organizational character throughout.
 *Practical Implications.* Every one of this document's "requires constitutional review" citations (Chapters 5–21) now resolves to this principle: the review is performed by the same constitutional governance authority ARCH-000 §11 and `SD-002-060` already establish for the Enterprise Operating System's other canonical documents, not a DS-001-specific body invented in isolation.
 
 **DS-001-362: Constitutional Authority Cannot Be Delegated to Implementation Teams**

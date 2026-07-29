@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Organization Establishment Attempt API
+  title: Aurex Organization Establishment Attempt API
   description: >
     IRA-001A constitutional correction to WP-01 (C-004, Organization
     Management): BA-01 (Establish Organization Identity, amended),

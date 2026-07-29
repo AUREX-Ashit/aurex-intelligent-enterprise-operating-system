@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class Person(Base):
     """
-    A human being known to the CorpStage platform.
+    A human being known to the Aurex platform.
 
     A Person may have multiple identities and memberships.
     """

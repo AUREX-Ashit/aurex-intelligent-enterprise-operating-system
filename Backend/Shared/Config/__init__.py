@@ -1,12 +1,12 @@
 """
-CorpStage Shared Configuration Framework
+Aurex Shared Configuration Framework
 
 A unified, multi-service configuration delivery mechanism built for Enterprise-grade
 resiliency, fail-fast validations, strict environment secrets insulation, and 
 hierarchical overrides.
 """
 
-from corpstage.backend.shared.config.exceptions import (
+from aurex.backend.shared.config.exceptions import (
     ConfigError,
     ConfigFileNotFoundError,
     YAMLValidationError,
@@ -14,10 +14,10 @@ from corpstage.backend.shared.config.exceptions import (
     TypeMismatchError,
     ImmutableConfigError
 )
-from corpstage.backend.shared.config.yaml_parser import YAMLParser
-from corpstage.backend.shared.config.environment_manager import EnvironmentManager
-from corpstage.backend.shared.config.settings_manager import SettingsManager, SettingsNode
-from corpstage.backend.shared.config.config_loader import ConfigLoader
+from aurex.backend.shared.config.yaml_parser import YAMLParser
+from aurex.backend.shared.config.environment_manager import EnvironmentManager
+from aurex.backend.shared.config.settings_manager import SettingsManager, SettingsNode
+from aurex.backend.shared.config.config_loader import ConfigLoader
 
 __all__ = [
     "ConfigLoader",

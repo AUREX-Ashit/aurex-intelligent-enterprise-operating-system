@@ -1,5 +1,5 @@
 """
-CorpStage Shared Configuration Framework - Config Loader Module.
+Aurex Shared Configuration Framework - Config Loader Module.
 
 This is the main entry point and orchestrator. It loads YAML, overlays
 environment overrides, validates required inputs, processes JWT validation,
@@ -10,21 +10,21 @@ import os
 import logging
 from typing import Dict, Any, Optional
 
-from corpstage.backend.shared.config.exceptions import (
+from aurex.backend.shared.config.exceptions import (
     ConfigError,
     YAMLValidationError,
     MissingRequiredValueError
 )
-from corpstage.backend.shared.config.yaml_parser import YAMLParser
-from corpstage.backend.shared.config.environment_manager import EnvironmentManager
-from corpstage.backend.shared.config.settings_manager import SettingsManager, SettingsNode
+from aurex.backend.shared.config.yaml_parser import YAMLParser
+from aurex.backend.shared.config.environment_manager import EnvironmentManager
+from aurex.backend.shared.config.settings_manager import SettingsManager, SettingsNode
 
-# Set up logging for CorpStage Shared Configuration
+# Set up logging for Aurex Shared Configuration
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
-logger = logging.getLogger("CorpStage.Config.Loader")
+logger = logging.getLogger("Aurex.Config.Loader")
 
 
 class ConfigLoader:
@@ -43,7 +43,7 @@ class ConfigLoader:
         config_file_path: Optional[str] = None
     ) -> SettingsNode:
         """
-        Coordinates the compilation, override resolution, and validation of CorpStage
+        Coordinates the compilation, override resolution, and validation of Aurex
         configuration properties, committing them into a frozen, typed representation.
         
         Args:
@@ -56,7 +56,7 @@ class ConfigLoader:
         Raises:
             ConfigError: When configuration parsing or integrity verification fails.
         """
-        logger.info(f"Initializing CorpStage Share Configuration Framework for service: [{service_name}]")
+        logger.info(f"Initializing Aurex Share Configuration Framework for service: [{service_name}]")
 
         path_to_load = config_file_path or ConfigLoader.DEFAULT_CONFIG_PATH
         logger.info(f"Loading base platform configuration values from: {path_to_load}")
@@ -67,7 +67,7 @@ class ConfigLoader:
         # 2. Get and Apply Environment Overrides
         overrides = EnvironmentManager.get_overrides()
         if overrides:
-            logger.info("Found active CORPSTAGE_ environment variables. Applying overrides...")
+            logger.info("Found active AUREX_ environment variables. Applying overrides...")
             logger.debug(f"Environment overrides detected: {list(overrides.keys())}")
             final_raw = EnvironmentManager.apply_overrides(base_raw, overrides)
         else:
@@ -83,7 +83,7 @@ class ConfigLoader:
 
         # 5. Populate Global Settings Manager
         settings = SettingsManager.load_from_dict(final_raw)
-        logger.info(f"CorpStage configuration successfully initialized. Unified settings frozen and ready.")
+        logger.info(f"Aurex configuration successfully initialized. Unified settings frozen and ready.")
         
         return settings
 

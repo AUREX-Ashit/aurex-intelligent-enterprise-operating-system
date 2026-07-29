@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Authentication API
-  description: Multi-tenant authenticating, token issuing, and routing authorization service specs for the CorpStage enterprise platform.
+  title: Aurex Authentication API
+  description: Multi-tenant authenticating, token issuing, and routing authorization service specs for the Aurex enterprise platform.
   version: 1.0.0
 paths:
   /auth/login:
@@ -207,7 +207,7 @@ components:
           example: "healthy"
         service:
           type: string
-          example: "CorpStage AuthService"
+          example: "Aurex AuthService"
         dependencies:
           type: object
           properties:
@@ -223,7 +223,7 @@ components:
           example: "ready"
         service:
           type: string
-          example: "CorpStage AuthService"
+          example: "Aurex AuthService"
         bootstrap:
           type: string
           example: "complete"

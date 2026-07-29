@@ -2,9 +2,9 @@
 ### Version 2.0 — GOLD STANDARD (Supersedes v1.0 Draft)
 
 **Status:** LOCKED
-**Scope:** Defines how humans, AI, departments, subsidiaries, and external participants interact within CorpStage.
+**Scope:** Defines how humans, AI, departments, subsidiaries, and external participants interact within Aurex.
 **Companion documents:** SD-001 (Screen Design Principles, v2.0 GOLD STANDARD), SD-002 (Universal Business Object Rules, v2.0 GOLD STANDARD)
-**Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
+**Governing framework:** Aurex Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
 
@@ -20,7 +20,7 @@ SD-003 v1.0 was the most structurally sound of the three foundational documents 
 | Merger/reorganization mechanism specified | v1.0's SD-003-219 asserted enterprise truth "shall survive" mergers and reorganizations without stating how conflicting ownership claims from two combining organizations resolve. A reconciliation process is now specified — see SD-003-219 below. |
 | Interruption Frequency Ceiling added | New principle (SD-003-226): a daily cap on cumulative interruptions to any one person, independent of L9's per-screen item cap, closing a real attention-management gap for high-connectivity users. |
 | Dual-parent joint venture jurisdiction clarified | New principle (SD-003-227) addresses what happens when two unrelated parent organizations both claim escalation authority over the same joint-venture entity. |
-| External participant jurisdiction boundary stated | New principle (SD-003-228) makes explicit that CorpStage's interaction laws govern platform behavior only, and do not presume authority over an external participant's home-organization obligations. |
+| External participant jurisdiction boundary stated | New principle (SD-003-228) makes explicit that Aurex's interaction laws govern platform behavior only, and do not presume authority over an external participant's home-organization obligations. |
 | Cross-reference added | SD-003-179 (AI interaction disclosure sequencing) now explicitly cross-references SD-001-021 (screen-level Progressive Disclosure) to prevent future ambiguity about which document owns which angle of the same idea. |
 | Numbering | Extended cleanly: SD-003-001 through SD-003-228, zero gaps, zero collisions. Original rule numbering preserved throughout — this version adds and amends, it does not renumber what already worked. |
 | Format | Original v1.0 rules are restated below in compact form (title plus the operative rule, one to two sentences) rather than reproducing every underlying example list verbatim — same substance, appropriate density for a locked reference document. Every new or amended principle receives full treatment. |
@@ -135,9 +135,9 @@ Where a joint-venture business object could legitimately escalate to either of t
 
 **SD-003-228 [new]: External Participant Jurisdiction Boundary**
 
-*(New — closes a gap identified in review: SD-003-195's External Participant model did not state the limits of CorpStage's own authority over an external participant.)*
+*(New — closes a gap identified in review: SD-003-195's External Participant model did not state the limits of Aurex's own authority over an external participant.)*
 
-CorpStage's interaction laws govern behavior *within the platform* only. An external participant (auditor, contractor, regulator, vendor employee) who is simultaneously subject to their own home organization's independent delegation, escalation, and approval rules is never assumed to be fully governed by CorpStage's interaction model. Any routing, escalation, or approval requirement directed at an external participant is a *request* recorded and tracked by CorpStage, not a *command* CorpStage can enforce — the platform's audit trail records what was asked and what was received, and does not presume authority over how the external participant's own organization internally handled the request.
+Aurex's interaction laws govern behavior *within the platform* only. An external participant (auditor, contractor, regulator, vendor employee) who is simultaneously subject to their own home organization's independent delegation, escalation, and approval rules is never assumed to be fully governed by Aurex's interaction model. Any routing, escalation, or approval requirement directed at an external participant is a *request* recorded and tracked by Aurex, not a *command* Aurex can enforce — the platform's audit trail records what was asked and what was received, and does not presume authority over how the external participant's own organization internally handled the request.
 
 ---
 

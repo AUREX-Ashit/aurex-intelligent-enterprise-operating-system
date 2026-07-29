@@ -1,6 +1,6 @@
 -- =============================================================================
 -- 02_post_drop_verify.sql
--- CorpStage AuthService — Post-Drop Verification
+-- Aurex AuthService — Post-Drop Verification
 -- =============================================================================
 -- PURPOSE
 --   Run after 01_drop_legacy_tables.sql.
@@ -8,7 +8,7 @@
 --   Proceed to Alembic migration only after this script produces clean results.
 --
 -- HOW TO RUN
---   docker exec -it corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -it aurex-postgres psql -U postgres -d aurex \
 --     -f /path/to/02_post_drop_verify.sql
 -- =============================================================================
 

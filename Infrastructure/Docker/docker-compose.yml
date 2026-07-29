@@ -1,24 +1,24 @@
 version: '3.9'
 
 # ==============================================================================
-# CorpStage Enterprise Platform - Distributed Architecture Compose Suite
+# Aurex Enterprise Platform - Distributed Architecture Compose Suite
 # Includes Core Datastores, Message Brokers, Object Storage, and Microservices
 # ==============================================================================
 
 networks:
-  corpstage-network:
+  aurex-network:
     driver: bridge
-    name: corpstage-network
+    name: aurex-network
 
 volumes:
   pg_data:
-    name: corpstage_pg_data
+    name: aurex_pg_data
   redis_data:
-    name: corpstage_redis_data
+    name: aurex_redis_data
   kafka_data:
-    name: corpstage_kafka_data
+    name: aurex_kafka_data
   minio_data:
-    name: corpstage_minio_data
+    name: aurex_minio_data
 
 services:
 
@@ -27,21 +27,21 @@ services:
   # ----------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
-    container_name: corpstage-postgres
+    container_name: aurex-postgres
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-corpstage}
+      POSTGRES_DB: ${POSTGRES_DB:-aurex}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CorpStageMasterDatabasePass123!}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-AurexMasterDatabasePass123!}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -61,14 +61,14 @@ services:
   # ----------------------------------------------------------------------------
   redis:
     image: redis:7.2-alpine
-    container_name: corpstage-redis
+    container_name: aurex-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -88,13 +88,13 @@ services:
   # ----------------------------------------------------------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: corpstage-zookeeper
+    container_name: aurex-zookeeper
     restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -111,7 +111,7 @@ services:
   # ----------------------------------------------------------------------------
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: corpstage-kafka
+    container_name: aurex-kafka
     restart: unless-stopped
     depends_on:
       zookeeper:
@@ -130,7 +130,7 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -148,36 +148,36 @@ services:
   # Kafka Topics Provisioning Container (Gracefully exits after topics auto-generation)
   kafka-init-topics:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: corpstage-kafka-init-topics
+    container_name: aurex-kafka-init-topics
     depends_on:
       kafka:
         condition: service_healthy
     networks:
-      - corpstage-network
+      - aurex-network
     entrypoint: [ "sh", "-c" ]
     command: |
-      "kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic corpstage.auth.user.events --replication-factor 1 --partitions 3 && \
-       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic corpstage.tenant.provisioning --replication-factor 1 --partitions 3 && \
-       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic corpstage.ingestion.job.updates --replication-factor 1 --partitions 3 && \
-       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic corpstage.ai.inference.logs --replication-factor 1 --partitions 3"
+      "kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic aurex.auth.user.events --replication-factor 1 --partitions 3 && \
+       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic aurex.tenant.provisioning --replication-factor 1 --partitions 3 && \
+       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic aurex.ingestion.job.updates --replication-factor 1 --partitions 3 && \
+       kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic aurex.ai.inference.logs --replication-factor 1 --partitions 3"
 
   # ----------------------------------------------------------------------------
   # Storage Object Store: MinIO (Structured / Unstructured ESG Payload Evidence)
   # ----------------------------------------------------------------------------
   minio:
     image: minio/minio:RELEASE.2024-03-03T20-13-08Z
-    container_name: corpstage-minio
+    container_name: aurex-minio
     restart: unless-stopped
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-corpstage_admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-CorpStageAdminPass123!}
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-aurex_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-AurexAdminPass123!}
     volumes:
       - minio_data:/data
     networks:
-      - corpstage-network
+      - aurex-network
     command: server /data --console-address ":9001"
     deploy:
       resources:
@@ -196,19 +196,19 @@ services:
   # MinIO Bucket Provisioner Helper (Self-terminating bootstrap hook)
   minio-init-buckets:
     image: minio/mc:RELEASE.2024-03-03T22-01-38Z
-    container_name: corpstage-minio-init-buckets
+    container_name: aurex-minio-init-buckets
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      mc alias set local http://minio:9000 corpstage_admin CorpStageAdminPass123!;
-      mc mb --ignore-existing local/corpstage-ingestion-payloads;
-      mc mb --ignore-existing local/corpstage-esg-evidence;
+      mc alias set local http://minio:9000 aurex_admin AurexAdminPass123!;
+      mc mb --ignore-existing local/aurex-ingestion-payloads;
+      mc mb --ignore-existing local/aurex-esg-evidence;
       exit 0;
       "
     networks:
-      - corpstage-network
+      - aurex-network
 
   # ==============================================================================
   # Microservices Layer: FastAPI Python Enterprise Integration
@@ -221,8 +221,8 @@ services:
     build:
       context: ../../
       dockerfile: ./Backend/Services/AuthService/Dockerfile
-    image: corpstage/auth-service:latest
-    container_name: corpstage-auth-service
+    image: aurex/auth-service:latest
+    container_name: aurex-auth-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -232,13 +232,13 @@ services:
     ports:
       - "8001:8001"
     environment:
-      CORPSTAGE_ENVIRONMENT: ${CORPSTAGE_ENVIRONMENT:-development}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-corpstage_super_secure_enterprise_token_signing_key_2026_jwt_auth!}
-      DATABASE_URL: postgresql+asyncpg://auth_service_user:AuthServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+      AUREX_ENVIRONMENT: ${AUREX_ENVIRONMENT:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-aurex_super_secure_enterprise_token_signing_key_2026_jwt_auth!}
+      DATABASE_URL: postgresql+asyncpg://auth_service_user:AuthServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
       REDIS_HOST: redis
       REDIS_PORT: 6379
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -258,8 +258,8 @@ services:
     build:
       context: ../../
       dockerfile: ./Backend/Services/TenantService/Dockerfile
-    image: corpstage/tenant-service:latest
-    container_name: corpstage-tenant-service
+    image: aurex/tenant-service:latest
+    container_name: aurex-tenant-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -269,11 +269,11 @@ services:
     ports:
       - "8002:8002"
     environment:
-      CORPSTAGE_ENVIRONMENT: ${CORPSTAGE_ENVIRONMENT:-development}
-      DATABASE_URL: postgresql://tenant_service_user:TenantServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+      AUREX_ENVIRONMENT: ${AUREX_ENVIRONMENT:-development}
+      DATABASE_URL: postgresql://tenant_service_user:TenantServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -293,8 +293,8 @@ services:
     build:
       context: ../../
       dockerfile: ./Backend/Services/IngestionService/Dockerfile
-    image: corpstage/ingestion-service:latest
-    container_name: corpstage-ingestion-service
+    image: aurex/ingestion-service:latest
+    container_name: aurex-ingestion-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -306,14 +306,14 @@ services:
     ports:
       - "8003:8003"
     environment:
-      CORPSTAGE_ENVIRONMENT: ${CORPSTAGE_ENVIRONMENT:-development}
-      DATABASE_URL: postgresql://ingestion_service_user:IngestionServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+      AUREX_ENVIRONMENT: ${AUREX_ENVIRONMENT:-development}
+      DATABASE_URL: postgresql://ingestion_service_user:IngestionServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-corpstage_admin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-CorpStageAdminPass123!}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-aurex_admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-AurexAdminPass123!}
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -333,8 +333,8 @@ services:
     build:
       context: ../../
       dockerfile: ./Backend/Services/AIService/Dockerfile
-    image: corpstage/ai-service:latest
-    container_name: corpstage-ai-service
+    image: aurex/ai-service:latest
+    container_name: aurex-ai-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -346,13 +346,13 @@ services:
     ports:
       - "8004:8004"
     environment:
-      CORPSTAGE_ENVIRONMENT: ${CORPSTAGE_ENVIRONMENT:-development}
-      DATABASE_URL: postgresql://ai_service_user:AIServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+      AUREX_ENVIRONMENT: ${AUREX_ENVIRONMENT:-development}
+      DATABASE_URL: postgresql://ai_service_user:AIServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       REDIS_HOST: redis
       REDIS_PORT: 6379
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:
@@ -372,8 +372,8 @@ services:
     build:
       context: ../../
       dockerfile: ./Backend/Services/ReportingService/Dockerfile
-    image: corpstage/reporting-service:latest
-    container_name: corpstage-reporting-service
+    image: aurex/reporting-service:latest
+    container_name: aurex-reporting-service
     restart: unless-stopped
     depends_on:
       postgres:
@@ -383,11 +383,11 @@ services:
     ports:
       - "8005:8005"
     environment:
-      CORPSTAGE_ENVIRONMENT: ${CORPSTAGE_ENVIRONMENT:-development}
-      DATABASE_URL: postgresql+asyncpg://reporting_service_user:ReportingServiceSecretPass123!@postgres:5432/corpstage?sslmode=disable
+      AUREX_ENVIRONMENT: ${AUREX_ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+asyncpg://reporting_service_user:ReportingServiceSecretPass123!@postgres:5432/aurex?sslmode=disable
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     networks:
-      - corpstage-network
+      - aurex-network
     deploy:
       resources:
         limits:

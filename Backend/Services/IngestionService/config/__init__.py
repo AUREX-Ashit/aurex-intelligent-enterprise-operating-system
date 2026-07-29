@@ -1,5 +1,5 @@
 """
-CorpStage Ingestion Service Configurations Module.
+Aurex Ingestion Service Configurations Module.
 """
 from .settings import settings, Settings
 

@@ -64,7 +64,7 @@ No construct in this document substitutes for Identity, Membership, Organization
 ## SECTION 5: Enterprise Integration (C-150)
 
 **PLT-001-010: Enterprise Integration Defined**
-An Enterprise Integration is the enterprise's canonical record of a governed business relationship between the CorpStage Intelligent Operating Center and one external system: the external party's business identity, the business purpose the relationship serves, its current status, and its accountable owner. It is never itself a protocol, connector, or endpoint — those remain CMD-001 §23's canonical data shape, consumed by reference once an Enterprise Integration authorizes their use.
+An Enterprise Integration is the enterprise's canonical record of a governed business relationship between the Aurex Intelligent Operating Center and one external system: the external party's business identity, the business purpose the relationship serves, its current status, and its accountable owner. It is never itself a protocol, connector, or endpoint — those remain CMD-001 §23's canonical data shape, consumed by reference once an Enterprise Integration authorizes their use.
 
 **PLT-001-011: Integration Purpose**
 Every Enterprise Integration states, before any technical connection exists, which enterprise business capability or objective it serves (for example, a specific Business Activity's need to consume or publish data). An Enterprise Integration with no stated business purpose is not constitutionally valid.
@@ -83,7 +83,7 @@ An Enterprise Integration's existence and Active status never themselves grant d
 ## SECTION 6: Import & Export Management (C-151)
 
 **PLT-001-020: Enterprise Data Exchange Defined**
-An Enterprise Data Exchange is the enterprise's canonical record of a specific, governed movement of enterprise data into (Import) or out of (Export) the CorpStage Intelligent Operating Center, occurring under an existing Enterprise Integration (Section 5), with a stated business purpose, data scope, and authorization.
+An Enterprise Data Exchange is the enterprise's canonical record of a specific, governed movement of enterprise data into (Import) or out of (Export) the Aurex Intelligent Operating Center, occurring under an existing Enterprise Integration (Section 5), with a stated business purpose, data scope, and authorization.
 
 **PLT-001-021: Exchange Requires an Authorized Integration**
 No Enterprise Data Exchange may be proposed or authorized outside the context of an already-Authorized or Active Enterprise Integration (PLT-001-013). An Enterprise Data Exchange never establishes its own external relationship independently of Section 5.

@@ -55,7 +55,7 @@ class AzureDocumentIntelligenceStub(OCRProvider):
                     "height": 11.0,
                     "span_count": 2,
                     "lines": [
-                        {"text": "CorpStage ESG Sustainability Audit Report 2026", "confidence": 0.99},
+                        {"text": "Aurex ESG Sustainability Audit Report 2026", "confidence": 0.99},
                         {"text": "Total Greenhouse Gas (GHG) Scope 1 Direct Emissions: 14,250 metric tons CO2e", "confidence": 0.98},
                         {"text": "Target Net-Zero Goal Year: 2030", "confidence": 0.99}
                     ]

@@ -1,12 +1,12 @@
 """
-CorpStage Shared Events Framework - Exceptions Module.
+Aurex Shared Events Framework - Exceptions Module.
 
 Provides custom, strongly-typed enterprise exceptions for event lifecycle stages,
 including context validation, serialization failures, and network dispatch bounds.
 """
 
 class EventError(Exception):
-    """Base exception for all event-related errors in the CorpStage Events Framework."""
+    """Base exception for all event-related errors in the Aurex Events Framework."""
     pass
 
 

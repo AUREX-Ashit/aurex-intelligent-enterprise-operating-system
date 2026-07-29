@@ -1,6 +1,6 @@
 -- =============================================================================
 -- 07_bootstrap_platform_admin.sql
--- CorpStage AuthService — Bootstrap: Platform Administrator Person, Identity, Membership
+-- Aurex AuthService — Bootstrap: Platform Administrator Person, Identity, Membership
 -- =============================================================================
 -- PURPOSE
 --   Creates the minimum R-001 entity graph required to test a PLATFORM_ADMIN
@@ -10,7 +10,7 @@
 --   Unlike 05_bootstrap_first_user.sql, this script does NOT create a new
 --   Organization: PLATFORM_ADMIN is a system-level role that operates across
 --   all organization boundaries (see 03_seed_r001_data.sql's PLATFORM_ADMIN
---   comment), so the Membership below simply reuses the existing CorpStage
+--   comment), so the Membership below simply reuses the existing Aurex
 --   Demo Organization created by 05_bootstrap_first_user.sql. No schema, no
 --   role, and no permission is created — only data, into tables that already
 --   exist.
@@ -22,11 +22,11 @@
 --
 -- CREDENTIALS FOR LOGIN TESTING
 --   Email:    platform.admin@corpstage.com
---   Password: CorpStage#PlatformAdmin2026!
+--   Password: Aurex#PlatformAdmin2026!
 --   Org UUID: 5466c6bf-67b2-52ac-ba83-a8cff7b8b42e   (from 05_bootstrap_first_user.sql)
 --
 -- UUID STRATEGY
---   All bootstrap UUIDs are deterministic (uuid5) with the CorpStage seed
+--   All bootstrap UUIDs are deterministic (uuid5) with the Aurex seed
 --   namespace. Re-running produces the same UUIDs. ON CONFLICT DO NOTHING
 --   makes this script safe to run multiple times.
 --
@@ -46,10 +46,10 @@
 --   - Alembic migration 8fac154e79e2 applied (run: alembic upgrade head)
 --   - Seed data applied (run: 03_seed_r001_data.sql)
 --   - PLATFORM_ADMIN role exists with UUID 9524d250-fe5e-5334-845b-18d547a5b59c
---   - CorpStage Demo Organization exists (run: 05_bootstrap_first_user.sql)
+--   - Aurex Demo Organization exists (run: 05_bootstrap_first_user.sql)
 --
 -- HOW TO RUN
---   docker exec -i corpstage-postgres psql -U postgres -d corpstage \
+--   docker exec -i aurex-postgres psql -U postgres -d aurex \
 --     < scripts/07_bootstrap_platform_admin.sql
 -- =============================================================================
 
@@ -90,7 +90,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- =============================================================================
 -- 2. Identity
---    password_hash is a bcrypt cost-12 hash of: CorpStage#PlatformAdmin2026!
+--    password_hash is a bcrypt cost-12 hash of: Aurex#PlatformAdmin2026!
 --    Verified round-trip in Python before embedding.
 --    is_verified = true: allows immediate login without email verification flow.
 -- =============================================================================
@@ -126,7 +126,7 @@ ON CONFLICT (email) DO NOTHING;
 
 -- =============================================================================
 -- 3. Membership
---    Links: Platform Admin User -> CorpStage Demo Org -> PLATFORM_ADMIN
+--    Links: Platform Admin User -> Aurex Demo Org -> PLATFORM_ADMIN
 --    Reuses the Organization created by 05_bootstrap_first_user.sql — no new
 --    Organization is created here (PLATFORM_ADMIN operates across all
 --    organization boundaries; it does not require an org of its own).
@@ -150,7 +150,7 @@ INSERT INTO memberships (
 VALUES (
     '231190bc-dc3f-58d3-88c3-a4832ca62c89',
     '1ac94f77-f5fc-5ce9-9c4e-1d01d59ed6b2',
-    '5466c6bf-67b2-52ac-ba83-a8cff7b8b42e',          -- CorpStage Demo Org from 05
+    '5466c6bf-67b2-52ac-ba83-a8cff7b8b42e',          -- Aurex Demo Org from 05
     '9524d250-fe5e-5334-845b-18d547a5b59c',          -- PLATFORM_ADMIN from seed
     'ACTIVE',
     true,
@@ -170,7 +170,7 @@ COMMIT;
 \echo ''
 \echo 'Login credentials:'
 \echo '  Email:    platform.admin@corpstage.com'
-\echo '  Password: CorpStage#PlatformAdmin2026!'
+\echo '  Password: Aurex#PlatformAdmin2026!'
 \echo '  Org UUID: 5466c6bf-67b2-52ac-ba83-a8cff7b8b42e'
 \echo '  Role:     PLATFORM_ADMIN'
 \echo ''
@@ -323,6 +323,6 @@ WHERE r.id IS NULL;
 \echo ''
 \echo 'Ready for login testing:'
 \echo '  POST /auth/login'
-\echo '  Body: { email: platform.admin@corpstage.com, password: CorpStage#PlatformAdmin2026! }'
+\echo '  Body: { email: platform.admin@corpstage.com, password: Aurex#PlatformAdmin2026! }'
 \echo '  Expected: TokenResponse with all 5 R-001 JWT claims, role_code = PLATFORM_ADMIN'
 \echo '======================================='

@@ -41,7 +41,7 @@
 
 -   Why CMD-001 exists
 
--   Position within CorpStage
+-   Position within Aurex
 
 -   Relationship with SD-002, SD-003, URA-001 and ERG-001
 
@@ -125,7 +125,7 @@ This will become a platform-wide standard.
 
 This is the most important section.
 
-Every persistent object in CorpStage will belong to exactly one
+Every persistent object in Aurex will belong to exactly one
 category.
 
 Examples:
@@ -388,7 +388,7 @@ Table → API → Screen → Event → AI Mapping.
 **1.1 Purpose**
 
 The **Canonical Data Model, Master Data & Governance Architecture
-(CMD-001)** defines the foundational data architecture for the CorpStage
+(CMD-001)** defines the foundational data architecture for the Aurex
 Intelligent Operating Center.
 
 Its purpose is to establish a single, enterprise-wide model governing
@@ -397,7 +397,7 @@ versioned, secured, and consumed across the platform.
 
 CMD-001 is not a database design document.
 
-It is the constitutional definition of enterprise data within CorpStage.
+It is the constitutional definition of enterprise data within Aurex.
 
 Every persistent business object, regardless of its implementation
 technology, shall conform to the principles defined in this document.
@@ -430,7 +430,7 @@ presentation models.
 
 **1.2 Scope**
 
-CMD-001 governs every persistent information asset within the CorpStage
+CMD-001 governs every persistent information asset within the Aurex
 platform, including but not limited to:
 
 -   Business Objects
@@ -481,7 +481,7 @@ CMD-001 establishes a canonical architecture that enables:
 
 -   Future-proof platform evolution
 
-**1.4 Relationship with Other CorpStage Architecture Documents**
+**1.4 Relationship with Other Aurex Architecture Documents**
 
 CMD-001 complements the existing architecture rather than replacing it.
 
@@ -491,7 +491,7 @@ Its role within the architecture ecosystem is:
   **Architecture       **Primary Responsibility**
   Document**           
   -------------------- --------------------------------------------------
-  CorpStage Complete   Overall platform vision and capability
+  Aurex Complete   Overall platform vision and capability
   Blueprint            architecture
 
   Master Technical     Technical architecture, services, persistence,
@@ -739,14 +739,14 @@ CMD-001 shall be considered successful if it enables:
 After completing SD-002, URA-001 and ERG-001, one additional principle
 emerges that is not explicitly documented elsewhere:
 
-**The CorpStage platform is fundamentally a Business Object Platform
+**The Aurex platform is fundamentally a Business Object Platform
 rather than an Application Platform.**
 
 Applications, workflows, reports, APIs, AI agents and databases are all
 different expressions of the same underlying canonical Business Objects.
 
 This principle should become one of the defining characteristics of the
-CorpStage Intelligent Operating Center and will guide the remaining
+Aurex Intelligent Operating Center and will guide the remaining
 sections of CMD-001.
 
 **CMD-001**
@@ -756,7 +756,7 @@ sections of CMD-001.
 **2.1 Purpose**
 
 This section establishes the architectural principles that govern all
-persistent information within the CorpStage Intelligent Operating
+persistent information within the Aurex Intelligent Operating
 Center.
 
 While **Section 1** established *why* the Canonical Data Model exists,
@@ -782,12 +782,12 @@ These principles apply universally across:
 
 -   AI Knowledge Objects
 
-Every persistent data artifact introduced into CorpStage shall conform
+Every persistent data artifact introduced into Aurex shall conform
 to these principles.
 
 **2.2 Canonical Data Philosophy**
 
-The CorpStage platform recognizes that enterprise information evolves
+The Aurex platform recognizes that enterprise information evolves
 through distinct architectural layers.
 
 The platform shall therefore distinguish between:
@@ -1051,7 +1051,7 @@ Audit information shall never be modified.
 **2.12 Architectural Principle 10 --- Knowledge Is a First-Class Data
 Category**
 
-A key innovation in the CorpStage architecture is recognizing
+A key innovation in the Aurex architecture is recognizing
 **Knowledge Data** as a distinct category.
 
 Knowledge is not:
@@ -1182,7 +1182,7 @@ This prevents:
 
 **2.17 Architectural Principle 12 --- Canonical Before Physical**
 
-The CorpStage architecture mandates the following design sequence:
+The Aurex architecture mandates the following design sequence:
 
 Business Capability\
 │\
@@ -1258,7 +1258,7 @@ governance, AI reasoning, and implementation tooling.
 **3.1 Purpose**
 
 The purpose of the Enterprise Domain Model is to establish the canonical
-decomposition of the CorpStage Intelligent Operating Center into stable
+decomposition of the Aurex Intelligent Operating Center into stable
 business domains.
 
 A Business Domain represents a cohesive area of enterprise
@@ -1317,7 +1317,7 @@ Traditional enterprise systems frequently organize information around:
 
 These organizational models inevitably change over time.
 
-CorpStage instead organizes information around enduring business
+Aurex instead organizes information around enduring business
 domains.
 
 Business Domains remain relatively stable even as:
@@ -1337,7 +1337,7 @@ boundary.
 
 **3.3 Canonical Enterprise Hierarchy**
 
-The CorpStage platform shall organize enterprise knowledge using the
+The Aurex platform shall organize enterprise knowledge using the
 following hierarchy:
 
 Enterprise\
@@ -1416,7 +1416,7 @@ Other domains may cache or consume data but shall not redefine it.
 
 **3.5 Canonical Business Domains**
 
-After reviewing the entire CorpStage architecture---including the
+After reviewing the entire Aurex architecture---including the
 Blueprint, Technical Architecture, SD-001, SD-002, SD-003, URA-001 and
 ERG-001---I recommend the following canonical domains.
 
@@ -1908,7 +1908,7 @@ The Business Domain Registry would maintain:
 -   Version History
 
 The BDR would become the authoritative catalog of all domains in the
-CorpStage platform, complementing the **Canonical Business Object
+Aurex platform, complementing the **Canonical Business Object
 Registry (CBOR)** proposed in Section 1.
 
 Together:
@@ -1930,7 +1930,7 @@ physical implementation while preserving business semantics.
 **Architectural Observation**
 
 I believe this section introduces one of the most important
-architectural concepts in the CorpStage platform: **Business Domains as
+architectural concepts in the Aurex platform: **Business Domains as
 first-class governed assets**.
 
 Many enterprise platforms stop at defining modules or microservices. By
@@ -1938,7 +1938,7 @@ formally defining Business Domains---with ownership, events, APIs, AI
 vocabulary, and governance---you create a stable architectural
 foundation that will outlive any individual implementation technology,
 database design, or service decomposition. This will make future
-evolution of CorpStage significantly easier and more disciplined.
+evolution of Aurex significantly easier and more disciplined.
 
 **CMD-001**
 
@@ -1946,7 +1946,7 @@ evolution of CorpStage significantly easier and more disciplined.
 
 **4.1 Purpose**
 
-The CorpStage Intelligent Operating Center manages many different kinds
+The Aurex Intelligent Operating Center manages many different kinds
 of persistent information.
 
 Not all data serves the same purpose.
@@ -2016,7 +2016,7 @@ constructs such as:
 
 These classifications provide little business value.
 
-CorpStage instead classifies information according to its business
+Aurex instead classifies information according to its business
 purpose.
 
 This makes governance independent of implementation technology.
@@ -2046,7 +2046,7 @@ This distinction is fundamental.
 
 **4.4 Canonical Data Categories**
 
-After evaluating the CorpStage platform architecture, I recommend
+After evaluating the Aurex platform architecture, I recommend
 adopting **nine canonical data categories**.
 
 These categories are mutually exclusive at the Business Object level.
@@ -2297,7 +2297,7 @@ Audit Data preserves trust.
 
 **Category 7 --- Knowledge Data**
 
-This is one of the defining innovations of CorpStage.
+This is one of the defining innovations of Aurex.
 
 **Purpose**
 
@@ -2432,7 +2432,7 @@ existing business facts.
 
 **4.6 Data Classification Decision Tree**
 
-Every new Business Object introduced into CorpStage shall answer the
+Every new Business Object introduced into Aurex shall answer the
 following questions:
 
 Does it define enterprise identity?\
@@ -2571,7 +2571,7 @@ Physical Storage
 **4.10 Architectural Enhancement (Recommended)**
 
 While designing this framework, one additional capability emerged that I
-believe will significantly strengthen CorpStage.
+believe will significantly strengthen Aurex.
 
 I recommend introducing a **Canonical Data Registry (CDR)** as a
 governed platform capability.
@@ -2638,7 +2638,7 @@ I consider this section one of the most important in CMD-001 because it
 establishes **data classification as an architectural concern rather
 than a database concern**. By recognizing **Knowledge Data** as a
 first-class category and separating **Business Objects** from **Data
-Categories**, CorpStage gains a governance model that is suitable not
+Categories**, Aurex gains a governance model that is suitable not
 only for traditional enterprise applications but also for AI-native
 systems, semantic search, knowledge graphs, and future intelligent
 automation without requiring architectural redesign.
@@ -2650,13 +2650,13 @@ automation without requiring architectural redesign.
 **5.1 Purpose**
 
 The Canonical Business Object Model (CBOM) defines the fundamental
-business entities that constitute the CorpStage Intelligent Operating
+business entities that constitute the Aurex Intelligent Operating
 Center.
 
 This section establishes the single most important architectural
 principle of the platform:
 
-**Everything in CorpStage is centered around Canonical Business
+**Everything in Aurex is centered around Canonical Business
 Objects.**
 
 Business Objects are the foundation upon which all other architectural
@@ -2733,7 +2733,7 @@ are all different implementations of one canonical concept:
 
 EnterpriseNode
 
-Therefore, CorpStage models business reality rather than software
+Therefore, Aurex models business reality rather than software
 artifacts.
 
 **5.3 Definition**
@@ -2873,7 +2873,7 @@ Those are derived representations.
 
 **5.8 Canonical Business Object Registry (CBOR)**
 
-To govern Business Objects consistently across the platform, CorpStage
+To govern Business Objects consistently across the platform, Aurex
 shall maintain a **Canonical Business Object Registry (CBOR)**.
 
 The CBOR is the authoritative catalog of every Business Object in the
@@ -3016,7 +3016,7 @@ This ensures complete architectural traceability.
 
 **5.13 AI Context**
 
-One innovation of CorpStage is that every Business Object is inherently
+One innovation of Aurex is that every Business Object is inherently
 AI-aware.
 
 Each Business Object shall expose:
@@ -3111,7 +3111,7 @@ AI Agents
 **5.16 Architectural Enhancement (Recommended)**
 
 This section introduces what I believe is one of the most significant
-improvements to the CorpStage architecture.
+improvements to the Aurex architecture.
 
 **Business Object Manifest (BOM)**
 
@@ -3172,7 +3172,7 @@ eventually be generated, including:
 
 -   Validation rules
 
-This aligns perfectly with CorpStage\'s principle of **Configuration
+This aligns perfectly with Aurex\'s principle of **Configuration
 Over Customization** and positions the platform to adopt **model-driven
 engineering** in the future.
 
@@ -3183,7 +3183,7 @@ to **business-object-centric**. More importantly, the introduction of a
 **Business Object Manifest (BOM)** creates a path toward a future where
 a single canonical specification can drive implementation across
 persistence, APIs, events, UI, AI, and documentation. That capability
-would be a major differentiator for CorpStage as an AI-native
+would be a major differentiator for Aurex as an AI-native
 Intelligent Operating Center and significantly reduce long-term
 maintenance effort.
 
@@ -3203,7 +3203,7 @@ It answers the question:
 Every transaction, workflow, event, report, AI inference, and analytical
 insight ultimately references Master Data.
 
-Within the CorpStage Intelligent Operating Center, Master Data is not
+Within the Aurex Intelligent Operating Center, Master Data is not
 simply reference information stored in tables.
 
 It is the authoritative representation of enterprise identity and
@@ -3508,7 +3508,7 @@ never bypass governance.
 
 **6.7 Canonical Master Data Categories**
 
-Within CorpStage, Master Data itself can be further classified.
+Within Aurex, Master Data itself can be further classified.
 
 I recommend the following categories.
 
@@ -3787,7 +3787,7 @@ Consumers\
 **6.14 Architectural Enhancement (Recommended)**
 
 While preparing this section, I identified a capability that would
-significantly strengthen CorpStage\'s governance model.
+significantly strengthen Aurex\'s governance model.
 
 **Master Data Catalog (MDC)**
 
@@ -3846,7 +3846,7 @@ This section intentionally positions **Master Data** as the **foundation
 of enterprise identity**, not simply as a collection of lookup tables or
 slowly changing dimensions. More importantly, by distinguishing
 governance roles (Business Owner, Data Steward, Domain Owner, Technical
-Owner) and proposing a dedicated **Master Data Catalog**, CorpStage
+Owner) and proposing a dedicated **Master Data Catalog**, Aurex
 gains an enterprise-grade Master Data Management capability without
 introducing a separate MDM product. This aligns with the platform\'s
 principles of **One Truth, Multiple Views**, **Human Governed, AI
@@ -3867,7 +3867,7 @@ Objects.
 
 The purpose of this section is to define the universal persistence
 architecture that governs how Business Objects are represented within
-the CorpStage platform.
+the Aurex platform.
 
 This architecture applies regardless of:
 
@@ -3895,7 +3895,7 @@ Business Object\
 \
 Database Table
 
-CorpStage explicitly rejects this assumption.
+Aurex explicitly rejects this assumption.
 
 Instead:
 
@@ -3952,7 +3952,7 @@ None of these redefine EnterpriseNode.
 
 **7.4 Persistence Layers**
 
-CorpStage persistence consists of six logical layers.
+Aurex persistence consists of six logical layers.
 
 Business Object\
 │\
@@ -4140,7 +4140,7 @@ This keeps architectural intent clear.
 
 **7.8 Architectural Rule**
 
-One important rule should become part of the CorpStage constitution:
+One important rule should become part of the Aurex constitution:
 
 **A persistence technology shall never define enterprise semantics.**
 
@@ -4172,7 +4172,7 @@ Consumers
 **7.10 Architectural Enhancement (Recommended)**
 
 I believe this section introduces another concept that would
-significantly strengthen CorpStage.
+significantly strengthen Aurex.
 
 **Persistent Representation Registry (PRR)**
 
@@ -4247,7 +4247,7 @@ Business Objects define **what exists**.
 
 Business Activities define **what happens**.
 
-The CorpStage Intelligent Operating Center is fundamentally a platform
+The Aurex Intelligent Operating Center is fundamentally a platform
 for orchestrating, governing, recording, and analyzing Business
 Activities.
 
@@ -4302,7 +4302,7 @@ Business Activities are verbs.
 
 **8.3 Business Activity Hierarchy**
 
-CorpStage shall model enterprise execution using the following
+Aurex shall model enterprise execution using the following
 hierarchy.
 
 Business Capability\
@@ -4606,7 +4606,7 @@ I believe this is a pivotal addition to CMD-001. Most enterprise
 architectures move directly from Business Objects to Transaction Data,
 leaving an implicit gap where business intent is lost. By introducing
 **Business Activities** as a first-class architectural construct,
-CorpStage gains a model that aligns naturally with workflow, events,
+Aurex gains a model that aligns naturally with workflow, events,
 analytics, audit, and AI. It also reinforces the platform principle of
 **Business Activities Over Questionnaires**, making that principle an
 explicit part of the data architecture rather than just a design
@@ -4619,7 +4619,7 @@ sections on **Reference Data**, **Configuration Data**, **Transaction
 Data**, **Event Data**, and **Audit Data** much clearer because they
 will all be grounded in the context of Business Activities rather than
 treated as isolated data categories. I believe this makes CMD-001
-significantly stronger and more consistent with the overall CorpStage
+significantly stronger and more consistent with the overall Aurex
 vision.
 
 **CMD-001**
@@ -4628,11 +4628,11 @@ vision.
 
 **9.1 Purpose**
 
-Metadata is the foundation upon which the CorpStage Intelligent
+Metadata is the foundation upon which the Aurex Intelligent
 Operating Center is built.
 
 Unlike traditional enterprise applications where application code
-determines business behaviour, CorpStage derives much of its behaviour
+determines business behaviour, Aurex derives much of its behaviour
 from governed metadata.
 
 Metadata defines:
@@ -4672,7 +4672,7 @@ Traditional systems often embed business rules directly into:
 
 This creates rigid systems that are expensive to evolve.
 
-CorpStage adopts a different philosophy:
+Aurex adopts a different philosophy:
 
 **Business behaviour should be driven by governed metadata wherever
 practical.**
@@ -4683,7 +4683,7 @@ This directly supports the platform principle:
 
 **9.3 What is Metadata?**
 
-Within CorpStage, metadata is defined as:
+Within Aurex, metadata is defined as:
 
 **Data that describes, governs, constrains or enriches Business Objects,
 Business Activities and their interactions without changing their
@@ -4717,7 +4717,7 @@ Every level builds upon the previous one.
 
 **9.5 Canonical Metadata Categories**
 
-CorpStage shall classify metadata into the following categories.
+Aurex shall classify metadata into the following categories.
 
 **Category 1 --- Structural Metadata**
 
@@ -4869,7 +4869,7 @@ Supports interoperability.
 
 **Category 8 --- AI Metadata**
 
-One of the key innovations of CorpStage.
+One of the key innovations of Aurex.
 
 Examples:
 
@@ -5012,7 +5012,7 @@ Platform Services
 I recommend introducing a **Canonical Metadata Registry (CMR)**.
 
 The CMR would become the authoritative repository for all governed
-metadata in CorpStage.
+metadata in Aurex.
 
 Each metadata definition would include:
 
@@ -5058,7 +5058,7 @@ This complements the earlier proposed registries:
 
 This section establishes **metadata as the execution engine of the
 platform**, not merely descriptive information. By elevating metadata to
-a first-class governed asset, CorpStage gains the ability to evolve
+a first-class governed asset, Aurex gains the ability to evolve
 business behaviour, user experience, workflows, integrations and AI
 capabilities primarily through governed configuration. This is a
 defining characteristic of an Intelligent Operating Center and directly
@@ -5079,7 +5079,7 @@ Every Business Object derives meaning through its relationships with
 other Business Objects.
 
 The purpose of this section is to establish a universal architecture
-governing business relationships across the entire CorpStage platform.
+governing business relationships across the entire Aurex platform.
 
 This architecture is independent of:
 
@@ -5112,7 +5112,7 @@ As a result:
 
 -   Governance becomes difficult.
 
-CorpStage adopts a different principle:
+Aurex adopts a different principle:
 
 **Business Relationships are first-class architectural assets.**
 
@@ -5368,7 +5368,7 @@ relationships** across the platform.
 
 I believe this section fills an important gap between **Business
 Objects** and the detailed data model that follows. ERG-001 gives
-CorpStage an enterprise graph, but the platform also needs a **Business
+Aurex an enterprise graph, but the platform also needs a **Business
 Relationship Graph** spanning workflows, reporting, governance,
 intelligence, evidence, and AI. Treating these relationships as
 first-class governed assets will significantly improve semantic
@@ -5398,7 +5398,7 @@ into the **implementation-oriented sections**, beginning with
 **Reference Data Architecture**, followed by **Configuration Data**,
 **Transaction Data**, **Event Data**, **Audit Data**, and finally the
 comprehensive validation and inventory of the 137 tables. This sequence
-is much more consistent with CorpStage\'s architecture-first philosophy.
+is much more consistent with Aurex\'s architecture-first philosophy.
 
 **Section 11 --- Reference Data Architecture**
 
@@ -5493,7 +5493,7 @@ governed.
 
 **11.5 Canonical Categories of Reference Data**
 
-Reference Data within CorpStage shall be classified into the following
+Reference Data within Aurex shall be classified into the following
 categories.
 
 **Geographic Reference Data**
@@ -5831,7 +5831,7 @@ from **Reference Data** (\"how it is classified\"), CMD-001 establishes
 a clear semantic boundary that will be essential when we begin
 validating the 138-table schema. It also ensures that AI, reporting,
 workflows, and integrations all rely on a common controlled vocabulary,
-reinforcing the CorpStage principles of **One Truth, Multiple Views**
+reinforcing the Aurex principles of **One Truth, Multiple Views**
 and **Configuration Over Customization**.
 
 **CMD-001**
@@ -5840,18 +5840,18 @@ and **Configuration Over Customization**.
 
 **12.1 Purpose**
 
-Configuration Data enables the CorpStage platform to adapt its runtime
+Configuration Data enables the Aurex platform to adapt its runtime
 behavior without modifying business semantics or application code.
 
 Policy Data defines the rules that govern how the platform behaves under
 specific business conditions.
 
-Together, Configuration and Policy Data operationalize the CorpStage
+Together, Configuration and Policy Data operationalize the Aurex
 principle of:
 
 **Configuration Over Customization**
 
-Rather than embedding behavior in application logic, CorpStage
+Rather than embedding behavior in application logic, Aurex
 externalizes business behavior into governed, metadata-driven
 configuration and policy objects.
 
@@ -5900,7 +5900,7 @@ Policy answers:
 
 **12.3 Configuration Categories**
 
-The CorpStage platform shall support the following configuration
+The Aurex platform shall support the following configuration
 categories.
 
 **Platform Configuration**
@@ -6282,7 +6282,7 @@ related architectural concepts is a significant improvement over
 traditional enterprise systems. Many platforms store policies as
 configuration records, which blurs the distinction between **runtime
 preferences** and **business governance**. By modeling policies as
-governed Business Objects with their own lifecycle, CorpStage gains a
+governed Business Objects with their own lifecycle, Aurex gains a
 flexible, metadata-driven execution model that supports enterprise
 governance, regulatory compliance, and AI-assisted decision-making
 without embedding business rules into application code. This section
@@ -6297,7 +6297,7 @@ inventory sections.
 **13.1 Purpose**
 
 Transaction Data records the execution of Business Activities performed
-within the CorpStage Intelligent Operating Center.
+within the Aurex Intelligent Operating Center.
 
 Unlike Master Data, which defines enterprise identity, Transaction Data
 records the business facts that occur over time.
@@ -6344,7 +6344,7 @@ It does not define business identity.
 One of the most common architectural mistakes is allowing transactions
 to become the source of truth.
 
-CorpStage explicitly prohibits this.
+Aurex explicitly prohibits this.
 
 The platform follows the principle:
 
@@ -6423,7 +6423,7 @@ compensating actions.
 
 **13.6 Canonical Transaction Categories**
 
-The CorpStage platform shall classify transactions into the following
+The Aurex platform shall classify transactions into the following
 categories.
 
 **Operational Transactions**
@@ -6744,7 +6744,7 @@ architectural concepts:
 
 Most enterprise systems blur these concepts, leading to tightly coupled
 implementations and limited traceability. By maintaining clear
-boundaries, CorpStage creates a model that is easier to govern, more
+boundaries, Aurex creates a model that is easier to govern, more
 scalable, and significantly more suitable for AI reasoning, event-driven
 architecture, and regulatory compliance.
 
@@ -6809,7 +6809,7 @@ It does not instruct another component what to do.
 
 **14.3 Event Philosophy**
 
-CorpStage adopts the following principle:
+Aurex adopts the following principle:
 
 Business Activity\
 \
@@ -6865,7 +6865,7 @@ They shall never be updated after publication.
 
 **14.5 Canonical Event Categories**
 
-CorpStage shall classify Business Events into the following categories.
+Aurex shall classify Business Events into the following categories.
 
 **Enterprise Events**
 
@@ -7185,7 +7185,7 @@ discoverable, and governed across the entire platform.
 This section establishes **Business Events as enterprise knowledge
 rather than technical integration messages**. That distinction is
 critical. By treating events as immutable business facts with explicit
-ownership, semantics, replay capability, and AI visibility, CorpStage
+ownership, semantics, replay capability, and AI visibility, Aurex
 creates a robust event-driven foundation that supports workflow
 orchestration, integration, auditability, analytics, and intelligent
 automation without coupling business meaning to implementation
@@ -7201,7 +7201,7 @@ of **Everything Is Auditable**, **One Truth, Multiple Views**, and
 
 Audit Data preserves the evidence necessary to reconstruct, verify,
 explain, and govern every significant business action performed within
-the CorpStage Intelligent Operating Center.
+the Aurex Intelligent Operating Center.
 
 Unlike Transaction Data, which records business execution, and Event
 Data, which communicates business facts, Audit Data preserves governance
@@ -7232,7 +7232,7 @@ Audit therefore becomes the foundation of:
 
 **15.2 Philosophy**
 
-CorpStage adopts the following principle:
+Aurex adopts the following principle:
 
 **Every governed business decision shall leave verifiable evidence.**
 
@@ -7262,7 +7262,7 @@ Audit therefore represents enterprise memory.
 
 **15.3 Audit vs Transaction vs Event**
 
-One of the most important distinctions in the CorpStage architecture is
+One of the most important distinctions in the Aurex architecture is
 the separation of these concepts.
 
   -----------------------------------------------------------------------
@@ -7376,7 +7376,7 @@ Examples:
 
 **AI Audit**
 
-One of the distinguishing capabilities of CorpStage.
+One of the distinguishing capabilities of Aurex.
 
 Examples:
 
@@ -7630,14 +7630,14 @@ existing schema.
 **Architectural Assessment**
 
 I believe this section completes the **governance backbone** of the
-CorpStage architecture.
+Aurex architecture.
 
 A key differentiator is the deliberate separation of **Transactions**,
 **Events**, **Evidence**, and **Audit** into four distinct but connected
 architectural concepts. Traditional enterprise systems often merge these
 concerns into generic logs or history tables, reducing traceability and
 governance. By modeling Audit as **enterprise evidence** rather than
-technical logging, CorpStage establishes a strong foundation for
+technical logging, Aurex establishes a strong foundation for
 regulatory compliance, explainable AI, historical reconstruction, and
 enterprise trust. This architecture also creates a clear bridge from
 conceptual governance to the physical audit-related tables that will be
@@ -7650,7 +7650,7 @@ validated in the 138-table schema.
 **16.1 Purpose**
 
 The Universal Data Standards establish mandatory architectural rules
-that apply to every governed Business Object within the CorpStage
+that apply to every governed Business Object within the Aurex
 Intelligent Operating Center.
 
 These standards ensure consistency across all Business Domains
@@ -8048,7 +8048,7 @@ inventory and validation of the physical data model.
 **17.1 Purpose**
 
 The Enterprise Domain is the foundational business domain of the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 It represents the enterprise itself, including its legal entities,
 operational structures, reporting structures, organizational
@@ -8441,7 +8441,7 @@ every physical table against the architecture, CMD-001 becomes both a
 governance document and an implementation assurance document. This
 approach will allow us to systematically review all **137 tables**,
 identify architectural gaps, generate the Excel data dictionary, and
-maintain traceability from the CorpStage Blueprint down to the physical
+maintain traceability from the Aurex Blueprint down to the physical
 schema. I recommend using this same template for the remaining domains
 (Identity & Access, Intelligence, Workflow, Reporting, Platform, AI,
 Integration, and Governance) to ensure consistency across the entire
@@ -8455,7 +8455,7 @@ document.
 
 The Identity & Access Domain establishes the canonical representation of
 every human, digital identity, membership, role, permission, assignment,
-delegation, and authorization construct within the CorpStage Intelligent
+delegation, and authorization construct within the Aurex Intelligent
 Operating Center.
 
 This domain is responsible for answering:
@@ -8812,7 +8812,7 @@ Traditional enterprise architecture validates **tables**.
 
 Modern Domain-Driven Design validates **Aggregates**.
 
-I believe CorpStage should go one step further and validate **Canonical
+I believe Aurex should go one step further and validate **Canonical
 Business Objects**.
 
 Business Objects are the only architectural construct that remains
@@ -9227,7 +9227,7 @@ This provides an objective assessment of the domain implementation.
 **19.12 Architectural Enhancement (Major Recommendation)**
 
 While designing this section, I identified an opportunity to
-significantly strengthen CorpStage.
+significantly strengthen Aurex.
 
 **Canonical Intelligence Registry (CIR)**
 
@@ -9297,15 +9297,15 @@ exercise rather than a simple schema inspection.
 **Architectural Assessment**
 
 I believe the **Intelligence Domain** is what fundamentally
-differentiates CorpStage from conventional enterprise platforms.
+differentiates Aurex from conventional enterprise platforms.
 Traditional systems treat metrics, KPIs, and frameworks as reporting
-artifacts. In CorpStage, they are elevated to **first-class canonical
+artifacts. In Aurex, they are elevated to **first-class canonical
 Business Objects** with their own lifecycle, governance, semantic
 relationships, and AI context. By introducing the **Canonical
 Intelligence Registry (CIR)**, the platform gains a centralized semantic
 foundation that can drive reporting, benchmarking, analytics, workflow,
 and intelligent automation without duplicating business definitions.
-This positions the Intelligence Domain as the heart of the CorpStage
+This positions the Intelligence Domain as the heart of the Aurex
 Intelligent Operating Center.
 
 **CMD-001**
@@ -9315,7 +9315,7 @@ Intelligent Operating Center.
 **20.1 Purpose**
 
 The Business Execution Domain governs how work is performed within the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 While the Enterprise Domain defines enterprise context, the Identity
 Domain defines who performs work, and the Intelligence Domain defines
@@ -9523,7 +9523,7 @@ Workflows implement Business Activities.
 
 They do not define them.
 
-This distinction is one of the defining characteristics of the CorpStage
+This distinction is one of the defining characteristics of the Aurex
 architecture.
 
 **20.8 Relationship with Workflow**
@@ -9734,7 +9734,7 @@ I believe renaming the **Workflow Domain** to the **Business Execution
 Domain** is one of the strongest architectural improvements we\'ve made.
 It shifts the focus from a specific implementation mechanism (workflow)
 to the broader business capability of executing governed work. This
-aligns directly with CorpStage\'s principle of **Business Activities
+aligns directly with Aurex\'s principle of **Business Activities
 Over Questionnaires**, accommodates future orchestration models such as
 AI agents and case management, and ensures that workflows remain an
 implementation choice rather than the architectural center of execution.
@@ -10101,9 +10101,9 @@ At completion of the review:
 **Information Product Catalog (IPC)**
 
 While designing this section, I identified another capability that I
-believe would significantly strengthen CorpStage.
+believe would significantly strengthen Aurex.
 
-Instead of treating reports as files, CorpStage should manage them as
+Instead of treating reports as files, Aurex should manage them as
 **Information Products**.
 
 Each Information Product would include:
@@ -10167,7 +10167,7 @@ answer:
 
 I believe renaming this domain to **Disclosure & Intelligence Delivery**
 is a significant architectural improvement. Traditional \"Reporting\"
-domains focus on document generation, whereas CorpStage delivers
+domains focus on document generation, whereas Aurex delivers
 governed information products across multiple channels and audiences. By
 introducing the **Information Product** as the primary architectural
 construct and the **Information Product Catalog (IPC)** as its governing
@@ -10176,7 +10176,7 @@ Domain) from **knowledge delivery** (Disclosure Domain). This
 distinction supports regulatory reporting, executive decision-making,
 AI-generated narratives, dashboards, scorecards, APIs, and future
 digital disclosure formats without requiring changes to the underlying
-intelligence model. It also positions CorpStage to support emerging
+intelligence model. It also positions Aurex to support emerging
 standards such as machine-readable disclosures and AI-driven information
 delivery.
 
@@ -10187,13 +10187,13 @@ delivery.
 **22.1 Purpose**
 
 The Platform Governance Domain governs the operational behavior,
-configurability, extensibility, and administration of the CorpStage
+configurability, extensibility, and administration of the Aurex
 Intelligent Operating Center.
 
 Unlike other domains that model enterprise business concepts, this
 domain models **how the platform behaves**.
 
-It enables CorpStage to remain metadata-driven by externalizing platform
+It enables Aurex to remain metadata-driven by externalizing platform
 behavior into governed Business Objects.
 
 This domain operationalizes the architectural principles:
@@ -10558,7 +10558,7 @@ notifications, AI settings, connectors, and feature management are not
 merely technical artifacts---they are governed business capabilities
 that determine how the Intelligent Operating Center behaves. By
 centralizing these capabilities and introducing the **Platform
-Capability Catalog (PCC)**, CorpStage gains a reusable governance layer
+Capability Catalog (PCC)**, Aurex gains a reusable governance layer
 that supports multi-tenancy, regulatory adaptation, AI governance,
 feature enablement, and future platform evolution without scattering
 configuration logic across services. This domain will also provide a
@@ -10572,14 +10572,14 @@ typically difficult to classify in large enterprise systems.
 **23.1 Purpose**
 
 The Enterprise Integration Domain governs the controlled exchange of
-information between the CorpStage Intelligent Operating Center and
+information between the Aurex Intelligent Operating Center and
 external systems.
 
 Unlike the Enterprise Domain, which models enterprise identity, or the
 Business Execution Domain, which governs work, the Enterprise
 Integration Domain governs **enterprise interoperability**.
 
-It enables CorpStage to:
+It enables Aurex to:
 
 -   Discover enterprise data
 
@@ -10743,11 +10743,11 @@ External System\
 └── Event Subscription
 
 Integration Business Objects connect external systems to the canonical
-CorpStage Business Objects.
+Aurex Business Objects.
 
 **23.7 Canonical Mapping Principle**
 
-One of the most important architectural principles of CorpStage is:
+One of the most important architectural principles of Aurex is:
 
 **External systems shall map to the Canonical Business Model.**
 
@@ -10765,7 +10765,7 @@ Supplier\
 \
 ↓\
 \
-CorpStage Intelligence
+Aurex Intelligence
 
 Likewise:
 
@@ -10974,7 +10974,7 @@ I believe placing the **Enterprise Integration Domain** after all
 business domains is a deliberate architectural improvement. It
 reinforces the principle that **integration serves the business
 architecture rather than defining it**. By mandating that every external
-system maps into the **Canonical Business Model**, CorpStage avoids the
+system maps into the **Canonical Business Model**, Aurex avoids the
 common anti-pattern of allowing source-system semantics to leak into the
 enterprise architecture. The proposed **Enterprise Integration Catalog
 (EIC)** further strengthens governance by providing a unified inventory
@@ -10990,7 +10990,7 @@ auditable, and aligned with the platform\'s long-term architecture.
 
 The Knowledge & AI Domain governs the acquisition, organization,
 enrichment, reasoning, and intelligent utilization of enterprise
-knowledge across the CorpStage Intelligent Operating Center.
+knowledge across the Aurex Intelligent Operating Center.
 
 Unlike the Intelligence Domain, which defines **what the enterprise
 measures**, the Knowledge & AI Domain defines **what the enterprise
@@ -11220,7 +11220,7 @@ Business Objects.
 It must never redefine business truth.
 
 This is one of the most important architectural principles for
-CorpStage.
+Aurex.
 
 **24.9 Relationship with AI**
 
@@ -11385,19 +11385,19 @@ should answer:
 
 **Architectural Assessment**
 
-I believe this domain is what transforms CorpStage from an enterprise
+I believe this domain is what transforms Aurex from an enterprise
 application into an **Enterprise Intelligence Platform**. The most
 important architectural principle established here is that **enterprise
 knowledge is a governed business asset**, while AI is a consumer,
 producer, and enrichment mechanism---not the owner of truth. By
 introducing the **Enterprise Knowledge Catalog (EKC)** and treating the
 Knowledge Graph as a **derived semantic projection** rather than a
-second System of Record, CorpStage avoids one of the most common
+second System of Record, Aurex avoids one of the most common
 pitfalls in AI-native architectures. This preserves a single canonical
 source of truth while enabling advanced capabilities such as semantic
 search, RAG, intelligent agents, explainable AI, and enterprise memory,
 all under human governance. I believe this will become one of the
-defining architectural differentiators of the CorpStage Intelligent
+defining architectural differentiators of the Aurex Intelligent
 Operating Center.
 
 **CMD-001**
@@ -11407,7 +11407,7 @@ Operating Center.
 **25.1 Purpose**
 
 The purpose of this section is to establish a standardized methodology
-for validating the physical implementation of the CorpStage Canonical
+for validating the physical implementation of the Aurex Canonical
 Data Model.
 
 Unlike traditional database reviews, this framework validates whether
@@ -11441,7 +11441,7 @@ architecture throughout the lifecycle of the platform.
 
 **25.2 Validation Philosophy**
 
-The CorpStage validation process follows the principle:
+The Aurex validation process follows the principle:
 
 Business Architecture\
 │\
@@ -11790,7 +11790,7 @@ describing the canonical data model, it defines a repeatable validation
 methodology that can be applied to every release of the platform. By
 validating **Business Objects before tables**, enforcing Universal Data
 Standards, and introducing the **Canonical Architecture Registry (CAR)**
-as the federating governance layer, CorpStage gains continuous
+as the federating governance layer, Aurex gains continuous
 architectural assurance. This is a capability rarely found in enterprise
 architecture documentation and will make CMD-001 a living governance
 artifact rather than a static specification.
@@ -11803,7 +11803,7 @@ artifact rather than a static specification.
 
 The Canonical Business Object Register (CBOR) is the authoritative
 enterprise registry of every governed Business Object within the
-CorpStage Intelligent Operating Center.
+Aurex Intelligent Operating Center.
 
 It serves as the definitive inventory of enterprise business concepts.
 
@@ -12203,7 +12203,7 @@ generating:
 
 -   Test cases
 
-This moves CorpStage toward a **model-driven architecture**, where
+This moves Aurex toward a **model-driven architecture**, where
 implementation artifacts are derived from governed business
 specifications.
 
@@ -12249,7 +12249,7 @@ events, AI, reporting, and documentation are organized. Coupled with the
 proposed **Business Object Manifest**, it creates a clear path toward
 metadata-driven development, automated artifact generation, and
 long-term architectural consistency. This is, in my view, one of the
-strongest differentiators of the CorpStage architecture and provides the
+strongest differentiators of the Aurex architecture and provides the
 foundation for the final implementation sections that will inventory the
 validated Business Objects, physical tables, master data fields, and
 compliance findings.
@@ -12261,7 +12261,7 @@ compliance findings.
 **27.1 Purpose**
 
 The Canonical Physical Data Asset Register (CPDAR) is the authoritative
-inventory of every persistent data asset that implements the CorpStage
+inventory of every persistent data asset that implements the Aurex
 Canonical Business Model.
 
 Unlike the Canonical Business Object Register (CBOR), which governs
@@ -12290,7 +12290,7 @@ implementation.
 
 **27.2 Architectural Principle**
 
-CorpStage follows the principle:
+Aurex follows the principle:
 
 **Business Objects define enterprise meaning.**
 
@@ -12582,7 +12582,7 @@ During implementation validation, each table shall be classified as:
 
 This provides a far richer understanding than simply listing tables.
 
-As CorpStage evolves, the CPDAR will naturally expand to include
+As Aurex evolves, the CPDAR will naturally expand to include
 non-relational assets without requiring changes to the architecture.
 
 **27.12 Architectural Enhancement (Major Recommendation)**
@@ -12658,7 +12658,7 @@ platforms persist information across multiple technologies---not just
 relational databases---and provides a unified governance model for all
 persistent assets. By distinguishing **Systems of Record** from
 **derived projections**, and by introducing the **Canonical Physical
-Asset Manifest (CPAM)**, CorpStage gains a future-proof implementation
+Asset Manifest (CPAM)**, Aurex gains a future-proof implementation
 architecture that can evolve across relational, graph, search, vector,
 and object storage technologies without changing its canonical business
 model. This aligns perfectly with the platform\'s
@@ -12691,12 +12691,12 @@ The purpose of this section is to establish the canonical governance
 model for managing the evolution of enterprise data while preserving
 semantic integrity, historical traceability, and backward compatibility.
 
-This architecture ensures that CorpStage can evolve continuously without
+This architecture ensures that Aurex can evolve continuously without
 compromising enterprise truth.
 
 **28.2 Architectural Principle**
 
-CorpStage follows the principle:
+Aurex follows the principle:
 
 **Enterprise meaning evolves through governance, never through
 uncontrolled schema changes.**
@@ -13082,7 +13082,7 @@ documents describe the current state but provide little guidance on how
 the architecture should evolve. By treating evolution as a governed
 architectural capability---with explicit compatibility rules, evolution
 manifests, and a dedicated **Canonical Architecture Evolution Registry
-(CAER)**---CorpStage gains a sustainable framework for long-term growth.
+(CAER)**---Aurex gains a sustainable framework for long-term growth.
 This approach supports continuous delivery, regulatory change, AI
 advancement, and business innovation while preserving the integrity of
 the canonical business model.
@@ -13095,7 +13095,7 @@ the canonical business model.
 
 The Architecture Compliance Assessment Framework (ACAF) establishes the
 enterprise-wide methodology for evaluating whether the implementation of
-the CorpStage Intelligent Operating Center conforms to its approved
+the Aurex Intelligent Operating Center conforms to its approved
 architecture.
 
 Rather than focusing solely on implementation defects, the ACAF
@@ -13418,7 +13418,7 @@ into an operational capability.
 
 **29.13 Relationship with Other Architecture Documents**
 
-The ACAF should be reusable across all CorpStage architecture artifacts.
+The ACAF should be reusable across all Aurex architecture artifacts.
 
 For example:
 
@@ -13454,7 +13454,7 @@ defines a repeatable, measurable process for assessing architectural
 quality across every domain and implementation artifact. Combined with
 the proposed **Architecture Compliance Service (ACS)**, it enables
 continuous architectural governance integrated into the software
-delivery lifecycle. This aligns with CorpStage\'s principles of
+delivery lifecycle. This aligns with Aurex\'s principles of
 **Everything Is Auditable**, **Everything Is Versioned**, and
 **Configuration Over Customization**, while providing objective evidence
 that the implemented platform remains faithful to its canonical
@@ -13468,7 +13468,7 @@ architecture.
 
 The Canonical Data Governance & Operating Model establishes the
 organizational, architectural, operational, and governance framework for
-the continued evolution, stewardship, and enforcement of the CorpStage
+the continued evolution, stewardship, and enforcement of the Aurex
 Canonical Data Model.
 
 Its objective is to ensure that the Canonical Data Model remains:
@@ -13776,20 +13776,20 @@ The Canonical Data Model shall be considered successful when:
 -   Architecture evolves through controlled governance rather than ad
     hoc implementation.
 
-These outcomes define the target operating state of the CorpStage
+These outcomes define the target operating state of the Aurex
 architecture.
 
 **30.12 Final Architectural Recommendation**
 
 After completing CMD-001, I have one overarching recommendation that I
-believe would significantly strengthen the entire CorpStage
+believe would significantly strengthen the entire Aurex
 architecture.
 
 **Establish an Enterprise Architecture Knowledge Base (EAKB)**
 
 Rather than treating the Blueprint, SD-001, SD-002, SD-003, URA-001,
 ERG-001, CMD-001, and future architecture documents as separate files,
-CorpStage should establish an **Enterprise Architecture Knowledge Base
+Aurex should establish an **Enterprise Architecture Knowledge Base
 (EAKB)**.
 
 The EAKB would federate:
@@ -13830,7 +13830,7 @@ into a governed enterprise knowledge system.
 **30.13 CMD-001 Completion Statement**
 
 CMD-001 establishes the canonical foundation for enterprise data within
-the CorpStage Intelligent Operating Center.
+the Aurex Intelligent Operating Center.
 
 It defines:
 
@@ -13846,8 +13846,8 @@ It defines:
 -   The standards by which implementation is validated and continuously
     governed.
 
-Together with the CorpStage Blueprint, SD-001, SD-002, SD-003, URA-001,
-and ERG-001, CMD-001 forms an integral part of the CorpStage Enterprise
+Together with the Aurex Blueprint, SD-001, SD-002, SD-003, URA-001,
+and ERG-001, CMD-001 forms an integral part of the Aurex Enterprise
 Architecture Framework and shall serve as the authoritative standard for
 all future data architecture, implementation, and governance activities.
 
@@ -13856,7 +13856,7 @@ all future data architecture, implementation, and governance activities.
 *(CERT-007 correction: this subsection was drafted during pre-freeze review, before this document was superseded by Version 1.1 — GOLD STANDARD, Status: LOCKED, per the header at the top of this document. It is retained below for audit history, not as the current position. CMD-001 is frozen as-is; the three refinements below remain unactioned recommendations for a possible future architectural decision, not prerequisites to freezing and not created, promoted, or rejected by this correction.)*
 
 Having now completed all 30 sections, I believe **CMD-001 is one of the
-strongest architecture documents in the overall CorpStage framework**,
+strongest architecture documents in the overall Aurex framework**,
 but I would make **three strategic refinements** before freezing it as
 Version 1.0.
 
@@ -13889,7 +13889,7 @@ automatically from the implementation.
 
 **Final Assessment**
 
-With those refinements, I believe the CorpStage architecture would
+With those refinements, I believe the Aurex architecture would
 naturally organize into three complementary layers:
 
 -   **Enterprise Architecture Standards** (Blueprint, SD-001, SD-002,
@@ -13903,6 +13903,6 @@ naturally organize into three complementary layers:
 
 That separation preserves the architecture as an enduring body of
 knowledge while allowing the operational artifacts to evolve with the
-platform. In my view, this will make the CorpStage Enterprise
+platform. In my view, this will make the Aurex Enterprise
 Architecture Framework scalable, maintainable, and capable of supporting
 the platform for many years without requiring structural redesign.

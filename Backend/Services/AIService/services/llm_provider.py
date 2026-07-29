@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 from config.settings import settings
 
 class LLMProvider(ABC):
-    """Abstract interface contract defining LLM Providers across the CorpStage platform."""
+    """Abstract interface contract defining LLM Providers across the Aurex platform."""
     
     @abstractmethod
     async def generate_text(

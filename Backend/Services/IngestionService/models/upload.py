@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .database import Base
 
 class UploadTracker(Base):
-    __tablename__ = "corpstage_upload_trackers"
+    __tablename__ = "aurex_upload_trackers"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     

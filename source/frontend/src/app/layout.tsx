@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CorpStage",
-  description: "CorpStage Enterprise Operating System",
+  title: "Aurex",
+  description: "Aurex Enterprise Operating System",
 };
 
 export default function RootLayout({

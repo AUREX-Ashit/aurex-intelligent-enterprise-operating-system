@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Role & Permission Management API
+  title: Aurex Role & Permission Management API
   description: >
-    Role & Permission Management (C-003, WP-02) endpoints for the CorpStage
+    Role & Permission Management (C-003, WP-02) endpoints for the Aurex
     AuthService. Covers BA-01 (Establish Business or System Role) only —
     see IRA-002 for the full ten-Enterprise-Experience Business Activity
     mapping; BA-02 onward are not yet implemented. Authorization gate:

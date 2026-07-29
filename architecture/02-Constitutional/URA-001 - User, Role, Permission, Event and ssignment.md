@@ -2,9 +2,9 @@
 ### Version 2.1 — GOLD STANDARD (Supersedes v2.0)
 
 **Status:** LOCKED
-**Scope:** Defines the authorization model — who may act, who owns what, who approves what, and how work is assigned and delegated — within CorpStage.
+**Scope:** Defines the authorization model — who may act, who owns what, who approves what, and how work is assigned and delegated — within Aurex.
 **Companion documents:** SD-001 (Screen Design, v2.0), SD-002 (Universal Business Object Rules, v2.0), SD-003 (Interaction Laws, v2.0), ERG-001 (Enterprise Structure & Relationship Management, v2.0) — all locked.
-**Governing framework:** CorpStage Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
+**Governing framework:** Aurex Blueprint v2.1 — 39 Laws, 39 Screens, Two Journeys, Three Layers, One Platform
 
 ---
 
@@ -20,7 +20,7 @@ URA-001 v1.0 had the best structural hygiene of any document reviewed to date �
 
 | Fix | Detail |
 |---|---|
-| **CIL governance realigned to SD-002 v2.0** | v1.0 gave final Global/Industry CIL promotion authority to a single "CorpStage Admin" role (URA-001-31, URA-001-123, URA-001-145). SD-002 v2.0 — already locked — assigns this to a multi-tier stewardship model (Company Steward → Industry Intelligence Council → CorpStage Governance Board, SD-002-065/066). All three affected principles are corrected below: CorpStage Admin is now explicitly an *operational* role that executes Board/Council decisions, not the decision-maker. |
+| **CIL governance realigned to SD-002 v2.0** | v1.0 gave final Global/Industry CIL promotion authority to a single "Aurex Admin" role (URA-001-31, URA-001-123, URA-001-145). SD-002 v2.0 — already locked — assigns this to a multi-tier stewardship model (Company Steward → Industry Intelligence Council → Aurex Governance Board, SD-002-065/066). All three affected principles are corrected below: Aurex Admin is now explicitly an *operational* role that executes Board/Council decisions, not the decision-maker. |
 | **Explicit URA-001/SD-003 boundary added** | v1.0 claimed "assignments," "delegations," and "how work is assigned" as its own scope with no stated boundary against SD-003's Section 5 (Ownership, Assignment & Work Routing) and Section 7 (Delegation, Escalation & Exception Management), which claim the same nouns. New principle (URA-001-01a) states the split explicitly: URA-001 answers *who is authorized*; SD-003 answers *how humans experience that authorization*. |
 | **Precedence models disambiguated** | v1.0's URA-001-76 ("Assignment Precedence Rules") and SD-002 v2.0's SD-002-113 ("Configuration Hierarchy Precedence") both used "most specific wins" language for different questions. URA-001-76 is renamed **Authorization Resolution Precedence** and now states explicitly what it is not. |
 | **External-user delegation restricted** | New principle (URA-001-108a) closes a gap: external users granted Delegate authority may no longer delegate to internal employees or to other external organizations without Corporate Admin pre-approval. |
@@ -90,14 +90,14 @@ URA-001-28 Users Are Never Deleted — restated structurally: activation, suspen
 
 ## SECTION 3: System Roles & Business Roles
 
-URA-001-29 System Roles Govern Platform Administration — CorpStage Admin, Corporate Admin, User Admin, Security Admin, and Domain Admin control users, licenses, metadata, security, and platform operations; they do not represent business accountability.
+URA-001-29 System Roles Govern Platform Administration — Aurex Admin, Corporate Admin, User Admin, Security Admin, and Domain Admin control users, licenses, metadata, security, and platform operations; they do not represent business accountability.
 URA-001-30 Business Roles Represent Business Identity — CEO, CFO, COO, CHRO, CSO, CISO, Company Secretary, Finance Manager, Plant Head, and Board Member represent organizational responsibility and never automatically grant administrative, approval, or user-management rights.
 
-**URA-001-31 [amended]: CorpStage Admin Is a Platform Operational Role, Not the Canonical Governance Authority**
+**URA-001-31 [amended]: Aurex Admin Is a Platform Operational Role, Not the Canonical Governance Authority**
 
-*(Amended — this is the root of the CIL governance conflict with SD-002 v2.0. v1.0 listed "Global CIL Governance" and "Industry CIL Governance" as direct CorpStage Admin capabilities. Corrected below.)*
+*(Amended — this is the root of the CIL governance conflict with SD-002 v2.0. v1.0 listed "Global CIL Governance" and "Industry CIL Governance" as direct Aurex Admin capabilities. Corrected below.)*
 
-CorpStage Admins belong to CorpStage, not to any customer organization, and are responsible for: corporate onboarding, global user support, platform configuration, license management, and subscription management. **CorpStage Admins execute the decisions of the CorpStage Governance Board and the Industry Intelligence Council (SD-002-065/066) — they do not independently decide Global CIL or Industry CIL promotion.** Where a CorpStage Admin action implements a canonical promotion, that action must reference the specific Governance Board or Industry Council decision it is executing; a CIL promotion event with no referenced Board or Council decision is an invalid state, not a valid shortcut.
+Aurex Admins belong to Aurex, not to any customer organization, and are responsible for: corporate onboarding, global user support, platform configuration, license management, and subscription management. **Aurex Admins execute the decisions of the Aurex Governance Board and the Industry Intelligence Council (SD-002-065/066) — they do not independently decide Global CIL or Industry CIL promotion.** Where a Aurex Admin action implements a canonical promotion, that action must reference the specific Governance Board or Industry Council decision it is executing; a CIL promotion event with no referenced Board or Council decision is an invalid state, not a valid shortcut.
 
 URA-001-32 Corporate Admin Is the Highest Company Authority — every organization has one or more Corporate Admins who create users, assign licenses and roles, create domains, and approve domain-level proposals; in CIL governance terms, the Corporate Admin functions as the Company Steward (SD-002-065).
 URA-001-33 User Admin Is a Specialized System Role — may invite, deactivate, and assign roles to users, but not manage licenses, domains, or approve CDE promotions unless explicitly granted.
@@ -223,7 +223,7 @@ URA-001-109 Explicit Assignments Override Default Access — external users rece
 URA-001-110 External Users Support Runtime Events — SUPPLIER_CERTIFICATION, BOARD_APPROVAL, AUDIT_CONFIRMATION, and CONSULTANT_REVIEW are all available to external users, remaining Object Scoped, Event Scoped, and Time Scoped.
 URA-001-111 License Types Are First-Class Objects — Full User License (internal: administration, configuration, approvals, metadata, CDE/BQ creation) and Light User License (external: view, enter, review, approve when assigned, upload evidence) are both supported.
 URA-001-112 Entitlements Are Separate From Licenses — licenses define user counts; entitlements define capabilities (IFRS Enabled, Annual Report Enabled, AI Discovery Enabled, Supplier Portal Enabled).
-URA-001-113 Entitlements Are Metadata Driven — CorpStage Admins create global entitlements (Regulatory Reporting Module, Integrated Reporting, Business Resilience Module); Corporate Admins enable company features, industry packages, and optional modules.
+URA-001-113 Entitlements Are Metadata Driven — Aurex Admins create global entitlements (Regulatory Reporting Module, Integrated Reporting, Business Resilience Module); Corporate Admins enable company features, industry packages, and optional modules.
 URA-001-114 Domain-Level Entitlements Are Supported — Finance (Annual Report Generation, IFRS Reporting), HR (Talent Competitiveness Analytics, Employee Engagement), and Business Resilience (Regulatory Reporting Module) domains each enable their own feature sets.
 URA-001-115 External Users May Consume Specialized Licenses — Supplier License, Auditor License, Board Member License, and Consultant License support lower cost, higher collaboration, and flexible pricing.
 URA-001-116 License Enforcement Is Centralized — Corporate Admins manage users only within purchased limits; exceeding a limit blocks new user creation pending upgrade, always auditable.
@@ -237,13 +237,13 @@ URA-001-120 External Collaboration Is a Core Platform Capability — suppliers, 
 ## SECTION 9: CDE, BQ & Business Activity Governance Workflow
 
 URA-001-121 Domain Admins May Create Proposals — proposals for new CDEs, BQs, and Business Activities (e.g., Finance: Energy Cost & Transition Exposure Liability; HR: Employee Wellbeing Index; Supply Chain: Supplier Circularity Score) may be created, never directly modifying canonical libraries.
-URA-001-122 Corporate Admin Approval Is Mandatory — every proposal requires Corporate Admin business validation, duplicate check, organizational relevance assessment, and ownership assignment before CorpStage review — Corporate Admin here functions as Company Steward (SD-002-065).
+URA-001-122 Corporate Admin Approval Is Mandatory — every proposal requires Corporate Admin business validation, duplicate check, organizational relevance assessment, and ownership assignment before Aurex review — Corporate Admin here functions as Company Steward (SD-002-065).
 
 **URA-001-123 [amended]: CIL Promotion Follows the SD-002 Stewardship Model**
 
-*(Amended — this was the primary source of the conflict with SD-002 v2.0. Corrected to route through the multi-tier stewardship model rather than a single CorpStage Admin decision.)*
+*(Amended — this was the primary source of the conflict with SD-002 v2.0. Corrected to route through the multi-tier stewardship model rather than a single Aurex Admin decision.)*
 
-Final canonical promotion decisions follow SD-002-065/066 exactly: **Company → Industry promotion requires Industry Intelligence Council approval; Industry → Global promotion requires CorpStage Governance Board approval.** CorpStage Admin executes the resulting decision (updating the CIL record, notifying stakeholders, versioning the promoted object) but is not the deciding authority for either tier. The full workflow is: Domain Admin creates proposal → Corporate Admin (Company Steward) validates and approves at company level → AI similarity analysis runs → Industry Intelligence Council decides Company-to-Industry promotion where applicable → CorpStage Governance Board decides Industry-to-Global promotion where applicable → CorpStage Admin executes the decision as Global CIL, Industry CIL, Company CIL, Merge, or Reject. A canonical promotion record with no referenced Council or Board decision is invalid.
+Final canonical promotion decisions follow SD-002-065/066 exactly: **Company → Industry promotion requires Industry Intelligence Council approval; Industry → Global promotion requires Aurex Governance Board approval.** Aurex Admin executes the resulting decision (updating the CIL record, notifying stakeholders, versioning the promoted object) but is not the deciding authority for either tier. The full workflow is: Domain Admin creates proposal → Corporate Admin (Company Steward) validates and approves at company level → AI similarity analysis runs → Industry Intelligence Council decides Company-to-Industry promotion where applicable → Aurex Governance Board decides Industry-to-Global promotion where applicable → Aurex Admin executes the decision as Global CIL, Industry CIL, Company CIL, Merge, or Reject. A canonical promotion record with no referenced Council or Board decision is invalid.
 
 URA-001-124 AI Similarity Detection Is Mandatory — the platform performs duplicate analysis before approval (e.g., "Delivery Cost" detected as 94% similar to "Cost Of Delivery"), suggesting reuse, merge, or escalation; AI recommendations remain advisory and humans make the final decision.
 URA-001-125 CDE Ownership Must Be Defined — every approved CDE has a named owner (Revenue → Finance Domain; Talent Competitiveness → HR Domain) supporting governance, review, approval, and lifecycle management.
@@ -274,7 +274,7 @@ URA-001-144 One Truth, Multiple Views — the same business object (Revenue) app
 
 **URA-001-145 [amended]: Local Innovation With Global Governance — Corrected Workflow**
 
-*(Amended — v1.0 restated the same single-admin CIL workflow error found in URA-001-123. Corrected identically here for consistency.)* Organizations innovate locally while preserving canonical integrity: Domain Admin → Corporate Admin (Company Steward) → Industry Intelligence Council (for Industry promotion) → CorpStage Governance Board (for Global promotion) → CorpStage Admin executes the decision as Global CIL, Industry CIL, Company CIL, Merge, or Reject. Innovation with governance — governed by councils and boards, executed by CorpStage Admin, never decided by CorpStage Admin alone.
+*(Amended — v1.0 restated the same single-admin CIL workflow error found in URA-001-123. Corrected identically here for consistency.)* Organizations innovate locally while preserving canonical integrity: Domain Admin → Corporate Admin (Company Steward) → Industry Intelligence Council (for Industry promotion) → Aurex Governance Board (for Global promotion) → Aurex Admin executes the decision as Global CIL, Industry CIL, Company CIL, Merge, or Reject. Innovation with governance — governed by councils and boards, executed by Aurex Admin, never decided by Aurex Admin alone.
 
 URA-001-146 Enterprise Scale Is a First-Class Concern — restated structurally: thousands of users, thousands of domains, millions of assignments, hundreds of organizations, multiple industries, without redesign.
 URA-001-147 Security Is Layered — Identity Layer (SSO, MFA), Membership Layer (roles, groups, permissions), Runtime Layer (assignments, delegations, approvals), and Audit Layer (events, history, retention) together provide defense in depth.
@@ -328,6 +328,6 @@ Person
 
 ## Freeze Statement
 
-URA-001 v2.0 is ready for lock. The CIL governance conflict with SD-002 v2.0 is fully resolved — CorpStage Admin is now consistently, in all three affected locations (URA-001-31, 123, 145), an operational role executing the decisions of the Industry Intelligence Council and CorpStage Governance Board, never the canonical decision-maker itself. The URA-001/SD-003 boundary is now explicit (URA-001-01a). The two "most specific wins" precedence systems are disambiguated by name and by stated scope (URA-001-76 vs. SD-002-113). The language purge is complete — 26 occurrences corrected using the binding substitution table, not synonym substitution. Cross-tenant Person visibility, external-user delegation boundaries, escalation cycle protection, and deferral to Technical Architecture are all now explicitly stated rather than left to inference.
+URA-001 v2.0 is ready for lock. The CIL governance conflict with SD-002 v2.0 is fully resolved — Aurex Admin is now consistently, in all three affected locations (URA-001-31, 123, 145), an operational role executing the decisions of the Industry Intelligence Council and Aurex Governance Board, never the canonical decision-maker itself. The URA-001/SD-003 boundary is now explicit (URA-001-01a). The two "most specific wins" precedence systems are disambiguated by name and by stated scope (URA-001-76 vs. SD-002-113). The language purge is complete — 26 occurrences corrected using the binding substitution table, not synonym substitution. Cross-tenant Person visibility, external-user delegation boundaries, escalation cycle protection, and deferral to Technical Architecture are all now explicitly stated rather than left to inference.
 
 **No open cross-document conflicts remain.** All four foundational documents — SD-001, SD-002, SD-003, and URA-001 — are now at Gold Standard v2.0 and consistent with one another.

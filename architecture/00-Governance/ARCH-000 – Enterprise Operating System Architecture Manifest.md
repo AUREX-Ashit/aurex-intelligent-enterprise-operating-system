@@ -9,7 +9,7 @@
 
 # 1. Purpose
 
-This document is the **authoritative entry point** to the CorpStage Enterprise Operating System (EOS) architecture.
+This document is the **authoritative entry point** to the Aurex Enterprise Operating System (EOS) architecture.
 
 It establishes the constitutional map of the architecture by defining:
 

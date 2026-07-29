@@ -13,7 +13,7 @@ async def test_health_check_endpoint(client: AsyncClient):
     response = await client.get("/ai/health")
     assert response.status_code == 200
     data = response.json()
-    assert data["service"] == "CorpStage"
+    assert data["service"] == "Aurex"
     assert "database" in data["components"]
 
 @pytest.mark.asyncio

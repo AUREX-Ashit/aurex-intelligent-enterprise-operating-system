@@ -1,5 +1,5 @@
 """
-CorpStage Shared Telemetry - Logger Factory.
+Aurex Shared Telemetry - Logger Factory.
 
 Configures python logging infrastructures across tenant boundaries, establishing
 standard handlers, dynamic filters, levels, and JSON formatters.
@@ -9,8 +9,8 @@ import sys
 import logging
 from typing import Dict, Any, Optional
 
-from corpstage.backend.shared.logging.log_formatter import JSONLogFormatter
-from corpstage.backend.shared.logging.exceptions import LoggingConfigurationError
+from aurex.backend.shared.logging.log_formatter import JSONLogFormatter
+from aurex.backend.shared.logging.exceptions import LoggingConfigurationError
 
 _global_service_name: Optional[str] = None
 _configured_loggers: Dict[str, logging.Logger] = {}
@@ -64,7 +64,7 @@ class LoggerFactory:
             ulogger.setLevel(numeric_level)
 
         root_logger.info(
-            f"CorpStage Structured Logger initialized successfully for service: '{service_name}' [Level: {default_level}]"
+            f"Aurex Structured Logger initialized successfully for service: '{service_name}' [Level: {default_level}]"
         )
 
     @classmethod
@@ -78,9 +78,9 @@ class LoggerFactory:
         if name in _configured_loggers:
             return _configured_loggers[name]
 
-        # Fail-safe initialization to default "CorpStageService" to avoid crashes
+        # Fail-safe initialization to default "AurexService" to avoid crashes
         if _global_service_name is None:
-            cls.initialize(service_name="CorpStageService", default_level="INFO")
+            cls.initialize(service_name="AurexService", default_level="INFO")
 
         logger = logging.getLogger(name)
         # Prevent double handling if parent logger is configured

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage AI Extraction API
+  title: Aurex AI Extraction API
   description: AI extraction and ESG intelligence APIs
   version: 1.0.0
 servers:

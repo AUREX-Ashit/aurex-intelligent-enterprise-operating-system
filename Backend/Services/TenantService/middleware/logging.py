@@ -9,7 +9,7 @@ from middleware.tenant import get_current_tenant_id
 
 
 # Setup structured console logger
-logger = logging.getLogger("corpstage_tenant_service")
+logger = logging.getLogger("aurex_tenant_service")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(message)s')

@@ -29,7 +29,7 @@ class AzureServiceBusStub(EventPublisher):
         # Construct Standardized Enterprise Event Envelope (CloudEvents compliant)
         cloudevent_envelope = {
             "specversion": "1.0",
-            "type": f"com.corpstage.ingestion.{event_type}",
+            "type": f"com.aurex.ingestion.{event_type}",
             "source": "/services/ingestion-service",
             "subject": f"tenant/{tenant_id}",
             "id": payload.get("document_id") or payload.get("id") or "unspecified",

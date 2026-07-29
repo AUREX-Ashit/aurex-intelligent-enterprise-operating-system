@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: CorpStage Internal Security & Auth Spec
+  title: Aurex Internal Security & Auth Spec
   version: 1.0.0
   description: Shared JWT structure and tenant boundary definition across the enterprise mesh.
 
@@ -10,7 +10,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Enter valid CorpStage JWT Bearer. Claims must include sub, tenant_id, role, and email.
+      description: Enter valid Aurex JWT Bearer. Claims must include sub, tenant_id, role, and email.
 
   schemas:
     JWTPayload:
