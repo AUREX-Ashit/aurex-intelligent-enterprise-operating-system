@@ -205,11 +205,11 @@ No model, repository, migration, or router registration (`main.py`) change was r
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** [recorded in commit-hash recording pass]
+**Repository Commit:** Committed to `master` in two commits — `2e6dd20` (implementation: 4 files) and `5b5ec74` (documentation: this report, TECH-DEBT.md TD-045, WPR-001 WP-04 row update).
 
-**Commit Hash:** [recorded in commit-hash recording pass]
+**Commit Hash:** `2e6dd20` (implementation), `5b5ec74` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** [recorded in commit-hash recording pass]
+**Commit Date:** 2026-07-29 (both commits)
 
 ---
 
