@@ -1047,11 +1047,11 @@ No model, repository, migration, `main.py`, or `middleware/tenant.py` change was
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** recorded below, Documents Updated section, upon commit.
+**Repository Commit:** Committed to `master` in two commits — `e3f70a4` (implementation: 4 files) and `9ef9910` (documentation: this report, TECH-DEBT.md TD-068 closure, WPR-001 WP-04 row and completion review).
 
-**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+**Commit Hash:** `e3f70a4` (implementation), `9ef9910` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** 2026-07-30
+**Commit Date:** 2026-07-30 (both commits)
 
 ---
 
