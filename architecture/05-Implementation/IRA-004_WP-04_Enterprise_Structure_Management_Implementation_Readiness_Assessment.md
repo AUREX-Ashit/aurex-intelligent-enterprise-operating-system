@@ -65,7 +65,7 @@ All eight independently confirmed by direct docx extraction of `PE-001-C005_Ente
 | BA-02 | Understand Structural Position | Query | EnterpriseNode (+ relationships) | ERB-C005-02 / EX-C005-03 | ⏳ Not started |
 | BA-03 | Frame Structural Change Intent | Create (governed decision record) | Structural Change Intent (`SCI-000001`, registered §21) | ERB-C005-03 / EX-C005-04 | ⏳ Not started — Business Object registered (§21); persistence mechanism, endpoint shape, and service/repository design remain undetermined and are that BA's own future implementation-readiness gap analysis, not assumed here |
 | BA-04 | Shape / Refine Proposed Structural Outcome | Create / Update (proposal) | Proposed Outcome Context (`POC-000001`, registered §22) — **v1 scoped to EnterpriseNode-targeted proposals only, per ADR-007**; EnterpriseRelationship/ConsolidationDetermination-targeted proposals explicitly deferred, not eliminated (ADR-007 point 3) | ERB-C005-04 / EX-C005-05, -06 | ⏳ Not started — target-type ambiguity resolved (ADR-007); Business Object registered (`POC-000001`, §22); own implementation-readiness gap analysis still required |
-| BA-05 | Assess Structural Consequence | Query (computed) | Impact/Comparison Context | ERB-C005-05 / EX-C005-07 | ⏳ Not started |
+| BA-05 | Assess Structural Consequence | Query (computed) | Impact Context (`IMC-000001`, registered §23) | ERB-C005-05 / EX-C005-07 | ⏳ Not started — Business Object registered (`IMC-000001`, §23); own implementation-readiness gap analysis still required |
 | BA-06 | Review Structural Outcome / Resolve Concerns | Update (review) | Review Context | ERB-C005-06 / EX-C005-08, -09 | ⏳ Not started |
 | BA-07 | Validate Transition Readiness | Update (validation) | Validation Context | ERB-C005-07 / EX-C005-10 | ⏳ Not started |
 | BA-08 | Complete Structural Transition | Update (lifecycle/state transition) | EnterpriseNode / EnterpriseRelationship (`organization_hierarchy`) / ConsolidationDetermination | ERB-C005-08 / EX-C005-11 | ⏳ Not started |
@@ -146,6 +146,8 @@ No new object *type* beyond `organization_node`'s own extension is required for 
 
 **Addendum (post-ADR-007):** a seventh object, **Proposed Outcome Context** — likewise a PE-001-C005 experience-layer construct, not an ERG-001 domain object — has since been identified and formally registered per SD-002 §2/CMD-001 §26.3; see §22. It governs BA-04, not BA-01/BA-02/BA-03.
 
+**Addendum (post-BA-04):** an eighth object, **Impact Context** — likewise a PE-001-C005 experience-layer construct, not an ERG-001 domain object — has since been identified and formally registered per SD-002 §2/CMD-001 §26.3; see §23. It governs BA-05, not BA-01 through BA-04.
+
 ---
 
 ## 8. Existing Reusable Implementation (from WP-00 through WP-03)
@@ -186,7 +188,7 @@ No new object *type* beyond `organization_node`'s own extension is required for 
 | BA-02 — Understand Structural Position | **B** (Existing implementation can be reused) | `OrganizationNodeRepository`'s inherited `get_by_id()`/query methods are a direct starting point once BA-01 exists |
 | BA-03 — Frame Structural Change Intent | **C** (Architecture requires completion — implementation-level; downgraded from D) | **Constitutional question resolved (§21, ADR-006):** Structural Change Intent is a registered canonical Business Object (`SCI-000001`) per SD-002 §2/CMD-001 §26.3 — not an undetermined concept. What remains is ordinary implementation-level gap analysis (persistence mechanism, endpoint shape, service/repository design) — the same class of work BA-01 itself required, not a governance blocker. This reclassification does not authorize implementation; BA-03's own fresh gap analysis is still required per CLAUDE.md §19.7 before any code is written. |
 | BA-04 — Shape/Refine Proposed Structural Outcome | **C** (Architecture requires completion — implementation-level; downgraded from D) | **Both constitutional questions resolved.** Target-type ambiguity resolved (ADR-007): BA-04 v1 is scoped to EnterpriseNode-targeted proposals only — a phased implementation decision, not an architectural one; ERG-001 remains unamended. EnterpriseRelationship/ConsolidationDetermination-targeted proposals remain deferred to their own future Business Activities. **Business Object registration resolved:** "Proposed Outcome Context" satisfied SD-002 §2's Universal Business Object Blueprint and the Cross-Experience Reference Test (BA-05/BA-06/BA-07 each name it as Required/Consumed Context under three separate ERBs) and is now registered as `POC-000001` (§22, `ADR-008`). Neither reclassification authorizes implementation; BA-04's own fresh implementation-readiness gap analysis (persistence mechanism, endpoint shape, service/repository design) is still required per CLAUDE.md §19.7. |
-| BA-05 — Assess Structural Consequence | **D** | Depends on BA-04's own resolution first |
+| BA-05 — Assess Structural Consequence | **C** (Architecture requires completion — implementation-level; downgraded from D) | **BA-04 dependency satisfied** (implemented, `17cba1e`/`c60cf97`/`b3adb6e`). **Business Object registration resolved:** "Impact Context" satisfied SD-002 §2's Universal Business Object Blueprint and the Cross-Experience Reference Test (BA-06/BA-07 each name it as Required/Consumed Context under two separate ERBs) and is now registered as `IMC-000001` (§23, `ADR-009`). This reclassification does not authorize implementation; BA-05's own fresh implementation-readiness gap analysis is still required per CLAUDE.md §19.7. |
 | BA-06 — Review Structural Outcome | **B** (likely, pending BA-04) | Mirrors WP-01/02/03's own review/audit patterns once a proposal object exists |
 | BA-07 — Validate Transition Readiness | **B** (likely, pending BA-04/BA-06) | Mirrors WP-01/02/03's own validation patterns |
 | BA-08 — Complete Structural Transition | **C** | Requires `organization_hierarchy`/`consolidation_determination` — genuinely new tables, category C exactly as BA-01 is for `organization_node` |
@@ -381,6 +383,62 @@ Same discipline as IRA-001/002/003: IMP-TEST-001 (Business Activity Contract tes
 - **Physical Implementation Mapping (CMD-001 §26.7)** — Physical Tables, APIs, Events Published/Consumed, Reports, Search Indexes, Knowledge Graph Nodes, AI Embeddings: **all Pending.** No database table, migration, API, or code is authorized or implied by this registration. Determining these remains BA-04's own future implementation-readiness gap analysis, per CLAUDE.md §19.4's Architectural Impact Assessment discipline.
 - **Business Object Quality Score (CMD-001 §26.8)** — not scored; scoring an object with no implementation yet would be premature.
 - **Whether BA-04 is now READY for implementation** — this registration resolves the *constitutional* question (does this concept qualify as a Business Object requiring registration) but does not itself perform BA-04's own implementation-readiness gap analysis (persistence mechanism, endpoint shape, service/repository design), which remains a separate, future step per CLAUDE.md §19.7. ADR-007's own EnterpriseNode-only v1 scope decision is unaffected and unchanged by this registration.
+
+---
+
+## 23. Business Object Registration — Impact Context
+
+**Trigger:** BA-05's own implementation-readiness assessment applied the identical SD-002 §2 Universal Business Object Blueprint test and Cross-Experience Reference Test already used for SCI-000001 (§21) and POC-000001 (§22) to "Impact Context" (PE-001-C005, ERB-C005-05/EX-C005-07, BA-05's own produced object) and found it qualifies: it is named as Required/Consumed Context by **two** separately-invoked Enterprise Experiences governed by two different ERBs — EX-C005-08 (ERB-C005-06, BA-06: "Proposal, Impact Context and review purpose") and EX-C005-10 (ERB-C005-07, BA-07: "Reviewed proposal, resolved concerns and Impact Context") — the same class of decisive evidence already accepted twice in this Work Package. Chapter 42's own text independently corroborates this: "Impact Context is mandatory for review readiness unless a canonical journey records a traceable exception," treating it as a standing, referenceable artifact, not a transient computation. This section performs the registration CMD-001 §26.3 requires **before** BA-05's own implementation-readiness gap analysis can proceed. This section does not authorize implementation.
+
+**Governing decision:** `ADR-009_Impact_Context_Canonical_Business_Object_Registration.md` records the governance decision authorizing this registration, following the identical pattern ADR-006 and ADR-008 already established. CMD-001 remains **LOCKED** — this registration exercises CMD-001 §26.3's own existing registration mechanism; it does not amend CMD-001's text, rules, or structure.
+
+### Registration Entry
+
+| Attribute (CMD-001 §26.4) | Value |
+|---|---|
+| **Business Object Identifier** | `IMC-000001` |
+| **Canonical Name** | Impact Context |
+| **Business Description** | The computed impact and uncertainty context — affected structural areas, known/uncertain consequences, and downstream capability implications — created for a specific coherent proposal revision, prior to review. EX-C005-07's own Purpose, verbatim: "Create impact and uncertainty context for review." Business Value, verbatim: "Improves decision quality by exposing affected context and uncertainty before review." |
+| **Business Domain** | Enterprise Structure Management (C-005) |
+| **Aggregate Root** | Impact Context itself — not a sub-object of Proposed Outcome Context (POC-000001). It is computed *about* a specific proposal revision but is independently identified, retrieved, and invalidated across BA-06/BA-07's own later experience stages — the same top-level-Context-construct disposition already established for SCI-000001/POC-000001. |
+| **Business Owner** | Structural Steward, Structural Reviewer (Participating Personas, EX-C005-07). |
+| **Data Steward** | Pending Canonical Binding — same disclosed gap class already recorded for SCI-000001 (§21) and POC-000001 (§22). |
+| **Primary Data Category** | Transaction — a computed, versioned, governed decision-support record tied to a specific proposal revision, the same classification already applied to SCI-000001/POC-000001, notwithstanding its "Query (computed)" Business Activity type (IRA-004 §4) — computed does not mean transient, per the Cross-Experience Reference Test finding above. |
+| **System of Record** | Pending — reserved for BA-05's own future implementation-readiness gap analysis. |
+| **Lifecycle Model** | SD-002-008's default lifecycle: **CREATED** (BA-05/EX-C005-07, Produced Context: "Impact Context, known/uncertain consequence context and downstream implications") → **INVALIDATED** (EX-C005-07's own Invalidated Context, verbatim: "Impact observations invalidated by material proposal revision") → **ARCHIVED** (SD-002-008's terminal state; not addressed in PE-001-C005's own text but not foreclosed by it). Unlike Proposed Outcome Context, no REVISED/SUPERSEDED pair is registered here — PE-001-C005's own text describes a material proposal revision *invalidating* the prior Impact Context outright (implying a fresh Impact Context is computed against the new revision), not a refinement of the same one; whether BA-05's own future implementation actually creates a new row per computation or reuses one is not decided by this registration. |
+| **Versioning Policy** | Full history retained; invalidated Impact Context entries preserved in traceability, never physically deleted, the same SD-002-009/-010 disclosure already applied to SCI-000001/POC-000001. |
+| **Effective Dating** | Supported — inherited automatically from SD-002-011's universal temporal model; not a distinctive design choice for this object. |
+| **Metadata Schema** | Pending — no implementation exists yet. |
+| **Security Classification** | Internal — consistent with SCI-000001/POC-000001 and every other C-005 construct. |
+| **AI Context** | "Represents the computed impact, uncertainty and downstream capability implications of a specific proposal revision, prior to review." EX-C005-07's own AI Assistance clause, quoted exactly: *"AI MAY identify possible affected context and downstream implications. Confidence and evidence basis SHALL be visible."* |
+| **Status** | Draft — newly created registration entry; no separate CBOR-entry-approval governance step is defined anywhere in this repository. Subject to this task's own Independent Review (Phase 6). |
+
+### Relationship Mapping (CMD-001 §26.5)
+
+| Impact Context | Relationship | Target |
+|---|---|---|
+| Impact Context | `DERIVED_FROM` | Proposed Outcome Context (POC-000001) — confirmed by EX-C005-07's own Required/Consumed Context: "Coherent proposal and current authoritative structural context." |
+| Impact Context | `PRECEDES` | Review Context (EX-C005-08's own Produced Context, BA-06 candidate) — confirmed by EX-C005-08's own Required/Consumed Context: "Proposal, Impact Context and review purpose." |
+| Impact Context | `PRECEDES` | Validation Context (EX-C005-10's own Produced Context, BA-07 candidate) — confirmed by EX-C005-10's own Required/Consumed Context: "Reviewed proposal, resolved concerns and Impact Context." |
+
+### Business Activity Mapping (CMD-001 §26.6)
+
+- **Consumes:** BA-04 — Shape / Refine Proposed Structural Outcome (POC-000001)
+- **Produces:** BA-05 — Assess Structural Consequence (itself)
+- **Supports:** BA-06 — Review Structural Outcome / Resolve Concerns (candidate); BA-07 — Validate Transition Readiness (candidate) — neither yet chartered.
+
+### Governing References
+
+- **Governing Business Activities:** BA-05 (create/compute), BA-06/BA-07 (consume, candidates)
+- **Governing Enterprise Experiences:** EX-C005-07 (Assess Structural Consequence, produces); EX-C005-08 (Review Proposed Structural Outcome, consumes); EX-C005-10 (Validate Structural Transition Readiness, consumes)
+- **Governing Business Rules:** BR-C005-008 ("C-005 SHALL identify downstream capability implications but SHALL not execute outcomes owned by those capabilities")
+
+### Explicitly Not Decided by This Registration
+
+- **Physical Implementation Mapping (CMD-001 §26.7)** — Physical Tables, APIs, Events Published/Consumed, Reports, Search Indexes, Knowledge Graph Nodes, AI Embeddings: **all Pending.** No database table, migration, API, or code is authorized or implied by this registration. Determining these remains BA-05's own future implementation-readiness gap analysis.
+- **Business Object Quality Score (CMD-001 §26.8)** — not scored.
+- **Whether BA-05 is now READY for implementation** — this registration resolves the *constitutional* question only; BA-05's own fresh implementation-readiness gap analysis (persistence mechanism, one-row-per-computation vs. reuse, endpoint shape, service/repository design) remains a separate, future step per CLAUDE.md §19.7.
+- **Whether "Review Context" (BA-06) and "Validation Context" (BA-07) themselves require CBOR registration** — each is that future Business Activity's own eligibility question, not decided or assumed here.
 
 ---
 
