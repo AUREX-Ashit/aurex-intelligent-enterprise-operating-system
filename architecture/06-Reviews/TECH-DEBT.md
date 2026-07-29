@@ -84,6 +84,9 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-054 | "Initial Comparison Context" (EX-C005-05's own Produced Context, alongside Proposed Outcome Context) is not persisted or computed anywhere by BA-04 — `StructuralProposalResponse` returns only the proposal itself. | BA-04 implementation (self-identified; Comparison Context fails the Cross-Experience Reference Test — named only within EX-C005-05's own text — so it is not itself a registered Business Object, but PE-001-C005 does not specify what is compared, and inventing a diff representation was judged out of BA-04's own minimal scope) | Architecture | Low | A future refinement of BA-04, or a dedicated future Business Activity, once a concrete comparison representation is actually needed by a caller. | Open | AuthService (Backend) |
 | TD-055 | No `GET` read endpoint exists for Proposed Outcome Context — only `POST /structural-proposals` (Shape) and `POST /structural-proposals/{proposal_id}/revisions` (Refine) exist. Mirrors TD-051's identical disposition for Structural Change Intent. | BA-04 implementation (self-identified, IRA-004 §4's own "Create / Update" typing for BA-04 — no Query type listed) | Architecture | Low | BA-05 (Assess Structural Consequence)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
 | TD-056 | `structural_proposals` has no unique constraint spanning `(proposal_id, revision_number)`. Two concurrent `POST /structural-proposals/{proposal_id}/revisions` calls against the same proposal could both read the same current revision and both insert a row with the same `revision_number`, silently producing two "revision 2" rows instead of a detected conflict. | BA-04 implementation (self-identified, the same class of gap TD-005/TD-006 already recorded for WP-01's own concurrent-duplicate race) | Concurrency | Low | Add a unique constraint on `(proposal_id, revision_number)` and a dedicated concurrency test, mirroring TD-005's own resolution pattern for `organizations.organization_code`. | Open | AuthService (Backend) |
+| TD-057 | `ImpactAssessment.status` is constrained to IRA-004 §23's own registered Lifecycle Model (CREATED, INVALIDATED, ARCHIVED), but BA-05's own code only ever writes CREATED — INVALIDATED and ARCHIVED are never reached. | BA-05 implementation (self-identified, mirroring TD-052/TD-053's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per EX-C005-07's own Invalidated Context) — deliberately out of BA-05's own scope ("implement only what BA-05 owns"). A future cross-cutting mechanism or BA-06's own gap analysis decides how invalidation is actually triggered. | Open | AuthService (Backend) |
+| TD-058 | No `GET` read endpoint exists for Impact Context — only `POST /impact-assessments` exists. Mirrors TD-051/TD-055's identical disposition for Structural Change Intent / Proposed Outcome Context. | BA-05 implementation (self-identified, IRA-004 §4's own typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-06 (Review Structural Outcome)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
+| TD-059 | `POST /impact-assessments` does not verify that the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own proposal lineage — an assessment can be created against a revision a later Refine call has already superseded. | BA-05 implementation (self-identified during this Business Activity's own gap analysis; EX-C005-07's own Trigger text — "A coherent proposed structural outcome exists" — does not explicitly require currency, so this was not assumed either way) | Architecture | Low | A future revisit of BA-05 (or BA-06's own review-readiness gap analysis) decides whether assessing a superseded revision should be rejected, allowed with a warning, or remains permitted as historical analysis. | Open | AuthService (Backend) |
 
 ---
 
@@ -679,6 +682,57 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-04 — Shape / Refine Proposed Structural Outcome
 - **Source:** BA-04 implementation (self-identified during this Business Activity's own gap analysis)
 - **Resolution Criteria:** A concurrent second Refine call against the same current revision receives a deterministic conflict response, not a silent duplicate `revision_number`.
+
+---
+
+### TD-057 — Detailed Entry
+
+- **Title:** Impact Context Lifecycle Transitions Beyond CREATED Are Not Implemented
+- **Category:** Architecture
+- **Description:** `ImpactAssessment.status` (`models/impact_assessment.py`) is constrained to IRA-004 §23's full registered Lifecycle Model — CREATED, INVALIDATED, ARCHIVED — but BA-05's own service (`ImpactAssessmentService`) only ever writes CREATED.
+- **Root Cause:** EX-C005-07's own Invalidated Context ("Impact observations invalidated by material proposal revision") ties invalidation to an event owned by BA-04 (`refine_proposal()`), not BA-05. Implementing it would require BA-05's own code to reach into BA-04's already-implemented, already-reviewed flow — explicitly out of scope ("implement only what BA-05 owns").
+- **Impact:** None today — mirrors BA-03/BA-04's own identical, already-accepted disposition (TD-052/TD-053) of not implementing every registered lifecycle value in a Business Activity's own first pass.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future cross-cutting mechanism (e.g., BA-04's `refine_proposal()` itself invalidating dependent Impact Context rows) or BA-06's own gap analysis, once review readiness actually depends on this distinction.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-05 — Assess Structural Consequence
+- **Source:** BA-05 implementation (self-identified, mirroring TD-052/TD-053's own precedent)
+- **Resolution Criteria:** INVALIDATED and ARCHIVED each have a real, tested code path once the mechanism that owns each transition is implemented.
+
+---
+
+### TD-058 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Impact Context
+- **Category:** Architecture
+- **Description:** BA-05 implements `POST /impact-assessments` only. No endpoint retrieves an existing assessment by id or lists assessments for a given proposal.
+- **Root Cause:** Mirrors TD-051/TD-055's identical scoping precedent — no read path was scoped for this Business Activity's own first pass.
+- **Impact:** None today — the create response already returns every field a caller needs immediately after assessment. Becomes real friction once BA-06 (Review Proposed Structural Outcome) needs to resolve an assessment by id independently.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** BA-06's own future implementation-readiness gap analysis decides whether a dedicated `GET /impact-assessments/{id}` (or a proposal-scoped list) is required.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-05 — Assess Structural Consequence
+- **Source:** BA-05 implementation (self-identified, mirroring TD-051/TD-055's own identical precedent)
+- **Resolution Criteria:** A read path for Impact Context exists, if and only if BA-06's own gap analysis determines one is required.
+
+---
+
+### TD-059 — Detailed Entry
+
+- **Title:** Assess Structural Consequence Does Not Verify the Referenced Proposal Revision Is Still Current
+- **Category:** Architecture
+- **Description:** `POST /impact-assessments` accepts any existing `structural_proposal_id`, including a revision a later `Refine` call has already marked `SUPERSEDED`. No check compares the referenced revision against its own lineage's current revision.
+- **Root Cause:** EX-C005-07's own Trigger text ("A coherent proposed structural outcome exists") does not explicitly require the assessed revision be the current one, so BA-05's own implementation neither assumed nor enforced currency either way — a disclosed, deliberate non-decision rather than a silent gap.
+- **Impact:** Low today — no consumer currently depends on assessments only existing against current revisions; a caller could in principle assess a stale revision, producing an Impact Context that is itself immediately stale.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future revisit of BA-05, or BA-06's own review-readiness gap analysis, decides whether assessing a superseded revision should be rejected (409-class), allowed with a warning, or remains permitted as legitimate historical analysis.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-05 — Assess Structural Consequence
+- **Source:** BA-05 implementation (self-identified during this Business Activity's own gap analysis)
+- **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision assessment is permitted, and that decision is enforced and tested.
 
 ---
 

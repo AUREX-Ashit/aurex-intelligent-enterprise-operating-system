@@ -3,7 +3,7 @@
 **Work Package:** WP-04 — Enterprise Structure Management (C-005)
 **Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is recorded in this report's own "Governing Architecture Review (Step 1) — BA-02" and "Gap Analysis Summary — BA-02" sections below, consuming IRA-004 §4/§9/§10's own BA-02 candidate disposition ("B — Existing implementation can be reused") rather than re-deriving it from nothing.
 **Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction. BA-02 has no equivalent ERG-001 domain rule (it is a pure read, ERG-001 governs write-side structural semantics) — its governing text is PE-001-C005 ERB-C005-02/EX-C005-03 directly.
-**Scope of this report:** BA-01, BA-02, BA-03, and BA-04. BA-05 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision. BA-04's own two constitutional questions (proposal target-type scope; Business Object registration) were resolved by `ADR-007` and `ADR-008` respectively — this report's own BA-04 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §22's registration and both ADRs' decisions.
+**Scope of this report:** BA-01, BA-02, BA-03, BA-04, and BA-05. BA-06 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision. BA-04's own two constitutional questions (proposal target-type scope; Business Object registration) were resolved by `ADR-007` and `ADR-008` respectively — this report's own BA-04 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §22's registration and both ADRs' decisions. BA-05's own Business Object registration question (Impact Context) was resolved by `ADR-009` — this report's own BA-05 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §23's registration and that ADR's decision.
 
 ---
 
@@ -472,4 +472,125 @@ Findings recorded, none blocking:
 
 ---
 
-*End of IMP-REPORT-WP-04 (BA-01, BA-02, BA-03, and BA-04). BA-05 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
+## BA-05 — Assess Structural Consequence
+
+## Business Activity Implemented
+
+**BA-05 — Assess Structural Consequence**, realizing PE-001-C005's ERB-C005-05 (Assess Structural Consequence) / EX-C005-07. Realizes IMC-000001 (Impact Context), the canonical Business Object registered by `ADR-009`/IRA-004 §23. No ERG-001 domain business rule governs this Business Activity — Impact Context, like Structural Change Intent and Proposed Outcome Context, is a PE-001-C005-native experience-layer construct, not an ERG-001 domain object.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Allow a caller to record computed impact and uncertainty context — affected structural areas, known/uncertain consequences, and identified downstream capability implications — for one specific proposal revision, prior to review (ERB-C005-05's own Purpose, verbatim: "Understand affected structural context and identify downstream capability implications before review").
+- **Input Contract:** `structural_proposal_id` (UUID, required — must reference an existing `StructuralProposal` revision), `impact_description` (str, required), `uncertainty_notes` (str, optional), `downstream_implications` (str, optional).
+- **Output Contract:** The persisted assessment (id, structural_proposal_id, impact_description, uncertainty_notes, downstream_implications, status, created_at, updated_at), or a 404 naming the missing proposal.
+- **Business Rules:**
+  - BR-C005-008 — C-005 SHALL identify downstream capability implications but SHALL not execute outcomes owned by those capabilities. Satisfied by construction: `downstream_implications` is a free-text identification field only; no downstream capability API is called, no event beyond `STRUCTURAL_CONSEQUENCE_ASSESSED` is published.
+- **Validation Rules:** `structural_proposal_id` must reference an existing row (404 otherwise); `impact_description` must be non-empty (422 otherwise). No check that the referenced revision is still current/non-`SUPERSEDED` (TD-059, disclosed rather than assumed either way). No duplicate-check — Impact Context has no natural business key, the same disclosed difference already established for SCI-000001/POC-000001.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required — the same interim gate every prior write-side Business Activity in this repository has used.
+- **Domain Events:** `STRUCTURAL_CONSEQUENCE_ASSESSED` (impact_assessment_id, structural_proposal_id).
+- **Audit Requirements:** `record_audit("ASSESS_STRUCTURAL_CONSEQUENCE", ...)` on success.
+- **Tests:** `tests/test_impact_assessment_service.py` (4 unit tests), `tests/test_impact_assessment_api.py` (9 API/authorization tests) — 13 new tests, all passing; full AuthService suite (513 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (Step 1) — BA-05
+
+Reviewed for this Business Activity: CLAUDE.md (§14, §16, §17, §19.1–§19.8), SD-002 (§2), CMD-001 (§26.3–§26.7), `ADR-009` (Accepted — registers IMC-000001), IRA-004 (§4/§9/§10/§23 — BA-05's own candidate disposition, readiness assessment, and full CBOR registration entry), PE-001-C005 (ERB-C005-05 §40.6, EX-C005-07 §41.8, and Chapter 42's own "Impact Context is mandatory for review readiness" text), `StructuralProposalRepository` (BA-04, reused directly to validate BA-05's own single FK input), `BaseRepository[T]`, `observability.py`, `dependencies.require_platform_admin`, `middleware/tenant.py`'s exemption pattern.
+
+**Key finding requiring disclosure (already recorded in the BA-05 constitutional-alignment task):** IRA-004 §4 types BA-05 as "Query (computed)" at the Business Activity level (it reads a proposal and computes an assessment; no existing structural data is mutated) — but the assessment itself is a registered, persisted Business Object (IMC-000001), so this implementation's own router uses `POST` (create), not a contradiction between the "Query" typing and a write-shaped endpoint.
+
+**Second finding:** setting `ImpactAssessment.status` to `INVALIDATED` (EX-C005-07's own Invalidated Context: "Impact observations invalidated by material proposal revision") would require reaching into BA-04's own, already-implemented and independently-reviewed `refine_proposal()` flow. Deliberately not done here — "implement only what BA-05 owns" — recorded as TD-057, not silently assumed satisfied.
+
+---
+
+## Gap Analysis Summary — BA-05 (see IRA-004 §23 for the underlying disposition)
+
+- **Database:** New table, `impact_assessments` — a genuine Create (IMC-000001 is its own Aggregate Root, IRA-004 §23). FK to `structural_proposals.id` (one specific revision). Single new migration (`b8e4d1a7c3f9`), chained onto the existing head (`a3c6f8e1d5b2`); `alembic heads` confirms exactly one head after this migration.
+- **Business Activities:** BA-05 is the fifth Business Activity authorized for implementation under this report's own fresh gap analysis (this section, consuming ADR-009's reclassification); BA-06 through BA-09 remain candidate-only (IRA-004 §4).
+- **API Impact:** One new endpoint, `POST /impact-assessments`, mirroring the established create-then-audit-then-event shape (BA-03's own precedent) minus a duplicate-check.
+- **UI Impact:** Out of scope for BA-05 (backend Business Activity implementation only).
+- **Dependencies:** BA-04 (satisfied — `structural_proposals` exists). No dependency on BA-06–BA-09.
+- **Missing runtime capabilities / canonical objects:** None required beyond the new table — every repository/service/audit/event mechanism reused directly.
+- **Missing repositories / services:** `ImpactAssessmentRepository`/`ImpactAssessmentService` (new, minimal — no natural-key lookup, mirroring `StructuralChangeIntentRepository`'s own shape).
+- **Missing authorization:** Same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate.
+- **Missing audit / events:** None — both implemented.
+- **Technical Debt raised:** TD-057 (lifecycle transitions beyond CREATED not implemented — mirrors TD-052/TD-053), TD-058 (no read endpoint — mirrors TD-051/TD-055), TD-059 (no check that the referenced revision is still current).
+
+**Conclusion: READY, implemented.** BA-05 required one new table and two new thin wrapper layers (repository/service) plus a router — no new architecture, permission, or event mechanism.
+
+---
+
+## Documents Updated (BA-05)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-04_Enterprise_Structure_Management.md` (this report, BA-05 section)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-057, TD-058, TD-059 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-04 row updated to reflect BA-05 implemented and independently reviewed)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/models/impact_assessment.py`
+- `Backend/Services/AuthService/repositories/impact_assessment_repository.py`
+- `Backend/Services/AuthService/schemas/impact_assessment.py`
+- `Backend/Services/AuthService/services/impact_assessment_service.py`
+- `Backend/Services/AuthService/routers/impact_assessment.py`
+- `Backend/Services/AuthService/alembic/versions/2026_08_05_0900-b8e4d1a7c3f9_impact_assessment.py`
+- `Backend/Services/AuthService/tests/test_impact_assessment_service.py`
+- `Backend/Services/AuthService/tests/test_impact_assessment_api.py`
+
+**Implementation (modified):**
+- `Backend/Services/AuthService/main.py` — registered the new `impact_assessment` router at `/impact-assessments`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/impact-assessments` and `/impact-assessments/*` to the tenant-exemption list.
+
+No other existing model, repository, service, or router was modified.
+
+---
+
+## Validation (BA-05)
+
+- 13 new tests (4 unit, 9 API), all passing.
+- Full AuthService suite: **513 passed**, zero regressions (re-run directly: 500 pre-existing + 13 new).
+- Confirmed a single Alembic head (`b8e4d1a7c3f9`) after the new migration, chained onto `a3c6f8e1d5b2`.
+- Confirmed BR-C005-008: `downstream_implications` is persisted as identification only; no downstream capability endpoint is called anywhere in the code path.
+- Confirmed `POST /impact-assessments` rejects an unknown `structural_proposal_id` with 404, not 500 or a silently-created orphan row.
+- Confirmed optional fields (`uncertainty_notes`, `downstream_implications`) may be omitted without error.
+- Confirmed two assessments against the same proposal each create their own distinct row (no deduplication).
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403; missing/invalid Authorization header returns 400/401 respectively.
+- Confirmed the endpoint requires no `X-Tenant-ID` header (tenant-exemption list).
+- Confirmed via `git status`/`git diff --stat` that only the files listed under Documents Updated above were touched — no BA-06–BA-09 code and no invalidation/cross-BA-04-coupling code exists anywhere in the change set.
+- OpenAPI schema (`app.openapi()`) generated successfully with `POST /impact-assessments` present among 64 total paths.
+- Live Postgres `alembic upgrade`/`alembic check` was not exercised — `alembic check` was attempted and failed only with a connection-refused error (no running Postgres instance available in this environment), the same limitation every prior Business Activity's validation carried.
+
+---
+
+## Status (BA-05)
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (513/513 full suite passing, re-run directly during this report's own preparation)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** recorded below, Documents Updated section, upon commit.
+
+**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+
+**Commit Date:** 2026-07-29
+
+---
+
+## Independent Review (BA-05)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in BA-05's implementation, verified the implementation against actual repository state rather than trusting this report's own claims, and re-ran the full test suite directly. `ADR-009`'s own IMC-000001 registration was re-confirmed Accepted and unamended by this implementation. `ImpactAssessmentService.assess_structural_consequence()` was read in full and confirmed to reuse `StructuralProposalRepository.get_by_id()` directly rather than re-implementing a lookup, and to persist `downstream_implications` as plain text with no call of any kind to a downstream-capability API — satisfying BR-C005-008's own "identify but do not execute" boundary by construction, not merely by convention. `git diff --stat` confirmed no BA-06–BA-09 code exists anywhere in the change set, and specifically that no change was made to `services/structural_proposal_service.py` (BA-04) — confirming TD-057's own disclosure that invalidation-on-revision was deliberately not implemented, rather than silently attempted and failing. The "Query (computed) type but POST verb" apparent tension was independently checked against BA-03's own identical precedent (a Create-typed Business Activity using POST) and found consistent, not a new inconsistency. Tests were re-run directly: 13/13 new tests pass, 513/513 full suite passes, matching this report's own claims exactly; both new test files were read in full to confirm each test isolates a genuinely distinct behavior (creation, optional-field omission, unknown-FK rejection, no-deduplication, and the full authorization/tenant-exemption/validation matrix are each separately covered).
+
+Findings recorded, none blocking:
+1. **TD-057** (lifecycle transitions beyond CREATED not implemented) — recorded in `TECH-DEBT.md`, mirroring TD-052/TD-053's own precedent class.
+2. **TD-058** (no read endpoint) — recorded in `TECH-DEBT.md`, mirroring TD-051/TD-055's own identical precedent.
+3. **TD-059** (no currency check against the proposal's own current revision) — recorded in `TECH-DEBT.md` as a genuinely new observation (not previously disclosed anywhere prior to this Business Activity); independently confirmed EX-C005-07's own Trigger text does not resolve the question either way, so this is a disclosed open design choice, not a defect being excused.
+4. **Inherited, not re-raised:** No PE-001-C005 persona exists as an enforceable claim — the same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every prior write-side Business Activity in this repository.
+5. The implementation itself was found complete, correct against BR-C005-008 and EX-C005-07's own Required/Produced Context, and consistent with this repository's established audit/event pattern — no correctness, security, tenant-isolation, or scope-creep (BA-06 absorption, or reaching into BA-04's own code) defect was found.
+
+---
+
+*End of IMP-REPORT-WP-04 (BA-01 through BA-05). BA-06 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
