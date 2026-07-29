@@ -68,7 +68,7 @@ All eight independently confirmed by direct docx extraction of `PE-001-C005_Ente
 | BA-05 | Assess Structural Consequence | Query (computed) | Impact Context (`IMC-000001`, registered §23) | ERB-C005-05 / EX-C005-07 | ⏳ Not started — Business Object registered (`IMC-000001`, §23); own implementation-readiness gap analysis still required |
 | BA-06 | Review Structural Outcome / Resolve Concerns | Update (review) | Review Context (`RVC-000001`, registered §25) | ERB-C005-06 / EX-C005-08, -09 | ⏳ Not started — Business Object registered (`RVC-000001`, §25); own implementation-readiness gap analysis still required |
 | BA-07 | Validate Transition Readiness | Update (validation) | Validation Context (`VLC-000001`, registered §26) | ERB-C005-07 / EX-C005-10 | ⏳ Not started — Business Object registered (`VLC-000001`, §26); own implementation-readiness gap analysis still required |
-| BA-08 | Complete Structural Transition | Update (lifecycle/state transition) | EnterpriseNode / EnterpriseRelationship (`organization_hierarchy`) / ConsolidationDetermination | ERB-C005-08 / EX-C005-11 | ⏳ Not started |
+| BA-08 | Complete Structural Transition | Update (lifecycle/state transition) | Resulting Structural Context (`RSC-000001`, registered §27) — **the actual ERG-001 domain object(s) a completion mutates (EnterpriseNode / EnterpriseRelationship (`organization_hierarchy`) / ConsolidationDetermination) remain a separate, explicitly undecided implementation question**, disclosed in §27's own "Explicitly Not Decided" subsection, not resolved by this row | ERB-C005-08 / EX-C005-11 | ⏳ Not started — Business Object registered (`RSC-000001`, §27); own implementation-readiness gap analysis, including the ERG-001-mutation-scope question, still required |
 | BA-09 | Continue from Resulting Structure | Query (context carry-forward) | Resulting Structural Context | ERB-C005-08 / EX-C005-12 | ⏳ Not started — likely (not assumed) candidate for a WP-03 BA-09/BA-11-style "no new production code" disposition, given its own Purpose text ("Transfer resulting structural context to the next Enterprise Experience or Journey") closely parallels EX-C007-13's |
 
 **Not listed as a numbered BA, explicitly flagged instead:** Enterprise View configuration (`enterprise_view_registry`), Traversal Policy configuration (`traversal_policy_registry`), and Node Permission Assignment (`node_permission_assignment`) are all canonically specified in ERG-001 (§6, §9) and Master Technical Architecture, but PE-001-C005's own text treats them as instances of the same generic "structural outcome" rather than naming them as distinct ERBs/EXs. Whether each becomes its own Business Activity, or a parameterized variant of BA-04/BA-08, is **not decided here** — it is a future gap-analysis question, exactly mirroring how IRA-003 §4 left the BA-09/BA-10/BA-11 collapse question open rather than assuming an answer.
@@ -152,6 +152,8 @@ No new object *type* beyond `organization_node`'s own extension is required for 
 
 **Addendum (post-BA-06):** a tenth object, **Validation Context** — the Structural Context Lifecycle's fifth stage — has since been registered per `ADR-010` and CMD-001 §26.3, independently re-confirmed (not merely assumed) during BA-07's own implementation-readiness assessment; see §26. It governs BA-07, not BA-01 through BA-06. Resulting Structural Context (the pattern's sixth and final stage) remains unregistered.
 
+**Addendum (post-BA-07):** an eleventh object, **Resulting Structural Context** — the Structural Context Lifecycle's sixth and final stage — has since been registered per `ADR-010` and CMD-001 §26.3, independently re-confirmed during BA-08's own implementation-readiness assessment on the most literal cross-Business-Activity evidence of any of the six stages; see §27. It governs BA-08, not BA-01 through BA-07. **The Structural Context Lifecycle pattern is now fully registered end-to-end** (SCI-000001 → POC-000001 → IMC-000001 → RVC-000001 → VLC-000001 → RSC-000001); no further pattern member remains outstanding. Whether BA-08 must also mutate real ERG-001 structural data (EnterpriseNode / `organization_hierarchy` / `consolidation_determination`) to actually complete a transition is a separate, explicitly undecided implementation question — see §27's own "Explicitly Not Decided" subsection — not itself a Structural Context Lifecycle pattern member.
+
 ---
 
 ## 8. Existing Reusable Implementation (from WP-00 through WP-03)
@@ -195,7 +197,7 @@ No new object *type* beyond `organization_node`'s own extension is required for 
 | BA-05 — Assess Structural Consequence | **C** (Architecture requires completion — implementation-level; downgraded from D) | **BA-04 dependency satisfied** (implemented, `17cba1e`/`c60cf97`/`b3adb6e`). **Business Object registration resolved:** "Impact Context" satisfied SD-002 §2's Universal Business Object Blueprint and the Cross-Experience Reference Test (BA-06/BA-07 each name it as Required/Consumed Context under two separate ERBs) and is now registered as `IMC-000001` (§23, `ADR-009`). This reclassification does not authorize implementation; BA-05's own fresh implementation-readiness gap analysis is still required per CLAUDE.md §19.7. |
 | BA-06 — Review Structural Outcome | **C** (Architecture requires completion — implementation-level; superseding the prior "B, likely" placeholder) | **BA-04/BA-05 dependencies satisfied** (both implemented). **Business Object registration resolved:** "Review Context" is registered as `RVC-000001` (§25, `ADR-011`), citing `ADR-010`'s own Structural Context Lifecycle pattern for eligibility rather than re-deriving it. This reclassification does not authorize implementation; BA-06's own fresh implementation-readiness gap analysis (including EX-C005-09's own disclosed ambiguity, §25) is still required per CLAUDE.md §19.7. |
 | BA-07 — Validate Transition Readiness | **C** (Architecture requires completion — implementation-level; superseding the prior "B, likely" placeholder) | **BA-04/BA-05/BA-06 dependencies satisfied** (all implemented). **Business Object registration resolved:** "Validation Context" is registered as `VLC-000001` (§26, `ADR-012`), citing `ADR-010`'s own Structural Context Lifecycle pattern for eligibility, independently re-confirmed rather than merely assumed. This reclassification does not authorize implementation; BA-07's own fresh implementation-readiness gap analysis is still required per CLAUDE.md §19.7. |
-| BA-08 — Complete Structural Transition | **C** | Requires `organization_hierarchy`/`consolidation_determination` — genuinely new tables, category C exactly as BA-01 is for `organization_node` |
+| BA-08 — Complete Structural Transition | **C** (Architecture requires completion — implementation-level; superseding the prior pre-`ADR-010` disposition) | **BA-07 dependency satisfied** (implemented). **Business Object registration resolved:** "Resulting Structural Context" is registered as `RSC-000001` (§27, `ADR-013`), citing `ADR-010`'s own Structural Context Lifecycle pattern for eligibility, independently re-confirmed rather than merely assumed. **Separately disclosed, not resolved:** whether/how BA-08 actually mutates ERG-001 structural data (`organization_hierarchy`/`consolidation_determination` genuinely do not exist yet; every `StructuralProposal` carries only free text, no structured change-representation exists upstream) is BA-08's own future implementation-readiness gap analysis's question. This reclassification does not authorize implementation. |
 | BA-09 — Continue from Resulting Structure | **B** (likely, pending BA-08) | Mirrors WP-03 BA-09/BA-11's own "no new production code, existing response shapes suffice" disposition — not assumed, to be confirmed at that BA's own gap analysis |
 | *(cross-cutting)* `node_permission_assignment` / URA-001-76 integration | **D** (Governance clarification required) | Requires C-002 (Access Management, no WP yet) coordination — explicitly out of WP-04's own BA-01 scope, recorded as a Governance Backlog Item (§17) |
 
@@ -604,6 +606,62 @@ Each stage is produced by exactly one EX (table above) and consumed, per §38.17
 - **Business Object Quality Score (CMD-001 §26.8)** — not scored.
 - **Whether BA-07 is now READY for implementation** — this registration resolves the *constitutional* question only; BA-07's own fresh implementation-readiness gap analysis (persistence mechanism, readiness-result representation, endpoint shape, service/repository design) remains a separate, future step per CLAUDE.md §19.7.
 - **Whether "Resulting Structural Context" (BA-08) itself requires its own registration** — that future Business Activity's own eligibility question; `ADR-010`'s pattern recognition already establishes it qualifies in principle as the pattern's sixth and final stage, but it is not registered by this section.
+
+---
+
+## 27. Business Object Registration — Resulting Structural Context
+
+**Trigger:** BA-08's own implementation-readiness assessment independently re-confirmed — not merely assumed from precedent — that Resulting Structural Context, the Structural Context Lifecycle's sixth and final stage, satisfies SD-002 §2 and the Cross-Experience Reference Test on the most literal textual evidence of any of the six stages, citing `ADR-010`'s own pattern recognition for the general eligibility question per that ADR's Decision point 4. This section performs the registration CMD-001 §26.3 requires **before** BA-08's own implementation-readiness gap analysis can proceed. This section does not authorize implementation.
+
+**Governing decision:** `ADR-013_Resulting_Structural_Context_Canonical_Business_Object_Registration.md` records the governance decision authorizing this registration. CMD-001 remains **LOCKED** — this registration exercises CMD-001 §26.3's own existing registration mechanism.
+
+### Registration Entry
+
+| Attribute (CMD-001 §26.4) | Value |
+|---|---|
+| **Business Object Identifier** | `RSC-000001` |
+| **Canonical Name** | Resulting Structural Context |
+| **Business Description** | The structural context produced by a successfully completed transition — the closure of a validated proposal into a recognizable resulting enterprise state. §38.15's own Meaning, verbatim: "Structural context produced by successful completion." EX-C005-11's own Purpose, verbatim: "Establish Resulting Structural Context and completed Enterprise Transition." Business Value, verbatim: "Creates a recognizable resulting enterprise state and closes the structural decision coherently." |
+| **Business Domain** | Enterprise Structure Management (C-005) |
+| **Aggregate Root** | Resulting Structural Context itself — per `ADR-010` point 5, not merged with Validation Context (VLC-000001) or any earlier stage; its own independently-identified object, related to Validation Context (see Relationship Mapping). |
+| **Business Owner** | Structural Steward; eligible decision participant by reference to URA-001 (EX-C005-11 Participating Personas, verbatim: "Structural Steward and eligible decision participant by reference to URA-001"). |
+| **Data Steward** | Pending Canonical Binding — same disclosed gap class already recorded for SCI-000001/POC-000001/IMC-000001/RVC-000001/VLC-000001 (§21/§22/§23/§25/§26). |
+| **Primary Data Category** | Transaction — a governed completion record, the same classification already applied to every other Structural Context Lifecycle member. |
+| **System of Record** | Pending — reserved for BA-08's own future implementation-readiness gap analysis. |
+| **Lifecycle Model** | SD-002-008's default lifecycle: **CREATED** (BA-08/EX-C005-11, Produced Context: "Resulting Structural Context and completion outcome") → **ARCHIVED** (SD-002-008's terminal state; not addressed in PE-001-C005's own text but not foreclosed by it). **Deliberately no INVALIDATED transition** — unlike its five siblings, EX-C005-11's own Invalidated Context text ("Transient proposal/review context closes as completed") describes the *prior* stages' contexts closing as a *result* of this stage's own completion, not Resulting Structural Context's own state being invalidated by a later material revision. This object represents a terminal, successfully-completed outcome; PE-001-C005's own text gives it no revision-invalidation semantics the way every earlier stage has — a disclosed, deliberate difference, not an oversight. |
+| **Versioning Policy** | Full version history retained; per GS-INV-012, "Completion SHALL identify the exact validated proposal revision from which Resulting Structural Context was produced" — exact traceability to one specific `StructuralValidation`, the same per-revision scoping already implemented for Impact Context, Review Context, and Validation Context. |
+| **Effective Dating** | Supported — inherited automatically from SD-002-011's universal temporal model; not a distinctive design choice for this object. |
+| **Metadata Schema** | Pending — no implementation exists yet. |
+| **Security Classification** | Internal — consistent with every other Structural Context Lifecycle member. |
+| **AI Context** | "Represents the resulting enterprise structural state produced by a successfully completed, validated transition." EX-C005-11's own AI Assistance clause, quoted exactly: *"AI MAY explain completion outcome and Resulting Structural Context. It SHALL not independently complete the transition."* |
+| **Status** | Draft — newly created registration entry; no separate CBOR-entry-approval governance step is defined anywhere in this repository. Subject to this task's own Independent Review (Phase 4). |
+
+### Relationship Mapping (CMD-001 §26.5)
+
+| Resulting Structural Context | Relationship | Target |
+|---|---|---|
+| Resulting Structural Context | `DERIVED_FROM` | Validation Context (VLC-000001) — confirmed by EX-C005-11's own Required/Consumed Context: "Validated Transition Context." |
+| Resulting Structural Context | `PRECEDES` | Downstream Continuation Context (§40.9's own Exit Context; EX-C005-12's own Produced Context, BA-09 candidate) — confirmed by EX-C005-12's own Required/Consumed Context: "Resulting Structural Context and next enterprise objective." Whether Downstream Continuation Context itself requires CBOR registration is **not decided here** — BA-09's own future eligibility question. |
+
+### Business Activity Mapping (CMD-001 §26.6)
+
+- **Consumes:** BA-07 — Validate Transition Readiness (VLC-000001)
+- **Produces:** BA-08 — Complete Structural Transition (itself)
+- **Supports:** BA-09 — Continue from Resulting Structure (candidate, not yet chartered)
+
+### Governing References
+
+- **Governing Business Activities:** BA-08 (create), BA-09 (consume, candidate)
+- **Governing Enterprise Experiences:** EX-C005-11 (Complete Structural Transition, produces); EX-C005-12 (Continue from Resulting Structure, consumes, candidate)
+- **Governing Business Rules:** BR-C005-009 ("Completion SHALL produce Resulting Structural Context"), BR-C005-010 ("Exiting without completion SHALL not represent a proposal as resulting enterprise structure" — cross-cutting, BA-03 through BA-08)
+- **Governing Invariants (PE-001-C005 Chapter 43):** GS-INV-008, GS-INV-012
+
+### Explicitly Not Decided by This Registration
+
+- **Physical Implementation Mapping (CMD-001 §26.7)** — Physical Tables, APIs, Events Published/Consumed, Reports, Search Indexes, Knowledge Graph Nodes, AI Embeddings: **all Pending.** No database table, migration, API, or code is authorized or implied by this registration. Determining these remains BA-08's own future implementation-readiness gap analysis.
+- **Business Object Quality Score (CMD-001 §26.8)** — not scored.
+- **Whether BA-08 is now READY for implementation** — this registration resolves the *constitutional* question only. BA-08's own fresh implementation-readiness gap analysis remains a separate, future step per CLAUDE.md §19.7 — **including the ERG-001-mutation-scope question BA-08's own readiness assessment separately disclosed** (whether/how completion actually mutates `organization_nodes` or any future `organization_hierarchy`/`consolidation_determination` table, given no structured change-representation exists anywhere upstream in the pipeline). This registration covers the C-005 experience-layer completion record only, not any ERG-001 domain mutation mechanism.
+- **Whether "Downstream Continuation Context" (BA-09) itself requires its own registration** — that future Business Activity's own eligibility question, not decided or assumed here.
 
 ---
 
