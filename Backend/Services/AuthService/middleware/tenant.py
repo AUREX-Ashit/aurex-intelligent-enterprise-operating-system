@@ -92,6 +92,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # /organization-nodes: an Organization Establishment Attempt
         # carries no organization_id column — it exists prior to any
         # Organization, tenant or otherwise.
+        # /structural-change-intents (WP-04, BA-03 Frame Structural Change
+        # Intent; SCI-000001, ADR-006, IRA-004 §21) is tenant-agnostic for
+        # the identical reason as /organization-nodes: a Structural Change
+        # Intent carries no organization_id column anywhere in its own
+        # model (models/structural_change_intent.py) — it is an
+        # enterprise-structure-level construct, not organization-scoped
+        # data.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -106,7 +113,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/") \
           or path == "/memberships" or path.startswith("/memberships/") \
           or path == "/organization-nodes" or path.startswith("/organization-nodes/") \
-          or path == "/organization-establishment-attempts" or path.startswith("/organization-establishment-attempts/"):
+          or path == "/organization-establishment-attempts" or path.startswith("/organization-establishment-attempts/") \
+          or path == "/structural-change-intents" or path.startswith("/structural-change-intents/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")
