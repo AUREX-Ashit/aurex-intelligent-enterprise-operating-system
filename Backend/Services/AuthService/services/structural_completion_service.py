@@ -44,9 +44,24 @@ OrganizationService.establish() already documents for
 
 Deliberately does not implement ARCHIVED (IRA-004 §27's own registered
 Lifecycle Model) — see TD-069.
+
+WP-04 BA-09 ("Continue from Resulting Structure", EX-C005-12) adds
+get_details() — a pure read, mirroring
+OrganizationNodeService.get_details()'s (WP-04 BA-01/BA-02) own
+identical shape: get_by_id() -> 404-if-None -> return, no audit, no
+domain event (read-only Business Activities do not audit or emit
+events in this repository's established pattern). Reuses the existing
+StructuralCompletionResponse verbatim — no payload enrichment, no
+embedded upstream chain, no new "downstream continuation" object
+(BA-09's own readiness assessment: "Downstream continuation context"
+does not qualify as a canonical Business Object — EX-C005-12's own
+Invalidated Context explicitly describes it as "C-005-only transient
+context not required downstream").
 """
 
 from __future__ import annotations
+
+from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
@@ -143,4 +158,21 @@ class StructuralCompletionService:
                 "structural_validation_id": str(completion.structural_validation_id),
             },
         )
+        return completion
+
+    async def get_details(self, structural_completion_id: UUID) -> StructuralCompletion:
+        """
+        Business Activity: Continue from Resulting Structure (BA-09,
+        EX-C005-12).
+
+        Realizes EX-C005-12's own Required Context ("Resulting
+        Structural Context") as a direct read of the completion record
+        already produced by BA-08 — no new object, no embellishment.
+        """
+        completion = await self.structural_completion_repo.get_by_id(structural_completion_id)
+        if completion is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No structural completion exists with id '{structural_completion_id}'.",
+            )
         return completion

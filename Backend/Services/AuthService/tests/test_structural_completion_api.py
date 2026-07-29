@@ -210,3 +210,82 @@ def test_complete_structural_transition_does_not_mutate_organization_node(client
     assert after["node_name"] == before["node_name"]
     assert after["operational_status"] == before["operational_status"]
     assert after["active_flag"] == before["active_flag"]
+
+
+# ---------------------------------------------------------------------------
+# BA-09 — Continue from Resulting Structure
+# ---------------------------------------------------------------------------
+
+def test_get_structural_completion_returns_details_for_platform_admin(client: TestClient) -> None:
+    validation_id = _seed_validation(client, "API-COMPLETE-NODE-006")
+    created = client.post(
+        "/structural-completions",
+        headers=_auth_headers(),
+        json={"structural_validation_id": validation_id, "completion_notes": "Completed."},
+    )
+    assert created.status_code == 201
+    completion_id = created.json()["id"]
+
+    response = client.get(f"/structural-completions/{completion_id}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == completion_id
+    assert body["structural_validation_id"] == validation_id
+    assert body["completion_notes"] == "Completed."
+
+
+def test_get_structural_completion_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.get(
+        "/structural-completions/99999999-9999-9999-9999-999999999999",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404
+
+
+def test_get_structural_completion_requires_authorization_header(client: TestClient) -> None:
+    response = client.get("/structural-completions/99999999-9999-9999-9999-999999999999")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_get_structural_completion_rejects_invalid_token(client: TestClient) -> None:
+    response = client.get(
+        "/structural-completions/99999999-9999-9999-9999-999999999999",
+        headers={"Authorization": "Bearer not-a-real-token"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_get_structural_completion_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.get(
+        "/structural-completions/99999999-9999-9999-9999-999999999999",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_get_structural_completion_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.get("/structural-completions/not-a-uuid", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_get_structural_completion_does_not_require_tenant_header(client: TestClient) -> None:
+    """
+    GET /structural-completions/{id} is tenant-agnostic (the existing
+    /structural-completions/* prefix exemption added for BA-08, no
+    middleware change required for BA-09). No X-Tenant-ID header sent;
+    a 404 (not 400) proves the request reached the handler rather than
+    being blocked by the tenant-header check.
+    """
+    response = client.get(
+        f"/structural-completions/{'99999999-9999-9999-9999-999999999999'}",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404

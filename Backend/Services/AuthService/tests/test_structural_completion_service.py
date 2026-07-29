@@ -147,3 +147,35 @@ async def test_complete_structural_transition_does_not_mutate_organization_node(
 
     node_after = await node_repo.get_by_id(proposal.target_organization_node_id)
     assert (node_after.node_name, node_after.operational_status, node_after.active_flag) == snapshot
+
+
+# ---------------------------------------------------------------------------
+# BA-09 — Continue from Resulting Structure
+# ---------------------------------------------------------------------------
+
+async def test_get_details_returns_the_completed_structural_transition(db_session: AsyncSession) -> None:
+    """BA-09: fetching by id returns exactly the completion created by BA-08's own complete_structural_transition()."""
+    validation = await _seed_validation(db_session, node_code="APAC-HOLD-505")
+    service = _service(db_session)
+    created = await service.complete_structural_transition(
+        CompleteStructuralTransitionRequest(
+            structural_validation_id=validation.id, completion_notes="Completed."
+        )
+    )
+
+    fetched = await service.get_details(created.id)
+
+    assert fetched.id == created.id
+    assert fetched.structural_validation_id == validation.id
+    assert fetched.completion_notes == "Completed."
+    assert fetched.status == "CREATED"
+
+
+async def test_get_details_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """BA-09: a well-formed but non-existent id is a 404, not a 500 or an empty success."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_details(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
