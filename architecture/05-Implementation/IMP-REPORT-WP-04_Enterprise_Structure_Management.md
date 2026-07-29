@@ -100,7 +100,11 @@ No other existing model, repository, service, or router was modified.
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** Recorded below (§ Independent Review) — implementation and documentation committed as separate commits per this task's own Phase 9 instruction; hashes recorded in a follow-up commit-hash-recording commit, mirroring WP-03's own three-commit BA pattern.
+**Repository Commit:** Committed to `master` in two commits — `f4f0292` (implementation: 10 files) and `0d80ca1` (documentation: this report, TECH-DEBT.md TD-043/044 and TD-032 update, WPR-001 WP-04 row).
+
+**Commit Hash:** `f4f0292` (implementation), `0d80ca1` (documentation: implementation report, TECH-DEBT.md, WPR-001)
+
+**Commit Date:** 2026-08-01 (both commits)
 
 ---
 
