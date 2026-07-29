@@ -30,7 +30,10 @@ from repositories.person_repository import PersonRepository
 from repositories.role_repository import RoleRepository
 from schemas.membership import (
     ChangeMembershipTermsRequest,
+    DependentCapability,
     EstablishMembershipRequest,
+    HandOffMembershipContextRequest,
+    HandoffOutcome,
     MembershipAuthorityConsequence,
     MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
@@ -815,3 +818,120 @@ async def test_preserve_membership_context_reflects_an_intervening_standing_chan
     second_currently_effective, second_consequence = compute_membership_authority_consequence(second_journey_read)
     assert second_currently_effective is False
     assert second_consequence == MembershipAuthorityConsequence.NOT_ACTIVE
+
+
+# ---------------------------------------------------------------------------
+# BA-10 — Hand Off Membership Context to a Dependent Capability (ERB-C007-06/EX-C007-12)
+# ---------------------------------------------------------------------------
+
+async def test_hand_off_rejects_unknown_membership_id(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.hand_off(
+            uuid.uuid4(),
+            HandOffMembershipContextRequest(
+                dependent_capability=DependentCapability.ROLE_PERMISSION_MANAGEMENT,
+                outcome=HandoffOutcome.ACCEPTED,
+            ),
+        )
+    assert exc_info.value.status_code == 404
+
+
+async def test_hand_off_rejects_returned_without_reason(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.hand_off(
+            established.id,
+            HandOffMembershipContextRequest(
+                dependent_capability=DependentCapability.ACCESS_MANAGEMENT,
+                outcome=HandoffOutcome.RETURNED,
+            ),
+        )
+    assert exc_info.value.status_code == 422
+
+
+async def test_hand_off_accepted_returns_bounded_context_with_fresh_authority_consequence(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-010: the transferred context always includes a freshly computed authority consequence."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    result = await service.hand_off(
+        established.id,
+        HandOffMembershipContextRequest(
+            dependent_capability=DependentCapability.ROLE_PERMISSION_MANAGEMENT,
+            outcome=HandoffOutcome.ACCEPTED,
+        ),
+    )
+
+    assert result.outcome == HandoffOutcome.ACCEPTED
+    assert result.dependent_capability == DependentCapability.ROLE_PERMISSION_MANAGEMENT
+    assert result.membership_context.id == established.id
+    assert result.membership_context.currently_effective is True
+    assert result.membership_context.authority_consequence == MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+    assert result.reason is None
+
+
+async def test_hand_off_returned_with_reason_does_not_alter_membership(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-011: a downstream rejection SHALL NOT alter the underlying Authoritative Membership Context."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    result = await service.hand_off(
+        established.id,
+        HandOffMembershipContextRequest(
+            dependent_capability=DependentCapability.WORKSPACE_MANAGEMENT,
+            outcome=HandoffOutcome.RETURNED,
+            reason="Membership context supplied is insufficient for this need.",
+        ),
+    )
+
+    assert result.outcome == HandoffOutcome.RETURNED
+    assert result.reason == "Membership context supplied is insufficient for this need."
+    await db_session.refresh(established)
+    assert established.membership_status == "ACTIVE"
+    assert established.license_type == "FULL"
+
+
+async def test_hand_off_reflects_lapsed_authority_consequence(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-010/Contract 5.10: a Membership recorded ACTIVE but past its effective end date is handed off as not currently effective, never as effective."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    reference_time = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    established = await service.establish(
+        EstablishMembershipRequest(
+            person_id=person.id, organization_id=organization.id, role_id=role.id,
+            effective_from=reference_time - timedelta(days=60),
+            effective_to=reference_time - timedelta(days=1),
+        )
+    )
+
+    result = await service.hand_off(
+        established.id,
+        HandOffMembershipContextRequest(
+            dependent_capability=DependentCapability.ROLE_PERMISSION_MANAGEMENT,
+            outcome=HandoffOutcome.ACCEPTED,
+        ),
+    )
+
+    assert result.membership_context.currently_effective is False
+    assert result.membership_context.authority_consequence == MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED

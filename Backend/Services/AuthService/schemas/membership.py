@@ -198,3 +198,80 @@ class MembershipUnderstandingResponse(MembershipResponse):
     authority_consequence: MembershipAuthorityConsequence = Field(
         ..., description="The reasoned classification behind currently_effective."
     )
+
+
+class DependentCapability(str, Enum):
+    """
+    The exactly three dependent capabilities PE-001-C007's own Contract
+    5.10 names (WP-03 BA-10): "A hand-off SHALL name the specific
+    dependent capability — Role & Permission Management, Access
+    Management or Workspace Management." Unlike WP-02's own analogous
+    field (which is open-ended, "any other dependent capability"),
+    C-007's own contract text enumerates exactly these three — no
+    broader "other" value is invented here.
+
+    Only C-003 (Role & Permission Management, WP-02) has any
+    implementation anywhere in this repository. C-002 (Access
+    Management) and C-008 (Workspace Management) are both registered
+    Active in CAP-001 but have no Work Package (WPR-001 SS2/SS3) — this
+    does not block BA-10 (see TD-042): C-007 never calls into any
+    dependent capability's own API for this Business Activity: the
+    caller reports the outcome, mirroring WP-02 BA-10's own stateless
+    ReportHandoffRejectionRequest precedent exactly.
+    """
+    ROLE_PERMISSION_MANAGEMENT = "C-003"
+    ACCESS_MANAGEMENT = "C-002"
+    WORKSPACE_MANAGEMENT = "C-008"
+
+
+class HandoffOutcome(str, Enum):
+    """
+    EX-C007-12's own two Success Criteria outcomes: "The dependent
+    capability either accepts the hand-off and proceeds under its own
+    ownership, or returns it with a reason." No third value — "it never
+    assumes acceptance from silence" (Experience Completion).
+    """
+    ACCEPTED = "ACCEPTED"
+    RETURNED = "RETURNED"
+
+
+class HandOffMembershipContextRequest(BaseModel):
+    """
+    Request body for Hand Off Membership Context to a Dependent
+    Capability (WP-03 BA-10, C-007, realizing ERB-C007-06 / EX-C007-12).
+
+    Per Contract 5.10 ("Acceptance or rejection SHALL be explicit; C-007
+    SHALL NOT assume acceptance from silence"), the caller reports the
+    already-resolved outcome — there is no live, synchronous call from
+    C-007 into the named dependent capability's own API anywhere in
+    this codebase (mirroring WP-02 BA-10's own precedent, the one
+    directly analogous "hand-off with no live integration" Business
+    Activity already built and certified in this repository).
+    """
+    dependent_capability: DependentCapability = Field(
+        ..., description="The specific named dependent capability the Membership context was transferred to (Contract 5.10)."
+    )
+    outcome: HandoffOutcome = Field(..., description="The dependent capability's own already-resolved decision.")
+    reason: str | None = Field(
+        None, max_length=1000,
+        description="Required when outcome=RETURNED (EX-C007-12's own 'insufficient Membership context' case). Ignored for ACCEPTED.",
+    )
+
+
+class MembershipHandoffResponse(BaseModel):
+    """
+    Response for Hand Off Membership Context to a Dependent Capability
+    (BA-10). Composes MembershipUnderstandingResponse (BA-02's own
+    bounded, current-state Membership context plus its freshly computed
+    authority consequence) rather than duplicating that shape —
+    Contract 5.10's own "transfer only the context the dependent
+    capability requires, never C-007's complete internal decision
+    history by default" is exactly what MembershipUnderstandingResponse
+    already is: no raw audit history, no internal reasoning, just the
+    current Membership fields and authority consequence.
+    """
+    membership_context: MembershipUnderstandingResponse
+    dependent_capability: DependentCapability
+    outcome: HandoffOutcome
+    reason: str | None
+    handed_off_at: datetime

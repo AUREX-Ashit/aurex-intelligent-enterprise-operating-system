@@ -743,3 +743,138 @@ def test_preserve_membership_context_never_carries_forward_a_lapsed_authority_co
 
     assert journey_read["currently_effective"] is False
     assert journey_read["authority_consequence"] == "ACTIVE_BUT_LAPSED"
+
+
+# ---------------------------------------------------------------------------
+# BA-10 — Hand Off Membership Context to a Dependent Capability (ERB-C007-06/EX-C007-12)
+# ---------------------------------------------------------------------------
+
+def test_hand_off_rejects_unknown_membership_id(client: TestClient) -> None:
+    response = client.post(
+        f"/memberships/{uuid.uuid4()}/hand-off",
+        headers=_auth_headers(),
+        json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
+    )
+    assert response.status_code == 404
+
+
+def test_hand_off_rejects_returned_without_reason(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(),
+        json={"dependent_capability": "C-002", "outcome": "RETURNED"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_hand_off_accepted_returns_bounded_context_with_fresh_authority_consequence(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(),
+        json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["dependent_capability"] == "C-003"
+    assert body["outcome"] == "ACCEPTED"
+    assert body["reason"] is None
+    assert body["membership_context"]["id"] == established["id"]
+    assert body["membership_context"]["currently_effective"] is True
+    assert body["membership_context"]["authority_consequence"] == "ACTIVE_AND_EFFECTIVE"
+
+
+def test_hand_off_returned_with_reason_does_not_alter_membership(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(),
+        json={
+            "dependent_capability": "C-008",
+            "outcome": "RETURNED",
+            "reason": "Membership context supplied is insufficient for this need.",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["outcome"] == "RETURNED"
+    assert body["reason"] == "Membership context supplied is insufficient for this need."
+
+    unchanged = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert unchanged["membership_status"] == "ACTIVE"
+    assert unchanged["license_type"] == "FULL"
+
+
+def test_hand_off_rejects_invalid_dependent_capability(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """Contract 5.10 names exactly C-003/C-002/C-008 - no open-ended 'any other' value, unlike WP-02's own analogous field."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(),
+        json={"dependent_capability": "C-999", "outcome": "ACCEPTED"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_hand_off_rejects_non_platform_admin(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    response = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(role_code="ESG_MANAGER"),
+        json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_hand_off_requires_authorization_header(client: TestClient) -> None:
+    response = client.post(
+        f"/memberships/{uuid.uuid4()}/hand-off",
+        json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
+    )
+    assert response.status_code == 400

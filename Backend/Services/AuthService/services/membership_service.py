@@ -62,9 +62,13 @@ from repositories.role_repository import RoleRepository
 from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
+    HandOffMembershipContextRequest,
+    HandoffOutcome,
     MembershipAuthorityConsequence,
+    MembershipHandoffResponse,
     MembershipPortfolioResponse,
     MembershipResponse,
+    MembershipUnderstandingResponse,
     MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
@@ -665,4 +669,98 @@ class MembershipService:
         memberships = await self.membership_repo.get_person_memberships(person_id)
         return MembershipPortfolioResponse(
             memberships=[MembershipResponse.model_validate(m) for m in memberships]
+        )
+
+    async def hand_off(
+        self, membership_id: UUID, request: HandOffMembershipContextRequest, actor_id: str | None = None
+    ) -> MembershipHandoffResponse:
+        """
+        Business Activity: Hand Off Membership Context to a Dependent
+        Capability (BA-10, ERB-C007-06 / EX-C007-12).
+
+        Per Contract 5.10, C-007 never calls into the named dependent
+        capability's own API — no live integration exists anywhere in
+        this codebase, and two of the three named capabilities (C-002,
+        C-008) have no implementation at all (TD-042). The caller
+        reports the already-resolved outcome, mirroring WP-02 BA-10's
+        own `classify_handoff_rejection()` precedent exactly: compute
+        fresh from existing state, audit, publish an event, return —
+        never persist a new row.
+
+        BR-C007-010 (bounded context + fresh authority consequence +
+        explicit outcome): satisfied by reusing
+        compute_membership_authority_consequence() (the same mechanism
+        BA-02 and BA-09 already reuse) and composing
+        MembershipUnderstandingResponse as the transferred context,
+        never assembling a broader payload.
+
+        BR-C007-011 (a downstream rejection SHALL NOT alter the
+        underlying Authoritative Membership Context): satisfied by
+        construction — this method never writes to `membership_status`
+        or any other Membership field, for either outcome.
+
+        "Context Superseded"/"Context Invalidated" (EX-C007-12's own
+        traceability requirement for a superseded hand-off attempt) is
+        satisfied by the audit trail itself: every call is independently
+        recorded via record_audit(), so two hand-off reports for the
+        same Membership remain separately traceable without a dedicated
+        new table — the same audit-based traceability precedent BA-03/
+        BA-06 already established for Membership Management itself.
+        """
+        membership = await self.membership_repo.get_by_id(membership_id)
+        if membership is None:
+            record_audit(
+                action="HAND_OFF_MEMBERSHIP_CONTEXT",
+                resource=f"membership:{membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "membership not found", "dependent_capability": request.dependent_capability.value},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No Membership exists with id '{membership_id}'.",
+            )
+
+        if request.outcome == HandoffOutcome.RETURNED and not request.reason:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="A reason is required when outcome is RETURNED (EX-C007-12's own 'insufficient Membership context' case).",
+            )
+
+        currently_effective, authority_consequence = compute_membership_authority_consequence(membership)
+        understanding = MembershipUnderstandingResponse(
+            **MembershipResponse.model_validate(membership).model_dump(),
+            currently_effective=currently_effective,
+            authority_consequence=authority_consequence,
+        )
+        handed_off_at = datetime.now(timezone.utc)
+
+        record_audit(
+            action="HAND_OFF_MEMBERSHIP_CONTEXT",
+            resource=f"membership:{membership_id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "dependent_capability": request.dependent_capability.value,
+                "outcome": request.outcome.value,
+                "reason": request.reason,
+                "authority_consequence": authority_consequence.value,
+                "currently_effective": currently_effective,
+            },
+        )
+        publish_event(
+            "MEMBERSHIP_CONTEXT_HANDED_OFF",
+            {
+                "membership_id": str(membership_id),
+                "dependent_capability": request.dependent_capability.value,
+                "outcome": request.outcome.value,
+            },
+        )
+
+        return MembershipHandoffResponse(
+            membership_context=understanding,
+            dependent_capability=request.dependent_capability,
+            outcome=request.outcome,
+            reason=request.reason,
+            handed_off_at=handed_off_at,
         )

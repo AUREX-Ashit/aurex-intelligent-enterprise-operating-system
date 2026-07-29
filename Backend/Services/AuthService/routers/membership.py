@@ -14,6 +14,8 @@ from repositories.role_repository import RoleRepository
 from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
+    HandOffMembershipContextRequest,
+    MembershipHandoffResponse,
     MembershipPortfolioResponse,
     MembershipResponse,
     MembershipUnderstandingResponse,
@@ -293,3 +295,41 @@ async def reactivate_membership(
 ) -> MembershipResponse:
     membership = await membership_service.reactivate(membership_id, request, actor_id=claims.get("person_id"))
     return MembershipResponse.model_validate(membership)
+
+
+@router.post(
+    "/{membership_id}/hand-off",
+    response_model=MembershipHandoffResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Hand off a Membership context to a dependent capability",
+    description=(
+        "WP-03 Business Activity: Hand Off Membership Context to a "
+        "Dependent Capability (C-007), realizing PE-001-C007's "
+        "ERB-C007-06 / EX-C007-12. Requires the PLATFORM_ADMIN role "
+        "(interim gate — EX-C007-12's own Membership Steward/Downstream "
+        "Capability Consumer personas are not yet implementable claims, "
+        "tracked as TD-042). Per Contract 5.10, C-007 never calls into "
+        "the named dependent capability's own API — the caller reports "
+        "the already-resolved outcome (accepted or returned, never "
+        "assumed from silence). The transferred context is bounded to "
+        "the same shape GET /memberships/{membership_id} already "
+        "returns, plus a freshly recomputed authority consequence "
+        "(BR-C007-010). A downstream rejection never alters the "
+        "underlying Membership (BR-C007-011)."
+    ),
+    responses={
+        200: {"description": "Hand-off outcome recorded."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No Membership exists with this id."},
+        422: {"description": "outcome=RETURNED was supplied without a reason."},
+    },
+)
+async def hand_off_membership_context(
+    membership_id: UUID,
+    request: HandOffMembershipContextRequest,
+    membership_service: Annotated[MembershipService, Depends(get_membership_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> MembershipHandoffResponse:
+    return await membership_service.hand_off(membership_id, request, actor_id=claims.get("person_id"))
