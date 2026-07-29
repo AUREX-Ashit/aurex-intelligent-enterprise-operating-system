@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -123,3 +125,37 @@ async def test_establish_organization_node_output_is_a_valid_membership_home_nod
     await db_session.flush()
 
     assert membership.home_node_id == node.id
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — Understand Structural Position
+# ---------------------------------------------------------------------------
+
+async def test_get_details_returns_the_established_organization_node(db_session: AsyncSession) -> None:
+    """BA-02: fetching by id returns exactly the node created by BA-01's establish()."""
+    service = _service(db_session)
+    created = await service.establish(
+        EstablishOrganizationNodeRequest(
+            node_code="APAC-HOLD-005",
+            node_name="APAC Holding Fifth",
+            node_type="HOLDING",
+            legal_entity_name="Acme APAC Fifth Pte Ltd",
+        )
+    )
+
+    fetched = await service.get_details(created.id)
+
+    assert fetched.id == created.id
+    assert fetched.node_code == "APAC-HOLD-005"
+    assert fetched.node_name == "APAC Holding Fifth"
+    assert fetched.legal_entity_name == "Acme APAC Fifth Pte Ltd"
+
+
+async def test_get_details_raises_404_for_unknown_id(db_session: AsyncSession) -> None:
+    """BA-02: a well-formed but non-existent id is a 404, not a 500 or an empty success."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_details(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404

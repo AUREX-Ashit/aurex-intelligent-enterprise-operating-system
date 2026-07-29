@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi.testclient import TestClient
@@ -176,3 +177,86 @@ def test_establish_organization_node_does_not_require_tenant_header(client: Test
     )
 
     assert response.status_code == 201
+
+
+# ---------------------------------------------------------------------------
+# BA-02 — Understand Structural Position
+# ---------------------------------------------------------------------------
+
+def test_get_organization_node_returns_details_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organization-nodes",
+        headers=_auth_headers(),
+        json={
+            "node_code": "API-NODE-008",
+            "node_name": "API View Node",
+            "node_type": "HOLDING",
+            "legal_entity_name": "API View Legal Entity",
+        },
+    )
+    assert established.status_code == 201
+    organization_node_id = established.json()["id"]
+
+    response = client.get(f"/organization-nodes/{organization_node_id}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == organization_node_id
+    assert body["node_code"] == "API-NODE-008"
+    assert body["legal_entity_name"] == "API View Legal Entity"
+
+
+def test_get_organization_node_returns_404_for_unknown_id(client: TestClient) -> None:
+    response = client.get(
+        f"/organization-nodes/{uuid.uuid4()}",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404
+
+
+def test_get_organization_node_requires_authorization_header(client: TestClient) -> None:
+    response = client.get(f"/organization-nodes/{uuid.uuid4()}")
+
+    assert response.status_code == 400
+    assert "Authorization" in response.json()["detail"]
+
+
+def test_get_organization_node_rejects_invalid_token(client: TestClient) -> None:
+    response = client.get(
+        f"/organization-nodes/{uuid.uuid4()}",
+        headers={"Authorization": "Bearer not-a-real-token"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_get_organization_node_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.get(
+        f"/organization-nodes/{uuid.uuid4()}",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+    )
+
+    assert response.status_code == 403
+
+
+def test_get_organization_node_rejects_invalid_uuid(client: TestClient) -> None:
+    response = client.get("/organization-nodes/not-a-uuid", headers=_auth_headers())
+
+    assert response.status_code == 422
+
+
+def test_get_organization_node_does_not_require_tenant_header(client: TestClient) -> None:
+    """
+    GET /organization-nodes/{id} is tenant-agnostic (middleware/tenant.py's
+    prefix exemption for /organization-nodes/*), same basis as Establish
+    Organization Node. No X-Tenant-ID header sent; a 404 (not 400) proves
+    the request reached the handler rather than being blocked by the
+    tenant-header check.
+    """
+    response = client.get(
+        f"/organization-nodes/{uuid.uuid4()}",
+        headers=_auth_headers(),
+    )
+
+    assert response.status_code == 404

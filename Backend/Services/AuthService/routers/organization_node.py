@@ -1,4 +1,5 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,4 +74,40 @@ async def establish_organization_node(
     organization_node = await organization_node_service.establish(
         request, actor_id=claims.get("person_id")
     )
+    return OrganizationNodeResponse.model_validate(organization_node)
+
+
+@router.get(
+    "/{organization_node_id}",
+    response_model=OrganizationNodeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="View organization node details",
+    description=(
+        "WP-04 Business Activity: Understand Structural Position (C-005, "
+        "ERB-C005-02/EX-C005-03 per PE-001-C005). Requires the "
+        "PLATFORM_ADMIN role, same interim gate as Establish Organization "
+        "Node. Returns the node's own Structural Identity fields only — "
+        "\"surrounding relationships\" (organization_hierarchy) are not "
+        "yet implemented (TD-045)."
+    ),
+    responses={
+        200: {"description": "Organization node found."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No organization node exists with this id."},
+        422: {"description": "organization_node_id is not a valid UUID."},
+    },
+)
+async def get_organization_node(
+    organization_node_id: UUID,
+    organization_node_service: Annotated[OrganizationNodeService, Depends(get_organization_node_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> OrganizationNodeResponse:
+    """
+    No tenant-scoping, same basis as establish_organization_node above:
+    OrganizationNode carries no organization_id column anywhere in the
+    canonical DDL.
+    """
+    organization_node = await organization_node_service.get_details(organization_node_id)
     return OrganizationNodeResponse.model_validate(organization_node)

@@ -1,25 +1,41 @@
 """
 WP-04 — Enterprise Structure Management (C-005).
 
-Business Activity implemented here: BA-01 Establish Organization Node
-(ERB-C005-01 / EX-C005-01, EX-C005-02 per PE-001-C005; ERG-001-02/03).
+Business Activities implemented here:
+  BA-01 Establish Organization Node (ERB-C005-01 / EX-C005-01, -02 per
+  PE-001-C005; ERG-001-02/03).
+  BA-02 Understand Structural Position (ERB-C005-02 / EX-C005-03 per
+  PE-001-C005).
 
 Realizes CAP-001 C-005 per IRA-004's Structural-Identity-subset scope
 (§9/§11). PE-001-C005 itself governs the experience layer only and
-states no domain Business Rule for a minimal Establish (IRA-004 §5) —
-this Business Activity's actual governing rules are ERG-001-02
-(Bounded Context Separation Within EnterpriseNode) and ERG-001-03
-(Node-to-Membership Linkage). Follows IMP-001 §6.3's Business Activity
-Lifecycle (Request -> Validation -> Business Rule Execution -> Business
-Object Update -> Domain Event Publication -> Audit Recording ->
-Response), reusing OrganizationService.establish()'s exact
-duplicate-check-then-create pattern (WP-01), including the same
+states no domain Business Rule for either a minimal Establish or a
+minimal View (IRA-004 §5) — BA-01's actual governing rules are
+ERG-001-02 (Bounded Context Separation Within EnterpriseNode) and
+ERG-001-03 (Node-to-Membership Linkage). Follows IMP-001 §6.3's
+Business Activity Lifecycle (Request -> Validation -> Business Rule
+Execution -> Business Object Update -> Domain Event Publication ->
+Audit Recording -> Response), reusing OrganizationService.establish()'s
+exact duplicate-check-then-create pattern (WP-01), including the same
 IntegrityError race-closing catch OrganizationService's own docstring
 documents (uq_organization_nodes_node_code, WP-03 BA-01's own
 constraint).
+
+BA-02 reuses OrganizationService.get_details()'s exact read-only shape
+(WP-01): no audit record or domain event, on the same basis already
+established for every prior WP's own first read-side Business Activity.
+EX-C005-03's own Purpose text ("understand surrounding structural
+context and position... relationships") is only partially realized
+here — this Business Activity returns a single OrganizationNode's own
+Structural Identity fields; traversing "surrounding relationships"
+requires `organization_hierarchy`, which does not exist yet (deferred,
+TD-045, the same disclosed-scoping-decision class as BA-01's own
+TD-043).
 """
 
 from __future__ import annotations
+
+from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
@@ -119,4 +135,29 @@ class OrganizationNodeService:
                 "node_type": organization_node.node_type,
             },
         )
+        return organization_node
+
+    async def get_details(self, organization_node_id: UUID) -> OrganizationNode:
+        """
+        Business Activity: Understand Structural Position (BA-02).
+
+        Read-only — no audit record or domain event, on the same basis
+        already established for Organization's own read-side Business
+        Activity (OrganizationService.get_details() does not audit
+        either; only the write path, establish(), does). Reuses
+        BaseRepository.get_by_id() via OrganizationNodeRepository as-is
+        — no new repository method required.
+
+        Realizes only the single-node half of EX-C005-03's own Purpose
+        ("understand surrounding structural context and position").
+        "Surrounding relationships" requires `organization_hierarchy`,
+        which does not exist yet — deferred, not silently claimed as
+        satisfied (TD-045).
+        """
+        organization_node = await self.organization_node_repo.get_by_id(organization_node_id)
+        if organization_node is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No organization node exists with id '{organization_node_id}'.",
+            )
         return organization_node
