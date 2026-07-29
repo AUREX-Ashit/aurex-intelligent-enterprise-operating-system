@@ -63,7 +63,7 @@ All eight independently confirmed by direct docx extraction of `PE-001-C005_Ente
 |---|---|---|---|---|---|
 | **BA-01** | **Establish Organization Node** | Create | EnterpriseNode (`organization_node`) | ERB-C005-01 / EX-C005-01, -02, cross-referenced against ERG-001-02/03 | ✅ **Implementation authorized under this IRA — see §9, §10** |
 | BA-02 | Understand Structural Position | Query | EnterpriseNode (+ relationships) | ERB-C005-02 / EX-C005-03 | ⏳ Not started |
-| BA-03 | Frame Structural Change Intent | Create (transient decision context) | Change Intent Context | ERB-C005-03 / EX-C005-04 | ⏳ Not started — no persisted business object is evident from PE-001-C005 or ERG-001; whether this requires a database table or is satisfied by request-scoped context alone is a question for that BA's own gap analysis, not assumed here |
+| BA-03 | Frame Structural Change Intent | Create (governed decision record) | Structural Change Intent (`SCI-000001`, registered §21) | ERB-C005-03 / EX-C005-04 | ⏳ Not started — Business Object registered (§21); persistence mechanism, endpoint shape, and service/repository design remain undetermined and are that BA's own future implementation-readiness gap analysis, not assumed here |
 | BA-04 | Shape / Refine Proposed Structural Outcome | Create / Update (proposal) | Proposed Outcome Context (structural change proposal — over EnterpriseNode, EnterpriseRelationship, or ConsolidationDetermination, per §4's disclosed ambiguity) | ERB-C005-04 / EX-C005-05, -06 | ⏳ Not started |
 | BA-05 | Assess Structural Consequence | Query (computed) | Impact/Comparison Context | ERB-C005-05 / EX-C005-07 | ⏳ Not started |
 | BA-06 | Review Structural Outcome / Resolve Concerns | Update (review) | Review Context | ERB-C005-06 / EX-C005-08, -09 | ⏳ Not started |
@@ -142,6 +142,8 @@ All eight independently confirmed by direct docx extraction of `PE-001-C005_Ente
 
 No new object *type* beyond `organization_node`'s own extension is required for BA-01. The remaining five ERG-001 objects are real, future WP-04 work (BA-02 onward), not invented here.
 
+**Addendum (post-BA-02):** this section's scope is ERG-001's own structural/domain objects only. A sixth object, **Structural Change Intent** — a PE-001-C005 experience-layer construct, not an ERG-001 domain object — has since been identified and formally registered per SD-002 §2/CMD-001 §26.3; see §21. It governs BA-03, not BA-01/BA-02.
+
 ---
 
 ## 8. Existing Reusable Implementation (from WP-00 through WP-03)
@@ -180,7 +182,7 @@ No new object *type* beyond `organization_node`'s own extension is required for 
 |---|---|---|
 | BA-01 — Establish Organization Node | **C** (Architecture requires completion — implementation-level) | Extend existing minimal `organization_node`/`OrganizationNodeRepository` with canonical columns (subset, per §9) and a create path; direct unblock of WP-03's own TD-032 |
 | BA-02 — Understand Structural Position | **B** (Existing implementation can be reused) | `OrganizationNodeRepository`'s inherited `get_by_id()`/query methods are a direct starting point once BA-01 exists |
-| BA-03 — Frame Structural Change Intent | **D** (Governance clarification required) | No persisted business object is evident from either PE-001-C005 or ERG-001; whether this is a database concept at all is undetermined — not resolved here |
+| BA-03 — Frame Structural Change Intent | **C** (Architecture requires completion — implementation-level; downgraded from D) | **Constitutional question resolved (§21, ADR-006):** Structural Change Intent is a registered canonical Business Object (`SCI-000001`) per SD-002 §2/CMD-001 §26.3 — not an undetermined concept. What remains is ordinary implementation-level gap analysis (persistence mechanism, endpoint shape, service/repository design) — the same class of work BA-01 itself required, not a governance blocker. This reclassification does not authorize implementation; BA-03's own fresh gap analysis is still required per CLAUDE.md §19.7 before any code is written. |
 | BA-04 — Shape/Refine Proposed Structural Outcome | **D** | Depends on §4's disclosed ambiguity (which ERG-001 object a "proposal" attaches to) — not resolved here |
 | BA-05 — Assess Structural Consequence | **D** | Depends on BA-04's own resolution first |
 | BA-06 — Review Structural Outcome | **B** (likely, pending BA-04) | Mirrors WP-01/02/03's own review/audit patterns once a proposal object exists |
@@ -263,6 +265,61 @@ Same discipline as IRA-001/002/003: IMP-TEST-001 (Business Activity Contract tes
 - **TD-032** (WP-03) — "Target Resolution: Enterprise Structure Management (C-005)'s own future 'Establish Organization Node' Business Activity." **This IRA is that charter; TD-032 remains Open until BA-01 is actually implemented and `home_node_id`'s nullability is explicitly revisited** (§16). Not closed by this IRA.
 - **ADR-002** (Proposed, not Accepted) — the same unresolved authorization-catalog question WP-01/02/03 all carried; WP-04's own `require_platform_admin` reuse (§8) will inherit it identically, not newly.
 - **TD-021–025, TD-042** (WP-01/02/03) — the recurring `PLATFORM_ADMIN`-only interim gate; WP-04 inherits this pattern, to be logged as its own TD entry at BA-01's own Independent Review rather than treated as newly discovered.
+
+---
+
+## 21. Business Object Registration — Structural Change Intent
+
+**Trigger:** This repository's own architectural-decision analysis (governance track, not a separate committed artifact) concluded that "Change Intent Context" (PE-001-C005, ERB-C005-03/EX-C005-04) satisfies SD-002 Section 2's Universal Business Object Blueprint — independent identity, business meaning, ownership, governance, business state, references, traceability, versioned history, and relationships — and is not a transient request-scoped value. This section performs the registration CMD-001 §26.3 requires ("No Business Object shall be implemented until it has been registered in the Canonical Business Object Register") **before** BA-03's own implementation-readiness gap analysis can proceed. This section does not authorize implementation.
+
+**Governing decision:** `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md` records the governance decision authorizing this registration, following the same pattern ADR-005 already established (a governance decision surfacing during a Work Package's own readiness-assessment review, formalized as its own ADR). CMD-001 is **LOCKED** (v1.3, GOLD STANDARD) — this registration exercises CMD-001 §26.3's own existing registration mechanism; it does not amend CMD-001's text, rules, or structure, and therefore does not itself require a Locked-document amendment ADR for CMD-001. The full registration entry is recorded here, in IRA-004, as WP-04/C-005's own implementation-readiness record — **disclosed as a Governance Backlog Item, not a silent resolution:** whether WP-04-registered objects should eventually be consolidated into CMD-001 §26 itself (a separate, future amendment to CMD-001) is not decided by this registration or by ADR-006.
+
+### Registration Entry
+
+| Attribute (CMD-001 §26.4) | Value |
+|---|---|
+| **Business Object Identifier** | `SCI-000001` |
+| **Canonical Name** | Structural Change Intent |
+| **Business Description** | The explicit enterprise decision context — business rationale, target structural outcome, and decision boundary — that must exist before a structural change may be proposed. Prevents structural work from beginning as an isolated edit (ERB-C005-03's own Purpose and Business Intent, verbatim). |
+| **Business Domain** | Enterprise Structure Management (C-005) |
+| **Aggregate Root** | Structural Change Intent itself — not a sub-object of EnterpriseNode/EnterpriseRelationship. It is the enterprise decision that precedes and governs an eventual change to one of those objects; PE-001-C005's own Context Model treats it as a top-level Context construct, not an attribute of the object it will eventually target. |
+| **Business Owner** | Structural Steward (ERB-C005-03 Participating Personas); Structural Decision Participant contributes decision intent. |
+| **Data Steward** | Pending Canonical Binding — no persona-to-URA-001-role binding exists yet for any C-005 persona (the same disclosed gap class as TD-021 through TD-025/TD-031/TD-034/TD-035/TD-036/TD-039/TD-042/TD-045; not newly discovered here, not separately registered per CLAUDE.md §19.8.3). |
+| **Primary Data Category** | Transaction — a mutable, versioned, governed decision record, distinct from a pure immutable Event log entry (though it produces events per SD-002-009 once implemented). |
+| **System of Record** | Pending — not yet determined. Deciding this is implementation-layer work (which service, which persistence mechanism) explicitly reserved for BA-03's own future implementation-readiness gap analysis, not this registration. |
+| **Lifecycle Model** | SD-002-008's default lifecycle, distributed across C-005's own experience stages: **CREATED** (BA-03/EX-C005-04) → **MODIFIED** (revision within Frame Intent, before Shape Outcome) → **SUPERSEDED** or **ABANDONED** (EX-C005-04's own Invalidated Context text, verbatim: "Superseded or abandoned intent statements") → **WITHDRAWN** (a distinct, more specific closure condition from PE-001-C005 §43.3's own exception-semantics table: "Change intent withdrawn → Close Change Intent Context as withdrawn; preserve decision rationale and return to the last valid Structural Understanding Context") → **ARCHIVED** (SD-002-008's terminal state; not addressed in PE-001-C005's own text but not foreclosed by it). Review/Approval states apply to the downstream Proposed Outcome Context (ERB-C005-06), not to the intent itself. |
+| **Versioning Policy** | Full version history retained; superseded revisions preserved in traceability, never physically deleted (EX-C005-04's own Invalidated Context text; SD-002-009/-010). |
+| **Effective Dating** | Supported — inherited automatically from SD-002-011's universal temporal model (Effective From/To, Version, Status, Approval Reference); not a distinctive design choice for this object. |
+| **Metadata Schema** | Pending — no implementation exists yet. |
+| **Security Classification** | Internal — enterprise-internal structural decision data, consistent with every other C-005 construct. |
+| **AI Context** | "Represents the enterprise's explicit rationale and target outcome for a proposed structural change, prior to a Proposed Outcome Context being shaped." EX-C005-04's own AI Assistance clause, quoted exactly: *"AI MAY help articulate intent, detect ambiguity and suggest questions. It SHALL not invent business rationale."* |
+| **Status** | Draft — this registration entry is newly created; no separate CBOR-entry-approval governance step is defined anywhere in this repository, so no higher status is claimed. Subject to the Independent Review this task's own Phase 5 performs. |
+
+### Relationship Mapping (CMD-001 §26.5)
+
+| Structural Change Intent | Relationship | Target |
+|---|---|---|
+| Structural Change Intent | `CONSUMES` | Structural Understanding Context (EX-C005-03's own Produced Context, BA-02) |
+| Structural Change Intent | `PRECEDES` | Proposed Outcome Context (EX-C005-05's own Produced Context, BA-04 candidate) — confirmed by EX-C005-05's own Required/Consumed Context: "Change Intent Context and current structural context" |
+| Structural Change Intent | `DERIVED_FROM` | EnterpriseNode / EnterpriseRelationship — **Pending Canonical Binding**. §4's own disclosed ambiguity (which ERG-001 object a "proposal" ultimately attaches to) is unresolved and is **not** resolved by this registration; it remains BA-04's own open question. |
+
+### Business Activity Mapping (CMD-001 §26.6)
+
+- **Consumes:** BA-02 — Understand Structural Position
+- **Produces:** BA-03 — Frame Structural Change Intent (itself)
+- **Supports:** BA-04 — Shape/Refine Proposed Structural Outcome (candidate, not yet chartered)
+
+### Governing References
+
+- **Governing Business Activities:** BA-03 (create), BA-04 (consumes, candidate)
+- **Governing Enterprise Experiences:** EX-C005-04 (Frame Structural Change Intent, produces); EX-C005-05 (Shape Structural Proposal, consumes)
+- **Governing Business Rules:** BR-C005-001 ("A governed structural change SHALL have explicit Change Intent Context"), BR-C005-002 (Structural Focus boundary, BA-02/BA-03)
+
+### Explicitly Not Decided by This Registration
+
+- **Physical Implementation Mapping (CMD-001 §26.7)** — Physical Tables, APIs, Events Published/Consumed, Reports, Search Indexes, Knowledge Graph Nodes, AI Embeddings: **all Pending.** No database table, migration, API, or code is authorized or implied by this registration. Determining these remains BA-03's own future implementation-readiness gap analysis, per CLAUDE.md §19.4's Architectural Impact Assessment discipline.
+- **Business Object Quality Score (CMD-001 §26.8)** — not scored; scoring an object with no implementation yet would be premature.
+- **Whether BA-03 is now READY for implementation** — this registration resolves the *constitutional* question (Category D, "is this a database concept at all") but does not itself perform BA-03's own implementation-readiness gap analysis (persistence mechanism, endpoint shape, service/repository design), which remains a separate, future step per CLAUDE.md §19.7.
 
 ---
 
