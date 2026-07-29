@@ -91,6 +91,10 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-061 | No `GET` read endpoint exists for Review Context — only `POST /structural-reviews` (create) and `POST /structural-reviews/{id}/resolve-concerns` exist. Mirrors TD-051/TD-055/TD-058's identical disposition for the other Structural Context Lifecycle objects. | BA-06 implementation (self-identified, IRA-004 §4's own "Update (review)" typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-07 (Validate Transition Readiness)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
 | TD-062 | `StructuralReview.status` is constrained to IRA-004 §25's own registered Lifecycle Model (CREATED, CONCERNS_RESOLVED, INVALIDATED, ARCHIVED), but BA-06's own code only ever writes CREATED and CONCERNS_RESOLVED — INVALIDATED and ARCHIVED are never reached. | BA-06 implementation (self-identified, mirroring TD-052/TD-053/TD-057's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per GS-INV-007) — deliberately out of BA-06's own scope ("implement only what BA-06 owns"), the same disposition already recorded for Impact Context (TD-057). | Open | AuthService (Backend) |
 | TD-063 | `POST /structural-reviews` and `POST /structural-reviews/{id}/resolve-concerns` do not verify that the referenced proposal revision is still current (non-`SUPERSEDED`) — mirrors TD-059's identical gap for Impact Context, now also present for Review Context. | BA-06 implementation (self-identified, same disclosed-not-assumed disposition as TD-059) | Architecture | Low | A future revisit of BA-06 (or BA-07's own readiness gap analysis) decides whether reviewing/resolving against a superseded revision should be rejected, allowed with a warning, or remains permitted. | Open | AuthService (Backend) |
+| TD-064 | No `GET` read endpoint exists for Validation Context — only `POST /structural-validations` exists. Mirrors TD-051/TD-055/TD-058/TD-061's identical disposition for the other Structural Context Lifecycle objects. | BA-07 implementation (self-identified, IRA-004 §4's own "Update (validation)" typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-08 (Complete Structural Transition)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
+| TD-065 | `StructuralValidation.status` is constrained to IRA-004 §26's own registered Lifecycle Model (CREATED, INVALIDATED, ARCHIVED), but BA-07's own code only ever writes CREATED — INVALIDATED and ARCHIVED are never reached. | BA-07 implementation (self-identified, mirroring TD-052/TD-053/TD-057/TD-062's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per GS-INV-007) — deliberately out of BA-07's own scope, the same disposition already recorded for Impact Context (TD-057) and Review Context (TD-062). | Open | AuthService (Backend) |
+| TD-066 | `POST /structural-validations` enforces only BR-C005-007 (review concerns resolved) as its readiness gate. EX-C005-10's own AI Assistance clause — "AI MAY identify missing context or apparent inconsistencies" — alludes to further readiness criteria beyond concern-resolution that are not implemented. | BA-07 implementation (self-identified during this Business Activity's own gap analysis, directly against EX-C005-10's own text) | Architecture | Low | A future revisit of BA-07, once a concrete additional readiness criterion (e.g., missing required context, structural inconsistency detection) is actually needed by a real caller — not invented speculatively ahead of that need. | Open | AuthService (Backend) |
+| TD-067 | `POST /structural-validations` does not verify that the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own proposal lineage — mirrors TD-059/TD-063's identical gap for Impact Context and Review Context, now also present for Validation Context. | BA-07 implementation (self-identified, same disclosed-not-assumed disposition as TD-059/TD-063) | Architecture | Low | A future revisit of BA-07 (or BA-08's own readiness gap analysis) decides whether validating against a superseded revision should be rejected, allowed with a warning, or remains permitted — ideally resolved once for TD-059/TD-063/TD-067 together. | Open | AuthService (Backend) |
 
 ---
 
@@ -805,6 +809,74 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-06 — Review Proposed Structural Outcome / Resolve Structural Review Concerns
 - **Source:** BA-06 implementation (self-identified, mirroring TD-059's own precedent)
 - **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision review/resolution is permitted, and that decision is enforced and tested — ideally applied consistently to both TD-059 and TD-063 at once.
+
+---
+
+### TD-064 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Validation Context
+- **Category:** Architecture
+- **Description:** BA-07 implements `POST /structural-validations` only. No endpoint retrieves an existing validation by id or lists validations for a given proposal.
+- **Root Cause:** Mirrors TD-051/TD-055/TD-058/TD-061's identical scoping precedent — no read path was scoped for this Business Activity's own first pass; IRA-004 §4 types BA-07 as "Update (validation)," not "Query."
+- **Impact:** None today — the create response already returns every field a caller needs immediately. Becomes real friction once BA-08 (Complete Structural Transition) needs to resolve a validation by id independently.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** BA-08's own future implementation-readiness gap analysis decides whether a dedicated `GET /structural-validations/{id}` is required.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-07 — Validate Transition Readiness
+- **Source:** BA-07 implementation (self-identified, mirroring TD-051/055/058/061's own identical precedent)
+- **Resolution Criteria:** A read path for Validation Context exists, if and only if BA-08's own gap analysis determines one is required.
+
+---
+
+### TD-065 — Detailed Entry
+
+- **Title:** Validation Context Lifecycle Transitions Beyond CREATED Are Not Implemented
+- **Category:** Architecture
+- **Description:** `StructuralValidation.status` (`models/structural_validation.py`) is constrained to IRA-004 §26's full registered Lifecycle Model — CREATED, INVALIDATED, ARCHIVED — but BA-07's own service only ever writes CREATED.
+- **Root Cause:** EX-C005-10's own Invalidated Context ("Readiness when proposal or material enterprise context changes") ties invalidation to an event owned by BA-04 (`refine_proposal()`), not BA-07 — the identical root cause already disclosed for Impact Context (TD-057) and Review Context (TD-062).
+- **Impact:** None today — mirrors BA-03/BA-04/BA-05/BA-06's own identical, already-accepted disposition (TD-052/053/057/062) of not implementing every registered lifecycle value in a Business Activity's own first pass.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future cross-cutting mechanism (e.g., BA-04's `refine_proposal()` itself invalidating dependent Impact/Review/Validation Context rows together) or BA-08's own gap analysis.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-07 — Validate Transition Readiness
+- **Source:** BA-07 implementation (self-identified, mirroring TD-052/053/057/062's own precedent)
+- **Resolution Criteria:** INVALIDATED and ARCHIVED each have a real, tested code path once the mechanism that owns each transition is implemented.
+
+---
+
+### TD-066 — Detailed Entry
+
+- **Title:** Only BR-C005-007 Is Enforced as a Readiness Gate — Other Potential Readiness Criteria Are Not Implemented
+- **Category:** Architecture
+- **Description:** `POST /structural-validations` hard-enforces exactly one readiness criterion: the referenced review must be `CONCERNS_RESOLVED` (BR-C005-007). EX-C005-10's own AI Assistance clause — "AI MAY identify missing context or apparent inconsistencies" — implies validation readiness could depend on further criteria (completeness of required context, structural inconsistency detection) that this Business Activity does not evaluate.
+- **Root Cause:** BR-C005-007 is the only readiness criterion PE-001-C005 states as a Business Rule (a SHALL); "missing context" and "apparent inconsistencies" are named only within an advisory AI Assistance clause, not as enforceable rules — building enforcement for them now would be inventing business rules PE-001-C005 itself does not state, beyond this Business Activity's own minimal, disclosed scope.
+- **Impact:** None today — no test, endpoint, or consumer requires additional readiness criteria; BR-C005-007 is the only rule this repository's own governing text makes mandatory.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future revisit of BA-07 once a concrete additional readiness criterion is elevated from advisory AI guidance to an actual enforceable Business Rule by a future PE-001-C005 revision or ADR.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-07 — Validate Transition Readiness
+- **Source:** BA-07 implementation (self-identified during this Business Activity's own gap analysis, directly against EX-C005-10's own text)
+- **Resolution Criteria:** A deliberate decision (not silence) governs whether any further readiness criterion becomes enforceable, and if so, is implemented and tested.
+
+---
+
+### TD-067 — Detailed Entry
+
+- **Title:** Validation Does Not Verify the Referenced Proposal Revision Is Still Current
+- **Category:** Architecture
+- **Description:** `POST /structural-validations` does not check whether the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own lineage.
+- **Root Cause:** Identical to TD-059 (Impact Context) and TD-063 (Review Context) — PE-001-C005's own text does not explicitly require currency for EX-C005-10, so this was disclosed rather than assumed either way, consistent with precedent applied to a third object.
+- **Impact:** Low today — no consumer currently depends on validations only existing against current revisions.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future revisit of BA-07, or BA-08's own gap analysis, decides whether validating against a superseded revision should be rejected, allowed with a warning, or remains permitted — ideally resolved once for TD-059/TD-063/TD-067 together.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-07 — Validate Transition Readiness
+- **Source:** BA-07 implementation (self-identified, mirroring TD-059/TD-063's own precedent)
+- **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision validation is permitted, and that decision is enforced and tested.
 
 ---
 
