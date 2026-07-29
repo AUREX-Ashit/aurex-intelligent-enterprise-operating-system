@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  title: CorpStage Organization Establishment Attempt API
+  description: >
+    IRA-001A constitutional correction to WP-01 (C-004, Organization
+    Management): BA-01 (Establish Organization Identity, amended),
+    BA-01B (Verify Organization Domain Claim, new), BA-01C (Activate
+    Organization first-time, new). Realizes PE-001-C004's
+    ERB-C004-01/02/03 — the Organization Anchor Context (§1.16), never
+    authoritative (BR-C004-08), until BA-01C's distinct, governed
+    activation act (BR-C004-01, Contract 5.4) produces the first
+    Authoritative Organization Context, documented in
+    organization-api.yaml. See IMP-REPORT-WP-01's IRA-001A section for
+    the full constitutional-correction rationale; supersedes BA-01's
+    original POST /organizations endpoint, which no longer exists.
+  version: 1.0.0
+paths:
+  /organization-establishment-attempts:
+    post:
+      summary: Establish a new Organization Establishment Attempt (Organization Anchor Context)
+      description: >
+        BA-01 (amended). Requires the PLATFORM_ADMIN role (IRA-001 §2.7).
+        Produces a non-authoritative Organization Anchor Context, never
+        an Organization. Rejects duplicate organization_code with 409,
+        checked against both already-activated Organizations and other
+        in-flight attempts. Tenant-agnostic: no organization_id column
+        exists on this resource.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstablishOrganizationAttemptRequest'
+      responses:
+        '201':
+          description: Organization establishment attempt created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEstablishmentAttemptResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '409':
+          description: An organization or establishment attempt with this organization_code already exists.
+        '422':
+          description: Invalid request (e.g., missing required field).
+
+  /organization-establishment-attempts/{attempt_id}/verify-domain:
+    post:
+      summary: Verify an Organization Establishment Attempt's domain claim
+      description: >
+        BA-01B (new). Requires the PLATFORM_ADMIN role. Only applicable
+        to an attempt that claimed a primary_domain at establishment;
+        records the verification outcome as a distinct, audited,
+        traceable fact (BR-C004-02/BR-C004-09). The actual
+        proof-of-control mechanism is out of scope (Technical Debt).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyDomainClaimRequest'
+      responses:
+        '200':
+          description: Domain claim verification outcome recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEstablishmentAttemptResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No establishment attempt exists with this id.
+        '409':
+          description: Attempt already activated, or claimed no primary_domain.
+        '422':
+          description: attempt_id is not a valid UUID.
+
+  /organization-establishment-attempts/{attempt_id}/activate:
+    post:
+      summary: Activate an Organization Establishment Attempt (first-time activation)
+      description: >
+        BA-01C (new), realizing ERB-C004-03 / BR-C004-01 / Contract 5.4:
+        the first, distinct, governed act producing the first
+        Authoritative Organization Context for this attempt. Requires
+        the PLATFORM_ADMIN role. Requires either a VERIFIED domain claim
+        or an explicit no_domain_activation_reason (BR-C004-09).
+        Lexically and semantically distinct from
+        POST /organizations/{organization_id}/activate (BA-05,
+        reactivation — organization-api.yaml), which is unmodified.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: attempt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateEstablishmentRequest'
+      responses:
+        '201':
+          description: Organization activated for the first time.
+          content:
+            application/json:
+              schema:
+                $ref: 'organization-api.yaml#/components/schemas/OrganizationResponse'
+        '400':
+          description: Missing or malformed Authorization header.
+        '401':
+          description: Access token invalid or expired.
+        '403':
+          description: Caller does not hold the PLATFORM_ADMIN role.
+        '404':
+          description: No establishment attempt exists with this id.
+        '409':
+          description: Attempt already activated; activation preconditions not met; or a concurrent activation claimed this organization_code.
+        '422':
+          description: attempt_id is not a valid UUID.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AuthService access token (from POST /auth/login), carrying a role_code claim.
+
+  schemas:
+    EstablishOrganizationAttemptRequest:
+      type: object
+      required:
+        - organization_code
+        - organization_name
+        - organization_type
+      properties:
+        organization_code:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "ACME-CORP-001"
+        organization_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Acme Corporation"
+        organization_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "CORPORATE"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+        primary_domain:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Optional claimed primary domain (ERB-C004-02).
+
+    VerifyDomainClaimRequest:
+      type: object
+      required:
+        - verified
+      properties:
+        verified:
+          type: boolean
+
+    ActivateEstablishmentRequest:
+      type: object
+      properties:
+        no_domain_activation_reason:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: Required if the attempt has no VERIFIED domain claim (BR-C004-09).
+
+    OrganizationEstablishmentAttemptResponse:
+      type: object
+      required:
+        - id
+        - organization_code
+        - organization_name
+        - organization_type
+        - domain_verification_status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        organization_code:
+          type: string
+        organization_name:
+          type: string
+        organization_type:
+          type: string
+        description:
+          type: string
+          nullable: true
+        primary_domain:
+          type: string
+          nullable: true
+        domain_verification_status:
+          type: string
+          enum: ["NOT_CLAIMED", "UNVERIFIED", "VERIFIED"]
+        activated_organization_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true

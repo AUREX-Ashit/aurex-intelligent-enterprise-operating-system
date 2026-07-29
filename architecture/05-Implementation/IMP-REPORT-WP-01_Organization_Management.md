@@ -1153,3 +1153,83 @@ No new Business Activity, no configuration/audit-history-style scope addition, a
 ---
 
 *(WP-01's Business Activity implementation is complete and frozen as of this entry. The next entry in this report will be either WP-01 Certification's outcome or a remediation record responding to it.)*
+
+---
+
+## IRA-001A — Constitutional Correction: Organization Identity Establishment & Activation
+
+**Trigger:** This repository's own constitutional-interpretation, behavioral-compliance-assessment, and historical-governance-validity investigation chain established that `OrganizationService.establish()` (BA-01) violated PE-001-C004's BR-C004-01 ("An Organization SHALL NOT be treated as valid before governed activation") and Contract 5.4 ("no Organization exists in this sense" prior to activation) — using code that existed at WP-01's own certification time (2026-07-23 self-reported, CERT-WP-01), not a documentation-accuracy gap as CERT-WP-01's own Finding A originally classified it. Full governing document: `architecture/05-Implementation/IRA-001A_WP-01_Organization_Establishment_Activation_Correction.md`.
+
+**Note on WP-01's freeze (above):** this correction is exactly the class of change the freeze's own text anticipates permitting — a governance-directed remediation responding to a material finding about already-certified behavior, not a scope addition or enhancement. It does not reopen or re-litigate BA-02 through BA-07, none of which was found non-compliant.
+
+### Business Activity Implemented
+
+**BA-01 (amended) — Establish Organization Identity**, realizing ERB-C004-01's own Exit Context correctly for the first time: an Organization Anchor Context, not an Authoritative Organization Context. **BA-01B (new) — Verify Organization Domain Claim**, realizing ERB-C004-02. **BA-01C (new) — Activate Organization (first-time)**, realizing ERB-C004-03 — the first, distinct, governed act producing the first Authoritative Organization Context for a given establishment attempt.
+
+### Architectural Realization
+
+A separate, non-authoritative persistence construct (`organization_establishment_attempts`, the Organization Anchor Context per PE-001-C004 §1.16) — selected over three alternatives (a fourth lifecycle status value on `organizations`, constitutionally disqualified by PE-001-C004 §9.6's own drafting history; a single-table authority flag; a workflow-orchestrated single table) for satisfying BR-C004-08/Contract 5.4 by construction and reopening zero already-certified Business Activities. Full option analysis: see this repository's own architectural-decision investigation (incorporated into IRA-001A §4).
+
+### Files Created
+
+| File | Purpose |
+|---|---|
+| `Backend/Services/AuthService/models/organization_establishment_attempt.py` | `OrganizationEstablishmentAttempt` model, `DomainVerificationStatus` enum |
+| `Backend/Services/AuthService/alembic/versions/2026_08_02_0900-e5c1a9f4b7d2_organization_establishment_attempt.py` | Migration: creates `organization_establishment_attempts` — purely additive, no existing table altered |
+| `Backend/Services/AuthService/repositories/organization_establishment_attempt_repository.py` | `OrganizationEstablishmentAttemptRepository.get_by_code()` |
+| `Backend/Services/AuthService/schemas/organization_establishment_attempt.py` | Request/response schemas for BA-01/BA-01B/BA-01C |
+| `Backend/Services/AuthService/routers/organization_establishment_attempt.py` | `POST /organization-establishment-attempts`, `.../verify-domain`, `.../activate` |
+| `Backend/Services/AuthService/organization-establishment-attempt-api.yaml` | OpenAPI contract for the three new endpoints |
+| `architecture/05-Implementation/IRA-001A_WP-01_Organization_Establishment_Activation_Correction.md` | Governing IRA for this correction |
+
+### Files Modified
+
+| File | Summary of Changes |
+|---|---|
+| `Backend/Services/AuthService/services/organization_service.py` | `establish()` rewritten to write only to the new Anchor construct; added `verify_domain_claim()`, `activate_establishment()`. `get_details()`, `search()`, `update_profile()`, `activate()`, `suspend()`, `retire()` — **zero changes**, confirmed by diff. |
+| `Backend/Services/AuthService/routers/organization.py` | Removed the `POST ""` (establish) handler — relocated, not repurposed. Every other endpoint unchanged. |
+| `Backend/Services/AuthService/main.py` | Registered the new router at `/organization-establishment-attempts`. |
+| `Backend/Services/AuthService/middleware/tenant.py` | Added `/organization-establishment-attempts` prefix exemption. |
+| `Backend/Services/AuthService/models/__init__.py` | Registered `OrganizationEstablishmentAttempt` in the SQLAlchemy mapper-registry import list. |
+| `Backend/Services/AuthService/schemas/organization.py` | Removed the now-dead `EstablishOrganizationRequest` class (superseded by `EstablishOrganizationAttemptRequest`); updated two docstrings. |
+| `Backend/Services/AuthService/tests/test_organization_service.py` | BA-01's establish tests rewritten; BA-01B/BA-01C tests added; BA-02–BA-07 test setup code migrated to a new `_establish_and_activate` helper — their own assertions unchanged. |
+| `Backend/Services/AuthService/tests/test_organization_api.py` | Same pattern, HTTP level. |
+| `Backend/Services/AuthService/organization-api.yaml` | Removed the `POST /organizations` path and `EstablishOrganizationRequest` schema; version bumped to 1.1.0. |
+| `architecture/06-Reviews/TECH-DEBT.md` | TD-046 through TD-049 added. |
+| `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` | WP-01 row updated to reflect the correction. |
+
+No other Work Package's files were touched — confirmed by `git diff --stat` (Independent Review, below).
+
+### Validation
+
+- Full AuthService suite: **469 passed**, zero regressions (441 pre-existing at WP-04's own baseline this session + 28 net from this correction and the same session's other work — re-run directly, not taken on faith).
+- Confirmed a single Alembic head (`e5c1a9f4b7d2`) after the new migration.
+- Confirmed `establish()` never writes to `organizations` (grep: `organization_repo.create` appears exactly once in the file, inside `activate_establishment`).
+- Confirmed `get_details()`/`search()` (BA-02/BA-03) reference the new repository nowhere.
+- Confirmed no file outside this change set references `organization_establishment_attempts`.
+- OpenAPI schema generated successfully: 60 total paths (57 before), including the three new endpoints; `/organizations` retains only `GET`.
+- Both `organization-api.yaml` and the new `organization-establishment-attempt-api.yaml` validated via `yaml.safe_load`.
+
+### Status
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (469/469 full suite passing)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** [recorded in commit-hash recording pass]
+
+### Independent Review
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in this correction, verified it against actual repository state rather than trusting IRA-001A's own narrative, and re-ran the full test suite directly. Confirmed by direct grep and full reads: `establish()` writes only to the new Anchor construct (`organization_repo.create` appears exactly once in `organization_service.py`, inside `activate_establishment`); `activate_establishment()`'s gate (VERIFIED domain or an explicit `no_domain_activation_reason`) has no bypass path, traced by hand; both repositories share the same request-scoped session, so the `IntegrityError` rollback on a concurrent-duplicate race correctly unwinds both tables together; `get_details()`/`search()` (BA-02/BA-03) were confirmed to reference the new repository nowhere, and their diffs are empty except docstring wording; `routers/organization.py` no longer has a `POST ""` handler (confirmed removed, not repurposed); a repository-wide grep found no stray reference to `organization_establishment_attempts` outside the expected new/modified files. Tests were re-read in full: BA-01's own tests now assert zero `organizations` rows exist after `establish()` alone; BA-01B/BA-01C have dedicated 404/409/precondition tests; BA-02 through BA-07's own test assertions were confirmed byte-for-byte unchanged (only their setup fixtures were migrated to a new helper). The reviewer re-ran the full suite directly (468 passed at that point) and confirmed `git status`/`git diff --stat` touched only the expected file set, no other Work Package.
+
+Findings, all resolved in this same documentation/implementation pass:
+1. **`no_domain_activation_reason` accepted whitespace-only strings**, technically satisfying the gate's truthiness check without recording a genuine decision (BR-C004-09's intent). **Fixed**: `activate_establishment()` now strips and treats an empty-after-strip reason as absent; a dedicated test (`test_activate_establishment_rejects_whitespace_only_no_domain_reason`) added. Suite re-run: 469/469.
+2. **IRA-001A's own §9 prematurely claimed Independent Review was complete**, citing this very section before it existed. **Fixed**: corrected to accurately reflect that this review (the one being recorded here) is the first and satisfies the claim.
+3. **An undisclosed, unrelated stray file** (`architecture/05-Implementation/_PE-001-C005_ba02_check.txt`, leftover scratch output from an earlier, separate investigation this same session) was found untracked in the working tree. Confirmed unrelated to this correction's diff; **left as-is, not committed with this change set** — disclosed in IRA-001A §8 for traceability.
+4. Two cross-capability/architecture observations were raised and registered as Technical Debt rather than fixed inline, consistent with §19.8's discipline: **TD-047** (`MembershipService`, WP-03's own file, bypasses C-004's resolution authority — out of WP-01A's ownership) and **TD-048** (BA-02 doesn't realize EX-C004-05's typed validity contract — no current consumer needs it). **TD-046** (BA-01B has no real proof-of-control mechanism) and **TD-049** (frontend now calls a removed endpoint) were also registered, both disclosed in IRA-001A from the start, not review findings.
+
+No defect was found in the core correction: no code path creates or exposes an Organization as valid outside `activate_establishment()`'s governed gate, and no code path lets a pre-activation attempt leak through BA-02/BA-03 or any other consumer.

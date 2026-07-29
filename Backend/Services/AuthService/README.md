@@ -44,7 +44,8 @@ AuthService/
 │   ├── __init__.py
 │   ├── auth.py             # /auth/login and /auth/refresh
 │   ├── person.py           # /person/recognize and /person/establish
-│   ├── organization.py     # POST /organizations (WP-01)
+│   ├── organization.py     # GET/PUT /organizations/* (WP-01, BA-02-BA-07)
+│   ├── organization_establishment_attempt.py  # POST /organization-establishment-attempts/* (IRA-001A, BA-01/BA-01B/BA-01C)
 │   └── health.py           # /health (liveness) and /ready (readiness, WP-00)
 ├── schemas/                # Pydantic v2 validation DTOs
 │   └── organization.py     # WP-01
@@ -172,15 +173,31 @@ feature_flags:
 
 ## 🏢 Organization Management (WP-01)
 
-BA-01 (Establish Organization Identity), BA-02 (Resolve Organization Details), BA-03 (Search &
-List Organizations), BA-04 (Steward Organization Identity), BA-05 (Reactivate Suspended
-Organization), BA-06 (Suspend Organization), and BA-07 (Retire Organization & Preserve
-Continuity) of C-004, per IRA-001 (as revised by its §15 WP-01 Scope Reconciliation against the
-canonical `PE-001-C004` Capability Specification) and ADR-003/004/005. **BA-07 is WP-01's final
-Business Activity.**
+BA-01 (Establish Organization Identity, **amended per IRA-001A**), BA-01B (Verify Organization
+Domain Claim, **new**), BA-01C (Activate Organization first-time, **new**), BA-02 (Resolve
+Organization Details), BA-03 (Search & List Organizations), BA-04 (Steward Organization
+Identity), BA-05 (Reactivate Suspended Organization), BA-06 (Suspend Organization), and BA-07
+(Retire Organization & Preserve Continuity) of C-004, per IRA-001 (as revised by its §15 WP-01
+Scope Reconciliation) and IRA-001A (constitutional correction to BA-01, per PE-001-C004's
+BR-C004-01/Contract 5.4) against the canonical `PE-001-C004` Capability Specification, and
+ADR-003/004/005.
 
-- `POST /organizations` — requires `Authorization: Bearer <access_token>` for a caller holding
-  the `PLATFORM_ADMIN` role. Rejects a duplicate `organization_code` with `409`.
+**Establishing an Organization is now a two-step, governed flow** — see
+`organization-establishment-attempt-api.yaml`:
+
+- `POST /organization-establishment-attempts` — requires `Authorization: Bearer <access_token>`
+  for a caller holding the `PLATFORM_ADMIN` role. Creates a non-authoritative Organization
+  Establishment Attempt (Organization Anchor Context), never an Organization. Rejects a
+  duplicate `organization_code` with `409`.
+- `POST /organization-establishment-attempts/{attempt_id}/verify-domain` — records a domain-claim
+  verification outcome (`verified: bool`); `404`/`409` if not found / already activated / no
+  domain was claimed.
+- `POST /organization-establishment-attempts/{attempt_id}/activate` — the governed activation act
+  (BA-01C): requires either a `VERIFIED` domain claim or an explicit
+  `no_domain_activation_reason`. Creates the first, real `organizations` row on success.
+  Lexically distinct from `POST /organizations/{organization_id}/activate` below, which remains
+  BA-05's reactivation only.
+
 - `GET /organizations/{organization_id}` — same authorization; `404` if the id doesn't exist.
 - `GET /organizations` — same authorization; `q` (name/code substring), `status`
   (`ACTIVE`/`SUSPENDED`/`RETIRED`), `skip`/`limit` (pagination, max 100/page), `sort_by`/`sort_order`

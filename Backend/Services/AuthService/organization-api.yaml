@@ -5,68 +5,15 @@ info:
     Organization Management (C-004, WP-01) endpoints for the CorpStage
     AuthService. Implementation ownership: ADR-003. Schema scope: ADR-004.
     Lifecycle model: ADR-005, extended by BA-07 to a third, terminal
-    RETIRED state per ERB-C004-07 (PE-001-C004). Covers all 7 Business
-    Activities of WP-01's Scope Reconciliation (IRA-001 §15): BA-01
-    (Establish Organization Identity), BA-02 (Resolve Organization
-    Details), BA-03 (Search & List Organizations), BA-04 (Steward
-    Organization Identity), BA-05 (Reactivate Suspended Organization),
-    BA-06 (Suspend Organization), and BA-07 (Retire Organization &
-    Preserve Continuity) — the final Business Activity of WP-01.
-  version: 1.0.0
+    RETIRED state per ERB-C004-07 (PE-001-C004). Covers WP-01's 7
+    original Business Activities (IRA-001 §15) plus IRA-001A's
+    constitutional correction to BA-01 and two new Business Activities,
+    BA-01B and BA-01C — see organization-establishment-attempt-api.yaml
+    for BA-01/BA-01B/BA-01C; this document covers BA-02 through BA-07
+    only, none of which changed under IRA-001A.
+  version: 1.1.0
 paths:
   /organizations:
-    post:
-      summary: Establish a new organization
-      description: >
-        WP-01 Business Activity 1: Establish Organization. Requires the
-        PLATFORM_ADMIN role — IRA-001 §2.7 documents this as a deliberate
-        simplification pending the Role & Permission Management work
-        package's Domain Permission model. Rejects a duplicate
-        organization_code with 409. Tenant-agnostic: establishing a
-        brand-new organization has no existing tenant to scope the
-        request to (X-Tenant-ID is not required or read).
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EstablishOrganizationRequest'
-      responses:
-        '201':
-          description: Organization established.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrganizationResponse'
-        '400':
-          description: Missing or malformed Authorization header.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPExceptionResponse'
-        '401':
-          description: Access token invalid or expired.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPExceptionResponse'
-        '403':
-          description: Caller does not hold the PLATFORM_ADMIN role.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPExceptionResponse'
-        '409':
-          description: An organization with this organization_code already exists.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPExceptionResponse'
-        '422':
-          description: Invalid request (e.g., missing or empty required field).
-
     get:
       summary: Search and list organizations
       description: >
@@ -454,35 +401,6 @@ components:
       description: AuthService access token (from POST /auth/login), carrying a role_code claim.
 
   schemas:
-    EstablishOrganizationRequest:
-      type: object
-      required:
-        - organization_code
-        - organization_name
-        - organization_type
-      properties:
-        organization_code:
-          type: string
-          minLength: 1
-          maxLength: 50
-          description: Unique organization code (platform-wide).
-          example: "ACME-CORP-001"
-        organization_name:
-          type: string
-          minLength: 1
-          maxLength: 255
-          example: "Acme Corporation"
-        organization_type:
-          type: string
-          minLength: 1
-          maxLength: 50
-          example: "CORPORATE"
-        description:
-          type: string
-          maxLength: 1000
-          nullable: true
-          example: "Global manufacturing conglomerate."
-
     UpdateOrganizationProfileRequest:
       type: object
       required:

@@ -73,6 +73,10 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-043 | BA-01 (Establish Organization Node, WP-04/C-005) persists only the Structural Identity subset of Master Technical Architecture's canonical `organization_node` DDL (`legal_entity_name`, `business_unit`, `sector`, `operational_status`, `effective_from`, `effective_to`). `geography_id` (no `geography_registry` table exists anywhere in this repository), `parent_available_flag` (naturally derived once `organization_hierarchy` exists — BA-08's own future scope), and the materiality/risk/scenario/passport scores (`strategic_importance_score`, `risk_criticality_score`, `reporting_currency`, `benchmark_group`, `scenario_sensitive_flag`, `external_dependency_flag`, `entity_materiality_score`, `data_readiness_score`, `external_data_retrieval_flag`, `passport_shareable_flag`) are deferred — disclosed in IRA-004 §9/§11, not silently omitted. See detailed entry below the table for full fields. | BA-01 | Data Integrity | Low | Enterprise Structure Management's own later Business Activities (BA-04/BA-05/BA-08 candidates, IRA-004 §4) as each concrete need for a deferred column is identified — not invented ahead of a real consumer, mirroring WP-01 ADR-004's own precedent | Open | AuthService (Backend) |
 | TD-044 | BA-01 (Establish Organization Node, WP-04/C-005) adds `operational_status` (free-text, e.g. ACTIVE/INACTIVE/DIVESTED per Master Technical Architecture's own DDL comment) as an independent column alongside the pre-existing `active_flag` (boolean, WP-03 BA-01) — the two are not reconciled into one authoritative lifecycle field. `establish()` leaves `active_flag` at its model default and accepts `operational_status` as an optional, independently-supplied value. | BA-01 | Data Integrity | Low | A future Business Activity introducing real lifecycle transitions for OrganizationNode (mirroring WP-01's activate()/suspend()/retire()) should resolve which of the two fields is authoritative, or how they stay in sync, before either is relied upon for a governed transition | Open | AuthService (Backend) |
 | TD-045 | BA-02 (Understand Structural Position, WP-04/C-005) realizes only the single-node half of EX-C005-03's own Purpose ("understand surrounding structural context and position... relationships") — `GET /organization-nodes/{id}` returns one node's own Structural Identity fields only. Traversing "surrounding relationships" per ERB-C005-02 requires `organization_hierarchy`, which does not exist yet (IRA-004 §7/§9 confirm it is out of BA-01's and BA-02's own scope, real future WP-04 work). Same disclosed-scoping-decision class as TD-043. See detailed entry below the table for full fields. | BA-02 | Architecture | Low | Enterprise Structure Management's own later Business Activity that introduces `organization_hierarchy` (BA-08 candidate per IRA-004 §4) — not invented ahead of a real consumer, mirroring TD-043's own precedent | Open | AuthService (Backend) |
+| TD-046 | BA-01B (Verify Organization Domain Claim, WP-01A/C-004, IRA-001A) records a verification *decision* (`verified: bool`, caller-supplied) as a distinct, audited, traceable act, but has no real proof-of-control mechanism (DNS TXT record, email token, etc.) behind it — the decision is trusted as reported, not independently confirmed. PE-001-C004's own governed no-domain activation path licenses proceeding without real domain verification entirely, so no WP-01A Business Activity requires one to reach Fully Implemented constitutional status; disclosed, not silently omitted. See detailed entry below the table for full fields. | BA-01B | Security | Low | A real proof-of-control mechanism (future, separately-scoped Business Activity) once a genuine domain-trust consumer exists (e.g. C-001/URA-001 SSO domain-based provisioning) | Open | AuthService (Backend) |
+| TD-047 | `MembershipService.establish()` (WP-03/C-007, pre-existing since 2026-07-29, not introduced by IRA-001A) derives Organization existence via direct `organization_repo.get_by_id()` repository access, bypassing any C-004-owned resolution authority (BR-C004-03: "Organization existence and validity SHALL be resolved exclusively through EX-C004-05; no dependent capability SHALL derive it independently"). No `.status` check is applied either, so a SUSPENDED or RETIRED organization is equally consumable. Out of IRA-001A's own ownership (C-004, not C-007) — `membership_service.py` was not modified by this correction. See detailed entry below the table for full fields. | IRA-001A (found during WP-01's own constitutional-correction review; not a WP-01A defect, a WP-03 one) | Security | Medium | A WP-03-owned amendment to `MembershipService.establish()` — either calling a C-004-owned resolve method with a status check, or an explicit WP-03 governance decision to accept the current direct-access pattern | Open | AuthService (Backend) |
+| TD-048 | BA-02 (`OrganizationService.get_details()`, WP-01/C-004) does not itself realize EX-C004-05's typed Organization Validity Context contract (`ACTIVE`/`SUSPENDED`/`RETIRED`/`NOT_FOUND` as a first-class resolution outcome) — it returns full Organization details or a 404, regardless of status, which is a superset a caller must interpret themselves rather than a purpose-built validity resolution. No current dependent capability needs the narrower contract; not built speculatively ahead of a real consumer. | IRA-001A (found during the correction's own gap analysis of BA-02's relationship to ERB-C004-04/EX-C004-05) | Architecture | Low | A future Business Activity or capability that genuinely needs a typed validity-only resolution (as opposed to full details) — not invented ahead of that need | Open | AuthService (Backend) |
+| TD-049 | Frontend consumers of Organization Establishment (`source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx`, `state/useEstablishOrganization.ts`, `services/organization-api.ts`) still call the removed `POST /organizations` endpoint and assume BA-01's original synchronous-ACTIVE-establishment response contract — IRA-001A is backend-only, the same scope precedent BA-05/BA-06/BA-07 each established. Establishing an organization through the existing UI will now fail (404) until the frontend is updated to the two-step establish-then-activate flow. | IRA-001A | UX | Medium | A frontend follow-up pass updating the Establish Organization UI flow to call `POST /organization-establishment-attempts` then `POST /organization-establishment-attempts/{id}/activate` — not part of WP-01A's own backend-only scope | Open | Platform Admin (Frontend) |
 
 ---
 
@@ -498,6 +502,74 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-02 — Understand Structural Position
 - **Source:** BA-02 implementation (self-identified during this Business Activity's own gap analysis, drawing directly on IRA-004 §4's own "(+ relationships)" annotation and EX-C005-03's Purpose text)
 - **Resolution Criteria:** `organization_hierarchy` exists and a Business Activity explicitly traverses it to satisfy EX-C005-03's "surrounding structural context" Purpose.
+
+---
+
+### TD-046 — Detailed Entry
+
+- **Title:** BA-01B (Verify Organization Domain Claim) Has No Real Proof-of-Control Mechanism
+- **Category:** Security
+- **Description:** BA-01B (Verify Organization Domain Claim, WP-01A/C-004, IRA-001A) records a verification outcome (`verified: bool`) supplied directly by the caller — an authorized, audited, traceable act satisfying BR-C004-02/BR-C004-09's literal requirement that verification be a recorded decision, never a silent default. It does not itself independently confirm domain control (no DNS TXT record check, no email-token proof-of-control flow).
+- **Root Cause:** PE-001-C004's own "governed no-domain activation path" explicitly licenses proceeding without any real domain verification at all — the specification treats the *distinctness and traceability* of the verification decision as the constitutional requirement, not the cryptographic strength of the proof behind it. No real proof-of-control mechanism exists anywhere in this repository to reuse.
+- **Impact:** A caller with PLATFORM_ADMIN access can mark any claimed domain "VERIFIED" without independent confirmation. No current dependent capability (C-001/URA-001 SSO domain-based provisioning) yet consumes this fact for trust decisions, so the exposure is currently theoretical, not active.
+- **Severity:** Low — disclosed at implementation time; no current consumer trusts this fact for anything security-relevant.
+- **Status:** Open
+- **Target Resolution:** A real proof-of-control mechanism, built as its own future, separately-scoped Business Activity once C-001/URA-001's SSO domain-based provisioning (or any other genuine domain-trust consumer) actually exists.
+- **Owning Work Package:** WP-01A — Organization Management Constitutional Correction (C-004)
+- **Related Business Activity:** BA-01B — Verify Organization Domain Claim
+- **Source:** BA-01B implementation (self-identified during IRA-001A's own gap analysis, drawing directly on PE-001-C004's own no-domain-path licensing text)
+- **Resolution Criteria:** A named proof-of-control mechanism exists and is exercised by BA-01B before marking a domain claim VERIFIED.
+
+---
+
+### TD-047 — Detailed Entry
+
+- **Title:** `MembershipService.establish()` (WP-03) Derives Organization Existence Independently, Bypassing C-004's Resolution Authority
+- **Category:** Security
+- **Description:** `MembershipService.establish()` (`Backend/Services/AuthService/services/membership_service.py`, WP-03/C-007, created 2026-07-29) calls `self.organization_repo.get_by_id(request.organization_id)` directly — a raw repository call, not any C-004-owned resolution method — and checks only `organization is None`. BR-C004-03 states: "Organization existence and validity SHALL be resolved exclusively through EX-C004-05; no dependent capability SHALL derive it independently."
+- **Root Cause:** WP-03 was implemented independently of C-004's own constitutional text; the direct-repository-access pattern mirrors WP-03's own established pattern for its other FK checks (role, person) without a distinct C-004 resolution contract to call instead at the time.
+- **Impact:** No `.status` check is applied at all — a `SUSPENDED` or `RETIRED` Organization is equally consumable for new Membership creation as an `ACTIVE` one, and the resolution bypasses whatever future EX-C004-05-conformant contract C-004 might define (TD-048).
+- **Severity:** Medium — a real, currently-exploitable gap (not merely theoretical), pre-existing since WP-03's own implementation and not introduced by IRA-001A.
+- **Status:** Open
+- **Target Resolution:** A WP-03-owned amendment to `MembershipService.establish()`, either calling a genuine C-004 resolution method with a status check, or an explicit WP-03 governance decision to formally accept the current direct-access pattern with its own disclosed rationale.
+- **Owning Work Package:** WP-03 — Membership Management (C-007) — **not WP-01A**; IRA-001A does not modify `membership_service.py`.
+- **Related Business Activity:** WP-03 BA-01 — Establish Membership Context
+- **Source:** IRA-001A's own gap analysis (found while verifying BR-C004-03 conformance across the codebase during the C-004 constitutional correction; a WP-03 finding surfaced by WP-01A's review, not a WP-01A defect)
+- **Resolution Criteria:** `MembershipService.establish()` resolves Organization validity through a C-004-owned contract that includes a status check, or WP-03 governance formally accepts the current pattern.
+
+---
+
+### TD-048 — Detailed Entry
+
+- **Title:** BA-02 (`get_details()`) Does Not Realize EX-C004-05's Typed Organization Validity Context Contract
+- **Category:** Architecture
+- **Description:** PE-001-C004's EX-C004-05 specifies a Produced Context of "Organization Validity Context (ACTIVE, SUSPENDED, RETIRED, or NOT_FOUND)." `OrganizationService.get_details()` (BA-02) returns either full Organization details (200) or a 404 — a superset response a caller must interpret to derive validity, not a purpose-built validity-only resolution matching EX-C004-05's own typed contract.
+- **Root Cause:** BA-02 was originally scoped as "View Organization Details" (a read/display concern), not explicitly bound to EX-C004-05's resolution contract; no dependent capability has yet needed the narrower, typed resolution.
+- **Impact:** Low today — every current caller (BA-02's own API consumers) wants full details anyway. Becomes relevant only if/when a dependent capability needs a lightweight, typed existence/validity check without the full detail payload (which would also naturally provide the single, authoritative resolution point BR-C004-03/TD-047 needs).
+- **Severity:** Low — no current consumer requires the narrower contract.
+- **Status:** Open
+- **Target Resolution:** A future Business Activity or capability need that requires a typed, validity-only resolution — not invented speculatively ahead of that need.
+- **Owning Work Package:** WP-01A — Organization Management Constitutional Correction (C-004)
+- **Related Business Activity:** BA-02 — Resolve Organization Details (pre-existing, unmodified by IRA-001A)
+- **Source:** IRA-001A's own gap analysis (found while reviewing whether any existing endpoint already realizes EX-C004-05)
+- **Resolution Criteria:** A Business Activity or endpoint exists that returns EX-C004-05's own typed `ACTIVE`/`SUSPENDED`/`RETIRED`/`NOT_FOUND` resolution as its primary contract.
+
+---
+
+### TD-049 — Detailed Entry
+
+- **Title:** Frontend Organization-Establishment UI Calls the Removed `POST /organizations` Endpoint
+- **Category:** UX
+- **Description:** `source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx`, `state/useEstablishOrganization.ts`, and `services/organization-api.ts` all call `POST /organizations` and assume BA-01's original synchronous-ACTIVE-establishment response — that endpoint no longer exists after IRA-001A's correction (relocated to `POST /organization-establishment-attempts`, followed by a distinct activation step).
+- **Root Cause:** IRA-001A is explicitly scoped backend-only, the same precedent BA-05/BA-06/BA-07 each established for their own WP-01 scope — no canonical document requires this correction to also update the frontend, and doing so was judged out of the constitutional-correction's own minimal scope.
+- **Impact:** Establishing a new Organization through the existing Platform Administrator UI will now fail (404 Not Found) until the frontend is updated — a real, user-facing regression for that one flow, not merely a latent gap. Every other Organization Management UI flow (View, Search, Update, Activate, Suspend, Retire) is unaffected.
+- **Severity:** Medium — real, immediate breakage of one existing UI flow, correctly disclosed rather than silently left for a user to discover.
+- **Status:** Open
+- **Target Resolution:** A frontend follow-up pass updating the Establish Organization UI flow to the new two-step `POST /organization-establishment-attempts` → `POST /organization-establishment-attempts/{id}/activate` sequence.
+- **Owning Work Package:** WP-01A — Organization Management Constitutional Correction (C-004) (frontend remediation itself may be picked up by any future WP-01-adjacent frontend pass)
+- **Related Business Activity:** BA-01 (amended) — Establish Organization Identity
+- **Source:** IRA-001A's own disclosure (self-identified during the correction's own scope-boundary review, consistent with every prior WP-01 scope-reduction decision being explicitly disclosed rather than silently left for discovery)
+- **Resolution Criteria:** The frontend Establish Organization flow successfully creates and activates an Organization through the new two-step API.
 
 ---
 
