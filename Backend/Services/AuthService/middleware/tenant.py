@@ -117,6 +117,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # reason as /impact-assessments: a Structural Review carries no
         # organization_id column anywhere in its own model
         # (models/structural_review.py).
+        # /structural-validations (WP-04, BA-07 Validate Transition
+        # Readiness; VLC-000001, ADR-012, IRA-004 §26) is
+        # tenant-agnostic for the identical reason as
+        # /structural-reviews: a Structural Validation carries no
+        # organization_id column anywhere in its own model
+        # (models/structural_validation.py).
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -135,7 +141,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/structural-change-intents" or path.startswith("/structural-change-intents/") \
           or path == "/structural-proposals" or path.startswith("/structural-proposals/") \
           or path == "/impact-assessments" or path.startswith("/impact-assessments/") \
-          or path == "/structural-reviews" or path.startswith("/structural-reviews/"):
+          or path == "/structural-reviews" or path.startswith("/structural-reviews/") \
+          or path == "/structural-validations" or path.startswith("/structural-validations/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")
