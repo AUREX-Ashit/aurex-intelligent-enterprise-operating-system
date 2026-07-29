@@ -442,6 +442,53 @@ Same discipline as IRA-001/002/003: IMP-TEST-001 (Business Activity Contract tes
 
 ---
 
+## 24. Canonical Pattern — The Structural Context Lifecycle
+
+**Trigger:** BA-06's own implementation-readiness assessment identified Review Context as a fourth candidate Business Object. Before repeating SCI-000001/POC-000001/IMC-000001's own individual discovery-and-registration cycle a third time, a fresh review of PE-001-C005 Chapter 38 (not previously consulted by any Business Activity's own readiness assessment in this Work Package) found the pattern already explicitly declared: **§38.15 ("C-005 Context Model")**, **§38.17 ("Context Transitions")**, and Chapter 43's **GS-INV-003 through GS-INV-012** governance invariants.
+
+**Governing decision:** `ADR-010_Structural_Context_Lifecycle_Canonical_Pattern.md` recognizes this pattern. **This section records that recognition. It registers no Business Object and authorizes no implementation.**
+
+### The Structural Context Lifecycle (PE-001-C005 §38.15/§38.17)
+
+Six substantive Context stages, in sequence, per §38.17's own transition semantics:
+
+| Stage | Context (§38.15) | Rule (§38.15, verbatim) | Governing EX (produces) | CBOR Status |
+|---|---|---|---|---|
+| 1 | Change Intent Context | "Created before a governed proposal." | EX-C005-04 | `SCI-000001` — **registered, §21 (ADR-006)** |
+| 2 | Proposed Outcome Context | "Never represented as current authoritative structure." | EX-C005-05 | `POC-000001` — **registered, §22 (ADR-008)** |
+| 3 | Comparison / Impact Context | "Preserved during assessment and review." | EX-C005-07 | `IMC-000001` — **registered, §23 (ADR-009)** |
+| 4 | Review Context | "Preserved through resolution and validation." | EX-C005-08 (BA-06) | **Not registered — candidate only, per this ADR's own Decision point 2** |
+| 5 | Validation Context | "Invalidated by material proposal change." | EX-C005-10 (BA-07 candidate) | **Not registered — candidate only** |
+| 6 | Resulting Structural Context | "Structural context produced by successful completion." | EX-C005-11 (BA-08 candidate) | **Not registered — candidate only** |
+
+Excluded from the substantive six (per §38.15's own table, ADR-010's own Decision): **Enterprise Context, Structural Focus, Journey Intent, Navigation Context** — cross-cutting session/request-scoped context, not persisted Business Objects (Structural Focus additionally resolves to an ERG-001 EnterpriseNode, itself outside the CBOR/SD-002 §2 registration process by this Work Package's own established precedent, IRA-004 §7's addenda).
+
+### Governing Invariants (PE-001-C005 Chapter 43, verbatim)
+
+- **GS-INV-003** — "A governed structural proposal SHALL NOT exist without explicit Change Intent Context."
+- **GS-INV-004** — "Current authoritative structural context and Proposed Outcome Context SHALL remain semantically and experientially distinct."
+- **GS-INV-005** — "Every proposal revision SHALL preserve lineage to the Change Intent Context and the proposal revision it supersedes, where applicable."
+- **GS-INV-006** — "Impact, Review and Validation Context SHALL identify the exact proposal revision to which they apply."
+- **GS-INV-007** — "A material proposal revision SHALL invalidate dependent readiness and SHALL trigger reassessment of affected impact or review context."
+- **GS-INV-008** — "Resulting Structural Context SHALL be created only after successful completion of the validated structural transition."
+- **GS-INV-012** — "Completion SHALL identify the exact validated proposal revision from which Resulting Structural Context was produced."
+
+### Ownership and Lifecycle Semantics (per-stage, §41's own Participating Personas)
+
+Structural Steward participates throughout every stage. Structural Decision Participant joins from Frame Intent onward. Structural Reviewer joins from Assess/Review onward. Each stage's own Invalidated Context (§41.5–§41.12) establishes a real, event-generating lifecycle transition — not merely a data update — consistent with SD-002-008/-009 across all six stages, already implemented identically for stages 1–3 (SCI-000001/POC-000001/IMC-000001 each carry a CheckConstraint-declared status enum matching their own registered Lifecycle Model, per §21/§22/§23).
+
+### Relationship to Enterprise Experiences
+
+Each stage is produced by exactly one EX (table above) and consumed, per §38.17's own transition table, by the immediately following stage's EX — the same `PRECEDES`/`DERIVED_FROM`/`CONSUMES` relationship vocabulary already used in §21/§22/§23's own Relationship Mapping tables. Stages 4–6 (Review, Validation, Resulting Structural Context) will each receive their own full Relationship Mapping only at their own future registration.
+
+### Explicitly Not Decided by This Section
+
+- **Review Context, Validation Context, and Resulting Structural Context are not registered by this section.** No Business Object Identifier, Aggregate Root, Owner, or Lifecycle Model is assigned to any of them here. Each requires its own future registration entry (mirroring §21/§22/§23's own format), which may cite this section and `ADR-010` for the eligibility question but must still independently supply its own CMD-001 §26.4 attributes.
+- **Whether BA-06 may now implement Review Context** — no. This section records a pattern, not a registration; CMD-001 §26.3's registration-precedes-implementation rule still applies per-object.
+- **Whether Enterprise Context / Structural Focus / Journey Intent / Navigation Context require their own CBOR registration** — this section's own analysis found they do not (cross-cutting session/request-scoped context, per §38.15's own "Mandatory throughout" / "Preserved until explicitly changed" framing, distinct from the six substantive, domain-specific stages) — not re-examined further here.
+
+---
+
 ## Completion Criteria
 
 This IRA is complete when:
