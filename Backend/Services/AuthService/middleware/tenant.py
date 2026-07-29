@@ -105,6 +105,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # /structural-change-intents: a Structural Proposal carries no
         # organization_id column anywhere in its own model
         # (models/structural_proposal.py).
+        # /impact-assessments (WP-04, BA-05 Assess Structural
+        # Consequence; IMC-000001, ADR-009, IRA-004 §23) is
+        # tenant-agnostic for the identical reason as
+        # /structural-proposals: an Impact Assessment carries no
+        # organization_id column anywhere in its own model
+        # (models/impact_assessment.py).
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -121,7 +127,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/organization-nodes" or path.startswith("/organization-nodes/") \
           or path == "/organization-establishment-attempts" or path.startswith("/organization-establishment-attempts/") \
           or path == "/structural-change-intents" or path.startswith("/structural-change-intents/") \
-          or path == "/structural-proposals" or path.startswith("/structural-proposals/"):
+          or path == "/structural-proposals" or path.startswith("/structural-proposals/") \
+          or path == "/impact-assessments" or path.startswith("/impact-assessments/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")
