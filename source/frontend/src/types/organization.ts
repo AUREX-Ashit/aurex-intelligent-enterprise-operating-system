@@ -11,6 +11,28 @@ export interface EstablishOrganizationRequest {
   description?: string | null;
 }
 
+/**
+ * IRA-001A (backend constitutional correction, TD-049): Establish Organization
+ * is now a two-step flow — POST /organization-establishment-attempts, then
+ * POST .../activate. This type mirrors AuthService's
+ * OrganizationEstablishmentAttemptResponse and is consumed only internally
+ * by services/organization-api.ts's establishOrganization(), which still
+ * returns Promise<OrganizationResponse> to every existing caller — no other
+ * frontend file needs to know this intermediate step exists.
+ */
+export interface OrganizationEstablishmentAttemptResponse {
+  id: string;
+  organization_code: string;
+  organization_name: string;
+  organization_type: string;
+  description: string | null;
+  primary_domain: string | null;
+  domain_verification_status: "NOT_CLAIMED" | "UNVERIFIED" | "VERIFIED";
+  activated_organization_id: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
 export interface UpdateOrganizationProfileRequest {
   organization_name: string;
   organization_type: string;
