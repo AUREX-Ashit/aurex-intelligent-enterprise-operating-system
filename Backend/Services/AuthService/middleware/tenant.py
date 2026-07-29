@@ -99,6 +99,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # model (models/structural_change_intent.py) — it is an
         # enterprise-structure-level construct, not organization-scoped
         # data.
+        # /structural-proposals (WP-04, BA-04 Shape/Refine Proposed
+        # Structural Outcome; POC-000001, ADR-008, IRA-004 §22) is
+        # tenant-agnostic for the identical reason as
+        # /structural-change-intents: a Structural Proposal carries no
+        # organization_id column anywhere in its own model
+        # (models/structural_proposal.py).
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -114,7 +120,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/memberships" or path.startswith("/memberships/") \
           or path == "/organization-nodes" or path.startswith("/organization-nodes/") \
           or path == "/organization-establishment-attempts" or path.startswith("/organization-establishment-attempts/") \
-          or path == "/structural-change-intents" or path.startswith("/structural-change-intents/"):
+          or path == "/structural-change-intents" or path.startswith("/structural-change-intents/") \
+          or path == "/structural-proposals" or path.startswith("/structural-proposals/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

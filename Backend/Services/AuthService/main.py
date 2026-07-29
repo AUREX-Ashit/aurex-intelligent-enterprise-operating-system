@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent
+from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent, structural_proposal
 from models.database import db_manager
 from config import settings
 
@@ -96,3 +96,4 @@ app.include_router(runtime_assignment_policy.router, prefix="/runtime-assignment
 app.include_router(membership.router, prefix="/memberships", tags=["Membership"])
 app.include_router(organization_node.router, prefix="/organization-nodes", tags=["Organization Node"])
 app.include_router(structural_change_intent.router, prefix="/structural-change-intents", tags=["Structural Change Intent"])
+app.include_router(structural_proposal.router, prefix="/structural-proposals", tags=["Structural Proposal"])
