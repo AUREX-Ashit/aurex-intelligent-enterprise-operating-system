@@ -629,6 +629,84 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-09 — Preserve Membership Context Across Enterprise Journeys
+
+Realizing PE-001-C007's ERB-C007-06 (Preserve Membership Context Across Enterprise Journeys and Hand Off to Dependent Capabilities) / EX-C007-11 (Preserve Membership Context Across Enterprise Journeys). IRA-003 §14 pre-classified BA-09/BA-11 together as Category B; this section performs BA-09's own fresh gap analysis and reaches a disposition not yet used elsewhere in this Work Package: **fully satisfied by an existing Business Activity's own mechanism, with no new production code required.**
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Carry a recognized Membership's Authoritative Context forward into a further Enterprise Journey or workspace without re-establishment, with its authority consequence always recomputed fresh — never merely carried forward unchanged (CAP-001's C-007 Business Intent, scoped to context continuity only).
+- **Input Contract / Output Contract:** Identical to BA-02's own `GET /memberships/{membership_id}` — a `membership_id`, returning `MembershipUnderstandingResponse` (the Membership's stored fields plus a freshly computed `currently_effective`/`authority_consequence` pair).
+- **Business Rules:**
+  - Contract 5.5 (Context Preservation Contract), verbatim: "Membership Authority Consequence Context SHALL be recomputed, never merely carried forward unchanged, whenever Membership context is understood, preserved into a further experience, or handed off." This single sentence explicitly groups EX-C007-03 (Understand, BA-02), EX-C007-11 (Preserve, this Business Activity), and EX-C007-12 (Hand Off, BA-10) as **one recomputation mechanism applied at three trigger points** — confirmed independently at line 1035 of the primary text as well: "EX-C007-03, EX-C007-11 and EX-C007-12 compute live whenever the Membership is next consumed."
+- **Validation/Authorization/Audit/Domain Events:** Identical to BA-02's own, unchanged — no new endpoint means no new contract surface of any kind.
+- **Tests:** `tests/test_membership_service.py` (3 new tests), `tests/test_membership_api.py` (2 new tests) — 5 new tests, all passing; full AuthService suite (410 tests) passing with zero regressions. These tests exercise a property BA-02's own original test suite did not specifically target: repeated carry-forward reads across a simulated multi-step Enterprise Journey, with an intervening state change, each independently fresh.
+
+---
+
+## Governing Architecture Review (BA-09)
+
+Reviewed: PE-001-C007 (ERB-C007-06, EX-C007-11's own Trigger/Purpose/Context Engineering/Success Criteria text, Chapter 5.5 Context Preservation Contract in full, Chapter 5.6 Navigation Contract's own "navigation SHALL NOT default to re-recognition when a valid Authoritative Membership Context exists"), IRA-003 §10/§14 (Category B classification), `services/membership_service.py` (`understand()` and `compute_membership_authority_consequence()`, read in full — confirmed no caching of any kind exists anywhere in either).
+
+**Why no new implementation is required, confirmed by direct textual and code comparison, not assumed:** EX-C007-11's own "Context Produced" ("Membership Journey Continuity Context delivered to the next Enterprise Experience, including whether the Membership currently carries authority") and EX-C007-03's own "Context Produced" (BA-02's `MembershipUnderstandingResponse`) describe the identical data shape — Membership fields plus a freshly computed authority-consequence pair. The two EXs differ only in **trigger context** (an explicit "understand" request versus an implicit "continuing into a further journey/workspace" event), which is a client-side navigation/UX concern per Contract 5.6, not a distinct backend data or computation requirement. `understand()` was read in full and confirmed to perform a plain `get_by_id()` fetch with no memoization; `compute_membership_authority_consequence()` was confirmed to be a pure function recomputed on every invocation, never persisted or cached — exactly what Contract 5.5's own "SHALL be recomputed, never merely carried forward unchanged" requires for the "preserved into a further experience" trigger, not only the "understood" one.
+
+**Discipline applied — Reuse, not duplication:** per CLAUDE.md §19.5 ("Reuse → Configure → Extend → Compose → Create"), the correct resolution stops at Reuse once a requirement is fully satisfied by an existing artifact. Introducing a differently-named schema or endpoint for "Membership Journey Continuity Context" that is structurally identical to `MembershipUnderstandingResponse` would itself violate CLAUDE.md's own "one entity, one definition" Golden Rule — a parallel implementation of the same construct, not a new capability. No such duplication was introduced.
+
+**BA-11 preliminary observation, not a confirmed disposition:** IRA-003 §4 leaves BA-11 (candidate EX-C007-13, "Continue from Membership Context Decision") as "genuinely undetermined whether distinct from BA-09... requires direct EX-C007-13 text review at that BA's own gap analysis." EX-C007-13's own text was read during this review and shares a similar "hand forward the current Membership context to whatever comes next" shape — but its own Trigger ("A C-007 experience has completed") is a closing/exit step following *any* other EX's completion, distinct in kind from EX-C007-11's own mid-journey continuity trigger. Since BA-10 (not BA-11) is the next Business Activity in sequence per IRA-003's own roadmap, this observation is recorded here for BA-11's own future gap analysis to weigh, per IRA-003's own instruction — it is **not** resolved as a collapse here, unlike BA-04/BA-08's own confirmed-not-collapsed dispositions, which were each resolved by the immediately-preceding Business Activity.
+
+---
+
+## Gap Analysis Summary (BA-09)
+
+- **Database:** No migration — no new column, table, or write path. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-09's mapping to ERB-C007-06/EX-C007-11 was already derived in IRA-003 §3/§4; this section performs the BA-09-specific gap analysis IRA-003 §1/§4 stated would be required, concluding full satisfaction by BA-02's own existing mechanism.
+- **API Impact:** None — no new endpoint. `GET /memberships/{membership_id}` (BA-02) is reused as-is.
+- **UI Impact:** Explicitly out of scope, more so than any prior WP-03 Business Activity: EX-C007-11's own distinguishing concern (a client/journey not forcing re-establishment as it moves between screens) is *entirely* a frontend navigation/state-management matter — Contract 5.6's own text frames it as a navigation expectation, not a backend capability.
+- **Dependencies:** `MembershipService.understand()` and `compute_membership_authority_consequence()` (both existing, BA-02, reused entirely unchanged).
+- **Risks:** None identified. No Technical Debt registered — there is no new production code to carry any.
+- **Technical Debt registered:** None. (Per CLAUDE.md §19.8, Technical Debt records non-blocking observations about *implemented* code; no new implementation exists here to register debt against.)
+
+---
+
+## Documents Updated (BA-09)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/05-Implementation/IRA-003_WP-03_Membership_Management_Implementation_Readiness_Assessment.md` (BA-09 row updated to Implemented; BA-11 preliminary observation recorded)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-09 implemented and independently reviewed)
+
+**Implementation (test files only — no production code changed):**
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 3 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 2 new tests.
+
+No new model, schema, repository, service method, router, migration, or OpenAPI path was required or added — this is the full and correct scope of BA-09's own implementation, confirmed by direct textual and code review, not an omission.
+
+---
+
+## Validation (BA-09)
+
+- 5 new tests (3 unit, 2 API), all passing.
+- Full AuthService suite: **410 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-09 introduces no migration.
+- Confirmed no production code (`schemas/`, `services/`, `routers/`, `membership-api.yaml`, `models/`) changed for BA-09 — `git status` shows test files only.
+- Confirmed, empirically: two `understand()`/`GET /memberships/{id}` reads separated by an intervening term change each return the *current* state, not a cached first result (both service-layer and API-layer).
+- Confirmed, empirically: a Membership whose `effective_to` passes between two carry-forward reads is never presented as currently effective on the second read, matching Contract 5.5's own explicit anti-staleness requirement.
+- Confirmed, empirically: an intervening standing change (simulated directly, since BA-05 is BLOCKED) is reflected on the very next carry-forward read.
+
+---
+
+## Independent Review (BA-09)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-09's independent review. The central claim — that BA-02's existing mechanism fully satisfies EX-C007-11 — was verified three ways rather than accepted on textual argument alone: (1) `understand()` and `compute_membership_authority_consequence()` were both read in full to confirm no caching exists at either the repository or computation layer; (2) Contract 5.5's own text was checked to confirm it explicitly, not merely implicitly, groups EX-C007-03/EX-C007-11/EX-C007-12 as one mechanism; (3) new tests were run and confirmed to genuinely exercise the claimed property (repeated-fetch freshness across an intervening mutation), not merely re-assert what BA-02's own original single-fetch tests already covered. One observation, non-blocking:
+
+1. The BA-11/EX-C007-13 preliminary observation recorded in the Governing Architecture Review above is disclosed as exactly that — a preliminary reading for BA-11's own future gap analysis to weigh, not a premature collapse decision. This mirrors IRA-003's own explicit instruction not to assume a collapse without direct confirmation at that Business Activity's own turn.
+
+No security, tenant-isolation, or data-integrity defect was found. No Technical Debt was registered, consistent with there being no new implementation to carry any.
+
+---
+
 ## Status (Combined)
 
 **BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
@@ -659,10 +737,12 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **Commit Date (BA-08):** 2026-07-29 (both commits)
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), and BA-08 (`6bde8db`, `e09ae19`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-08.
+**BA-09 — Preserve Membership Context Across Enterprise Journeys:** Implementation COMPLETE — fully satisfied by BA-02's existing `understand()` mechanism, no new production code (410/410 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (no Technical Debt registered — no new implementation to carry any). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-08's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), and BA-08 (`6bde8db`, `e09ae19`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-09 is implementation-complete (test-only), tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-09.
 
 ---
 
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, and now BA-08 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** **BA-09 through BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, and now BA-09 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** A preliminary, non-binding observation on BA-11's own possible relationship to BA-09 was recorded above, for BA-11's own future gap analysis to weigh — not a collapse decision. **BA-10 and BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
