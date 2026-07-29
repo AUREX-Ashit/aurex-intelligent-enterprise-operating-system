@@ -78,6 +78,8 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-048 | BA-02 (`OrganizationService.get_details()`, WP-01/C-004) does not itself realize EX-C004-05's typed Organization Validity Context contract (`ACTIVE`/`SUSPENDED`/`RETIRED`/`NOT_FOUND` as a first-class resolution outcome) — it returns full Organization details or a 404, regardless of status, which is a superset a caller must interpret themselves rather than a purpose-built validity resolution. No current dependent capability needs the narrower contract; not built speculatively ahead of a real consumer. | IRA-001A (found during the correction's own gap analysis of BA-02's relationship to ERB-C004-04/EX-C004-05) | Architecture | Low | A future Business Activity or capability that genuinely needs a typed validity-only resolution (as opposed to full details) — not invented ahead of that need | Open | AuthService (Backend) |
 | TD-049 | Frontend consumers of Organization Establishment (`source/frontend/src/features/organization/components/OrganizationManagementScreen.tsx`, `state/useEstablishOrganization.ts`, `services/organization-api.ts`) still call the removed `POST /organizations` endpoint and assume BA-01's original synchronous-ACTIVE-establishment response contract — IRA-001A is backend-only, the same scope precedent BA-05/BA-06/BA-07 each established. Establishing an organization through the existing UI will now fail (404) until the frontend is updated to the two-step establish-then-activate flow. | IRA-001A | UX | Medium | **Resolved:** `services/organization-api.ts`'s `establishOrganization()` now performs both calls internally, preserving its existing `Promise<OrganizationResponse>` contract — no other frontend file required a change. See TD-050 for a partial-failure edge case surfaced by this fix. | Closed | Platform Admin (Frontend) |
 | TD-050 | The frontend's `establishOrganization()` (`source/frontend/src/services/organization-api.ts`, TD-049's own resolution) performs two sequential backend calls (create attempt, then activate). If the first succeeds but the second fails for a non-409 reason (network drop, timeout, backend restart), the `organization_establishment_attempts` row is orphaned — un-activated, with no user-visible way to discover, retry-activate, or delete it. Because `organization_code` is unique across both `organizations` and `organization_establishment_attempts`, the obvious user recovery (retry with the same code) then fails with a misleading "already exists" 409, since the modal doesn't clear the code field on error. | Independent Review of TD-049's resolution | UX | Low | A proper fix (idempotent retry-by-code, an attempt list/cleanup affordance, or reusing an existing un-activated attempt on retry) requires backend/UX design beyond a minimal wrapper fix — deliberately not built here to avoid the orchestration-surfacing redesign this task was scoped to avoid. Revisit if this is ever observed in practice. | Open | Platform Admin (Frontend) |
+| TD-051 | `StructuralChangeIntent` (SCI-000001, WP-04 BA-03) has no `GET` read endpoint — only `POST /structural-change-intents` (create) exists. EX-C005-05's own Required/Consumed Context names "Change Intent Context" as something a later experience must retrieve, but BA-03 (Type: Create, IRA-004 §4) was not scoped to include a read path; the create response body is the only current way to obtain a framed intent's fields. | BA-03 implementation (self-identified during this Business Activity's own gap analysis, IRA-004 §21's own "Explicitly Not Decided" disclosure) | Architecture | Low | BA-04 (Shape Structural Proposal)'s own future gap analysis — decide there whether it needs a dedicated `GET /structural-change-intents/{id}` or only an internal repository-level lookup. | Open | AuthService (Backend) |
+| TD-052 | `StructuralChangeIntent.status` is constrained (CheckConstraint) to IRA-004 §21's full registered Lifecycle Model (CREATED, MODIFIED, SUPERSEDED, ABANDONED, WITHDRAWN, ARCHIVED), but BA-03's own code only ever writes CREATED — no code path anywhere in this repository sets any other value. | BA-03 implementation (self-identified, mirroring BA-01's own disclosed minimal-slice precedent, IRA-004 §5) | Architecture | Low | BA-04 through BA-08's own future gap analyses, as each realizes the lifecycle transition its own stage implies (MODIFIED/SUPERSEDED at BA-04/BA-06, WITHDRAWN per §43.3's exception path, ARCHIVED at eventual retirement). | Open | AuthService (Backend) |
 
 ---
 
@@ -571,6 +573,40 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-01 (amended) — Establish Organization Identity
 - **Source:** IRA-001A's own disclosure (self-identified during the correction's own scope-boundary review, consistent with every prior WP-01 scope-reduction decision being explicitly disclosed rather than silently left for discovery)
 - **Resolution Criteria:** The frontend Establish Organization flow successfully creates and activates an Organization through the new two-step API.
+
+---
+
+### TD-051 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Structural Change Intent
+- **Category:** Architecture
+- **Description:** WP-04 BA-03 (Frame Structural Change Intent, SCI-000001) implements `POST /structural-change-intents` only. EX-C005-05's own Required/Consumed Context ("Change Intent Context and current structural context") establishes that a later, independently-invoked experience must retrieve a previously-framed intent by identity — but IRA-004 §4 scopes BA-03 as `Type: Create` only, mirroring BA-01/BA-02's own precedent of a create-then-read split across two separate Business Activities.
+- **Root Cause:** The BA-03 readiness assessment explicitly left "whether BA-03 also needs its own read endpoint" undecided, deferring it as BA-03's own first disclosed implementation decision rather than assuming an answer. This implementation makes the minimal choice (create only), consistent with "do not absorb BA-04 functionality."
+- **Impact:** None today — no Business Activity yet consumes a previously-framed Structural Change Intent. Becomes real friction only once BA-04 (Shape Structural Proposal) is implemented and needs to resolve a Change Intent Context by id.
+- **Severity:** Low — no current consumer exists; the create response already returns every field a caller needs immediately after framing.
+- **Status:** Open
+- **Target Resolution:** BA-04's own future implementation-readiness gap analysis decides whether a dedicated `GET /structural-change-intents/{id}` is required, or whether an internal (non-HTTP) repository lookup suffices for that Business Activity's own service-layer needs.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-03 — Frame Structural Change Intent
+- **Source:** BA-03 implementation (self-identified during this Business Activity's own gap analysis)
+- **Resolution Criteria:** A read path for Structural Change Intent exists, if and only if BA-04's own gap analysis determines one is required.
+
+---
+
+### TD-052 — Detailed Entry
+
+- **Title:** Structural Change Intent Lifecycle Transitions Beyond CREATED Are Not Implemented
+- **Category:** Architecture
+- **Description:** `StructuralChangeIntent.status` (`models/structural_change_intent.py`) is constrained to IRA-004 §21's full registered Lifecycle Model — CREATED, MODIFIED, SUPERSEDED, ABANDONED, WITHDRAWN, ARCHIVED — but BA-03's own service (`StructuralChangeIntentService.frame_change_intent()`) only ever persists CREATED. No code path anywhere in this repository sets any other value.
+- **Root Cause:** BA-03, as scoped in IRA-004 §4 ("Create (governed decision record)"), realizes only ERB-C005-03/EX-C005-04 (Frame). MODIFIED corresponds to intent revision, SUPERSEDED/ABANDONED to EX-C005-04's own Invalidated Context, and WITHDRAWN to PE-001-C005 §43.3's distinct exception path — each belongs to a later stage of the C-005 journey (BA-04 revision, BA-06/BA-07 review/validation-triggered invalidation, or an explicit withdrawal action), not to the initial Frame act.
+- **Impact:** None today — mirrors BA-01's own identical, already-accepted disposition of not implementing BR-C005-001 through -010's full governed-transition workflow (IRA-004 §5). The CheckConstraint documents SCI-000001's actual registered lifecycle so the schema is not narrower than the Business Object's own constitution, but no transition logic exists yet.
+- **Severity:** Low — consistent with, not a departure from, this Work Package's established minimal-slice discipline.
+- **Status:** Open
+- **Target Resolution:** BA-04 through BA-08's own future gap analyses, each realizing the lifecycle transition its own stage implies.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-03 — Frame Structural Change Intent
+- **Source:** BA-03 implementation (self-identified, mirroring IRA-004 §5's own precedent disclosure for BA-01)
+- **Resolution Criteria:** Each of MODIFIED/SUPERSEDED/ABANDONED/WITHDRAWN/ARCHIVED has a real, tested code path once the Business Activity that owns that transition is implemented.
 
 ---
 

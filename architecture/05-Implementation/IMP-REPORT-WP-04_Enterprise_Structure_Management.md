@@ -3,7 +3,7 @@
 **Work Package:** WP-04 — Enterprise Structure Management (C-005)
 **Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is recorded in this report's own "Governing Architecture Review (Step 1) — BA-02" and "Gap Analysis Summary — BA-02" sections below, consuming IRA-004 §4/§9/§10's own BA-02 candidate disposition ("B — Existing implementation can be reused") rather than re-deriving it from nothing.
 **Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction. BA-02 has no equivalent ERG-001 domain rule (it is a pure read, ERG-001 governs write-side structural semantics) — its governing text is PE-001-C005 ERB-C005-02/EX-C005-03 directly.
-**Scope of this report:** BA-01 and BA-02. BA-03 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report.
+**Scope of this report:** BA-01, BA-02, and BA-03. BA-04 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision.
 
 ---
 
@@ -227,4 +227,125 @@ Findings recorded, none blocking:
 
 ---
 
-*End of IMP-REPORT-WP-04 (BA-01 and BA-02). BA-03 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
+## BA-03 — Frame Structural Change Intent
+
+## Business Activity Implemented
+
+**BA-03 — Frame Structural Change Intent**, realizing PE-001-C005's ERB-C005-03 (Frame Structural Change Intent) / EX-C005-04 (Frame Structural Change Intent). Realizes SCI-000001 (Structural Change Intent), the canonical Business Object registered by `ADR-006`/IRA-004 §21. No ERG-001 domain business rule governs this Business Activity — Structural Change Intent is a PE-001-C005-native experience-layer construct, not an ERG-001 structural/domain object (ADR-006's own Aggregate Root finding), the same disclosed layer distinction IRA-004 §5 already drew between PE-001-C005's experience rules and ERG-001's domain rules.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Allow a caller to record explicit enterprise decision context — business rationale, target structural outcome, and decision boundary — before a structural change may be proposed (ERB-C005-03's own Purpose, verbatim: "Turn an observed structural need into explicit enterprise intent, target outcome and decision context"; BR-C005-001: "A governed structural change SHALL have explicit Change Intent Context").
+- **Input Contract:** `change_rationale` (str, required — EX-C005-04's own Required/Consumed Context: "recognized change need"), `target_outcome` (str, required — EX-C005-04's own Produced Context), `decision_boundary` (str, optional — EX-C005-04's own Produced Context, not marked mandatory by its own text).
+- **Output Contract:** The framed StructuralChangeIntent (id, change_rationale, target_outcome, decision_boundary, status, created_at, updated_at), or a 422 naming the missing/invalid field.
+- **Business Rules:**
+  - BR-C005-001 — A governed structural change SHALL have explicit Change Intent Context. Satisfied by construction: this is the only path that creates a `StructuralChangeIntent` row, and `change_rationale`/`target_outcome` are both required (schema validation).
+  - BR-C005-002 — Structural Focus SHALL be established before a proposal is shaped. Not directly enforced by BA-03 (no hard dependency on a prior BA-02 call is checked) — EX-C005-04's own Required Context is "Structural Understanding Context and recognized change need" at the experience level, not a database-enforceable precondition; the same disclosed-not-enforced disposition BA-01/BA-02 already established for the PE-001-C005 experience layer generally (IRA-004 §5).
+- **Validation Rules:** `change_rationale`/`target_outcome` must be non-empty (422 otherwise, Pydantic `min_length=1`). No duplicate-check exists — EX-C005-04's own text names no unique business key for a Change Intent Context (a deliberate, disclosed difference from BA-01's `node_code`-based duplicate check).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required — the same interim gate BA-01/BA-02 and every prior Work Package used. No PE-001-C005 persona (Structural Steward) exists as an enforceable claim today; not newly disclosed (inherits the same TD-021–025/031/034/035/036/039/042/045 class of finding).
+- **Domain Events:** `STRUCTURAL_CHANGE_INTENT_FRAMED` (structural_change_intent_id, status).
+- **Audit Requirements:** `record_audit("FRAME_STRUCTURAL_CHANGE_INTENT", ...)` on success, per SD-002-054's seven audit questions — same mechanism BA-01/BA-02 established, reused as-is.
+- **Tests:** `tests/test_structural_change_intent_service.py` (4 unit tests), `tests/test_structural_change_intent_api.py` (9 API/authorization tests) — 13 new tests, all passing; full AuthService suite (482 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (Step 1) — BA-03
+
+Reviewed for this Business Activity: CLAUDE.md (§14, §16, §17, §19.1–§19.8), SD-002 (§2, Universal Business Object Blueprint — the basis of SCI-000001's own registration), CMD-001 (§26.3–§26.7, Canonical Business Object Register), `ADR-006` (Accepted — registers SCI-000001, downgrades BA-03 to Category C, does not itself authorize implementation), IRA-004 (§4/§9/§10/§21 — BA-03's own candidate disposition and the full CBOR registration entry), PE-001-C005 (ERB-C005-03 §40.4, EX-C005-04 §41.5 and EX-C005-05 §41.6, re-extracted verbatim from `_PE-001-C005_ba02_check.txt` during this Business Activity's own readiness assessment), `OrganizationNodeService`/`OrganizationNodeRepository`/`OrganizationNodeRepository` (BA-01/BA-02, the direct Establish-Business-Activity structural precedent), `OrganizationEstablishmentAttempt` (WP-01A, evaluated and found only a partial structural analog — see below), `BaseRepository[T]`, `observability.py`, `dependencies.require_platform_admin`, `middleware/tenant.py`'s exemption pattern.
+
+**Key finding requiring disclosure (already recorded in the BA-03 readiness assessment):** EX-C005-04's own Required Context is "Structural Understanding Context and recognized change need" — not a bound reference to a specific EnterpriseNode/EnterpriseRelationship row. The `DERIVED_FROM` relationship IRA-004 §21 records as Pending Canonical Binding is confirmed, by direct comparison against EX-C005-05's own Required Context ("Change Intent Context **and current structural context**"), to be BA-04's resolution responsibility, not a BA-03 precondition. `StructuralChangeIntent` therefore carries no FK to `organization_nodes` or any future `organization_hierarchy` row — binding a structural target here would absorb BA-04's own scope, which this Business Activity deliberately does not do.
+
+**Second finding:** `OrganizationEstablishmentAttempt` (WP-01A) was evaluated as a candidate reuse template ("governed intermediate decision object with its own table") and found only a partial analog: that object is deliberately never exposed through any read path, while SCI-000001 is designed to be read by a later, independently-invoked BA-04 (EX-C005-05's own Required/Consumed Context names it explicitly). No read endpoint is added by BA-03 itself (TD-051) — BA-03's own scope is `Create` only (IRA-004 §4).
+
+---
+
+## Gap Analysis Summary — BA-03 (see the BA-03 readiness assessment and IRA-004 §21 for the underlying disposition)
+
+- **Database:** New table, `structural_change_intents` — a genuine Create, not an Extend (no existing table maps to SCI-000001, confirmed by IRA-004 §21's own Aggregate Root finding). Single new migration (`f7a2d9c4e6b1`), chained onto the existing head (`e5c1a9f4b7d2`); `alembic heads` confirms exactly one head after this migration.
+- **Business Activities:** BA-03 is the third Business Activity authorized for implementation under this report's own fresh gap analysis (this section, consuming ADR-006's Category C reclassification); BA-04 through BA-09 remain candidate-only (IRA-004 §4), each requiring its own gap analysis before implementation, per CLAUDE.md §19.7.
+- **API Impact:** One new endpoint, `POST /structural-change-intents` (Frame), mirroring the established Establish-Business-Activity shape (schema/repository/service/router layering, create-then-audit-then-event) minus the duplicate-check step (no natural unique key exists for this object — disclosed, not silently copied from BA-01).
+- **UI Impact:** Out of scope for BA-03 (backend Business Activity implementation only, matching every prior WP's own precedent).
+- **Dependencies:** BA-02 (satisfied — implemented, committed). No dependency on BA-04–BA-09.
+- **Missing runtime capabilities / canonical objects:** None required beyond the new table itself — `BaseRepository[T]`, `observability.py`, `require_platform_admin`, and the Pydantic schema pattern are all directly reusable.
+- **Missing repositories / services:** `StructuralChangeIntentRepository`/`StructuralChangeIntentService` — new, mirroring `OrganizationNodeRepository`/`OrganizationNodeService`'s own minimal shape.
+- **Missing authorization:** Same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every other write-side Business Activity in this repository (not a new gap; not separately registered, per §19.8.3).
+- **Missing audit / events:** None — both are implemented (`FRAME_STRUCTURAL_CHANGE_INTENT` audit action, `STRUCTURAL_CHANGE_INTENT_FRAMED` event).
+- **Technical Debt raised:** TD-051 (no read endpoint yet — deferred to BA-04's own gap analysis), TD-052 (lifecycle transitions beyond CREATED not implemented — deferred to BA-04 through BA-08's own future gap analyses).
+
+**Conclusion: READY, implemented.** BA-03 required one new table and three new thin wrapper layers (repository/service/router), all following directly reusable patterns — no new architecture, permission, or event mechanism was introduced.
+
+---
+
+## Documents Updated (BA-03)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-04_Enterprise_Structure_Management.md` (this report, BA-03 section)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-051, TD-052 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-04 row updated to reflect BA-03 implemented and independently reviewed)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/models/structural_change_intent.py`
+- `Backend/Services/AuthService/repositories/structural_change_intent_repository.py`
+- `Backend/Services/AuthService/schemas/structural_change_intent.py`
+- `Backend/Services/AuthService/services/structural_change_intent_service.py`
+- `Backend/Services/AuthService/routers/structural_change_intent.py`
+- `Backend/Services/AuthService/alembic/versions/2026_08_03_0900-f7a2d9c4e6b1_structural_change_intent.py`
+- `Backend/Services/AuthService/tests/test_structural_change_intent_service.py`
+- `Backend/Services/AuthService/tests/test_structural_change_intent_api.py`
+
+**Implementation (modified):**
+- `Backend/Services/AuthService/main.py` — registered the new `structural_change_intent` router at `/structural-change-intents`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/structural-change-intents` and `/structural-change-intents/*` to the tenant-exemption list (`StructuralChangeIntent` carries no `organization_id` column, the same basis `/organization-nodes`' own exemption documents).
+
+No other existing model, repository, service, or router was modified.
+
+---
+
+## Validation (BA-03)
+
+- 13 new tests (4 unit, 9 API), all passing.
+- Full AuthService suite: **482 passed**, zero regressions (re-run directly: 469 pre-existing + 13 new).
+- Confirmed a single Alembic head (`f7a2d9c4e6b1`) after the new migration (`alembic heads`, `alembic history` — chained onto `e5c1a9f4b7d2`, no branch point introduced).
+- Confirmed BR-C005-001: every successful `POST /structural-change-intents` call persists a real, identity-bearing row; `change_rationale`/`target_outcome` cannot be empty (422).
+- Confirmed `decision_boundary` may be omitted without error.
+- Confirmed two structurally-identical requests each create their own distinct row (no 409/deduplication) — the disclosed, deliberate difference from BA-01's own duplicate-check pattern.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403; missing/invalid Authorization header returns 400/401 respectively.
+- Confirmed `POST /structural-change-intents` requires no `X-Tenant-ID` header (tenant-exemption list).
+- Confirmed via `git status`/`git diff --stat` that only the files listed under Documents Updated above were touched — no BA-04–BA-09 code, no structural-target/EnterpriseNode FK, and no lifecycle-transition code exists anywhere in the change set.
+- OpenAPI schema (`app.openapi()`) generated successfully with `POST /structural-change-intents` present (single `post` operation) among 61 total paths — recounted directly against the current repository state, not assumed from BA-02's own (pre-WP-01A/pre-rebrand) figure.
+- Live Postgres `alembic upgrade`/`alembic check` was not exercised — `alembic check` was attempted and failed only with a connection-refused error (no running Postgres instance available in this environment), the same limitation every prior WP's own validation carried; static verification (`alembic heads`/`history`) was performed instead.
+
+---
+
+## Status (BA-03)
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (482/482 full suite passing, re-run directly during this report's own preparation)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** recorded below, Documents Updated section, upon commit.
+
+**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+
+**Commit Date:** 2026-07-29
+
+---
+
+## Independent Review (BA-03)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in BA-03's implementation, verified the implementation against actual repository state rather than trusting this report's own claims, and re-ran the full test suite directly. ADR-006's own text was re-confirmed to authorize registration only, not implementation — this Business Activity's own gap analysis (this report, above) was performed fresh rather than assumed satisfied by the registration alone, satisfying CLAUDE.md §19.7's Business Activity Completion Gate. EX-C005-04 and EX-C005-05 were both re-extracted directly from `_PE-001-C005_ba02_check.txt` and compared side-by-side: EX-C005-04's Required Context ("Structural Understanding Context and recognized change need") was confirmed to name no structural target, while EX-C005-05's Required Context ("Change Intent Context and current structural context") was confirmed to be the first point at which a structural target is required — validating the decision not to add an EnterpriseNode/EnterpriseRelationship FK to `StructuralChangeIntent` as a textually-grounded reading, not a convenient assumption. `git status`/`git diff --stat` confirmed no BA-04–BA-09 code, no structural-target FK, and no lifecycle-transition code (MODIFIED/SUPERSEDED/ABANDONED/WITHDRAWN/ARCHIVED) exists anywhere in the change set — matching BA-03's own disclosed minimal-CREATED-only scope. The CheckConstraint on `status` was confirmed to match IRA-004 §21's own registered Lifecycle Model exactly (six values), with TD-052 recorded for the five unreachable-by-BA-03 values rather than silently left undocumented. `OrganizationEstablishmentAttempt` was independently re-compared against `StructuralChangeIntent` and confirmed to be only a partial analog (write-only vs. read-later), validating the report's own disclosed reasoning for not copying that pattern's own read-exclusion. Tests were re-run directly: 13/13 new tests pass, 482/482 full suite passes, matching this report's own claims exactly; both new test files were read in full to confirm each test isolates a genuinely distinct behavior (creation, default status, optional-field omission, no-deduplication, and the full authorization/tenant-exemption matrix are each separately covered).
+
+Findings recorded, none blocking:
+1. **TD-051** (no read endpoint yet for Structural Change Intent) — recorded in `TECH-DEBT.md` in the same pass as this review, consistent with §19.8.2's registration-hygiene rule.
+2. **TD-052** (lifecycle transitions beyond CREATED not implemented) — recorded in `TECH-DEBT.md` in the same pass as this review, mirroring BA-01's own already-accepted minimal-slice disposition (IRA-004 §5) rather than a newly discovered gap class.
+3. **Observation, non-blocking:** BR-C005-002 (Structural Focus established before framing) is disclosed as not database-enforced by BA-03 (experience-level guidance, not a persisted precondition) — consistent with how BA-01/BA-02 already treated PE-001-C005's own experience-layer Business Rules (IRA-004 §5). Not acted upon further here; no dependent capability currently requires enforcement.
+4. **Inherited, not re-raised:** No PE-001-C005 persona (Structural Steward, etc.) exists as an enforceable claim — the same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every prior write-side Business Activity in this repository; not separately re-registered, per §19.8.3.
+5. The implementation itself was found complete, correct against BR-C005-001 and EX-C005-04's own Required/Produced Context, and consistent with the established Establish-Business-Activity pattern in every structural respect except the deliberately-disclosed absence of a duplicate check — no correctness, security, tenant-isolation, or scope-creep (BA-04 absorption) defect was found.
+
+---
+
+*End of IMP-REPORT-WP-04 (BA-01, BA-02, and BA-03). BA-04 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
