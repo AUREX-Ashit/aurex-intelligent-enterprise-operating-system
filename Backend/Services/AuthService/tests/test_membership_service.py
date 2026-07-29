@@ -754,24 +754,36 @@ async def test_preserve_membership_context_recomputes_freshly_across_repeated_ca
 async def test_preserve_membership_context_never_carries_forward_a_lapsed_authority_consequence(
     db_session: AsyncSession, seeded_person_organization_role
 ) -> None:
-    """Contract 5.5: 'a Membership whose effective validity has lapsed SHALL NOT be carried... as currently effective merely because an earlier computation... found it so.'"""
+    """
+    Contract 5.5: 'a Membership whose effective validity has lapsed SHALL
+    NOT be carried... as currently effective merely because an earlier
+    computation... found it so.'
+
+    Uses a fixed reference time and explicit now= injection for both
+    carry-forward reads, mirroring BA-02's own established deterministic
+    pattern (test_compute_authority_consequence_active_but_lapsed et al.,
+    above) - not real wall-clock elapsed time, which would make this
+    test's first assertion racy under slow test execution.
+    """
     person, organization, role = seeded_person_organization_role
     service = _service(db_session)
+    reference_time = datetime(2026, 6, 15, tzinfo=timezone.utc)
     established = await service.establish(
         EstablishMembershipRequest(
             person_id=person.id, organization_id=organization.id, role_id=role.id,
-            effective_to=datetime.now(timezone.utc) + timedelta(seconds=1),
+            effective_from=reference_time - timedelta(days=30),
+            effective_to=reference_time + timedelta(days=1),
         )
     )
 
     first_journey_read = await service.understand(established.id)
     first_currently_effective, _first_consequence = compute_membership_authority_consequence(
-        first_journey_read, now=datetime.now(timezone.utc)
+        first_journey_read, now=reference_time
     )
     assert first_currently_effective is True
 
     # The Membership continues into a further Enterprise Journey after its effective_to has passed.
-    later = datetime.now(timezone.utc) + timedelta(seconds=2)
+    later = reference_time + timedelta(days=2)
     second_journey_read = await service.understand(established.id)
     second_currently_effective, second_consequence = compute_membership_authority_consequence(
         second_journey_read, now=later
