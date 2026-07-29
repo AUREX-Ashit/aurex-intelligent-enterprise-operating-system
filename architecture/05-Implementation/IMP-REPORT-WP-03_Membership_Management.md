@@ -842,9 +842,13 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **Commit Date (BA-09 Remediation):** 2026-07-29
 
-**BA-10 — Hand Off Membership Context to a Dependent Capability:** Implementation COMPLETE (422/422 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-042, not blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-09's own precedent).
+**BA-10 — Hand Off Membership Context to a Dependent Capability:** Implementation COMPLETE (422/422 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-042, not blocking). Committed to `master` in two commits — `0cf6aec` (implementation: 6 files) and `9eef8ca` (documentation: this report, TECH-DEBT.md TD-042, IRA-003, WPR-001 status update).
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), and BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-10 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-10.
+**Commit Hash (BA-10):** `0cf6aec` (implementation), `9eef8ca` (documentation: implementation report, TECH-DEBT.md, IRA-003, WPR-001)
+
+**Commit Date (BA-10):** 2026-07-29 (both commits)
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`), and BA-10 (`0cf6aec`, `9eef8ca`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-10.
 
 ---
 
