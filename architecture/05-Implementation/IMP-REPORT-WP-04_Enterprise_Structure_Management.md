@@ -325,11 +325,11 @@ No other existing model, repository, service, or router was modified.
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** recorded below, Documents Updated section, upon commit.
+**Repository Commit:** Committed to `master` in two commits — `e411aa5` (implementation: 10 files) and `62df1c7` (documentation: this report, TECH-DEBT.md TD-051/052, WPR-001 WP-04 row).
 
-**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+**Commit Hash:** `e411aa5` (implementation), `62df1c7` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** 2026-07-29
+**Commit Date:** 2026-07-29 (both commits)
 
 ---
 
