@@ -448,11 +448,11 @@ No other existing model, repository, service, or router was modified.
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** recorded below, Documents Updated section, upon commit.
+**Repository Commit:** Committed to `master` in two commits — `17cba1e` (implementation: 10 files) and `c60cf97` (documentation: this report, TECH-DEBT.md TD-053–056, WPR-001 WP-04 row).
 
-**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+**Commit Hash:** `17cba1e` (implementation), `c60cf97` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** 2026-07-29
+**Commit Date:** 2026-07-29 (both commits)
 
 ---
 
