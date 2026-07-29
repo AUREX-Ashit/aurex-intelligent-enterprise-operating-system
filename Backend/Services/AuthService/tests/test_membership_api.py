@@ -685,3 +685,61 @@ def test_present_own_portfolio_does_not_require_platform_admin(client: TestClien
 def test_present_own_portfolio_requires_authorization_header(client: TestClient) -> None:
     response = client.get("/memberships/my-portfolio")
     assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-09 — Preserve Membership Context Across Enterprise Journeys (ERB-C007-06/EX-C007-11)
+# ---------------------------------------------------------------------------
+#
+# No new endpoint - EX-C007-11's own carry-forward/recompute-live
+# requirement is the identical mechanism Contract 5.5 groups with
+# BA-02's own understand() (see the service-layer tests' own module
+# comment for the full textual basis). These API-level tests prove the
+# same property end-to-end through GET /memberships/{membership_id},
+# simulating a Membership continuing across two Enterprise Journey
+# points with a term change in between.
+
+def test_preserve_membership_context_recomputes_freshly_across_repeated_carry_forward_reads(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    first_journey_read = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert first_journey_read["license_type"] == "FULL"
+    assert first_journey_read["currently_effective"] is True
+
+    client.post(
+        f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={"license_type": "LIGHT"},
+    )
+
+    second_journey_read = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert second_journey_read["license_type"] == "LIGHT"
+    assert second_journey_read["currently_effective"] is True
+
+
+def test_preserve_membership_context_never_carries_forward_a_lapsed_authority_consequence(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """Contract 5.5: an expired Membership is never carried forward as currently effective."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+    lapsed_effective_to = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    client.post(
+        f"/memberships/{established['id']}/terms",
+        headers=_auth_headers(),
+        json={"effective_to": lapsed_effective_to},
+    )
+
+    journey_read = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+
+    assert journey_read["currently_effective"] is False
+    assert journey_read["authority_consequence"] == "ACTIVE_BUT_LAPSED"

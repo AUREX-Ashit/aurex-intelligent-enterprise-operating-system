@@ -700,3 +700,106 @@ async def test_present_own_portfolio_only_returns_the_supplied_persons_own_membe
     result = await service.present_own_portfolio(other_person.id)
 
     assert result.memberships == []
+
+
+# ---------------------------------------------------------------------------
+# BA-09 — Preserve Membership Context Across Enterprise Journeys (ERB-C007-06/EX-C007-11)
+# ---------------------------------------------------------------------------
+#
+# EX-C007-11's own Trigger ("a recognized Membership continues into a
+# further Enterprise Journey or workspace") and Context Produced
+# ("Membership Journey Continuity Context... including whether the
+# Membership currently carries authority") are, per Contract 5.5's own
+# text, the identical recomputation requirement BA-02's understand()
+# already implements: "Membership Authority Consequence Context SHALL
+# be recomputed, never merely carried forward unchanged, whenever
+# Membership context is understood, preserved into a further
+# experience, or handed off" - grouping EX-C007-03 (Understand,
+# BA-02), EX-C007-11 (Preserve, this BA), and EX-C007-12 (Hand Off,
+# BA-10) as one mechanism applied at three trigger points. No new
+# schema, service method, or endpoint is introduced for BA-09 - these
+# tests instead prove, empirically (not merely by textual argument),
+# that repeated "carry-forward" reads via the existing understand()
+# mechanism stay independently fresh across a simulated multi-step
+# Enterprise Journey, with no caching or staleness carried between
+# calls (the stale-context rule, Contract 5.5).
+
+async def test_preserve_membership_context_recomputes_freshly_across_repeated_carry_forward_reads(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """Simulates a Membership continuing into a further Enterprise Journey: two understand() calls, a term change in between, each call independently fresh."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    assert established.license_type == "FULL"
+
+    first_journey_read = await service.understand(established.id)
+    first_currently_effective, first_consequence = compute_membership_authority_consequence(first_journey_read)
+    assert first_journey_read.license_type == "FULL"
+    assert first_currently_effective is True
+    assert first_consequence == MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+
+    # An intervening C-007 transition occurs before the Membership continues into the next Enterprise Journey.
+    await service.change_terms(established.id, ChangeMembershipTermsRequest(license_type=LicenseType.LIGHT))
+
+    second_journey_read = await service.understand(established.id)
+    second_currently_effective, second_consequence = compute_membership_authority_consequence(second_journey_read)
+    assert second_journey_read.license_type == "LIGHT"
+    assert second_currently_effective is True
+    assert second_consequence == MembershipAuthorityConsequence.ACTIVE_AND_EFFECTIVE
+
+
+async def test_preserve_membership_context_never_carries_forward_a_lapsed_authority_consequence(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """Contract 5.5: 'a Membership whose effective validity has lapsed SHALL NOT be carried... as currently effective merely because an earlier computation... found it so.'"""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(
+            person_id=person.id, organization_id=organization.id, role_id=role.id,
+            effective_to=datetime.now(timezone.utc) + timedelta(seconds=1),
+        )
+    )
+
+    first_journey_read = await service.understand(established.id)
+    first_currently_effective, _first_consequence = compute_membership_authority_consequence(
+        first_journey_read, now=datetime.now(timezone.utc)
+    )
+    assert first_currently_effective is True
+
+    # The Membership continues into a further Enterprise Journey after its effective_to has passed.
+    later = datetime.now(timezone.utc) + timedelta(seconds=2)
+    second_journey_read = await service.understand(established.id)
+    second_currently_effective, second_consequence = compute_membership_authority_consequence(
+        second_journey_read, now=later
+    )
+    assert second_currently_effective is False
+    assert second_consequence == MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED
+
+
+async def test_preserve_membership_context_reflects_an_intervening_standing_change(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """A standing change between two carry-forward reads (simulated directly - BA-05 is BLOCKED) is reflected on the very next read, never a cached prior standing."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    first_journey_read = await service.understand(established.id)
+    assert first_journey_read.membership_status == "ACTIVE"
+    first_currently_effective, _ = compute_membership_authority_consequence(first_journey_read)
+    assert first_currently_effective is True
+
+    established.membership_status = "SUSPENDED"
+    await db_session.flush()
+
+    second_journey_read = await service.understand(established.id)
+    assert second_journey_read.membership_status == "SUSPENDED"
+    second_currently_effective, second_consequence = compute_membership_authority_consequence(second_journey_read)
+    assert second_currently_effective is False
+    assert second_consequence == MembershipAuthorityConsequence.NOT_ACTIVE
