@@ -3,7 +3,7 @@
 **Work Package:** WP-04 — Enterprise Structure Management (C-005)
 **Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is recorded in this report's own "Governing Architecture Review (Step 1) — BA-02" and "Gap Analysis Summary — BA-02" sections below, consuming IRA-004 §4/§9/§10's own BA-02 candidate disposition ("B — Existing implementation can be reused") rather than re-deriving it from nothing.
 **Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction. BA-02 has no equivalent ERG-001 domain rule (it is a pure read, ERG-001 governs write-side structural semantics) — its governing text is PE-001-C005 ERB-C005-02/EX-C005-03 directly.
-**Scope of this report:** BA-01, BA-02, and BA-03. BA-04 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision.
+**Scope of this report:** BA-01, BA-02, BA-03, and BA-04. BA-05 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report. BA-03's own governing decision, `ADR-006_Structural_Change_Intent_Canonical_Business_Object_Registration.md`, registered SCI-000001 (Structural Change Intent) as a canonical Business Object and downgraded BA-03 from IRA-004 §10's original Category D to Category C — this report's own BA-03 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §21's registration and ADR-006's decision. BA-04's own two constitutional questions (proposal target-type scope; Business Object registration) were resolved by `ADR-007` and `ADR-008` respectively — this report's own BA-04 section records that Business Activity's implementation, consuming (not repeating) IRA-004 §22's registration and both ADRs' decisions.
 
 ---
 
@@ -348,4 +348,128 @@ Findings recorded, none blocking:
 
 ---
 
-*End of IMP-REPORT-WP-04 (BA-01, BA-02, and BA-03). BA-04 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
+## BA-04 — Shape / Refine Proposed Structural Outcome
+
+## Business Activity Implemented
+
+**BA-04 — Shape / Refine Proposed Structural Outcome**, realizing PE-001-C005's ERB-C005-04 (Shape Proposed Structural Outcome) / EX-C005-05 (Shape Structural Proposal) and EX-C005-06 (Refine Structural Proposal). Realizes POC-000001 (Proposed Outcome Context), the canonical Business Object registered by `ADR-008`/IRA-004 §22. Proposal target scoped to EnterpriseNode only for v1, per `ADR-007`. No ERG-001 domain business rule governs this Business Activity — Proposed Outcome Context, like Structural Change Intent, is a PE-001-C005-native experience-layer construct, not an ERG-001 domain object.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Allow a caller to develop an intended structural result against an existing Structural Change Intent and EnterpriseNode target, and to iteratively refine it while preserving every prior revision (ERB-C005-04's own Purpose, verbatim: "Develop the intended structural result while preserving current context for comparison").
+- **Input Contract (Shape):** `structural_change_intent_id` (UUID, required — must reference an existing `StructuralChangeIntent`), `target_organization_node_id` (UUID, required — must reference an existing `OrganizationNode`, ADR-007's v1 scope), `proposed_outcome_description` (str, required).
+- **Input Contract (Refine):** `proposal_id` (UUID, path parameter — identifies the lineage), `proposed_outcome_description` (str, required — the only field a revision may change; `structural_change_intent_id`/`target_organization_node_id` are copied forward unchanged, per BR-C005-004).
+- **Output Contract:** The shaped/refined revision (id, proposal_id, revision_number, structural_change_intent_id, target_organization_node_id, proposed_outcome_description, status, created_at, updated_at), or a 404 naming the missing reference.
+- **Business Rules:**
+  - BR-C005-003 — Current structural context SHALL remain distinguishable from Proposed Outcome Context. Satisfied by construction: `StructuralProposal` is its own table/object, never conflated with `OrganizationNode`.
+  - BR-C005-004 — Every proposal revision SHALL remain traceable to the change intent that produced it. Satisfied by construction: `structural_change_intent_id` is copied forward, unchanged, across every revision in a lineage; Refine's own schema does not accept a different value.
+  - §41.14 (C-005 Context Contract) — "A material proposal revision SHALL invalidate readiness and dependent impact/review conclusions that no longer apply" (BR-C005-005). Not enforced by this Business Activity: no readiness marker is implemented yet (TD-053) — there is nothing to invalidate.
+- **Validation Rules:** `structural_change_intent_id` and `target_organization_node_id` must reference existing rows (404 otherwise, mirroring ERG-001-03's "must be addressable and resolvable" discipline already applied to `Membership.home_node_id`); `proposal_id` (Refine) must reference an existing proposal lineage (404 otherwise). No duplicate-check on Shape — Proposed Outcome Context has no natural business key, the same disclosed difference BA-03 already established.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required — the same interim gate every prior write-side Business Activity in this repository has used.
+- **Domain Events:** `STRUCTURAL_PROPOSAL_SHAPED` (proposal_id, revision_id, revision_number), `STRUCTURAL_PROPOSAL_REFINED` (proposal_id, revision_id, revision_number, superseded_revision_id).
+- **Audit Requirements:** `record_audit("SHAPE_STRUCTURAL_PROPOSAL", ...)` and `record_audit("REFINE_STRUCTURAL_PROPOSAL", ...)` on success, per SD-002-054's seven audit questions.
+- **Tests:** `tests/test_structural_proposal_service.py` (6 unit tests), `tests/test_structural_proposal_api.py` (12 API/authorization tests) — 18 new tests, all passing; full AuthService suite (500 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (Step 1) — BA-04
+
+Reviewed for this Business Activity: CLAUDE.md (§14, §16, §17, §19.1–§19.8), SD-002 (§2), CMD-001 (§26.3–§26.7), `ADR-007` (Accepted — EnterpriseNode-only v1 proposal-target scope), `ADR-008` (Accepted — registers POC-000001), IRA-004 (§4/§9/§10/§22 — BA-04's own candidate disposition, readiness assessment, and full CBOR registration entry), PE-001-C005 (ERB-C005-04 §40.5, EX-C005-05 §41.6, EX-C005-06 §41.7, and §41.14's C-005 Context Contract, re-extracted verbatim from `_PE-001-C005_ba02_check.txt` during BA-04's own readiness assessment), `StructuralChangeIntentRepository`/`OrganizationNodeRepository` (BA-01/BA-03, reused directly to validate BA-04's two FK inputs), `BaseRepository[T]`, `observability.py`, `dependencies.require_platform_admin`, `middleware/tenant.py`'s exemption pattern.
+
+**Key finding requiring disclosure (already recorded in the BA-04 readiness assessment):** this repository has no existing precedent for a revision/versioning write path — every prior write-side Business Activity (BA-01, BA-03) is a single-state create-or-read. BA-04 introduces an **append-only revision model**: `proposal_id` (stable lineage identity, equal to `id` for revision 1) plus `revision_number` (incrementing per Refine), with each row's own substantive content (`proposed_outcome_description`) never altered after insert — only `status` transitions (CREATED → SUPERSEDED), satisfying POC-000001's own registered Versioning Policy ("Full version history retained; superseded revisions preserved in traceability, never physically deleted").
+
+**Second finding:** "initial Comparison Context" (EX-C005-05's own Produced Context, alongside Proposed Outcome Context) was re-checked against the Cross-Experience Reference Test during BA-04's own readiness assessment and found not to qualify as a registered Business Object (named only within EX-C005-05's own text). It is not persisted or computed by this Business Activity — TD-054, not silently omitted.
+
+---
+
+## Gap Analysis Summary — BA-04 (see the BA-04 readiness assessment and IRA-004 §22 for the underlying disposition)
+
+- **Database:** New table, `structural_proposals` — a genuine Create (POC-000001 is its own Aggregate Root, IRA-004 §22). FKs to `structural_change_intents.id` and `organization_nodes.id`. Single new migration (`a3c6f8e1d5b2`), chained onto the existing head (`f7a2d9c4e6b1`); `alembic heads` confirms exactly one head after this migration.
+- **Business Activities:** BA-04 is the fourth Business Activity authorized for implementation under this report's own fresh gap analysis (this section, consuming ADR-007's and ADR-008's reclassifications); BA-05 through BA-09 remain candidate-only (IRA-004 §4).
+- **API Impact:** Two new endpoints — `POST /structural-proposals` (Shape) and `POST /structural-proposals/{proposal_id}/revisions` (Refine). The Refine endpoint is deliberately a `POST`-a-new-revision-resource shape, not `PUT`/`PATCH`, since it literally inserts a new row rather than mutating one in place — a disclosed naming decision, not an accident of convenience.
+- **UI Impact:** Out of scope for BA-04 (backend Business Activity implementation only).
+- **Dependencies:** BA-01 and BA-03 (both satisfied — `organization_nodes` and `structural_change_intents` both exist). No dependency on BA-05–BA-09.
+- **Missing runtime capabilities / canonical objects:** None required beyond the new table — every repository/service/audit/event mechanism reused directly.
+- **Missing repositories / services:** `StructuralProposalRepository` (new, adds `get_current_revision()` beyond the inherited `BaseRepository` methods — no natural-key lookup applies here) / `StructuralProposalService` (new).
+- **Missing authorization:** Same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every other write-side Business Activity in this repository.
+- **Missing audit / events:** None — both implemented for Shape and Refine separately.
+- **Technical Debt raised:** TD-053 (lifecycle transitions beyond CREATED/SUPERSEDED not implemented), TD-054 (Comparison Context not persisted), TD-055 (no read endpoint — mirrors TD-051), TD-056 (no unique constraint on `(proposal_id, revision_number)` — a concurrent-revision race, mirroring TD-005/TD-006's own class).
+
+**Conclusion: READY, implemented.** BA-04 required one new table, two new thin wrapper layers (repository/service), one new router with two endpoints, and one genuinely new pattern (append-only revisions) — no new architecture, permission, or event mechanism otherwise.
+
+---
+
+## Documents Updated (BA-04)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-04_Enterprise_Structure_Management.md` (this report, BA-04 section)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-053, TD-054, TD-055, TD-056 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-04 row updated to reflect BA-04 implemented and independently reviewed)
+
+**Implementation (new):**
+- `Backend/Services/AuthService/models/structural_proposal.py`
+- `Backend/Services/AuthService/repositories/structural_proposal_repository.py`
+- `Backend/Services/AuthService/schemas/structural_proposal.py`
+- `Backend/Services/AuthService/services/structural_proposal_service.py`
+- `Backend/Services/AuthService/routers/structural_proposal.py`
+- `Backend/Services/AuthService/alembic/versions/2026_08_04_0900-a3c6f8e1d5b2_structural_proposal.py`
+- `Backend/Services/AuthService/tests/test_structural_proposal_service.py`
+- `Backend/Services/AuthService/tests/test_structural_proposal_api.py`
+
+**Implementation (modified):**
+- `Backend/Services/AuthService/main.py` — registered the new `structural_proposal` router at `/structural-proposals`.
+- `Backend/Services/AuthService/middleware/tenant.py` — added `/structural-proposals` and `/structural-proposals/*` to the tenant-exemption list.
+
+No other existing model, repository, service, or router was modified.
+
+---
+
+## Validation (BA-04)
+
+- 18 new tests (6 unit, 12 API), all passing.
+- Full AuthService suite: **500 passed**, zero regressions (re-run directly: 482 pre-existing + 18 new).
+- Confirmed a single Alembic head (`a3c6f8e1d5b2`) after the new migration, chained onto `f7a2d9c4e6b1`.
+- Confirmed BR-C005-003/004: `StructuralProposal` is its own table; `structural_change_intent_id`/`target_organization_node_id` are copied forward unchanged across a 3-revision chain (tested directly).
+- Confirmed the append-only property directly: after Refine, the prior revision's own `proposed_outcome_description` is unchanged and its `status` is `SUPERSEDED`; the new revision carries the new description at `status=CREATED`.
+- Confirmed Shape/Refine each reject an unknown FK reference with 404, not 500 or a silently-created orphan row.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403; missing/invalid Authorization header returns 400/401 respectively.
+- Confirmed both endpoints require no `X-Tenant-ID` header (tenant-exemption list).
+- Confirmed via `git status`/`git diff --stat` that only the files listed under Documents Updated above were touched — no BA-05–BA-09 code and no Comparison Context/validation-readiness code exists anywhere in the change set.
+- OpenAPI schema (`app.openapi()`) generated successfully with both `POST /structural-proposals` and `POST /structural-proposals/{proposal_id}/revisions` present among 63 total paths.
+- Live Postgres `alembic upgrade`/`alembic check` was not exercised — `alembic check` was attempted and failed only with a connection-refused error (no running Postgres instance available in this environment), the same limitation every prior Business Activity's validation carried.
+
+---
+
+## Status (BA-04)
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (500/500 full suite passing, re-run directly during this report's own preparation)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** recorded below, Documents Updated section, upon commit.
+
+**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+
+**Commit Date:** 2026-07-29
+
+---
+
+## Independent Review (BA-04)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in BA-04's implementation, verified the implementation against actual repository state rather than trusting this report's own claims, and re-ran the full test suite directly. `ADR-007`'s own EnterpriseNode-only v1 scope and `ADR-008`'s own POC-000001 registration were each re-confirmed Accepted and unamended by this implementation — this Business Activity consumes both decisions rather than re-litigating them. The append-only revision model was independently traced through `StructuralProposalService.refine_proposal()`'s actual control flow: the current revision is read via `get_current_revision()` (ordered by `revision_number` descending), its own `status` is set to `SUPERSEDED` (a status transition, confirmed by direct inspection to be the only field changed on that row — `proposed_outcome_description` is never reassigned), and a genuinely new row is inserted for the next revision. A three-revision chain was independently exercised (`test_refine_proposal_operates_on_the_current_revision_after_multiple_refinements`) and confirmed both earlier revisions end in `SUPERSEDED`, not just the immediately-prior one. `git diff --stat` confirmed no BA-05–BA-09 code exists anywhere in the change set, and that Comparison Context/validation-readiness code was genuinely absent (not merely untested) — consistent with TD-054/TD-053's own disclosures. The `id`-population defect found and fixed during this Business Activity's own development (assigning `proposal_id = proposal.id` before the ORM's Python-side `default=uuid.uuid4` had been evaluated, which would have silently persisted `proposal_id = NULL` had the `NOT NULL` constraint not caught it at flush) was independently re-verified fixed: `structural_proposal_service.py` now generates the id explicitly via `uuid4()` before insertion rather than reading it back from an unflushed object. Tests were re-run directly: 18/18 new tests pass, 500/500 full suite passes, matching this report's own claims exactly.
+
+Findings recorded, none blocking:
+1. **TD-053** (lifecycle transitions beyond CREATED/SUPERSEDED not implemented) — recorded in `TECH-DEBT.md`, mirroring TD-052's own precedent class for SCI-000001.
+2. **TD-054** (Comparison Context not persisted) — recorded in `TECH-DEBT.md`; independently re-verified that Comparison Context genuinely fails the Cross-Experience Reference Test (grep confirms it is named only within EX-C005-05's own text) rather than being a rationalized omission.
+3. **TD-055** (no read endpoint) — recorded in `TECH-DEBT.md`, mirroring TD-051's own identical precedent; independently confirmed IRA-004 §4 types BA-04 as `Create / Update` only, with no `Query` type listed, supporting the scoping decision as textually grounded rather than convenient.
+4. **TD-056** (no unique constraint on `(proposal_id, revision_number)`, a concurrency race) — recorded in `TECH-DEBT.md` as a newly-identified, genuine gap (not previously disclosed anywhere prior to this Business Activity's own implementation) — the same class of finding TD-005/TD-006 already established for WP-01, not a novel category of risk to this repository.
+5. **Inherited, not re-raised:** No PE-001-C005 persona (Structural Steward, etc.) exists as an enforceable claim — the same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every prior write-side Business Activity in this repository.
+6. The implementation itself was found complete, correct against BR-C005-003/004 and EX-C005-05/-06's own Required/Produced Context, and consistent with this repository's established audit/event pattern in every respect except the deliberately-new append-only revision mechanism (itself found correct) — no correctness, security, tenant-isolation, or scope-creep (BA-05 absorption) defect was found beyond the id-population defect already caught and fixed during development, not left for independent review to discover.
+
+---
+
+*End of IMP-REPORT-WP-04 (BA-01, BA-02, BA-03, and BA-04). BA-05 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*

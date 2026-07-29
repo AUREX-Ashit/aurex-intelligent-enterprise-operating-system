@@ -80,6 +80,10 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-050 | The frontend's `establishOrganization()` (`source/frontend/src/services/organization-api.ts`, TD-049's own resolution) performs two sequential backend calls (create attempt, then activate). If the first succeeds but the second fails for a non-409 reason (network drop, timeout, backend restart), the `organization_establishment_attempts` row is orphaned — un-activated, with no user-visible way to discover, retry-activate, or delete it. Because `organization_code` is unique across both `organizations` and `organization_establishment_attempts`, the obvious user recovery (retry with the same code) then fails with a misleading "already exists" 409, since the modal doesn't clear the code field on error. | Independent Review of TD-049's resolution | UX | Low | A proper fix (idempotent retry-by-code, an attempt list/cleanup affordance, or reusing an existing un-activated attempt on retry) requires backend/UX design beyond a minimal wrapper fix — deliberately not built here to avoid the orchestration-surfacing redesign this task was scoped to avoid. Revisit if this is ever observed in practice. | Open | Platform Admin (Frontend) |
 | TD-051 | `StructuralChangeIntent` (SCI-000001, WP-04 BA-03) has no `GET` read endpoint — only `POST /structural-change-intents` (create) exists. EX-C005-05's own Required/Consumed Context names "Change Intent Context" as something a later experience must retrieve, but BA-03 (Type: Create, IRA-004 §4) was not scoped to include a read path; the create response body is the only current way to obtain a framed intent's fields. | BA-03 implementation (self-identified during this Business Activity's own gap analysis, IRA-004 §21's own "Explicitly Not Decided" disclosure) | Architecture | Low | BA-04 (Shape Structural Proposal)'s own future gap analysis — decide there whether it needs a dedicated `GET /structural-change-intents/{id}` or only an internal repository-level lookup. | Open | AuthService (Backend) |
 | TD-052 | `StructuralChangeIntent.status` is constrained (CheckConstraint) to IRA-004 §21's full registered Lifecycle Model (CREATED, MODIFIED, SUPERSEDED, ABANDONED, WITHDRAWN, ARCHIVED), but BA-03's own code only ever writes CREATED — no code path anywhere in this repository sets any other value. | BA-03 implementation (self-identified, mirroring BA-01's own disclosed minimal-slice precedent, IRA-004 §5) | Architecture | Low | BA-04 through BA-08's own future gap analyses, as each realizes the lifecycle transition its own stage implies (MODIFIED/SUPERSEDED at BA-04/BA-06, WITHDRAWN per §43.3's exception path, ARCHIVED at eventual retirement). | Open | AuthService (Backend) |
+| TD-053 | `StructuralProposal.status` is constrained to IRA-004 §22's own registered Lifecycle Model (CREATED, SUPERSEDED, VALIDATED, ARCHIVED), but BA-04's own code only ever writes CREATED and SUPERSEDED — VALIDATED (BR-C005-005's readiness marker) and ARCHIVED are never reached. | BA-04 implementation (self-identified, mirroring TD-052's own identical class for SCI-000001) | Architecture | Low | BA-07 (Validate Transition Readiness)'s own future gap analysis decides how readiness is represented (a status value here, a separate column, or a separate table); a future retirement/cleanup path would reach ARCHIVED. | Open | AuthService (Backend) |
+| TD-054 | "Initial Comparison Context" (EX-C005-05's own Produced Context, alongside Proposed Outcome Context) is not persisted or computed anywhere by BA-04 — `StructuralProposalResponse` returns only the proposal itself. | BA-04 implementation (self-identified; Comparison Context fails the Cross-Experience Reference Test — named only within EX-C005-05's own text — so it is not itself a registered Business Object, but PE-001-C005 does not specify what is compared, and inventing a diff representation was judged out of BA-04's own minimal scope) | Architecture | Low | A future refinement of BA-04, or a dedicated future Business Activity, once a concrete comparison representation is actually needed by a caller. | Open | AuthService (Backend) |
+| TD-055 | No `GET` read endpoint exists for Proposed Outcome Context — only `POST /structural-proposals` (Shape) and `POST /structural-proposals/{proposal_id}/revisions` (Refine) exist. Mirrors TD-051's identical disposition for Structural Change Intent. | BA-04 implementation (self-identified, IRA-004 §4's own "Create / Update" typing for BA-04 — no Query type listed) | Architecture | Low | BA-05 (Assess Structural Consequence)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
+| TD-056 | `structural_proposals` has no unique constraint spanning `(proposal_id, revision_number)`. Two concurrent `POST /structural-proposals/{proposal_id}/revisions` calls against the same proposal could both read the same current revision and both insert a row with the same `revision_number`, silently producing two "revision 2" rows instead of a detected conflict. | BA-04 implementation (self-identified, the same class of gap TD-005/TD-006 already recorded for WP-01's own concurrent-duplicate race) | Concurrency | Low | Add a unique constraint on `(proposal_id, revision_number)` and a dedicated concurrency test, mirroring TD-005's own resolution pattern for `organizations.organization_code`. | Open | AuthService (Backend) |
 
 ---
 
@@ -607,6 +611,74 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-03 — Frame Structural Change Intent
 - **Source:** BA-03 implementation (self-identified, mirroring IRA-004 §5's own precedent disclosure for BA-01)
 - **Resolution Criteria:** Each of MODIFIED/SUPERSEDED/ABANDONED/WITHDRAWN/ARCHIVED has a real, tested code path once the Business Activity that owns that transition is implemented.
+
+---
+
+### TD-053 — Detailed Entry
+
+- **Title:** Proposed Outcome Context Lifecycle Transitions Beyond CREATED/SUPERSEDED Are Not Implemented
+- **Category:** Architecture
+- **Description:** `StructuralProposal.status` (`models/structural_proposal.py`) is constrained to IRA-004 §22's full registered Lifecycle Model — CREATED, SUPERSEDED, VALIDATED, ARCHIVED — but BA-04's own service (`StructuralProposalService`) only ever writes CREATED (Shape/Refine) and SUPERSEDED (a revision closed by a later Refine). No code path sets VALIDATED or ARCHIVED.
+- **Root Cause:** BA-04, as scoped in IRA-004 §4 ("Create / Update (proposal)"), realizes only ERB-C005-04/EX-C005-05/-06 (Shape, Refine). VALIDATED corresponds to BR-C005-005's own readiness marker, owned by the future BA-07 (Validate Transition Readiness); ARCHIVED is a terminal state reachable only after a full completion/retirement path exists.
+- **Impact:** None today — mirrors BA-03's own identical, already-accepted disposition (TD-052) of not implementing every registered lifecycle value in its own first Business Activity.
+- **Severity:** Low — consistent with, not a departure from, this Work Package's established minimal-slice discipline.
+- **Status:** Open
+- **Target Resolution:** BA-07's own future gap analysis decides how readiness is represented (a status value on this same table, a separate column, or a separate table) before writing VALIDATED; a future retirement path reaches ARCHIVED.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-04 — Shape / Refine Proposed Structural Outcome
+- **Source:** BA-04 implementation (self-identified, mirroring TD-052's own precedent disclosure for SCI-000001)
+- **Resolution Criteria:** VALIDATED and ARCHIVED each have a real, tested code path once the Business Activity that owns that transition is implemented.
+
+---
+
+### TD-054 — Detailed Entry
+
+- **Title:** "Initial Comparison Context" Is Not Persisted or Computed by BA-04
+- **Category:** Architecture
+- **Description:** EX-C005-05's own Produced Context is "Proposed Outcome Context **and initial Comparison Context**." BA-04 implements only the former — `StructuralProposalResponse` carries no comparison/diff information between the current authoritative structural context and the proposed outcome.
+- **Root Cause:** Comparison Context was checked against the Cross-Experience Reference Test during BA-04's own implementation-readiness assessment and found to fail it (named only within EX-C005-05's own text, never required by a later Enterprise Experience) — it is therefore not itself a registered Business Object requiring CBOR registration. However, PE-001-C005's own text does not specify what is compared or how, so building any concrete diff representation now would be inventing a mechanism beyond BA-04's own disclosed minimal scope.
+- **Impact:** None today — no test, endpoint, or consumer expects comparison output; EX-C005-05's own Produced Context is only partially realized, disclosed rather than silently claimed complete.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future refinement of BA-04 (or a dedicated future Business Activity) once a concrete comparison representation is actually needed by a real caller — not invented speculatively ahead of that need.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-04 — Shape / Refine Proposed Structural Outcome
+- **Source:** BA-04 implementation (self-identified during this Business Activity's own gap analysis)
+- **Resolution Criteria:** A comparison/diff representation exists and is returned alongside Proposed Outcome Context, once its shape is deliberately decided rather than assumed.
+
+---
+
+### TD-055 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Proposed Outcome Context
+- **Category:** Architecture
+- **Description:** BA-04 implements `POST /structural-proposals` (Shape) and `POST /structural-proposals/{proposal_id}/revisions` (Refine) only. No endpoint retrieves an existing proposal or its current/full revision history.
+- **Root Cause:** IRA-004 §4 types BA-04 as `Create / Update (proposal)` only — no `Query` type is listed, the identical scoping precedent TD-051 already established for BA-03/Structural Change Intent.
+- **Impact:** None today — the Shape/Refine response bodies already return every field a caller needs immediately after each call. Becomes real friction once BA-05 (Assess Structural Consequence) needs to resolve a proposal by id independently.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** BA-05's own future implementation-readiness gap analysis decides whether a dedicated `GET /structural-proposals/{proposal_id}` (current revision, or full history) is required, or whether an internal repository-level lookup suffices.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-04 — Shape / Refine Proposed Structural Outcome
+- **Source:** BA-04 implementation (self-identified, mirroring TD-051's own identical precedent)
+- **Resolution Criteria:** A read path for Proposed Outcome Context exists, if and only if BA-05's own gap analysis determines one is required.
+
+---
+
+### TD-056 — Detailed Entry
+
+- **Title:** Concurrent Refine Calls Can Race on `revision_number`
+- **Category:** Concurrency
+- **Description:** `structural_proposals` has no unique constraint spanning `(proposal_id, revision_number)`. `StructuralProposalService.refine_proposal()` reads the current revision, then inserts a new row with `revision_number + 1` — two concurrent calls against the same `proposal_id` could both read the same current revision and both insert a row claiming the same `revision_number`, producing two rows with identical `(proposal_id, revision_number)` instead of a detected 409-class conflict.
+- **Root Cause:** No optimistic-concurrency or unique-constraint guard was added for the revision-increment path — the same class of gap TD-005/TD-006 already recorded for WP-01's own concurrent-duplicate-`organization_code` race, not a newly-invented category of risk.
+- **Impact:** Low today — `PLATFORM_ADMIN`-only access makes simultaneous Refine calls against the same proposal unlikely in practice; no test or consumer currently depends on `revision_number` uniqueness being enforced at the database level.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** Add a unique constraint on `(proposal_id, revision_number)` plus a dedicated concurrency test asserting the second concurrent Refine call receives a conflict response rather than silently succeeding, mirroring TD-005's own resolution pattern.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-04 — Shape / Refine Proposed Structural Outcome
+- **Source:** BA-04 implementation (self-identified during this Business Activity's own gap analysis)
+- **Resolution Criteria:** A concurrent second Refine call against the same current revision receives a deterministic conflict response, not a silent duplicate `revision_number`.
 
 ---
 
