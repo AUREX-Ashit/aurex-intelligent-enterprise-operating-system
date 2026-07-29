@@ -745,7 +745,13 @@ No security, tenant-isolation, or data-integrity defect was found. No Technical 
 
 **Commit Date (BA-09):** 2026-07-29 (both commits)
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), and BA-09 (`ff7321d`, `690c685`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-09.
+**Remediation (post-review):** A subsequent Independent Architecture Governance Review of BA-09 found a wall-clock-timing dependency in one service-layer test and an overstated evidentiary claim in this report's own wording (both non-blocking, neither changing BA-09's architectural conclusion). Both were corrected and committed to `master` in two further commits — `29eb0a5` (test fix: deterministic time injection, mirroring BA-02's own pattern) and `d85fcb2` (documentation: this report's own Validation/Independent Review wording corrected). Full suite re-confirmed at 410/410 passing after the fix.
+
+**Commit Hash (BA-09 Remediation):** `29eb0a5` (test fix), `d85fcb2` (documentation)
+
+**Commit Date (BA-09 Remediation):** 2026-07-29
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), and BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-09.
 
 ---
 
