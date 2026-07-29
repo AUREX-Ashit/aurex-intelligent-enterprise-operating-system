@@ -1,9 +1,9 @@
 # IMP-REPORT-WP-04 — Enterprise Structure Management (C-005)
 
 **Work Package:** WP-04 — Enterprise Structure Management (C-005)
-**Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7).
-**Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction.
-**Scope of this report:** BA-01 only. BA-02 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report.
+**Governing Readiness Assessment:** `IRA-004_WP-04_Enterprise_Structure_Management_Implementation_Readiness_Assessment.md` (Approved — WP-04 READY, BA-01 only; BA-02 onward each require their own fresh gap analysis before implementation, per IRA-004 §1 and CLAUDE.md §19.7). BA-02's own fresh gap analysis is recorded in this report's own "Governing Architecture Review (Step 1) — BA-02" and "Gap Analysis Summary — BA-02" sections below, consuming IRA-004 §4/§9/§10's own BA-02 candidate disposition ("B — Existing implementation can be reused") rather than re-deriving it from nothing.
+**Governing Capability Specification:** `PE-001-C005_Enterprise_Structure_Management.docx` (eight ERBs, twelve Enterprise Experiences, twelve Chapter 42.3 Business Rules — experience-level, not domain rules, per IRA-004 §5). **Governing domain/structural authority: `ERG-001` (Enterprise Structure & Relationship Management, LOCKED)** — BA-01's actual governing rules (ERG-001-02/03) come from this document, not PE-001-C005, per IRA-004 §5's disclosed distinction. BA-02 has no equivalent ERG-001 domain rule (it is a pure read, ERG-001 governs write-side structural semantics) — its governing text is PE-001-C005 ERB-C005-02/EX-C005-03 directly.
+**Scope of this report:** BA-01 and BA-02. BA-03 through BA-09 (candidate list per IRA-004 §4) are **not started** and are not covered by this report.
 
 ---
 
@@ -122,4 +122,109 @@ Findings recorded, none blocking:
 
 ---
 
-*End of IMP-REPORT-WP-04 (BA-01 only). BA-02 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
+## BA-02 — Understand Structural Position
+
+## Business Activity Implemented
+
+**BA-02 — Understand Structural Position**, realizing PE-001-C005's ERB-C005-02 (Understand Structural Position) / EX-C005-03 (Understand Structural Position). No ERG-001 domain business rule governs this Business Activity — ERG-001 governs structural write-side semantics (ERG-001-02/03, BA-01's own governing rules); BA-02 is a pure read with no domain rule of its own, per IRA-004 §5's own disclosed distinction between PE-001-C005's experience layer and ERG-001's domain layer.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Allow a caller to retrieve a single, previously-established `organization_node`'s own Structural Identity fields — CAP-001's C-005 Business Intent ("Maintain enterprise structure"), scoped to the single-node read half of EX-C005-03's Purpose (IRA-004 §4's own "Query — EnterpriseNode (+ relationships)" candidate description; the "+ relationships" half is out of this Business Activity's scope, TD-045).
+- **Input Contract:** `organization_node_id` (UUID, required, path parameter).
+- **Output Contract:** The requested OrganizationNode (id, node_code, node_name, node_type, legal_entity_name, business_unit, sector, operational_status, active_flag, effective_from, effective_to), or a 404 naming the missing id.
+- **Business Rules:** None specific to BA-02 at the ERG-001 domain layer (see above). At the experience layer, EX-C005-03's Purpose ("understand surrounding structural context and position") is only partially realized — this Business Activity returns a single node's own fields; "surrounding relationships" requires `organization_hierarchy`, which does not exist yet (TD-045).
+- **Validation Rules:** `organization_node_id` must be a syntactically valid UUID (422 otherwise, enforced by FastAPI path-parameter typing); the referenced node must exist (404 otherwise).
+- **Authorization Rules:** `PLATFORM_ADMIN` role required — the same interim gate every prior read-side Business Activity in this repository has used (`OrganizationService.get_details()`, WP-01 BA-02, being the direct precedent this Business Activity mirrors). No PE-001-C005 persona exists as an enforceable claim today; not newly disclosed (inherits BA-01's own class of finding).
+- **Domain Events:** None. Read-only Business Activities do not emit domain events or audit records in this repository's established pattern (`OrganizationService.get_details()` does not audit either; only write paths do).
+- **Audit Requirements:** None (see above).
+- **Tests:** `tests/test_organization_node_service.py` (2 new unit tests), `tests/test_organization_node_api.py` (7 new API/authorization tests) — 9 new tests, all passing; full AuthService suite (450 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (Step 1) — BA-02
+
+Reviewed for this Business Activity: CLAUDE.md (§14, §16, §17, §19.1–§19.8), CAP-001 (C-005 entry, unchanged since BA-01's own review), ERG-001 (re-confirmed no domain rule governs a pure read of `organization_node`; ERG-001-02/03 remain BA-01's own rules, not re-applied here), PE-001-C005 (ERB-C005-02 §40.3, EX-C005-03 §41.4), IMP-001 (§6.7 Business Activity Contract template, applied identically to BA-01's own), URA-001 (no persona-specific authorization construct exists for C-005 today, same disclosed gap class as BA-01/TD-021 through TD-025/TD-031/TD-034/TD-035/TD-036/TD-039/TD-042 — not separately re-registered, per §19.8.3), Master Technical Architecture (`organization_node` canonical DDL, unchanged since BA-01), WPR-001 (confirms WP-04 row shows BA-01 implemented, BA-02 through BA-09 candidate-only prior to this Business Activity), IRA-004 (§4's BA-02 candidate row: `Query`, `EnterpriseNode (+ relationships)`, `ERB-C005-02 / EX-C005-03`; §9's own BA-02 disposition: **B — "Existing implementation can be reused... `OrganizationNodeRepository`'s inherited `get_by_id()`/query methods are a direct starting point once BA-01 exists"** — confirmed accurate: BA-01 already exists, and `BaseRepository.get_by_id()` required no extension), `OrganizationService.get_details()` (WP-01 BA-02's own implementation — the direct structural precedent reused verbatim: no audit, no event, 404-on-missing, `PLATFORM_ADMIN`-gated, no tenant-scoping).
+
+**Key finding requiring disclosure (already recorded in TD-045):** EX-C005-03's own Purpose text ("understand surrounding structural context and position... relationships") describes more than a single-record read. This Business Activity realizes only the single-node half — traversing "surrounding relationships" requires `organization_hierarchy`, which does not exist anywhere in this repository (confirmed by direct grep, zero matches) and is real, disclosed, future WP-04 work (BA-08 candidate, IRA-004 §4), not invented here. This is the same disclosed-scoping-decision class as TD-043 (BA-01's own deferred-column disclosure), not a silently discovered gap.
+
+---
+
+## Gap Analysis Summary — BA-02 (see IRA-004 §4/§9/§10 for the underlying candidate disposition)
+
+- **Database:** No schema change. `organization_nodes` (extended by BA-01) is read via the existing `BaseRepository.get_by_id()` inherited by `OrganizationNodeRepository` — no new column, table, or repository method required. Alembic head remains `a9f3d6e2c8b4` (confirmed via `alembic heads`, single head, unchanged by this Business Activity).
+- **Business Activities:** BA-02 is the second Business Activity authorized for implementation under this report's own fresh gap analysis (this section); BA-03 through BA-09 remain candidate-only (IRA-004 §4), each requiring its own gap analysis before implementation, per CLAUDE.md §19.7.
+- **API Impact:** One new endpoint, `GET /organization-nodes/{organization_node_id}`, mirroring `GET /organizations/{organization_id}`'s established shape (path-parameter UUID, 404-on-missing, no audit/event, `PLATFORM_ADMIN`-gated).
+- **UI Impact:** Out of scope for BA-02 (backend Business Activity implementation only, matching every prior WP's own precedent for a first read-side Business Activity).
+- **Dependencies:** Requires BA-01 to exist (it does, committed `f4f0292`/`0d80ca1`) — no other Business Activity or Work Package dependency.
+- **Missing runtime capabilities / canonical objects:** `organization_hierarchy` does not exist (TD-045) — not required for BA-02's own minimal single-node scope, only for the "+ relationships" half IRA-004 §4 itself already flagged as separate.
+- **Missing repositories / services:** None — `OrganizationNodeRepository`/`OrganizationNodeService` (BA-01) are extended in place, per IRA-004 §9's own BA-02 disposition ("no new repository class anticipated for BA-02").
+- **Missing authorization:** Same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every other read-side Business Activity in this repository (not a new gap; not separately registered, per §19.8.3).
+- **Missing audit / events:** None expected — read-only Business Activities do not audit or emit events in this repository's established pattern.
+- **Technical Debt raised:** TD-045 (surrounding-relationships traversal deferred to `organization_hierarchy`'s own future Business Activity).
+
+**Conclusion: READY.** BA-02 required no new architecture, table, repository, service, or authorization construct — only an additive method (`OrganizationNodeService.get_details()`) and endpoint (`GET /organization-nodes/{organization_node_id}`) reusing BA-01's and WP-01 BA-02's own already-accepted patterns exactly.
+
+---
+
+## Documents Updated (BA-02)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-04_Enterprise_Structure_Management.md` (this report, BA-02 section)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-045 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-04 row updated to reflect BA-02 implemented and independently reviewed)
+
+**Implementation (modified):**
+- `Backend/Services/AuthService/services/organization_node_service.py` — added `get_details()`.
+- `Backend/Services/AuthService/routers/organization_node.py` — added `GET /organization-nodes/{organization_node_id}`.
+- `Backend/Services/AuthService/tests/test_organization_node_service.py` — added 2 unit tests.
+- `Backend/Services/AuthService/tests/test_organization_node_api.py` — added 7 API/authorization tests.
+
+No model, repository, migration, or router registration (`main.py`) change was required — `OrganizationNodeRepository.get_by_id()` (inherited from `BaseRepository`) and the existing `/organization-nodes` router registration and `middleware/tenant.py` prefix exemption already cover this Business Activity.
+
+---
+
+## Validation (BA-02)
+
+- 9 new tests (2 unit, 7 API), all passing.
+- Full AuthService suite: **450 passed**, zero regressions (re-run directly: 441 pre-existing + 9 new).
+- Confirmed a single Alembic head (`a9f3d6e2c8b4`), unchanged — no migration was introduced by this Business Activity.
+- Confirmed a second `GET /organization-nodes/{organization_node_id}` for an unknown id returns 404, not 500 or an empty success.
+- Confirmed non-`PLATFORM_ADMIN` callers receive 403; missing/invalid Authorization header returns 400/401 respectively; a non-UUID path parameter returns 422.
+- Confirmed `GET /organization-nodes/{organization_node_id}` requires no `X-Tenant-ID` header (already-existing `/organization-nodes/*` prefix exemption in `middleware/tenant.py`, added for BA-01 and confirmed here to already prefix-match this new path without further change).
+- OpenAPI schema (`app.openapi()`) generated successfully with `GET /organization-nodes/{organization_node_id}` present among 57 total paths (56 at BA-01, +1).
+- Live Postgres `alembic upgrade`/`alembic check` was not exercised — same limitation as BA-01's own validation; no running Postgres instance is available in this environment.
+
+---
+
+## Status (BA-02)
+
+**Implementation:** COMPLETE
+
+**Developer Validation:** Complete (450/450 full suite passing, re-run directly during this report's own preparation)
+
+**Independent Review:** APPROVED WITH OBSERVATIONS
+
+**Repository Commit:** [recorded in commit-hash recording pass]
+
+**Commit Hash:** [recorded in commit-hash recording pass]
+
+**Commit Date:** [recorded in commit-hash recording pass]
+
+---
+
+## Independent Review (BA-02)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** An independent reviewer, with no prior involvement in BA-02's implementation, verified the implementation against actual repository state rather than trusting this report's own claims, and re-ran the full test suite directly. IRA-004's own BA-02 candidate row (§4, §9/§10) was confirmed to state `Query` type, `EnterpriseNode (+ relationships)`, `ERB-C005-02 / EX-C005-03`, disposition **B — "existing implementation can be reused"** — an exact match to what was implemented. `OrganizationNodeService.get_details()` was read in full and compared directly against `OrganizationService.get_details()` (WP-01 BA-02, the reused precedent): both call `get_by_id()` → 404-if-`None` → return, with no `record_audit()`, no `publish_event()`, and no write of any kind. `routers/organization_node.py`'s new endpoint was confirmed gated by the same `require_platform_admin` dependency as `establish_organization_node`, fully explaining the 400/401/403/404/422/200 test matrix. `middleware/tenant.py`'s `/organization-nodes` exemption was confirmed to be a genuine prefix match (`path.startswith("/organization-nodes/")`), not merely an exact-path exemption — the new path is legitimately covered, not accidentally passing. `git diff --stat` confirmed no `models/`, `repositories/`, `schemas/`, `main.py`, or `middleware/` change was needed. All 9 new tests (2 service, 7 API) were confirmed to each isolate a genuinely distinct behavior/status code, not collapsed into fewer broad tests. Tests were re-run directly: 450/450 full suite passes, matching this report's own claim exactly; `alembic heads` was re-run directly, confirming the single unchanged head `a9f3d6e2c8b4` and no new migration file. TD-045's factual claim that `organization_hierarchy` does not exist anywhere in the repository was independently re-verified by grep (present only in comments/docstrings/architecture text asserting its future, not-yet-built status). EX-C005-03's Purpose text and ERB-C005-02's Purpose text were read directly from the governing specification and confirmed to genuinely describe relationship traversal beyond a single-record read, validating TD-045's scoping rationale as accurate rather than a rationalized excuse. `WPR-001`'s updated WP-04 row was confirmed consistent with BA-01 + BA-02 now implemented.
+
+Findings recorded, none blocking:
+1. **Process-sequencing observation (resolved by this review):** At the time of review, this report's own BA-02 Status and Independent Review fields were still placeholders while `WPR-001` already asserted BA-02 as independently reviewed in the same uncommitted working tree — momentarily inconsistent as a snapshot, but resolved by this review's own outcome being folded into the report (this edit) before any commit is made, mirroring BA-01's own two-commit sequence (implementation, then documentation only after the review outcome is known).
+2. **TD-045** (this Business Activity's own disclosed relationship-traversal deferral) — recorded in `TECH-DEBT.md` in the same pass as this review, consistent with §19.8.2's registration-hygiene rule (future reviews should cite the TD ID rather than repeating the observation).
+3. **Inherited, not re-raised:** No PE-001-C005 persona (Structural Steward, etc.) exists as an enforceable claim — the same disclosed, pre-existing `PLATFORM_ADMIN`-only interim gate as every prior read-side Business Activity in this repository (TD-021 through TD-025/TD-031/TD-034/TD-035/TD-036/TD-039/TD-042's own class of finding); not separately re-registered, per §19.8.3.
+4. The implementation itself was found complete, correct against ERB-C005-02/EX-C005-03's single-node scope, and consistent with the WP-01 BA-02 read-side Business Activity pattern in every structural respect (get-by-id → 404-if-missing → return, no audit, no event) — no correctness, security, or tenant-isolation defect was found. The unrelated pre-existing uncommitted/untracked documents present at session start (`CLAUDE.md`, `ARM-001_Implementation_Report.md`, and the AR-001/AAR-001 governance-audit-track documents) were confirmed unrelated to BA-02 and are not mistaken for scope creep.
+
+---
+
+*End of IMP-REPORT-WP-04 (BA-01 and BA-02). BA-03 through BA-09 remain candidate-only per IRA-004 §4 — each requires its own fresh gap analysis before implementation, per CLAUDE.md §19.7.*
