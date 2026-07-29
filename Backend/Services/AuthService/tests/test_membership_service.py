@@ -35,6 +35,7 @@ from schemas.membership import (
     HandOffMembershipContextRequest,
     HandoffOutcome,
     MembershipAuthorityConsequence,
+    MembershipResponse,
     MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
@@ -935,3 +936,96 @@ async def test_hand_off_reflects_lapsed_authority_consequence(
 
     assert result.membership_context.currently_effective is False
     assert result.membership_context.authority_consequence == MembershipAuthorityConsequence.ACTIVE_BUT_LAPSED
+
+
+# ---------------------------------------------------------------------------
+# BA-11 — Continue from Membership Context Decision (ERB-C007-06/EX-C007-13)
+# ---------------------------------------------------------------------------
+#
+# EX-C007-13's own Trigger ("A C-007 experience has completed —
+# recognition, establishment, term change, standing transition, or
+# hand-off") and Context Produced ("The continuation context delivered
+# to the receiving experience... Produced coincides with Created here,
+# since this hand-forward artifact has no separate prior existence")
+# describe exactly what every existing write-path method in this
+# service already returns as its own result - no new schema, service
+# method, or endpoint is introduced. Distinct from BA-09 (EX-C007-11):
+# EX-C007-13's own "Context Preserved" is "decision traceability back
+# through the originating C-007 experience" (an audit-trail concern),
+# not "the Authoritative Membership Context itself" (BA-09's own).
+#
+# These tests prove, empirically, the property the tests actually can
+# prove: that a write method's own returned object already reflects
+# the correct, current state - matching what an independent re-fetch
+# also shows - so a receiving Enterprise Experience never needs to
+# reconstruct it. Decision traceability (record_audit() being called
+# on every write path) is established by code inspection, not by these
+# tests - no test anywhere in this codebase captures record_audit()'s
+# actual log output (no caplog usage exists), consistent with every
+# prior Business Activity's own evidentiary basis for this claim.
+# Stating this precisely, rather than overstating what the tests show,
+# is a direct lesson from the BA-09 Independent Architecture Governance
+# Review's own finding.
+
+async def test_establish_response_serves_as_continuation_context_without_refetch(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    established_snapshot = MembershipResponse.model_validate(established).model_dump()
+    await db_session.commit()
+    await db_session.refresh(established)
+
+    refetched = await service.understand(established.id)
+    assert established_snapshot["person_id"] == refetched.person_id
+    assert established_snapshot["organization_id"] == refetched.organization_id
+    assert established_snapshot["role_id"] == refetched.role_id
+    assert established_snapshot["membership_status"] == refetched.membership_status
+    assert established_snapshot["license_type"] == refetched.license_type
+
+
+async def test_change_terms_response_serves_as_continuation_context_without_refetch(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    changed = await service.change_terms(established.id, ChangeMembershipTermsRequest(license_type=LicenseType.LIGHT))
+    changed_snapshot = MembershipResponse.model_validate(changed).model_dump()
+    await db_session.commit()
+    await db_session.refresh(established)
+
+    refetched = await service.understand(established.id)
+    assert changed_snapshot["license_type"] == refetched.license_type == "LIGHT"
+
+
+async def test_hand_off_response_serves_as_continuation_context_without_refetch(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    handed_off = await service.hand_off(
+        established.id,
+        HandOffMembershipContextRequest(
+            dependent_capability=DependentCapability.ROLE_PERMISSION_MANAGEMENT,
+            outcome=HandoffOutcome.ACCEPTED,
+        ),
+    )
+    await db_session.commit()
+    await db_session.refresh(established)
+
+    refetched = await service.understand(established.id)
+    assert handed_off.membership_context.membership_status == refetched.membership_status
+    assert handed_off.membership_context.currently_effective is True

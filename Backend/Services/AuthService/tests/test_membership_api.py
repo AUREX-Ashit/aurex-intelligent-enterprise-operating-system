@@ -878,3 +878,70 @@ def test_hand_off_requires_authorization_header(client: TestClient) -> None:
         json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
     )
     assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-11 — Continue from Membership Context Decision (ERB-C007-06/EX-C007-13)
+# ---------------------------------------------------------------------------
+#
+# No new endpoint - see the service-layer tests' own module comment for
+# the full textual basis. These API-level tests prove the same
+# property end-to-end: a write endpoint's own response body already
+# serves as EX-C007-13's own "continuation context," matching an
+# independent subsequent GET, so a receiving Enterprise Experience
+# never needs to reconstruct it.
+
+def test_establish_response_serves_as_continuation_context_without_refetch(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    refetched = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert established["person_id"] == refetched["person_id"]
+    assert established["organization_id"] == refetched["organization_id"]
+    assert established["membership_status"] == refetched["membership_status"]
+
+
+def test_change_terms_response_serves_as_continuation_context_without_refetch(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    changed = client.post(
+        f"/memberships/{established['id']}/terms", headers=_auth_headers(), json={"license_type": "LIGHT"},
+    ).json()
+
+    refetched = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert changed["license_type"] == refetched["license_type"] == "LIGHT"
+
+
+def test_hand_off_response_serves_as_continuation_context_without_refetch(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_person_organization_role
+    established = client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    ).json()
+
+    handed_off = client.post(
+        f"/memberships/{established['id']}/hand-off",
+        headers=_auth_headers(),
+        json={"dependent_capability": "C-003", "outcome": "ACCEPTED"},
+    ).json()
+
+    refetched = client.get(f"/memberships/{established['id']}", headers=_auth_headers()).json()
+    assert handed_off["membership_context"]["membership_status"] == refetched["membership_status"]
+    assert handed_off["membership_context"]["currently_effective"] is True
