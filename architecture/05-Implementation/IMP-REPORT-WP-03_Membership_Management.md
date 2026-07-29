@@ -709,6 +709,97 @@ No security, tenant-isolation, or data-integrity defect was found. No Technical 
 
 ---
 
+## BA-10 — Hand Off Membership Context to a Dependent Capability
+
+Realizing PE-001-C007's ERB-C007-06 (Preserve Membership Context Across Enterprise Journeys and Hand Off to Dependent Capabilities) / EX-C007-12 (Hand Off Membership Context to a Dependent Capability). IRA-003 §14 classified BA-10 as Category B, governed by its own distinct Contract 5.10 (not Contract 5.5) — this section performs BA-10's own fresh gap analysis.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Transfer a bounded Membership context to a named dependent capability (Role & Permission Management/C-003, Access Management/C-002, or Workspace Management/C-008) and record the outcome, without C-007 itself assigning Roles, granting Access, or determining workspace composition (CAP-001's C-007 Business Intent, scoped to hand-off only).
+- **Input Contract:** `membership_id` (UUID, path parameter, required); `HandOffMembershipContextRequest` — `dependent_capability` (enum: `C-003`/`C-002`/`C-008`, exactly Contract 5.10's own three named capabilities, required), `outcome` (enum: `ACCEPTED`/`RETURNED`, required), `reason` (required only when `outcome=RETURNED`).
+- **Output Contract:** `MembershipHandoffResponse` — composes `MembershipUnderstandingResponse` (BA-02's own bounded, current-state Membership context plus authority consequence) as the transferred context, plus the hand-off envelope (`dependent_capability`, `outcome`, `reason`, `handed_off_at`).
+- **Business Rules:**
+  - BR-C007-010 — a hand-off SHALL transfer only the required Membership context, SHALL always include the current Membership Authority Consequence Context, and SHALL record an explicit accepted or returned outcome. Satisfied by construction: `hand_off()` reuses `compute_membership_authority_consequence()` (the same mechanism BA-02 and BA-09 already reuse) and composes `MembershipUnderstandingResponse` — no broader payload is assembled.
+  - BR-C007-011 — a downstream rejection of a hand-off SHALL NOT alter the underlying Authoritative Membership Context. Satisfied by construction: `hand_off()` never writes to `membership_status` or any other Membership field, for either outcome.
+- **Validation Rules:** Membership existence checked (404) via `MembershipRepository.get_by_id()` — reused as-is. `reason` required when `outcome=RETURNED` (422 otherwise) — EX-C007-12's own "insufficient Membership context" case.
+- **Authorization Rules:** `PLATFORM_ADMIN` role required. **Scoped simplification, same class as TD-031/034/035/036/039/041:** EX-C007-12 names Membership Steward/Downstream Capability Consumer as its Participating Personas; neither exists as an enforceable claim today. Disclosed explicitly, recorded as **TD-042**.
+- **Domain Events:** `MEMBERSHIP_CONTEXT_HANDED_OFF` (membership_id, dependent_capability, outcome) — published on every successful call (both outcomes), mirroring BA-01/BA-03's own "audit and event on the completed business act" precedent.
+- **Audit Requirements:** `record_audit("HAND_OFF_MEMBERSHIP_CONTEXT", ...)` on every path (unknown membership, success) — carrying `dependent_capability`, `outcome`, `reason`, and the freshly computed authority consequence, per SD-002-054's seven audit questions.
+- **Tests:** `tests/test_membership_service.py` (5 new unit tests), `tests/test_membership_api.py` (7 new API/authorization tests, including a test confirming Contract 5.10's own closed three-value enumeration rejects an invalid capability) — 12 new tests, all passing; full AuthService suite (422 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-10)
+
+Reviewed: PE-001-C007 (ERB-C007-06, EX-C007-12's own Trigger/Purpose/Context Engineering/Success Criteria text, Chapter 5.10 Cross-Capability Hand-off Contract in full, BR-C007-010/011), CAP-001 (C-002 Access Management line 53, C-008 Workspace Management line 59 — both registered **Active**), WPR-001 §2/§3 (confirming no Work Package anywhere implements C-002 or C-008 — only WP-00/00A/01/02/03 exist), Master Technical Architecture (searched for any "hand-off"/"capability_handoff" table — none exists; `delegation_registry` is a different concept, temporary authority delegation between Memberships, already tracked by TD-028 as a WP-02 dependency, not this Business Activity's own concern), IRA-003 §10/§14 (Category B classification, "mirrors WP-02 BA-10's own shared-mechanism pattern"), `schemas/authorization_policy_handoff.py` and `services/authorization_policy_conflict_service.py`'s own `classify_handoff_rejection()` (WP-02 BA-10 — read in full as the one directly analogous, already-certified precedent for "hand off to a capability with no live integration").
+
+**Why C-002/C-008's own non-existence does not block BA-10, confirmed by direct precedent, not assumed:** EX-C007-12's Trigger names three dependent capabilities, but Contract 5.10 never requires C-007 to call into any of their APIs — it requires only that a hand-off "name the specific dependent capability... and the specific Membership context transferred," that "acceptance or rejection SHALL be explicit," and that "C-007 SHALL NOT assume acceptance from silence." WP-02's own BA-10 (`classify_handoff_rejection()`, already implemented and certified) resolves the identical problem — a hand-off addressed to "C-002" (also non-existent) — by having the caller report the outcome directly (`ReportHandoffRejectionRequest.reporting_capability`, an open string), computing a classification purely from already-known state, auditing, publishing an event, and returning — no live call-out, no new table. BA-10 mirrors this exactly. This was verified by reading WP-02's own service method in full, not inferred from its docstring.
+
+**Difference from WP-02's own precedent, disclosed:** WP-02's `classify_handoff_rejection()` only handles the rejection case (it independently classifies a *stated* rejection); it does not model acceptance at all, since C-003's own dependent-capability relationship doesn't require distinguishing the two outcomes the way EX-C007-12 explicitly does ("either accepts... or returns it with a reason"). BA-10's own `hand_off()` therefore models both `ACCEPTED` and `RETURNED` as an explicit, caller-reported enum, rather than reusing WP-02's own narrower rejection-only shape — a deliberate, disclosed adaptation of the pattern, not a departure from its underlying stateless, no-live-integration design.
+
+**"Context Created" vs. "Context Produced" — resolved as coinciding, per the document's own established convention:** EX-C007-12 is the one EX in this document that describes these as temporally distinct ("the Hand-off Context is created at request time; the Hand-off Outcome is produced only once the dependent capability resolves it"). Since no live integration exists to make a genuine two-phase, pending-state flow meaningful — and building one would require inventing a new persistence table this Business Activity's own governing text does not ask for — both moments are treated as coinciding in a single call, the same disposition several other EXs in this document explicitly sanction as valid ("Produced and Created coincide here," e.g. EX-C007-09). The caller supplies the already-resolved outcome in the same request that triggers the fresh context computation.
+
+**Scoped enumeration, not an open string:** unlike WP-02's own `reporting_capability` field (explicitly open-ended per its own docstring, "any other dependent capability"), Contract 5.10's own text for C-007 names exactly three capabilities with no "or any other" qualifier. `DependentCapability` is therefore a closed three-value enum, not a free string — a deliberate, disclosed divergence from the WP-02 precedent's own shape, justified by C-007's own narrower contract text.
+
+---
+
+## Gap Analysis Summary (BA-10)
+
+- **Database:** No migration. `hand_off()` never persists a new row — mirroring WP-02 BA-10's own stateless precedent; traceability of multiple hand-off attempts for the same Membership is satisfied by the audit trail itself (each call independently recorded via `record_audit()`), the same audit-based traceability precedent BA-03/BA-06 already established. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-10's mapping to ERB-C007-06/EX-C007-12 was already derived in IRA-003 §3/§4 and confirmed NOT to collapse with BA-09/BA-11 (its own distinct Contract 5.10, found during Independent Review per IRA-003's own note); this section performs BA-10's own remaining gap analysis.
+- **API Impact:** One new endpoint, `POST /memberships/{membership_id}/hand-off`, added to `membership-api.yaml`. No existing endpoint's shape changed.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with every prior WP-03 Business Activity's own scope decision).
+- **Dependencies:** `MembershipRepository.get_by_id()` (existing, BA-01) and `compute_membership_authority_consequence()` (existing, BA-02, reused a third time after BA-09) — both reused unchanged, no new repository method.
+- **Risks:** TD-042 (interim PLATFORM_ADMIN gate, plus the disclosed C-002/C-008 non-existence) — Low severity, same class as prior persona simplifications; the non-existence of C-002/C-008 is a real, disclosed limitation on what "hand-off" means in practice for those two capabilities today, not a defect in this Business Activity's own implementation.
+- **Technical Debt registered:** TD-042 (`architecture/06-Reviews/TECH-DEBT.md`).
+
+---
+
+## Documents Updated (BA-10)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/06-Reviews/TECH-DEBT.md` (TD-042 added)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-10 implemented and independently reviewed)
+
+**Implementation (modified, no new files):**
+- `Backend/Services/AuthService/schemas/membership.py` — added `DependentCapability`, `HandoffOutcome` enums, `HandOffMembershipContextRequest`, `MembershipHandoffResponse` schemas.
+- `Backend/Services/AuthService/services/membership_service.py` — added `MembershipService.hand_off()`.
+- `Backend/Services/AuthService/routers/membership.py` — added `POST /memberships/{membership_id}/hand-off`.
+- `Backend/Services/AuthService/membership-api.yaml` — added the `POST /memberships/{membership_id}/hand-off` path and its two new schemas.
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 5 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 7 new tests.
+
+No new model, repository, migration, or router file was required — confirming IRA-003 §14's own Category B classification.
+
+---
+
+## Validation (BA-10)
+
+- 12 new tests (5 unit, 7 API), all passing.
+- Full AuthService suite: **422 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-10 introduces no migration.
+- Confirmed the FastAPI app's own generated OpenAPI schema registers `POST /memberships/{membership_id}/hand-off` correctly, and the standalone `membership-api.yaml` parses as valid YAML with the matching path and schemas.
+- Confirmed BR-C007-010: every hand-off response includes a freshly computed `currently_effective`/`authority_consequence` pair, including correctly reporting `ACTIVE_BUT_LAPSED` for a Membership past its effective end date, never presenting it as effective.
+- Confirmed BR-C007-011: a `RETURNED` outcome with a reason never alters the underlying Membership's `membership_status` or terms, verified via a direct re-fetch after the hand-off call.
+- Confirmed `outcome=RETURNED` without a `reason` is rejected with 422.
+- Confirmed the `dependent_capability` enum rejects a value outside Contract 5.10's own closed three-value set (`C-003`/`C-002`/`C-008`) with 422.
+- Confirmed unknown `membership_id` returns 404; non-`PLATFORM_ADMIN` callers receive 403; missing/malformed Authorization header returns 400.
+
+---
+
+## Independent Review (BA-10)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-10's independent review, re-deriving repository state directly from Git and re-running the full suite directly. The central architectural question — whether C-002/C-008's own non-existence blocks this Business Activity — was resolved by reading WP-02's own already-certified `classify_handoff_rejection()` in full, not by assumption: it independently confirmed the identical "hand off to a non-existent capability" problem is already solved in this codebase via a stateless, caller-reports pattern, which BA-10 mirrors. `hand_off()` was read in full and confirmed to contain no write to `membership_status` or any other Membership field on any path, including the `RETURNED` outcome — a genuine risk area for a Business Activity whose own Business Rule (BR-C007-011) specifically forbids exactly that mutation. One finding, disclosed as Technical Debt rather than blocking:
+
+1. TD-042 (interim `PLATFORM_ADMIN` gate, plus disclosed C-002/C-008 non-existence) — same class as TD-031/034/035/036/039/041 for the persona aspect; the capability-non-existence aspect is a genuine, disclosed limitation on what "hand-off" can mean for those two capabilities today, not a defect, mirroring BA-04's own C-005 finding in kind (though not in severity — BA-04 was fully blocked, BA-10 is not, since it never requires calling into C-002/C-008 at all).
+
+No security, tenant-isolation, or data-integrity defect was found. `MembershipService.hand_off()` was confirmed to hold no code path capable of mutating the Membership, consistent with BR-C007-011's own requirement being enforced by construction, not merely by convention.
+
+---
+
 ## Status (Combined)
 
 **BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
@@ -751,10 +842,12 @@ No security, tenant-isolation, or data-integrity defect was found. No Technical 
 
 **Commit Date (BA-09 Remediation):** 2026-07-29
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), and BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-09.
+**BA-10 — Hand Off Membership Context to a Dependent Capability:** Implementation COMPLETE (422/422 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (TD-042, not blocking). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-09's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), and BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-10 is implementation-complete, tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-10.
 
 ---
 
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, and now BA-09 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** A preliminary, non-binding observation on BA-11's own possible relationship to BA-09 was recorded above, for BA-11's own future gap analysis to weigh — not a collapse decision. **BA-10 and BA-11 remain not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, BA-09, and now BA-10 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** A preliminary, non-binding observation on BA-11's own possible relationship to BA-09 was recorded above, for BA-11's own future gap analysis to weigh — not a collapse decision. BA-10 was confirmed NOT to collapse with BA-09/BA-11, per its own distinct Contract 5.10. **BA-11 remains not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
