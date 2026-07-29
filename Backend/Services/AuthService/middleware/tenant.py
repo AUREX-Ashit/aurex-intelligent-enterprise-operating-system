@@ -87,6 +87,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # or this table's current shape (IRA-004 §9), so there is no tenant
         # column to scope by, not merely a PLATFORM_ADMIN-operates-across-
         # tenants argument as with /organizations.
+        # /organization-establishment-attempts (IRA-001A, BA-01 amended /
+        # BA-01B / BA-01C) is tenant-agnostic for the identical reason as
+        # /organization-nodes: an Organization Establishment Attempt
+        # carries no organization_id column — it exists prior to any
+        # Organization, tenant or otherwise.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -100,7 +105,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/delegation-policies" or path.startswith("/delegation-policies/") \
           or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/") \
           or path == "/memberships" or path.startswith("/memberships/") \
-          or path == "/organization-nodes" or path.startswith("/organization-nodes/"):
+          or path == "/organization-nodes" or path.startswith("/organization-nodes/") \
+          or path == "/organization-establishment-attempts" or path.startswith("/organization-establishment-attempts/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

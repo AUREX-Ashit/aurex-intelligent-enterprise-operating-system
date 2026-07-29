@@ -8,8 +8,10 @@ from dependencies import require_platform_admin
 from models.database import db_manager
 from models.organization import OrganizationStatus
 from repositories.organization_repository import OrganizationRepository
+from repositories.organization_establishment_attempt_repository import (
+    OrganizationEstablishmentAttemptRepository,
+)
 from schemas.organization import (
-    EstablishOrganizationRequest,
     OrganizationListResponse,
     OrganizationResponse,
     OrganizationSortField,
@@ -31,52 +33,33 @@ async def get_organization_repository(
     return OrganizationRepository(session)
 
 
+async def get_organization_establishment_attempt_repository(
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+) -> OrganizationEstablishmentAttemptRepository:
+    return OrganizationEstablishmentAttemptRepository(session)
+
+
 async def get_organization_service(
     organization_repo: Annotated[OrganizationRepository, Depends(get_organization_repository)],
+    organization_establishment_attempt_repo: Annotated[
+        OrganizationEstablishmentAttemptRepository,
+        Depends(get_organization_establishment_attempt_repository),
+    ],
 ) -> OrganizationService:
-    return OrganizationService(organization_repo)
+    return OrganizationService(organization_repo, organization_establishment_attempt_repo)
 
 
 # ---------------------------------------------------------------------------
 # Endpoints
+#
+# IRA-001A note: BA-01 (Establish Organization Identity) no longer has an
+# endpoint in this router — it moved to
+# routers/organization_establishment_attempt.py, since establish() now
+# produces an Organization Establishment Attempt (Organization Anchor
+# Context), not an Organization. POST /organizations was removed, not
+# repurposed — see IRA-001A / IMP-REPORT-WP-01's IRA-001A section for the
+# full rationale. Every endpoint below (BA-02 through BA-07) is unmodified.
 # ---------------------------------------------------------------------------
-
-@router.post(
-    "",
-    response_model=OrganizationResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Establish a new organization",
-    description=(
-        "WP-01 Business Activity: Establish Organization (C-004). Requires the "
-        "PLATFORM_ADMIN role (IRA-001 §2.7 — Domain Permission checks are "
-        "deferred to the Role & Permission Management work package). Rejects "
-        "duplicate organization_code with 409."
-    ),
-    responses={
-        201: {"description": "Organization established."},
-        400: {"description": "Missing or malformed Authorization header."},
-        401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
-        409: {"description": "An organization with this organization_code already exists."},
-        422: {"description": "Invalid request (e.g., missing required field)."},
-    },
-)
-async def establish_organization(
-    request: EstablishOrganizationRequest,
-    organization_service: Annotated[OrganizationService, Depends(get_organization_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
-) -> OrganizationResponse:
-    """
-    No tenant-scoping: establishing a brand-new Organization has no
-    existing tenant to scope to, on the same basis routers/person.py's
-    establish_person already documents for Person — see also
-    middleware/tenant.py's exemption list, which this path is added to.
-    """
-    organization = await organization_service.establish(
-        request, actor_id=claims.get("person_id")
-    )
-    return OrganizationResponse.model_validate(organization)
-
 
 @router.get(
     "",

@@ -34,9 +34,51 @@ def _auth_headers(role_code: str = "PLATFORM_ADMIN") -> dict[str, str]:
     return {"Authorization": f"Bearer {_access_token(role_code)}"}
 
 
-def test_establish_organization_succeeds_for_platform_admin(client: TestClient) -> None:
+def _establish_and_activate(
+    client: TestClient,
+    organization_code: str,
+    organization_name: str,
+    organization_type: str = "CORPORATE",
+    description: str | None = None,
+) -> dict:
+    """
+    Test-only helper (IRA-001A): BA-02 through BA-07's own API tests need
+    a real, ACTIVE Organization to exercise against — POST /organizations
+    no longer exists (establishment moved to
+    POST /organization-establishment-attempts, BR-C004-01). Establishes
+    an attempt, then activates it via the governed no-domain path, and
+    returns the resulting Organization response body unchanged in shape
+    from every downstream test's own assertions.
+    """
+    established = client.post(
+        "/organization-establishment-attempts",
+        headers=_auth_headers(),
+        json={
+            "organization_code": organization_code,
+            "organization_name": organization_name,
+            "organization_type": organization_type,
+            "description": description,
+        },
+    )
+    assert established.status_code == 201
+    attempt_id = established.json()["id"]
+
+    activated = client.post(
+        f"/organization-establishment-attempts/{attempt_id}/activate",
+        headers=_auth_headers(),
+        json={"no_domain_activation_reason": "Test fixture: no domain to claim."},
+    )
+    assert activated.status_code == 201
+    return activated.json()
+
+
+# ---------------------------------------------------------------------------
+# BA-01 — Establish Organization Identity (amended, IRA-001A)
+# ---------------------------------------------------------------------------
+
+def test_establish_organization_creates_attempt_not_organization(client: TestClient) -> None:
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers=_auth_headers(),
         json={
             "organization_code": "API-ORG-001",
@@ -48,9 +90,10 @@ def test_establish_organization_succeeds_for_platform_admin(client: TestClient) 
     assert response.status_code == 201
     body = response.json()
     assert body["organization_code"] == "API-ORG-001"
-    assert body["status"] == "ACTIVE"
-    assert body["is_active"] is True
+    assert body["domain_verification_status"] == "NOT_CLAIMED"
+    assert body["activated_organization_id"] is None
     assert "id" in body
+    assert "status" not in body
 
 
 def test_establish_organization_rejects_duplicate_code(client: TestClient) -> None:
@@ -59,17 +102,17 @@ def test_establish_organization_rejects_duplicate_code(client: TestClient) -> No
         "organization_name": "API Test Org",
         "organization_type": "CORPORATE",
     }
-    first = client.post("/organizations", headers=_auth_headers(), json=payload)
+    first = client.post("/organization-establishment-attempts", headers=_auth_headers(), json=payload)
     assert first.status_code == 201
 
-    second = client.post("/organizations", headers=_auth_headers(), json=payload)
+    second = client.post("/organization-establishment-attempts", headers=_auth_headers(), json=payload)
     assert second.status_code == 409
 
 
 def test_establish_organization_requires_authorization_header(client: TestClient) -> None:
     """No Authorization header at all -> 400, per dependencies.get_current_claims."""
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         json={
             "organization_code": "API-ORG-003",
             "organization_name": "API Test Org",
@@ -83,7 +126,7 @@ def test_establish_organization_requires_authorization_header(client: TestClient
 
 def test_establish_organization_rejects_invalid_token(client: TestClient) -> None:
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers={"Authorization": "Bearer not-a-real-token"},
         json={
             "organization_code": "API-ORG-004",
@@ -96,13 +139,9 @@ def test_establish_organization_rejects_invalid_token(client: TestClient) -> Non
 
 
 def test_establish_organization_rejects_non_platform_admin_role(client: TestClient) -> None:
-    """
-    IRA-001 §2.7: only PLATFORM_ADMIN may establish an organization.
-    A validly-signed token for any other role must be rejected with 403,
-    not silently allowed.
-    """
+    """IRA-001 §2.7: only PLATFORM_ADMIN may establish an organization establishment attempt."""
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers=_auth_headers(role_code="ORG_ADMIN"),
         json={
             "organization_code": "API-ORG-005",
@@ -116,7 +155,7 @@ def test_establish_organization_rejects_non_platform_admin_role(client: TestClie
 
 def test_establish_organization_rejects_missing_required_field(client: TestClient) -> None:
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers=_auth_headers(),
         json={"organization_name": "Missing Code Org", "organization_type": "CORPORATE"},
     )
@@ -126,7 +165,7 @@ def test_establish_organization_rejects_missing_required_field(client: TestClien
 
 def test_establish_organization_rejects_empty_required_field(client: TestClient) -> None:
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers=_auth_headers(),
         json={
             "organization_code": "",
@@ -140,14 +179,14 @@ def test_establish_organization_rejects_empty_required_field(client: TestClient)
 
 def test_establish_organization_does_not_require_tenant_header(client: TestClient) -> None:
     """
-    POST /organizations is tenant-agnostic (middleware/tenant.py's
-    exemption list) — establishing a brand-new Organization has no
-    existing tenant to scope to. No X-Tenant-ID header is sent here at
-    all; if TenantMiddleware were not exempting this path, this would
-    fail with 400 ("Header 'X-Tenant-ID' is required...") instead of 201.
+    POST /organization-establishment-attempts is tenant-agnostic
+    (middleware/tenant.py's exemption list) — an establishment attempt has
+    no organization_id column at all. No X-Tenant-ID header is sent here;
+    if TenantMiddleware were not exempting this path, this would fail with
+    400 instead of 201.
     """
     response = client.post(
-        "/organizations",
+        "/organization-establishment-attempts",
         headers=_auth_headers(),
         json={
             "organization_code": "API-ORG-006",
@@ -160,22 +199,131 @@ def test_establish_organization_does_not_require_tenant_header(client: TestClien
 
 
 # ---------------------------------------------------------------------------
+# BA-01B — Verify Organization Domain Claim (new, IRA-001A)
+# ---------------------------------------------------------------------------
+
+def test_verify_domain_claim_succeeds_for_platform_admin(client: TestClient) -> None:
+    established = client.post(
+        "/organization-establishment-attempts",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-010",
+            "organization_name": "API Domain Org",
+            "organization_type": "CORPORATE",
+            "primary_domain": "api-domain-org.example",
+        },
+    )
+    attempt_id = established.json()["id"]
+
+    response = client.post(
+        f"/organization-establishment-attempts/{attempt_id}/verify-domain",
+        headers=_auth_headers(),
+        json={"verified": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["domain_verification_status"] == "VERIFIED"
+
+
+def test_verify_domain_claim_returns_404_for_unknown_attempt(client: TestClient) -> None:
+    response = client.post(
+        f"/organization-establishment-attempts/{uuid.uuid4()}/verify-domain",
+        headers=_auth_headers(),
+        json={"verified": True},
+    )
+
+    assert response.status_code == 404
+
+
+def test_verify_domain_claim_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.post(
+        f"/organization-establishment-attempts/{uuid.uuid4()}/verify-domain",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+        json={"verified": True},
+    )
+
+    assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# BA-01C — Activate Organization, first-time (new, IRA-001A)
+# ---------------------------------------------------------------------------
+
+def test_activate_establishment_with_no_domain_reason_creates_active_organization(client: TestClient) -> None:
+    established = client.post(
+        "/organization-establishment-attempts",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-020",
+            "organization_name": "API Activated Org",
+            "organization_type": "CORPORATE",
+        },
+    )
+    attempt_id = established.json()["id"]
+
+    response = client.post(
+        f"/organization-establishment-attempts/{attempt_id}/activate",
+        headers=_auth_headers(),
+        json={"no_domain_activation_reason": "No domain to claim."},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["organization_code"] == "API-ORG-020"
+    assert body["status"] == "ACTIVE"
+    assert body["is_active"] is True
+
+
+def test_activate_establishment_rejects_without_verification_or_reason(client: TestClient) -> None:
+    established = client.post(
+        "/organization-establishment-attempts",
+        headers=_auth_headers(),
+        json={
+            "organization_code": "API-ORG-021",
+            "organization_name": "API Blocked Org",
+            "organization_type": "CORPORATE",
+            "primary_domain": "api-blocked-org.example",
+        },
+    )
+    attempt_id = established.json()["id"]
+
+    response = client.post(
+        f"/organization-establishment-attempts/{attempt_id}/activate",
+        headers=_auth_headers(),
+        json={},
+    )
+
+    assert response.status_code == 409
+
+
+def test_activate_establishment_returns_404_for_unknown_attempt(client: TestClient) -> None:
+    response = client.post(
+        f"/organization-establishment-attempts/{uuid.uuid4()}/activate",
+        headers=_auth_headers(),
+        json={"no_domain_activation_reason": "x"},
+    )
+
+    assert response.status_code == 404
+
+
+def test_activate_establishment_rejects_non_platform_admin_role(client: TestClient) -> None:
+    response = client.post(
+        f"/organization-establishment-attempts/{uuid.uuid4()}/activate",
+        headers=_auth_headers(role_code="ORG_ADMIN"),
+        json={"no_domain_activation_reason": "x"},
+    )
+
+    assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
 # BA-02 — View Organization Details
 # ---------------------------------------------------------------------------
 
 def test_view_organization_returns_details_for_platform_admin(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={
-            "organization_code": "API-ORG-007",
-            "organization_name": "API View Org",
-            "organization_type": "CORPORATE",
-            "description": "Created for the view test.",
-        },
-    )
-    assert established.status_code == 201
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(
+        client, "API-ORG-007", "API View Org", "CORPORATE", description="Created for the view test."
+    )["id"]
 
     response = client.get(f"/organizations/{organization_id}", headers=_auth_headers())
 
@@ -239,18 +387,9 @@ def test_view_organization_does_not_require_tenant_header(client: TestClient) ->
 # ---------------------------------------------------------------------------
 
 def test_update_organization_succeeds_for_platform_admin(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={
-            "organization_code": "API-ORG-008",
-            "organization_name": "Original Org",
-            "organization_type": "CORPORATE",
-            "description": "Before update.",
-        },
-    )
-    assert established.status_code == 201
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(
+        client, "API-ORG-008", "Original Org", "CORPORATE", description="Before update."
+    )["id"]
 
     response = client.put(
         f"/organizations/{organization_id}",
@@ -303,12 +442,7 @@ def test_update_organization_rejects_non_platform_admin_role(client: TestClient)
 
 
 def test_update_organization_rejects_missing_required_field(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-009", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-009", "Org", "CORPORATE")["id"]
 
     response = client.put(
         f"/organizations/{organization_id}",
@@ -320,12 +454,7 @@ def test_update_organization_rejects_missing_required_field(client: TestClient) 
 
 
 def test_update_organization_rejects_empty_required_field(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-010", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-010", "Org", "CORPORATE")["id"]
 
     response = client.put(
         f"/organizations/{organization_id}",
@@ -343,12 +472,7 @@ def test_update_organization_does_not_accept_organization_code_change(client: Te
     default), proving the immutable natural key cannot be changed through
     this endpoint.
     """
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-011", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-011", "Org", "CORPORATE")["id"]
 
     response = client.put(
         f"/organizations/{organization_id}",
@@ -372,12 +496,7 @@ def test_update_organization_rejects_invalid_uuid(client: TestClient) -> None:
 
 def test_update_organization_does_not_require_tenant_header(client: TestClient) -> None:
     """PUT /organizations/{id} is covered by the same /organizations/* prefix exemption as GET."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-012", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-012", "Org", "CORPORATE")["id"]
 
     response = client.put(
         f"/organizations/{organization_id}",
@@ -403,12 +522,7 @@ async def test_activate_organization_succeeds_for_platform_admin(
     existing precedent of mixing these two fixtures), not through a
     public API endpoint.
     """
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-013", "organization_name": "Suspended Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-013", "Suspended Org", "CORPORATE")["id"]
 
     organization = await db_session.get(Organization, uuid.UUID(organization_id))
     organization.status = "SUSPENDED"
@@ -423,12 +537,7 @@ async def test_activate_organization_succeeds_for_platform_admin(
 
 
 def test_activate_organization_rejects_already_active(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-014", "organization_name": "Already Active Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-014", "Already Active Org", "CORPORATE")["id"]
 
     response = client.post(f"/organizations/{organization_id}/activate", headers=_auth_headers())
 
@@ -465,12 +574,7 @@ def test_activate_organization_rejects_invalid_uuid(client: TestClient) -> None:
 
 def test_activate_organization_does_not_require_tenant_header(client: TestClient) -> None:
     """PUT/POST /organizations/{id}/* is covered by the same /organizations/* prefix exemption as GET."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-015", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-015", "Org", "CORPORATE")["id"]
 
     # Already ACTIVE -> 409, but a 409 (not 400) proves the request reached
     # the handler rather than being blocked by the tenant-header check.
@@ -484,12 +588,7 @@ def test_activate_organization_does_not_require_tenant_header(client: TestClient
 # ---------------------------------------------------------------------------
 
 def test_suspend_organization_succeeds_for_platform_admin(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-016", "organization_name": "Active Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-016", "Active Org", "CORPORATE")["id"]
 
     response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
 
@@ -500,12 +599,7 @@ def test_suspend_organization_succeeds_for_platform_admin(client: TestClient) ->
 
 
 def test_suspend_organization_rejects_already_suspended(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-017", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-017", "Org", "CORPORATE")["id"]
     first = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
     assert first.status_code == 200
 
@@ -544,12 +638,7 @@ def test_suspend_organization_rejects_invalid_uuid(client: TestClient) -> None:
 
 def test_suspend_organization_does_not_require_tenant_header(client: TestClient) -> None:
     """POST /organizations/{id}/suspend is covered by the same /organizations/* prefix exemption as GET."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-018", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-018", "Org", "CORPORATE")["id"]
 
     response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
 
@@ -561,13 +650,9 @@ def test_suspend_then_activate_round_trip_keeps_is_active_in_sync(client: TestCl
     TD-012 resolution, exercised end-to-end through the HTTP API: suspend
     sets is_active False, a subsequent activate sets it back to True.
     """
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-019", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
-    assert established.json()["is_active"] is True
+    established = _establish_and_activate(client, "API-ORG-019", "Org", "CORPORATE")
+    organization_id = established["id"]
+    assert established["is_active"] is True
 
     suspended = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
     assert suspended.status_code == 200
@@ -583,12 +668,7 @@ def test_suspend_then_activate_round_trip_keeps_is_active_in_sync(client: TestCl
 # ---------------------------------------------------------------------------
 
 def test_retire_organization_succeeds_for_platform_admin(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-020", "organization_name": "Active Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-020", "Active Org", "CORPORATE")["id"]
 
     response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
 
@@ -601,12 +681,7 @@ def test_retire_organization_succeeds_for_platform_admin(client: TestClient) -> 
 
 def test_retire_organization_succeeds_from_suspended(client: TestClient) -> None:
     """ERB-C004-07 Entry Context: retirement is also valid directly from SUSPENDED, not only ACTIVE."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-021", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-021", "Org", "CORPORATE")["id"]
     suspend_response = client.post(f"/organizations/{organization_id}/suspend", headers=_auth_headers())
     assert suspend_response.status_code == 200
 
@@ -617,12 +692,7 @@ def test_retire_organization_succeeds_from_suspended(client: TestClient) -> None
 
 
 def test_retire_organization_rejects_already_retired(client: TestClient) -> None:
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-022", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-022", "Org", "CORPORATE")["id"]
     first = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
     assert first.status_code == 200
 
@@ -661,12 +731,7 @@ def test_retire_organization_rejects_invalid_uuid(client: TestClient) -> None:
 
 def test_retire_organization_does_not_require_tenant_header(client: TestClient) -> None:
     """POST /organizations/{id}/retire is covered by the same /organizations/* prefix exemption as GET."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-023", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-023", "Org", "CORPORATE")["id"]
 
     response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
 
@@ -675,12 +740,7 @@ def test_retire_organization_does_not_require_tenant_header(client: TestClient) 
 
 def test_activate_organization_rejects_retired_organization(client: TestClient) -> None:
     """Irreversibility invariant (PE-001-C004 §3.8), exercised through the HTTP API."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-024", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-024", "Org", "CORPORATE")["id"]
     retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
     assert retire_response.status_code == 200
 
@@ -694,12 +754,7 @@ def test_activate_organization_rejects_retired_organization(client: TestClient) 
 
 def test_suspend_organization_rejects_retired_organization(client: TestClient) -> None:
     """Same irreversibility invariant, exercised against /suspend instead of /activate."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-025", "organization_name": "Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-025", "Org", "CORPORATE")["id"]
     retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
     assert retire_response.status_code == 200
 
@@ -712,17 +767,9 @@ def test_suspend_organization_rejects_retired_organization(client: TestClient) -
 
 def test_view_organization_still_returns_retired_organization_details(client: TestClient) -> None:
     """Continuity requirement: retirement SHALL NOT physically delete the Organization."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={
-            "organization_code": "API-ORG-026",
-            "organization_name": "Preserved Org",
-            "organization_type": "CORPORATE",
-            "description": "Should survive retirement.",
-        },
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(
+        client, "API-ORG-026", "Preserved Org", "CORPORATE", description="Should survive retirement."
+    )["id"]
     retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
     assert retire_response.status_code == 200
 
@@ -738,12 +785,7 @@ def test_view_organization_still_returns_retired_organization_details(client: Te
 
 def test_search_organizations_can_filter_by_retired_status(client: TestClient) -> None:
     """A RETIRED organization is still discoverable via Search & List — not hidden or deleted."""
-    established = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": "API-ORG-027", "organization_name": "Findable Retired Org", "organization_type": "CORPORATE"},
-    )
-    organization_id = established.json()["id"]
+    organization_id = _establish_and_activate(client, "API-ORG-027", "Findable Retired Org", "CORPORATE")["id"]
     retire_response = client.post(f"/organizations/{organization_id}/retire", headers=_auth_headers())
     assert retire_response.status_code == 200
 
@@ -760,13 +802,7 @@ def test_search_organizations_can_filter_by_retired_status(client: TestClient) -
 # ---------------------------------------------------------------------------
 
 def _establish(client: TestClient, code: str, name: str) -> dict:
-    response = client.post(
-        "/organizations",
-        headers=_auth_headers(),
-        json={"organization_code": code, "organization_name": name, "organization_type": "CORPORATE"},
-    )
-    assert response.status_code == 201
-    return response.json()
+    return _establish_and_activate(client, code, name, "CORPORATE")
 
 
 def test_search_organizations_returns_a_page_with_total(client: TestClient) -> None:

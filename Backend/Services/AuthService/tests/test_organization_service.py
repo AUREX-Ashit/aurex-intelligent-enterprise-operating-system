@@ -6,52 +6,113 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.organization import Organization, OrganizationStatus
+from models.organization_establishment_attempt import DomainVerificationStatus, OrganizationEstablishmentAttempt
 from repositories.organization_repository import OrganizationRepository
-from schemas.organization import EstablishOrganizationRequest, UpdateOrganizationProfileRequest
+from repositories.organization_establishment_attempt_repository import (
+    OrganizationEstablishmentAttemptRepository,
+)
+from schemas.organization import UpdateOrganizationProfileRequest
+from schemas.organization_establishment_attempt import (
+    ActivateEstablishmentRequest,
+    EstablishOrganizationAttemptRequest,
+)
 from services.organization_service import OrganizationService
 
 
 def _service(session: AsyncSession) -> OrganizationService:
-    return OrganizationService(OrganizationRepository(session))
+    return OrganizationService(
+        OrganizationRepository(session), OrganizationEstablishmentAttemptRepository(session)
+    )
 
 
-async def test_establish_creates_organization_with_active_status(db_session: AsyncSession) -> None:
+async def _establish_and_activate(
+    service: OrganizationService,
+    organization_code: str,
+    organization_name: str,
+    organization_type: str = "CORPORATE",
+    description: str | None = None,
+) -> Organization:
     """
-    Business Activity Contract: a first-time Establish Organization call
-    creates exactly one row, with status defaulted to ACTIVE per ADR-005's
-    interim lifecycle model — never invented as some other value.
+    Test-only helper (IRA-001A): BA-02 through BA-07's own tests need a
+    real, ACTIVE Organization to exercise — establish() alone no longer
+    produces one (BR-C004-01). Establishes an attempt, then activates it
+    via the governed no-domain path, and returns the resulting
+    Organization, preserving every downstream test's own assertions
+    unchanged.
+    """
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code=organization_code,
+            organization_name=organization_name,
+            organization_type=organization_type,
+            description=description,
+        )
+    )
+    return await service.activate_establishment(
+        attempt.id, ActivateEstablishmentRequest(no_domain_activation_reason="Test fixture: no domain to claim.")
+    )
+
+
+# ---------------------------------------------------------------------------
+# BA-01 — Establish Organization Identity (amended, IRA-001A)
+# ---------------------------------------------------------------------------
+
+async def test_establish_creates_establishment_attempt_not_organization(db_session: AsyncSession) -> None:
+    """
+    IRA-001A / BR-C004-01, Contract 5.4: a first-time Establish Organization
+    call creates exactly one Organization Establishment Attempt row — never
+    an Organization row, and never with any authoritative status.
     """
     service = _service(db_session)
-    request = EstablishOrganizationRequest(
+    request = EstablishOrganizationAttemptRequest(
         organization_code="ACME-001",
         organization_name="Acme Corporation",
         organization_type="CORPORATE",
         description="A test organization.",
     )
 
-    organization = await service.establish(request, actor_id="platform-admin-1")
+    attempt = await service.establish(request, actor_id="platform-admin-1")
 
-    assert organization.organization_code == "ACME-001"
-    assert organization.organization_name == "Acme Corporation"
-    assert organization.organization_type == "CORPORATE"
-    assert organization.description == "A test organization."
-    assert organization.status == OrganizationStatus.ACTIVE.value
-    assert organization.is_active is True
-    assert organization.id is not None
+    assert attempt.organization_code == "ACME-001"
+    assert attempt.organization_name == "Acme Corporation"
+    assert attempt.organization_type == "CORPORATE"
+    assert attempt.description == "A test organization."
+    assert attempt.domain_verification_status == DomainVerificationStatus.NOT_CLAIMED.value
+    assert attempt.activated_organization_id is None
+    assert attempt.id is not None
+
+    organizations = (await db_session.execute(select(Organization))).scalars().all()
+    assert len(organizations) == 0
 
 
 async def test_establish_allows_optional_description_to_be_omitted(db_session: AsyncSession) -> None:
-    """description is the only optional field — establishment must not require it."""
+    """description is the only optional identity field — establishment must not require it."""
     service = _service(db_session)
-    request = EstablishOrganizationRequest(
+    request = EstablishOrganizationAttemptRequest(
         organization_code="ACME-002",
         organization_name="Acme Subsidiary",
         organization_type="SUBSIDIARY",
     )
 
-    organization = await service.establish(request)
+    attempt = await service.establish(request)
 
-    assert organization.description is None
+    assert attempt.description is None
+
+
+async def test_establish_with_primary_domain_starts_unverified(db_session: AsyncSession) -> None:
+    """BR-C004-02: a claimed domain is never presented as verified before independent verification succeeds."""
+    service = _service(db_session)
+    request = EstablishOrganizationAttemptRequest(
+        organization_code="ACME-002B",
+        organization_name="Acme Domain Co",
+        organization_type="CORPORATE",
+        primary_domain="acme-domain-co.example",
+    )
+
+    attempt = await service.establish(request)
+
+    assert attempt.primary_domain == "acme-domain-co.example"
+    assert attempt.domain_verification_status == DomainVerificationStatus.UNVERIFIED.value
 
 
 async def test_establish_rejects_duplicate_organization_code(db_session: AsyncSession) -> None:
@@ -61,7 +122,7 @@ async def test_establish_rejects_duplicate_organization_code(db_session: AsyncSe
     silently deduplicated and not permitted to create a second row.
     """
     service = _service(db_session)
-    request = EstablishOrganizationRequest(
+    request = EstablishOrganizationAttemptRequest(
         organization_code="ACME-003",
         organization_name="Acme Corporation",
         organization_type="CORPORATE",
@@ -74,9 +135,192 @@ async def test_establish_rejects_duplicate_organization_code(db_session: AsyncSe
     assert exc_info.value.status_code == 409
 
     result = await db_session.execute(
-        select(Organization).where(Organization.organization_code == "ACME-003")
+        select(OrganizationEstablishmentAttempt).where(
+            OrganizationEstablishmentAttempt.organization_code == "ACME-003"
+        )
     )
     assert len(result.scalars().all()) == 1
+
+
+async def test_establish_rejects_code_already_used_by_an_activated_organization(db_session: AsyncSession) -> None:
+    """
+    BR-C004-01: organization_code uniqueness spans both already-activated
+    Organizations and other in-flight establishment attempts — one shared
+    namespace, not two independent ones.
+    """
+    service = _service(db_session)
+    first = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-003B", organization_name="Acme Corp", organization_type="CORPORATE",
+        )
+    )
+    await service.activate_establishment(first.id, ActivateEstablishmentRequest(no_domain_activation_reason="No domain to claim."))
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.establish(
+            EstablishOrganizationAttemptRequest(
+                organization_code="ACME-003B", organization_name="Acme Corp Duplicate", organization_type="CORPORATE",
+            )
+        )
+
+    assert exc_info.value.status_code == 409
+
+
+# ---------------------------------------------------------------------------
+# BA-01B — Verify Organization Domain Claim (new, IRA-001A)
+# ---------------------------------------------------------------------------
+
+async def test_verify_domain_claim_records_verified_outcome(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-010", organization_name="Acme Verified Co",
+            organization_type="CORPORATE", primary_domain="acme-verified.example",
+        )
+    )
+
+    updated = await service.verify_domain_claim(attempt.id, verified=True, actor_id="platform-admin-1")
+
+    assert updated.domain_verification_status == DomainVerificationStatus.VERIFIED.value
+
+
+async def test_verify_domain_claim_records_unverified_outcome(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-011", organization_name="Acme Unverified Co",
+            organization_type="CORPORATE", primary_domain="acme-unverified.example",
+        )
+    )
+
+    updated = await service.verify_domain_claim(attempt.id, verified=False)
+
+    assert updated.domain_verification_status == DomainVerificationStatus.UNVERIFIED.value
+
+
+async def test_verify_domain_claim_rejects_when_no_domain_was_claimed(db_session: AsyncSession) -> None:
+    """BR-C004-02: verification is only meaningful against a claimed domain — nothing to verify otherwise."""
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-012", organization_name="Acme No Domain Co", organization_type="CORPORATE",
+        )
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.verify_domain_claim(attempt.id, verified=True)
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_verify_domain_claim_raises_404_for_unknown_attempt(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.verify_domain_claim(uuid.uuid4(), verified=True)
+
+    assert exc_info.value.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# BA-01C — Activate Organization, first-time (new, IRA-001A)
+# ---------------------------------------------------------------------------
+
+async def test_activate_establishment_with_verified_domain_creates_active_organization(db_session: AsyncSession) -> None:
+    """
+    BR-C004-01/Contract 5.4: activation is the first, distinct act that
+    produces an Authoritative, ACTIVE Organization — never establish() alone.
+    """
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-020", organization_name="Acme Activated Co",
+            organization_type="CORPORATE", primary_domain="acme-activated.example",
+        )
+    )
+    await service.verify_domain_claim(attempt.id, verified=True)
+
+    organization = await service.activate_establishment(
+        attempt.id, ActivateEstablishmentRequest(), actor_id="platform-admin-1"
+    )
+
+    assert organization.organization_code == "ACME-020"
+    assert organization.status == OrganizationStatus.ACTIVE.value
+    assert organization.id is not None
+
+
+async def test_activate_establishment_links_attempt_to_activated_organization(db_session: AsyncSession) -> None:
+    """PE-001-C004 §1.17: the Anchor is preserved in lineage, never deleted, once activation succeeds."""
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-021", organization_name="Acme Lineage Co", organization_type="CORPORATE",
+        )
+    )
+
+    organization = await service.activate_establishment(
+        attempt.id, ActivateEstablishmentRequest(no_domain_activation_reason="No domain to claim.")
+    )
+
+    reloaded = await db_session.get(OrganizationEstablishmentAttempt, attempt.id)
+    assert reloaded is not None
+    assert reloaded.activated_organization_id == organization.id
+    assert reloaded.no_domain_activation_reason == "No domain to claim."
+
+
+async def test_activate_establishment_rejects_without_verification_or_no_domain_reason(db_session: AsyncSession) -> None:
+    """BR-C004-09: the no-domain path must be an explicit, recorded decision — never a silent default."""
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-022", organization_name="Acme Blocked Co",
+            organization_type="CORPORATE", primary_domain="acme-blocked.example",
+        )
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate_establishment(attempt.id, ActivateEstablishmentRequest())
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_activate_establishment_rejects_whitespace_only_no_domain_reason(db_session: AsyncSession) -> None:
+    """BR-C004-09: a whitespace-only reason is not a genuine recorded decision — must not bypass the gate."""
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-024", organization_name="Acme Whitespace Co", organization_type="CORPORATE",
+        )
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate_establishment(attempt.id, ActivateEstablishmentRequest(no_domain_activation_reason="   "))
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_activate_establishment_rejects_already_activated_attempt(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+    attempt = await service.establish(
+        EstablishOrganizationAttemptRequest(
+            organization_code="ACME-023", organization_name="Acme Double Activate Co", organization_type="CORPORATE",
+        )
+    )
+    await service.activate_establishment(attempt.id, ActivateEstablishmentRequest(no_domain_activation_reason="No domain."))
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate_establishment(attempt.id, ActivateEstablishmentRequest(no_domain_activation_reason="No domain."))
+
+    assert exc_info.value.status_code == 409
+
+
+async def test_activate_establishment_raises_404_for_unknown_attempt(db_session: AsyncSession) -> None:
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.activate_establishment(uuid.uuid4(), ActivateEstablishmentRequest(no_domain_activation_reason="x"))
+
+    assert exc_info.value.status_code == 404
 
 
 # ---------------------------------------------------------------------------
@@ -84,15 +328,11 @@ async def test_establish_rejects_duplicate_organization_code(db_session: AsyncSe
 # ---------------------------------------------------------------------------
 
 async def test_get_details_returns_the_established_organization(db_session: AsyncSession) -> None:
-    """BA-02: fetching by id returns exactly the organization created by BA-01's establish()."""
+    """BA-02: fetching by id returns exactly the organization created by BA-01C's activate_establishment()."""
     service = _service(db_session)
-    request = EstablishOrganizationRequest(
-        organization_code="ACME-004",
-        organization_name="Acme Fourth",
-        organization_type="CORPORATE",
-        description="Fetched by id.",
+    created = await _establish_and_activate(
+        service, "ACME-004", "Acme Fourth", "CORPORATE", description="Fetched by id."
     )
-    created = await service.establish(request)
 
     fetched = await service.get_details(created.id)
 
@@ -123,13 +363,8 @@ async def test_update_profile_updates_name_type_and_description(db_session: Asyn
     new organization_name, organization_type, and description.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="UPD-001",
-            organization_name="Original Name",
-            organization_type="CORPORATE",
-            description="Original description.",
-        )
+    created = await _establish_and_activate(
+        service, "UPD-001", "Original Name", "CORPORATE", description="Original description."
     )
 
     updated = await service.update_profile(
@@ -155,13 +390,7 @@ async def test_update_profile_does_not_change_code_or_status(db_session: AsyncSe
     touched by Update Organization Profile.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="UPD-002",
-            organization_name="Untouched Code Org",
-            organization_type="CORPORATE",
-        )
-    )
+    created = await _establish_and_activate(service, "UPD-002", "Untouched Code Org", "CORPORATE")
 
     updated = await service.update_profile(
         created.id,
@@ -175,13 +404,8 @@ async def test_update_profile_does_not_change_code_or_status(db_session: AsyncSe
 async def test_update_profile_allows_optional_description_to_be_cleared(db_session: AsyncSession) -> None:
     """description is optional on Update, same as Establish — omitting it clears any existing value."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="UPD-003",
-            organization_name="Has Description",
-            organization_type="CORPORATE",
-            description="Will be cleared.",
-        )
+    created = await _establish_and_activate(
+        service, "UPD-003", "Has Description", "CORPORATE", description="Will be cleared."
     )
 
     updated = await service.update_profile(
@@ -217,11 +441,7 @@ async def test_activate_transitions_suspended_organization_to_active(db_session:
     directly through the repository, not a public Business Activity.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="ACT-001", organization_name="Suspended Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "ACT-001", "Suspended Org", "CORPORATE")
     await service.organization_repo.update(created.id, {"status": OrganizationStatus.SUSPENDED.value})
     await db_session.flush()
 
@@ -234,11 +454,7 @@ async def test_activate_transitions_suspended_organization_to_active(db_session:
 async def test_activate_rejects_already_active_organization(db_session: AsyncSession) -> None:
     """Business Rule: activating an already-ACTIVE organization is a 409, not a silent no-op."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="ACT-002", organization_name="Already Active Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "ACT-002", "Already Active Org", "CORPORATE")
 
     with pytest.raises(HTTPException) as exc_info:
         await service.activate(created.id)
@@ -259,13 +475,8 @@ async def test_activate_raises_404_for_unknown_id(db_session: AsyncSession) -> N
 async def test_activate_does_not_change_profile_fields(db_session: AsyncSession) -> None:
     """Activate Organization touches only status — name, type, description, and code are untouched."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="ACT-003",
-            organization_name="Stable Profile Org",
-            organization_type="CORPORATE",
-            description="Should not change.",
-        )
+    created = await _establish_and_activate(
+        service, "ACT-003", "Stable Profile Org", "CORPORATE", description="Should not change."
     )
     await service.organization_repo.update(created.id, {"status": OrganizationStatus.SUSPENDED.value})
     await db_session.flush()
@@ -285,11 +496,7 @@ async def test_activate_does_not_change_profile_fields(db_session: AsyncSession)
 async def test_suspend_transitions_active_organization_to_suspended(db_session: AsyncSession) -> None:
     """Business Activity Contract: suspending an ACTIVE organization transitions its status to SUSPENDED."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="SUS-001", organization_name="Active Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "SUS-001", "Active Org", "CORPORATE")
 
     suspended = await service.suspend(created.id, actor_id="platform-admin-1")
 
@@ -300,11 +507,7 @@ async def test_suspend_transitions_active_organization_to_suspended(db_session: 
 async def test_suspend_rejects_already_suspended_organization(db_session: AsyncSession) -> None:
     """Business Rule: suspending an already-SUSPENDED organization is a 409, not a silent no-op."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="SUS-002", organization_name="Already Suspended Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "SUS-002", "Already Suspended Org", "CORPORATE")
     await service.suspend(created.id)
 
     with pytest.raises(HTTPException) as exc_info:
@@ -326,13 +529,8 @@ async def test_suspend_raises_404_for_unknown_id(db_session: AsyncSession) -> No
 async def test_suspend_does_not_change_profile_fields(db_session: AsyncSession) -> None:
     """Suspend Organization touches only status/is_active — name, type, description, and code are untouched."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="SUS-003",
-            organization_name="Stable Profile Org",
-            organization_type="CORPORATE",
-            description="Should not change.",
-        )
+    created = await _establish_and_activate(
+        service, "SUS-003", "Stable Profile Org", "CORPORATE", description="Should not change."
     )
 
     suspended = await service.suspend(created.id)
@@ -350,11 +548,7 @@ async def test_suspend_and_activate_keep_is_active_in_sync_with_status(db_sessio
     subsequent activate() back to ACTIVE implies is_active=True again.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="SUS-004", organization_name="Sync Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "SUS-004", "Sync Org", "CORPORATE")
     assert created.is_active is True
 
     suspended = await service.suspend(created.id)
@@ -373,11 +567,7 @@ async def test_suspend_and_activate_keep_is_active_in_sync_with_status(db_sessio
 async def test_retire_transitions_active_organization_to_retired(db_session: AsyncSession) -> None:
     """ERB-C004-07 Entry Context: retirement may be entered directly from ACTIVE."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-001", organization_name="Active Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-001", "Active Org", "CORPORATE")
 
     retired = await service.retire(created.id, actor_id="platform-admin-1")
 
@@ -389,11 +579,7 @@ async def test_retire_transitions_active_organization_to_retired(db_session: Asy
 async def test_retire_transitions_suspended_organization_to_retired(db_session: AsyncSession) -> None:
     """ERB-C004-07 Entry Context: retirement may also be entered from SUSPENDED, not only ACTIVE."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-002", organization_name="Suspended Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-002", "Suspended Org", "CORPORATE")
     await service.suspend(created.id)
 
     retired = await service.retire(created.id)
@@ -405,11 +591,7 @@ async def test_retire_transitions_suspended_organization_to_retired(db_session: 
 async def test_retire_rejects_already_retired_organization(db_session: AsyncSession) -> None:
     """Business Rule: retiring an already-RETIRED organization is a 409, not a silent no-op."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-003", organization_name="Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-003", "Org", "CORPORATE")
     await service.retire(created.id)
 
     with pytest.raises(HTTPException) as exc_info:
@@ -435,13 +617,8 @@ async def test_retire_preserves_identity_and_profile_fields(db_session: AsyncSes
     remain intact and queryable after retirement.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-004",
-            organization_name="Preserved Org",
-            organization_type="CORPORATE",
-            description="Should survive retirement.",
-        )
+    created = await _establish_and_activate(
+        service, "RET-004", "Preserved Org", "CORPORATE", description="Should survive retirement."
     )
 
     retired = await service.retire(created.id)
@@ -459,11 +636,7 @@ async def test_retire_preserves_identity_and_profile_fields(db_session: AsyncSes
 async def test_retire_is_findable_by_status_filter(db_session: AsyncSession) -> None:
     """A RETIRED organization is still discoverable via Search & List's status filter — not hidden or deleted."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-005", organization_name="Findable Retired Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-005", "Findable Retired Org", "CORPORATE")
     await service.retire(created.id)
 
     items, total = await service.search(
@@ -481,11 +654,7 @@ async def test_activate_rejects_retired_organization(db_session: AsyncSession) -
     silently succeed.
     """
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-006", organization_name="Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-006", "Org", "CORPORATE")
     await service.retire(created.id)
 
     with pytest.raises(HTTPException) as exc_info:
@@ -500,11 +669,7 @@ async def test_activate_rejects_retired_organization(db_session: AsyncSession) -
 async def test_suspend_rejects_retired_organization(db_session: AsyncSession) -> None:
     """Same irreversibility invariant, exercised against suspend() instead of activate()."""
     service = _service(db_session)
-    created = await service.establish(
-        EstablishOrganizationRequest(
-            organization_code="RET-007", organization_name="Org", organization_type="CORPORATE"
-        )
-    )
+    created = await _establish_and_activate(service, "RET-007", "Org", "CORPORATE")
     await service.retire(created.id)
 
     with pytest.raises(HTTPException) as exc_info:
@@ -520,9 +685,7 @@ async def test_suspend_rejects_retired_organization(db_session: AsyncSession) ->
 # ---------------------------------------------------------------------------
 
 async def _seed(service: OrganizationService, code: str, name: str, org_type: str = "CORPORATE") -> Organization:
-    return await service.establish(
-        EstablishOrganizationRequest(organization_code=code, organization_name=name, organization_type=org_type)
-    )
+    return await _establish_and_activate(service, code, name, org_type)
 
 
 async def test_search_returns_all_organizations_with_default_paging(db_session: AsyncSession) -> None:

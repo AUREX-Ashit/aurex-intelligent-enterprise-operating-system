@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node
+from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node
 from models.database import db_manager
 from config import settings
 
@@ -82,6 +82,11 @@ app.include_router(health.router, prefix="", tags=["Health"])
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 app.include_router(person.router, prefix="/person", tags=["Person"])
 app.include_router(organization.router, prefix="/organizations", tags=["Organization"])
+app.include_router(
+    organization_establishment_attempt.router,
+    prefix="/organization-establishment-attempts",
+    tags=["Organization Establishment Attempt"],
+)
 app.include_router(role.router, prefix="/roles", tags=["Role"])
 app.include_router(domain.router, prefix="/domains", tags=["Domain"])
 app.include_router(domain_permission.router, prefix="/domain-permissions", tags=["Domain Permission"])
