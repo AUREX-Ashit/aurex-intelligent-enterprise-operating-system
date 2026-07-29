@@ -1218,7 +1218,11 @@ No other Work Package's files were touched — confirmed by `git diff --stat` (I
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** [recorded in commit-hash recording pass]
+**Repository Commit:** Committed to `master` in three commits — `b152266` (implementation: 13 files), `a1e414f` (documentation: IRA-001A, IMP-REPORT-WP-01 section, TECH-DEBT.md TD-046–TD-049, WPR-001), and `a292c31` (certification: CERT-WP-01A).
+
+**Commit Hash:** `b152266` (implementation), `a1e414f` (documentation), `a292c31` (certification)
+
+**Commit Date:** 2026-07-29 (all three commits)
 
 ### Independent Review
 

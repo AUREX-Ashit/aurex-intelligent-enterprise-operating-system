@@ -65,8 +65,8 @@ Per CLAUDE.md §19.7's Business Activity Completion Gate, applied per corrective
 - ✅ Full AuthService suite: 468/468 passing, zero regressions to BA-02–BA-07 or any other Work Package.
 - ✅ Single Alembic head confirmed.
 - ✅ Independent Review completed — APPROVED WITH OBSERVATIONS (fresh-context reviewer, full detail recorded in IMP-REPORT-WP-01's IRA-001A section, added in the same documentation pass as this status update).
-- ⏳ Committed to repository (see IMP-REPORT-WP-01's IRA-001A section for commit hashes).
-- ⏳ CERT-WP-01A issued.
+- ✅ Committed to repository: `b152266` (implementation), `a1e414f` (documentation), `a292c31` (certification).
+- ✅ CERT-WP-01A issued — CERTIFIED PASS WITH OBSERVATIONS.
 
 ---
 
