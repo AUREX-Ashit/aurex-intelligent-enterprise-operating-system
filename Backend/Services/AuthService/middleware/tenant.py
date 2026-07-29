@@ -80,6 +80,13 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # PLATFORM_ADMIN is the sole caller today (TD-031 — no Membership
         # Steward/Sponsor persona authority model exists yet), the same
         # disposition as TD-021/TD-022/TD-023/TD-024/TD-025.
+        # /organization-nodes (WP-04, BA-01 Establish Organization Node) is
+        # tenant-agnostic for the same reason as /organizations — but more
+        # directly: OrganizationNode carries no organization_id column at
+        # all anywhere in Master Technical Architecture's own canonical DDL
+        # or this table's current shape (IRA-004 §9), so there is no tenant
+        # column to scope by, not merely a PLATFORM_ADMIN-operates-across-
+        # tenants argument as with /organizations.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -92,7 +99,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/approval-authorities" or path.startswith("/approval-authorities/") \
           or path == "/delegation-policies" or path.startswith("/delegation-policies/") \
           or path == "/runtime-assignment-policies" or path.startswith("/runtime-assignment-policies/") \
-          or path == "/memberships" or path.startswith("/memberships/"):
+          or path == "/memberships" or path.startswith("/memberships/") \
+          or path == "/organization-nodes" or path.startswith("/organization-nodes/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")

@@ -30,13 +30,15 @@ class OrganizationNode(Base):
     and is out of BA-01's own scope entirely — no hierarchy concept is
     modeled here.
 
-    No Business Activity anywhere establishes rows in this table today
-    (TD-032): MDP-001 explicitly excludes `organization_node` from
-    build-time seeding ("populate exclusively through real tenant
-    onboarding and real business operation"), and no capability
-    (C-005/Enterprise Structure Management has no IRA yet) currently
-    owns an "Establish Organization Node" Business Activity. Rows exist
-    only via direct creation until that capability is implemented.
+    WP-04 BA-01 (Establish Organization Node, ERB-C005-01/EX-C005-01/02
+    per PE-001-C005, IRA-004 §9/§11) extends this WP-03-era minimal
+    table with `legal_entity_name`, `business_unit`, `sector` and
+    `operational_status` — the Structural Identity subset of Master
+    Technical Architecture's canonical `organization_node` DDL
+    (ERG-001-02's "Structural Identity" extension context). The
+    remaining canonical columns (geography_id, parent_available_flag,
+    and the materiality/risk/scenario/passport scores) are deferred,
+    not silently omitted — see TD-043/TD-044.
     """
 
     __tablename__ = "organization_nodes"
@@ -67,6 +69,38 @@ class OrganizationNode(Base):
         Boolean,
         default=True
     )
+
+    legal_entity_name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    business_unit: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    sector: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+
+    operational_status: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    """Free-text per Master Technical Architecture's own DDL comment ('active/inactive/divested') — not a closed enum, mirroring `node_type`'s own treatment. Deliberately independent of `active_flag` (TD-044): reconciling the two into a single authoritative lifecycle field is deferred, not assumed here."""
+
+    effective_from: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
+    effective_to: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    """`DateTime`, not the canonical DDL's literal `VARCHAR(255)` — a deliberate departure disclosed in IRA-004 §5/§11, mirroring `memberships.effective_from`/`effective_to`'s own established `DateTime(timezone=True)` shape (WP-03 BA-01) rather than reproducing an inconsistent column type."""
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
