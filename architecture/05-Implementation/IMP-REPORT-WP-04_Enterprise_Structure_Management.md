@@ -817,11 +817,11 @@ No other existing model, repository, service, or router was modified — in part
 
 **Independent Review:** APPROVED WITH OBSERVATIONS
 
-**Repository Commit:** recorded below, Documents Updated section, upon commit.
+**Repository Commit:** Committed to `master` in two commits — `b2aae67` (implementation: 10 files) and `91090c8` (documentation: this report, TECH-DEBT.md TD-064–067, WPR-001 WP-04 row).
 
-**Commit Hash:** *(recorded in a follow-up commit-hash-recording commit, per this Work Package's own established 3-commit convention)*
+**Commit Hash:** `b2aae67` (implementation), `91090c8` (documentation: implementation report, TECH-DEBT.md, WPR-001)
 
-**Commit Date:** 2026-07-30
+**Commit Date:** 2026-07-30 (both commits)
 
 ---
 
