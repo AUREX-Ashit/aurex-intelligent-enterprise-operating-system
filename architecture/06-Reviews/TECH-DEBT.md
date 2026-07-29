@@ -87,6 +87,10 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-057 | `ImpactAssessment.status` is constrained to IRA-004 §23's own registered Lifecycle Model (CREATED, INVALIDATED, ARCHIVED), but BA-05's own code only ever writes CREATED — INVALIDATED and ARCHIVED are never reached. | BA-05 implementation (self-identified, mirroring TD-052/TD-053's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per EX-C005-07's own Invalidated Context) — deliberately out of BA-05's own scope ("implement only what BA-05 owns"). A future cross-cutting mechanism or BA-06's own gap analysis decides how invalidation is actually triggered. | Open | AuthService (Backend) |
 | TD-058 | No `GET` read endpoint exists for Impact Context — only `POST /impact-assessments` exists. Mirrors TD-051/TD-055's identical disposition for Structural Change Intent / Proposed Outcome Context. | BA-05 implementation (self-identified, IRA-004 §4's own typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-06 (Review Structural Outcome)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
 | TD-059 | `POST /impact-assessments` does not verify that the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own proposal lineage — an assessment can be created against a revision a later Refine call has already superseded. | BA-05 implementation (self-identified during this Business Activity's own gap analysis; EX-C005-07's own Trigger text — "A coherent proposed structural outcome exists" — does not explicitly require currency, so this was not assumed either way) | Architecture | Low | A future revisit of BA-05 (or BA-06's own review-readiness gap analysis) decides whether assessing a superseded revision should be rejected, allowed with a warning, or remains permitted as historical analysis. | Open | AuthService (Backend) |
+| TD-060 | `StructuralReview.concerns` (RVC-000001, WP-04 BA-06) is a single Text field. §41.16's own Collaboration Contract text — "Review concerns SHALL preserve author, decision context and unresolved/resolved status by reference to owning mechanisms" — arguably implies structured, per-concern tracking (individual author, individual resolved/unresolved status), not one free-text field. | BA-06 implementation (self-identified during this Business Activity's own gap analysis) | Architecture | Low | A future revisit of BA-06 introduces a dedicated per-concern child table once a real consumer needs individually-tracked concerns rather than a single review-level text field. | Open | AuthService (Backend) |
+| TD-061 | No `GET` read endpoint exists for Review Context — only `POST /structural-reviews` (create) and `POST /structural-reviews/{id}/resolve-concerns` exist. Mirrors TD-051/TD-055/TD-058's identical disposition for the other Structural Context Lifecycle objects. | BA-06 implementation (self-identified, IRA-004 §4's own "Update (review)" typing — no dedicated read endpoint scoped for this Business Activity) | Architecture | Low | BA-07 (Validate Transition Readiness)'s own future gap analysis decides whether it needs a dedicated `GET` endpoint or an internal repository-level lookup only. | Open | AuthService (Backend) |
+| TD-062 | `StructuralReview.status` is constrained to IRA-004 §25's own registered Lifecycle Model (CREATED, CONCERNS_RESOLVED, INVALIDATED, ARCHIVED), but BA-06's own code only ever writes CREATED and CONCERNS_RESOLVED — INVALIDATED and ARCHIVED are never reached. | BA-06 implementation (self-identified, mirroring TD-052/TD-053/TD-057's own identical class) | Architecture | Low | Setting INVALIDATED requires reaching into BA-04's own `refine_proposal()` flow (the event that triggers invalidation per GS-INV-007) — deliberately out of BA-06's own scope ("implement only what BA-06 owns"), the same disposition already recorded for Impact Context (TD-057). | Open | AuthService (Backend) |
+| TD-063 | `POST /structural-reviews` and `POST /structural-reviews/{id}/resolve-concerns` do not verify that the referenced proposal revision is still current (non-`SUPERSEDED`) — mirrors TD-059's identical gap for Impact Context, now also present for Review Context. | BA-06 implementation (self-identified, same disclosed-not-assumed disposition as TD-059) | Architecture | Low | A future revisit of BA-06 (or BA-07's own readiness gap analysis) decides whether reviewing/resolving against a superseded revision should be rejected, allowed with a warning, or remains permitted. | Open | AuthService (Backend) |
 
 ---
 
@@ -733,6 +737,74 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-05 — Assess Structural Consequence
 - **Source:** BA-05 implementation (self-identified during this Business Activity's own gap analysis)
 - **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision assessment is permitted, and that decision is enforced and tested.
+
+---
+
+### TD-060 — Detailed Entry
+
+- **Title:** Review Context Concerns Are a Single Text Field, Not Structured Per-Concern Records
+- **Category:** Architecture
+- **Description:** `StructuralReview.concerns` (`models/structural_review.py`) is one Text column, appended to (never overwritten) by `resolve_concerns()`. §41.16's own Collaboration Contract text — "Review concerns SHALL preserve author, decision context and unresolved/resolved status by reference to owning mechanisms" — describes concerns with per-item structure (an author, a context, an individually-tracked status), which a single free-text field cannot represent.
+- **Root Cause:** Building a dedicated per-concern child table (author, timestamp, individual resolved/unresolved status) ahead of any real, identified consumer needing that granularity would be speculative schema design, the same class of over-building ADR-004's own Rationale already rejected for WP-01's Organization schema. BA-06's own v1 scope is deliberately minimal, mirroring every prior Business Activity in this Work Package.
+- **Impact:** None today — no test, endpoint, or consumer requires per-concern granularity; the single-field representation satisfies BR-C005-007's own literal text ("Unresolved review concerns SHALL prevent completion...") since the whole review's own status already gates completion via `CONCERNS_RESOLVED`.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future revisit of BA-06 (or a dedicated future Business Activity) introduces structured per-concern tracking once a real consumer — e.g., a collaboration/messaging integration — actually needs individually-addressable concerns.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-06 — Review Proposed Structural Outcome / Resolve Structural Review Concerns
+- **Source:** BA-06 implementation (self-identified during this Business Activity's own gap analysis, directly against §41.16's own text)
+- **Resolution Criteria:** Individual concerns can be authored, addressed, and independently marked resolved/unresolved without renegotiating the single-field representation.
+
+---
+
+### TD-061 — Detailed Entry
+
+- **Title:** No `GET` Read Endpoint Exists for Review Context
+- **Category:** Architecture
+- **Description:** BA-06 implements `POST /structural-reviews` and `POST /structural-reviews/{id}/resolve-concerns` only. No endpoint retrieves an existing review by id or lists reviews for a given proposal.
+- **Root Cause:** Mirrors TD-051/TD-055/TD-058's identical scoping precedent — no read path was scoped for this Business Activity's own first pass; IRA-004 §4 types BA-06 as "Update (review)," not "Query."
+- **Impact:** None today — both create and resolve responses already return every field a caller needs immediately. Becomes real friction once BA-07 (Validate Transition Readiness) needs to resolve a review by id independently.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** BA-07's own future implementation-readiness gap analysis decides whether a dedicated `GET /structural-reviews/{id}` is required.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-06 — Review Proposed Structural Outcome / Resolve Structural Review Concerns
+- **Source:** BA-06 implementation (self-identified, mirroring TD-051/TD-055/TD-058's own identical precedent)
+- **Resolution Criteria:** A read path for Review Context exists, if and only if BA-07's own gap analysis determines one is required.
+
+---
+
+### TD-062 — Detailed Entry
+
+- **Title:** Review Context Lifecycle Transitions Beyond CREATED/CONCERNS_RESOLVED Are Not Implemented
+- **Category:** Architecture
+- **Description:** `StructuralReview.status` (`models/structural_review.py`) is constrained to IRA-004 §25's full registered Lifecycle Model — CREATED, CONCERNS_RESOLVED, INVALIDATED, ARCHIVED — but BA-06's own service only ever writes CREATED and CONCERNS_RESOLVED.
+- **Root Cause:** EX-C005-08's own Invalidated Context ("Prior review position if the reviewed revision changes materially") ties invalidation to an event owned by BA-04 (`refine_proposal()`), not BA-06 — the identical root cause already disclosed for Impact Context (TD-057).
+- **Impact:** None today — mirrors BA-03/BA-04/BA-05's own identical, already-accepted disposition (TD-052/053/057) of not implementing every registered lifecycle value in a Business Activity's own first pass.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future cross-cutting mechanism (e.g., BA-04's `refine_proposal()` itself invalidating dependent Review Context rows, alongside Impact Context per TD-057) or BA-07's own gap analysis.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-06 — Review Proposed Structural Outcome / Resolve Structural Review Concerns
+- **Source:** BA-06 implementation (self-identified, mirroring TD-052/053/057's own precedent)
+- **Resolution Criteria:** INVALIDATED and ARCHIVED each have a real, tested code path once the mechanism that owns each transition is implemented.
+
+---
+
+### TD-063 — Detailed Entry
+
+- **Title:** Review Creation and Concern Resolution Do Not Verify the Referenced Proposal Revision Is Still Current
+- **Category:** Architecture
+- **Description:** Neither `POST /structural-reviews` nor `POST /structural-reviews/{id}/resolve-concerns` checks whether the referenced `structural_proposal_id` is still the current (non-`SUPERSEDED`) revision of its own lineage.
+- **Root Cause:** Identical to TD-059 (Impact Context) — PE-001-C005's own text does not explicitly require currency for either EX-C005-08 or EX-C005-09, so this was disclosed rather than assumed either way, consistent with TD-059's own precedent applied to a second object.
+- **Impact:** Low today — no consumer currently depends on reviews only existing against current revisions.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future revisit of BA-06, or BA-07's own gap analysis, decides whether reviewing/resolving against a superseded revision should be rejected, allowed with a warning, or remains permitted — the same decision TD-059 already defers for Impact Context, ideally resolved once for both objects together.
+- **Owning Work Package:** WP-04 — Enterprise Structure Management (C-005)
+- **Related Business Activity:** BA-06 — Review Proposed Structural Outcome / Resolve Structural Review Concerns
+- **Source:** BA-06 implementation (self-identified, mirroring TD-059's own precedent)
+- **Resolution Criteria:** A deliberate decision (not silence) governs whether superseded-revision review/resolution is permitted, and that decision is enforced and tested — ideally applied consistently to both TD-059 and TD-063 at once.
 
 ---
 
