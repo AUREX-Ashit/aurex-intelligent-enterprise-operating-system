@@ -926,9 +926,13 @@ No security, tenant-isolation, or data-integrity defect was found. No Technical 
 
 **Commit Date (BA-10):** 2026-07-29 (both commits)
 
-**BA-11 — Continue from Membership Context Decision:** Implementation COMPLETE — fully satisfied by BA-01/BA-03/BA-10's own existing response shapes plus the already-certified `record_audit()` mechanism, no new production code (428/428 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (one test-rigor finding found and corrected within this same pass — see above; no Technical Debt registered). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-10's own precedent).
+**BA-11 — Continue from Membership Context Decision:** Implementation COMPLETE — fully satisfied by BA-01/BA-03/BA-10's own existing response shapes plus the already-certified `record_audit()` mechanism, no new production code (428/428 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (one test-rigor finding found and corrected within this same pass — see above; no Technical Debt registered). Committed to `master` in two commits — `fb1f1ba` (implementation: 2 test files) and `a601a57` (documentation: this report, IRA-003, WPR-001 status update).
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`), and BA-10 (`0cf6aec`, `9eef8ca`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-11 is implementation-complete (test-only), tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-11.
+**Commit Hash (BA-11):** `fb1f1ba` (implementation), `a601a57` (documentation: implementation report, IRA-003, WPR-001)
+
+**Commit Date (BA-11):** 2026-07-29 (both commits)
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`), BA-10 (`0cf6aec`, `9eef8ca`), and BA-11 (`fb1f1ba`, `a601a57`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-11.
 
 ---
 
