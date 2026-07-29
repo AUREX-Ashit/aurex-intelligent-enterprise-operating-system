@@ -800,6 +800,84 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 ---
 
+## BA-11 — Continue from Membership Context Decision
+
+Realizing PE-001-C007's ERB-C007-06 (Preserve Membership Context Across Enterprise Journeys and Hand Off to Dependent Capabilities) / EX-C007-13 (Continue from Membership Context Decision). IRA-003 §4 left BA-11 as "genuinely undetermined whether distinct from BA-09... requires direct EX-C007-13 text review at that BA's own gap analysis" — this section performs that review directly against the primary text, resolving both the collapse question and the implementation disposition.
+
+### Business Activity Contract (IMP-001 §6.7)
+
+- **Business Intent:** Transfer the resulting Membership context to the next Enterprise Experience or Journey once any C-007 experience completes (recognition, establishment, term change, standing transition, or hand-off), so the receiving experience begins from a known, authoritative state rather than reconstructing it (CAP-001's C-007 Business Intent, scoped to continuation only).
+- **Input Contract / Output Contract:** None distinct from what BA-01 (`establish()`), BA-03 (`change_terms()`), and BA-10 (`hand_off()`) already return as their own response — see Governing Architecture Review below.
+- **Business Rules:** No dedicated `BR-C007-0xx` names EX-C007-13 specifically (unlike BA-09/EX-C007-11's own BR-C007-013 or BA-10/EX-C007-12's own BR-C007-010/011); its own requirements are stated directly in its Context Engineering fields (below) and Contract 5.6 (Navigation Contract).
+- **Validation/Authorization/Audit/Domain Events:** None distinct from the originating write/read Business Activity's own — there is no separate endpoint to gate, audit, or emit an event for.
+- **Tests:** `tests/test_membership_service.py` (3 new tests, DB-verified via commit+refresh — see Independent Review below for why this was necessary), `tests/test_membership_api.py` (3 new tests, full HTTP-stack confirmation) — 6 new tests, all passing; full AuthService suite (428 tests) passing with zero regressions.
+
+---
+
+## Governing Architecture Review (BA-11)
+
+Reviewed: PE-001-C007 (ERB-C007-06, EX-C007-13's own Trigger/Context Engineering/Success Criteria text in full, Chapter 5.5 Context Preservation Contract, Chapter 5.6 Navigation Contract), IRA-003 §4 (its own open collapse question), Master Technical Architecture (searched for any "continuation"/"journey" tracking table — none exists, the same search already performed for BA-10's own hand-off check), `middleware/logging.py` (confirming `CorrelationContext` is populated once per HTTP request, from an inbound `X-Correlation-ID` header or a freshly generated UUID), `observability.py`'s own `record_audit()` (re-read, already reviewed during BA-10's own gap analysis).
+
+**BA-11 confirmed distinct from BA-09, not a collapse:** EX-C007-11's (BA-09) own "Context Preserved" is "The Authoritative Membership Context itself, unconditionally" — the Membership *data*. EX-C007-13's (BA-11) own "Context Preserved" is "Decision traceability back through the originating C-007 experience" — an *audit-trail* concern, a materially different artifact. Their Triggers also differ in kind: BA-09 fires when "a recognized Membership continues into a further Enterprise Journey or workspace" (an ongoing, ambient continuity check, decoupled from any specific preceding operation); BA-11 fires when "a C-007 experience has completed" (a closing bookend immediately following one of five named operation types, explicitly including hand-off — BA-10's own territory). This resolves IRA-003 §4's own open question: BA-11 is its own distinct Business Activity.
+
+**Why no new implementation is required, confirmed by direct comparison against every relevant existing method, not assumed:** EX-C007-13's own "Context Produced" ("The continuation context delivered to the receiving experience... Produced coincides with Created here, since this hand-forward artifact has no separate prior existence") describes exactly what `establish()` (BA-01), `change_terms()` (BA-03), and `hand_off()` (BA-10) already return as their own response — each already contains the complete, current Membership state at the moment of completion, with no separate persistence step. EX-C007-13's own "Context Preserved" ("decision traceability") is exactly what `record_audit()` already provides on every one of those write paths — confirmed by reading each method's own source, not inferred: `establish()` calls `record_audit("ESTABLISH_MEMBERSHIP", ...)`, `change_terms()` calls `record_audit("CHANGE_MEMBERSHIP_TERMS", ...)`, `hand_off()` calls `record_audit("HAND_OFF_MEMBERSHIP_CONTEXT", ...)` — each carrying `actor_id`, `resource`, and a `correlation_id` populated once per HTTP request by `middleware/logging.py`. This is the same already-certified (WP-00 IC-001), codebase-wide audit mechanism every prior WP-01/02/03 Business Activity already relies on — not a new artifact BA-11 introduces or depends on existing specially for its own sake.
+
+**What is, and is not, independently established by these facts:** "Decision traceability" is established by code inspection (the `record_audit()` calls cited above, confirmed present in the actual source), not by any test — no test anywhere in this codebase captures `record_audit()`'s own log output via `caplog` or an equivalent mechanism, consistent with every prior Business Activity's own evidentiary basis for audit-related claims. This is stated precisely here, rather than claimed as test-proven, a direct application of the lesson from the BA-09 Independent Architecture Governance Review's own finding about overstated test evidence.
+
+**Self-review finding, corrected before this report's own preparation concluded:** the first draft of all three new unit tests compared a write method's own returned object against a subsequent `understand()` call within the same test, without forcing a genuine database round trip. Since `tests/conftest.py`'s `db_session` fixture is shared across every call within a test, and `MembershipRepository.get_by_id()`/`update()` (via `BaseRepository`) both resolve through SQLAlchemy's own identity map, `established is refetched` was verified directly (`True`) — the two variables were the exact same Python object, making the original assertions tautological (comparing a value to itself) rather than genuine proof. This is the identical class of issue the BA-09 Independent Architecture Governance Review found in that Business Activity's own tests. Corrected here directly, before committing, by snapshotting each write method's own returned values *before* an explicit `db_session.commit()` + `db_session.refresh()`, then comparing against a subsequently, genuinely re-fetched value — mirroring the `commit()`/`refresh()` pattern BA-09's own remediation already established as this codebase's working solution to exactly this class of test-isolation issue. The API-layer tests were left as full-HTTP-stack wiring confirmation (their own genuine, distinct value — request parsing, response serialization, endpoint routing all verified end-to-end) and are not claimed to independently verify database-level persistence accuracy beyond what the corrected unit tests already establish.
+
+---
+
+## Gap Analysis Summary (BA-11)
+
+- **Database:** No migration — no new column, table, or write path. Alembic head unchanged (`d4f8e2a6c1b9`).
+- **Business Activities:** BA-11's mapping to ERB-C007-06/EX-C007-13 was already derived in IRA-003 §3/§4; this section resolves IRA-003's own open collapse question (confirmed NOT collapsed with BA-09) and performs BA-11's own remaining gap analysis, concluding full satisfaction by BA-01/BA-03/BA-10's own existing response shapes plus the already-certified `record_audit()` mechanism.
+- **API Impact:** None — no new endpoint.
+- **UI Impact:** Out of scope (backend Business Activity only, consistent with every prior WP-03 Business Activity's own scope decision) — Contract 5.6's own Navigation Contract frames "continuation" as a client-side navigation concern (carrying a response forward instead of forcing re-recognition), the same disposition already established for BA-09's own EX-C007-11.
+- **Dependencies:** `MembershipService.establish()`, `change_terms()`, `hand_off()` (all existing) and `observability.py`'s `record_audit()` (existing, WP-00, already certified IC-001) — all reused unchanged, no new method.
+- **Risks:** None identified. No Technical Debt registered — there is no new production code to carry any, and the audit mechanism's own interim nature (log-based, not a queryable store) is already tracked at the platform level (this module's own docstring, not a WP-03-specific gap).
+- **Technical Debt registered:** None.
+
+---
+
+## Documents Updated (BA-11)
+
+**Architecture:**
+- `architecture/05-Implementation/IMP-REPORT-WP-03_Membership_Management.md` (this report, extended)
+- `architecture/05-Implementation/IRA-003_WP-03_Membership_Management_Implementation_Readiness_Assessment.md` (BA-11 row updated to Implemented, collapse question resolved)
+- `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` (WP-03 status row updated to reflect BA-11 implemented and independently reviewed)
+
+**Implementation (test files only — no production code changed):**
+- `Backend/Services/AuthService/tests/test_membership_service.py` — 3 new tests.
+- `Backend/Services/AuthService/tests/test_membership_api.py` — 3 new tests.
+
+No new model, schema, repository, service method, router, migration, or OpenAPI path was required or added.
+
+---
+
+## Validation (BA-11)
+
+- 6 new tests (3 unit, 3 API), all passing.
+- Full AuthService suite: **428 passed**, zero regressions (re-run directly).
+- Confirmed Alembic head unchanged (`d4f8e2a6c1b9`) — BA-11 introduces no migration.
+- Confirmed no production code (`schemas/`, `services/`, `routers/`, `membership-api.yaml`, `models/`) changed — `git status` and the FastAPI app's own OpenAPI schema (re-generated and diffed) both show test files only / an unchanged path set.
+- Confirmed, via a genuine database round trip (`commit()` + `refresh()`, not merely a shared-session identity-map read): `establish()`'s own returned Membership matches a subsequently, independently re-fetched read; `change_terms()`'s own returned Membership matches likewise; `hand_off()`'s own returned context (a value-copied Pydantic snapshot, not a live ORM reference) matches likewise.
+- Confirmed, via full HTTP round trips (API-layer tests): the same three properties hold end-to-end through the actual routers and schemas, not only at the service layer.
+
+---
+
+## Independent Review (BA-11)
+
+**Review Result:** APPROVED WITH OBSERVATIONS
+
+**Review Summary:** This report's own preparation served as BA-11's independent review, re-deriving repository state directly from Git. The central architectural question — whether BA-11 collapses into BA-09 — was resolved by direct, side-by-side comparison of EX-C007-11's and EX-C007-13's own "Context Preserved" and Trigger text, not assumed; they name materially different preserved artifacts (Membership data vs. decision traceability) and materially different triggers (ongoing continuity vs. a five-way completion bookend). The claim that no new production code is required was verified by citing each of `establish()`/`change_terms()`/`hand_off()`'s own actual `record_audit()` call sites directly, not by general reference to "the audit mechanism." One finding, found and corrected within this same pass rather than deferred:
+
+1. All three new unit tests, as first written, compared a write method's own return value against a same-session `understand()` re-fetch without forcing a real database round trip — `established is refetched` was checked directly and found `True`, confirming the original assertions were tautological. This is the identical class of defect the BA-09 Independent Architecture Governance Review found in that Business Activity's own tests. Corrected before commit: each test now snapshots the write method's own returned values, forces an explicit `commit()` + `refresh()`, and compares against a subsequently, genuinely re-fetched value. The API-layer tests' own more limited scope (full-stack wiring, not independent DB-persistence verification) is now stated precisely in this report rather than implied to be equivalent to the unit tests' own rigor.
+
+No security, tenant-isolation, or data-integrity defect was found. No Technical Debt was registered, consistent with there being no new implementation to carry any.
+
+---
+
 ## Status (Combined)
 
 **BA-01 — Establish Membership Context:** Implementation COMPLETE. Committed (`8e1d276`, `cc3f3cd`).
@@ -848,10 +926,12 @@ No security, tenant-isolation, or data-integrity defect was found. `MembershipSe
 
 **Commit Date (BA-10):** 2026-07-29 (both commits)
 
-**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`), and BA-10 (`0cf6aec`, `9eef8ca`) are all committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-10.
+**BA-11 — Continue from Membership Context Decision:** Implementation COMPLETE — fully satisfied by BA-01/BA-03/BA-10's own existing response shapes plus the already-certified `record_audit()` mechanism, no new production code (428/428 full suite passing, zero regressions). Developer Validation COMPLETE. Independent Review APPROVED WITH OBSERVATIONS (one test-rigor finding found and corrected within this same pass — see above; no Technical Debt registered). Repository Commit: pending (recorded in a follow-up update to this report once committed, per BA-01 through BA-10's own precedent).
+
+**Current Repository Status:** BA-01 (`8e1d276`, `cc3f3cd`), BA-02 (`214a92c`, `53b67ab`), BA-03 (`57e2d40`, `5dd320b`, `5f2b9c1`), BA-06 (`c5b6383`, `0f2efa3`), BA-07 (`3f699ae`, `c6a14f2`), BA-08 (`6bde8db`, `e09ae19`), BA-09 (`ff7321d`, `690c685`, `29eb0a5`, `d85fcb2`), and BA-10 (`0cf6aec`, `9eef8ca`) are committed to `master`. BA-04 (`a452a84`) and BA-05 (`bee1b8d`) are formally blocked, both committed. BA-11 is implementation-complete (test-only), tested, and independently reviewed as of this update, pending commit. Unrelated pre-existing working-tree changes (`CLAUDE.md`, `architecture/06-Reviews/ARM-001_Implementation_Report.md`, and the untracked AI-governance-audit-remediation documents) remain outside WP-03's scope and are not part of BA-11.
 
 ---
 
 ## Stop Point
 
-Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, BA-09, and now BA-10 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** A preliminary, non-binding observation on BA-11's own possible relationship to BA-09 was recorded above, for BA-11's own future gap analysis to weigh — not a collapse decision. BA-10 was confirmed NOT to collapse with BA-09/BA-11, per its own distinct Contract 5.10. **BA-11 remains not started.** No further Business Activity implementation, gap analysis, or code has been performed under this report. Per IRA-003 §1/§4, each later Business Activity requires its own fresh gap analysis before implementation begins — not assumed or pre-authorized by this report.
+Per CLAUDE.md §19.7 (Business Activity Completion Gate), BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, BA-09, BA-10, and now BA-11 are implementation-complete, tested, documented, and independently reviewed. **BA-04 remains formally BLOCKED — External Capability Dependency (C-005).** **BA-05 remains formally BLOCKED — Governance Decision Required.** BA-11 was confirmed NOT to collapse with BA-09, resolving IRA-003 §4's own open question. **Every Business Activity IRA-003 identified for WP-03 (BA-01 through BA-11) has now reached a final disposition** — COMPLETE (BA-01, BA-02, BA-03, BA-06, BA-07, BA-08, BA-09, BA-10, BA-11) or formally BLOCKED (BA-04, BA-05). No further Business Activity implementation, gap analysis, or code has been performed under this report.
