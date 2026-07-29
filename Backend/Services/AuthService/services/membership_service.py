@@ -63,6 +63,8 @@ from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
     MembershipAuthorityConsequence,
+    MembershipPortfolioResponse,
+    MembershipResponse,
     MultiOrganizationAwarenessResponse,
     ReactivateMembershipRequest,
 )
@@ -624,3 +626,43 @@ class MembershipService:
             },
         )
         return MultiOrganizationAwarenessResponse(has_memberships_in_other_organizations=has_other)
+
+    async def present_own_portfolio(self, person_id: UUID) -> MembershipPortfolioResponse:
+        """
+        Business Activity: Present Person's Own Cross-Organization
+        Membership View (BA-08, ERB-C007-05 / EX-C007-10).
+
+        BR-C007-009: a Membership Subject SHALL be able to see the
+        complete detail of their own Membership portfolio — this is a
+        materially different visibility posture from BA-07's own
+        existence-only signal (BR-C007-008), because the caller is
+        viewing their *own* data, which URA-001-17a's cross-tenant
+        restriction never applied to in the first place (it governs an
+        *establishing Organization's* visibility into a Person's
+        Memberships elsewhere, not the Person's own).
+
+        person_id is supplied by the router directly from the caller's
+        own verified JWT claims, never from a query parameter — the
+        entire safety property here rests on the caller only ever being
+        able to name themselves. EX-C007-10's own second Participating
+        Persona, "Platform Oversight Participant where an authorized
+        aggregator is involved," is deliberately NOT implemented: no
+        distinct aggregator claim exists anywhere in this codebase, and
+        standing PLATFORM_ADMIN in for it — unlike every prior WP-03
+        Business Activity's own interim-gate simplification — would let
+        any platform admin read any Person's complete cross-tenant
+        Membership detail, a materially larger exposure than anything
+        BA-01 through BA-07 permit. Disclosed as TD-041, not silently
+        implemented as an admin-accessible endpoint.
+
+        Reuses MembershipRepository.get_person_memberships() as-is (the
+        same query BA-07 already reuses) — no new repository method.
+        No audit record: mirrors BA-02's own "only a write path audits"
+        precedent, since a person reading their own data is not a
+        cross-tenant-boundary event the way BA-07's cross-organization
+        awareness check is.
+        """
+        memberships = await self.membership_repo.get_person_memberships(person_id)
+        return MembershipPortfolioResponse(
+            memberships=[MembershipResponse.model_validate(m) for m in memberships]
+        )

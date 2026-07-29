@@ -608,3 +608,80 @@ def test_multi_organization_awareness_requires_authorization_header(client: Test
         params={"person_id": str(uuid.uuid4()), "organization_id": str(uuid.uuid4())},
     )
     assert response.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# BA-08 — Present Person's Own Cross-Organization Membership View (ERB-C007-05/EX-C007-10)
+# ---------------------------------------------------------------------------
+
+SELF_PERSON_ID = uuid.UUID("11111111-1111-1111-1111-111111111111")
+"""Matches _access_token()'s own hardcoded 'person_id' claim, so the self-service /my-portfolio endpoint can be exercised against a real Person row."""
+
+
+@pytest.fixture
+async def seeded_self_person_organization_role(db_session: AsyncSession) -> tuple[str, str, str]:
+    person = Person(id=SELF_PERSON_ID, first_name="Self", last_name="Caller", display_name="Self Caller")
+    organization = Organization(
+        organization_code="MEM_API_TEST_SELF_ORG", organization_name="Self Portfolio Test Org", organization_type="CORPORATE",
+    )
+    role = Role(role_code="MEM_API_TEST_SELF_ROLE", role_name="Self Portfolio Test Role")
+    db_session.add_all([person, organization, role])
+    await db_session.commit()
+    return str(person.id), str(organization.id), str(role.id)
+
+
+def test_present_own_portfolio_returns_empty_list_when_no_memberships(client: TestClient) -> None:
+    response = client.get("/memberships/my-portfolio", headers=_auth_headers())
+
+    assert response.status_code == 200
+    assert response.json()["memberships"] == []
+
+
+def test_present_own_portfolio_returns_full_detail_for_own_membership(
+    client: TestClient, seeded_self_person_organization_role
+) -> None:
+    person_id, organization_id, role_id = seeded_self_person_organization_role
+    assert person_id == str(SELF_PERSON_ID)
+    client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    )
+
+    response = client.get("/memberships/my-portfolio", headers=_auth_headers())
+
+    assert response.status_code == 200
+    memberships = response.json()["memberships"]
+    assert len(memberships) == 1
+    assert memberships[0]["organization_id"] == organization_id
+    assert memberships[0]["membership_status"] == "ACTIVE"
+
+
+def test_present_own_portfolio_never_returns_a_different_persons_membership(
+    client: TestClient, seeded_person_organization_role
+) -> None:
+    """Confirms no cross-Person leakage: seeded_person_organization_role creates a *different* Person than SELF_PERSON_ID."""
+    person_id, organization_id, role_id = seeded_person_organization_role
+    assert person_id != str(SELF_PERSON_ID)
+    client.post(
+        "/memberships",
+        headers=_auth_headers(),
+        json={"person_id": person_id, "organization_id": organization_id, "role_id": role_id},
+    )
+
+    response = client.get("/memberships/my-portfolio", headers=_auth_headers())
+
+    assert response.status_code == 200
+    assert response.json()["memberships"] == []
+
+
+def test_present_own_portfolio_does_not_require_platform_admin(client: TestClient) -> None:
+    """BR-C007-009: any authenticated caller may see their own portfolio - no role gate, unlike every other WP-03 endpoint."""
+    response = client.get("/memberships/my-portfolio", headers=_auth_headers(role_code="ESG_MANAGER"))
+
+    assert response.status_code == 200
+
+
+def test_present_own_portfolio_requires_authorization_header(client: TestClient) -> None:
+    response = client.get("/memberships/my-portfolio")
+    assert response.status_code == 400

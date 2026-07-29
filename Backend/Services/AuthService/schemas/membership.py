@@ -140,6 +140,25 @@ class MultiOrganizationAwarenessResponse(BaseModel):
     )
 
 
+class MembershipPortfolioResponse(BaseModel):
+    """
+    Response for Present Person's Own Cross-Organization Membership View
+    (WP-03 BA-08, C-007, realizing ERB-C007-05 / EX-C007-10).
+
+    Per BR-C007-009 and Contract 5.4: a Membership Subject SHALL be able
+    to see the complete detail of their own Membership portfolio across
+    every Organization they participate in — this is the Person's own
+    data and is not restricted by URA-001-17a's cross-tenant rule (which
+    governs an *establishing Organization's* visibility into a Person's
+    Memberships elsewhere, not the Person's own visibility into their
+    own record). Every field BA-01 through BA-07 already expose via
+    MembershipResponse is included, per Organization, unfiltered.
+    """
+    memberships: list[MembershipResponse] = Field(
+        ..., description="The complete set of the caller's own ACTIVE Memberships, across every Organization."
+    )
+
+
 class ReactivateMembershipRequest(BaseModel):
     """
     Request body for Reactivate Membership (WP-03 BA-06, C-007,

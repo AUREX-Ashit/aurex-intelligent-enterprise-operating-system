@@ -606,3 +606,97 @@ async def test_multi_organization_awareness_ignores_non_active_memberships_elsew
     result = await service.surface_multi_organization_awareness(person.id, organization.id)
 
     assert result.has_memberships_in_other_organizations is False
+
+
+# ---------------------------------------------------------------------------
+# BA-08 — Present Person's Own Cross-Organization Membership View (ERB-C007-05/EX-C007-10)
+# ---------------------------------------------------------------------------
+
+async def test_present_own_portfolio_returns_empty_list_when_no_memberships(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, _organization, _role = seeded_person_organization_role
+    service = _service(db_session)
+
+    result = await service.present_own_portfolio(person.id)
+
+    assert result.memberships == []
+
+
+async def test_present_own_portfolio_returns_full_detail_for_a_single_membership(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """BR-C007-009: full detail, not existence-only (contrast with BA-07's own MultiOrganizationAwarenessResponse)."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    result = await service.present_own_portfolio(person.id)
+
+    assert len(result.memberships) == 1
+    membership = result.memberships[0]
+    assert membership.id == established.id
+    assert membership.organization_id == organization.id
+    assert membership.membership_status == "ACTIVE"
+    assert membership.membership_type == "INTERNAL"
+    assert membership.license_type == "FULL"
+
+
+async def test_present_own_portfolio_returns_memberships_across_multiple_organizations(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    person, organization, role = seeded_person_organization_role
+    other_organization = Organization(
+        organization_code="MEM_TEST_ORG_PORTFOLIO_OTHER", organization_name="Portfolio Other Org", organization_type="CORPORATE",
+    )
+    db_session.add(other_organization)
+    await db_session.flush()
+    service = _service(db_session)
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=other_organization.id, role_id=role.id)
+    )
+
+    result = await service.present_own_portfolio(person.id)
+
+    returned_org_ids = {m.organization_id for m in result.memberships}
+    assert returned_org_ids == {organization.id, other_organization.id}
+
+
+async def test_present_own_portfolio_excludes_non_active_memberships(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """Reuses get_person_memberships()'s own existing ACTIVE-only filter, same as BA-07."""
+    person, organization, role = seeded_person_organization_role
+    service = _service(db_session)
+    established = await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+    established.membership_status = "SUSPENDED"
+    await db_session.flush()
+
+    result = await service.present_own_portfolio(person.id)
+
+    assert result.memberships == []
+
+
+async def test_present_own_portfolio_only_returns_the_supplied_persons_own_memberships(
+    db_session: AsyncSession, seeded_person_organization_role
+) -> None:
+    """Confirms no cross-Person leakage: a different Person's own Membership is never returned."""
+    person, organization, role = seeded_person_organization_role
+    other_person = Person(first_name="Grace", last_name="Hopper", display_name="Grace Hopper")
+    db_session.add(other_person)
+    await db_session.flush()
+    service = _service(db_session)
+    await service.establish(
+        EstablishMembershipRequest(person_id=person.id, organization_id=organization.id, role_id=role.id)
+    )
+
+    result = await service.present_own_portfolio(other_person.id)
+
+    assert result.memberships == []

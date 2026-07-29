@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import require_platform_admin
+from dependencies import get_current_claims, require_platform_admin
 from models.database import db_manager
 from repositories.membership_repository import MembershipRepository
 from repositories.organization_node_repository import OrganizationNodeRepository
@@ -14,6 +14,7 @@ from repositories.role_repository import RoleRepository
 from schemas.membership import (
     ChangeMembershipTermsRequest,
     EstablishMembershipRequest,
+    MembershipPortfolioResponse,
     MembershipResponse,
     MembershipUnderstandingResponse,
     MultiOrganizationAwarenessResponse,
@@ -145,6 +146,37 @@ async def surface_multi_organization_awareness(
     return await membership_service.surface_multi_organization_awareness(
         person_id, organization_id, actor_id=claims.get("person_id")
     )
+
+
+# Registered before GET /{membership_id} below, same reason as the
+# multi-organization-awareness route above (Starlette route-matching order).
+@router.get(
+    "/my-portfolio",
+    response_model=MembershipPortfolioResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Present the caller's own cross-organization Membership portfolio",
+    description=(
+        "WP-03 Business Activity: Present Person's Own Cross-Organization "
+        "Membership View (C-007), realizing PE-001-C007's ERB-C007-05 / "
+        "EX-C007-10. Requires only a valid access token — no role gate — "
+        "since BR-C007-009 entitles a Membership Subject to see the "
+        "complete detail of their own Membership portfolio, and this is "
+        "the caller's own data, never another Person's (person_id is "
+        "taken from the caller's own verified claims, never a query "
+        "parameter). EX-C007-10's own 'authorized aggregator' persona is "
+        "not implemented here — see TD-041."
+    ),
+    responses={
+        200: {"description": "The caller's own complete Membership portfolio."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+    },
+)
+async def present_own_portfolio(
+    membership_service: Annotated[MembershipService, Depends(get_membership_service)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+) -> MembershipPortfolioResponse:
+    return await membership_service.present_own_portfolio(UUID(claims["person_id"]))
 
 
 @router.get(
