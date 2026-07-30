@@ -120,6 +120,16 @@ Execute AR-001 (AI Governance & Ownership Reconciliation), the first of AAR-001'
 
 ---
 
+## Repository Commit
+
+**Repository Commit:** Committed to `master`. Staged and committed exactly two files — `architecture/00-Governance/ARCH-000 – Enterprise Operating System Architecture Manifest.md` (the AR-001 change) and `architecture/06-Reviews/ARM-001_Implementation_Report.md` (this report) — verified via `git diff`/`git status` before staging to confirm no unrelated file, no LOCKED document (RTA-001 was confirmed untouched), and no implementation code was included. Pre-existing unrelated changes noted in the Independent Review's observation (an uncommitted `CLAUDE.md` §19.8 addition and untracked WP-01/audit documents) were deliberately left unstaged and uncommitted, so this commit contains only ARM-001 changes.
+
+**Commit Hash:** `770aaad0cc3182a81fde3bc22154c4ca18e8379b`
+
+**Commit Date:** 2026-07-27
+
+---
+
 ## 5. Stop Point
 
-Per instruction, this report covers AR-001 only. AR-002 through AR-009 remain deferred and unexecuted. No further remediation (ARM-002 or beyond) has been started. No Independent Review has been performed. No commit has been made. Awaiting explicit approval before proceeding.
+Per instruction, this report covers AR-001 only. AR-002 through AR-009 remain deferred and unexecuted at the time of this report. **Updated:** AR-001 has since been independently reviewed and committed (see Independent Review and Repository Commit sections above, commit `770aaad0cc3182a81fde3bc22154c4ca18e8379b`, 2026-07-27). A subsequent, separate attempt at AR-002 did not result in a valid committed artifact — see the Governance Recovery operation's Validation Failure Report; AF-002/AR-002 remain Open in `AAR-001`.
