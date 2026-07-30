@@ -1,8 +1,9 @@
-# DOC-000 — Enterprise Operating System Documentation Catalogue
+# DOC-000 — Enterprise Documentation Register (EDR)
 
-**Type:** Repository Navigation Guide (not an architecture, design, or governance specification)
-**Status:** Current as of Constitutional Baseline v2.0
-**Read time:** ~10 minutes
+**Type:** Authoritative Enterprise Documentation Register — governs the repository's own document inventory, metadata, ownership, and navigation. (Sections 1–7 below retain this document's original role as the Repository Navigation Guide; that role is preserved unchanged, not replaced — see Section 8 onward for the Register itself.)
+**Status:** Current as of Constitutional Baseline v2.0; evolved into the Enterprise Documentation Register per repository-owner governance decision (2026-07-30)
+**Read time:** ~10 minutes (Sections 1–7); ~10 further minutes for the Register (Sections 8–12)
+**Relationship to WP-REG-001:** Complementary, not overlapping. DOC-000 answers *"What governed documents exist within the Enterprise Operating System?"* — inventory, metadata, ownership, canonical status, navigation. `WP-REG-001` answers *"What is the current implementation state?"* — Work Package lifecycle, Business Activity progress, certification status. DOC-000 SHALL NOT contain implementation status; `WP-REG-001` SHALL NOT contain document inventory. Neither supersedes the other.
 
 ---
 
@@ -10,7 +11,7 @@
 
 This catalogue is the single entry point into the Aurex Enterprise Operating System repository. It exists because the repository now spans 20+ registered architecture documents across four layers, and no single document previously told a reader which one to open first.
 
-**How to use it:** find your role in Section 6, or your task in Section 5's "If I want to..." table, and go straight to the named document. Section 3 is the full reference catalogue; consult it when Sections 5–6 don't cover your case.
+**How to use it:** find your role in Section 6, or your task in Section 5's "If I want to..." table, and go straight to the named document. Section 3 is the full reference catalogue; consult it when Sections 5–6 don't cover your case. **For the complete, authoritative inventory of every governed document in the repository** (metadata, ownership, canonical/lifecycle status, update triggers) **see Section 8 onward — the Enterprise Documentation Register.**
 
 **Who should read it:** every new architect, developer, reviewer, or AI coding agent, before opening any other file in this repository.
 
@@ -183,4 +184,327 @@ Read top to bottom. Every arrow is "consumes," never "redefines" — per ARCH-00
 
 ---
 
-*End of DOC-000. For anything not covered here, start at ARCH-000.*
+---
+
+# PART II — ENTERPRISE DOCUMENTATION REGISTER
+
+*(Sections 8–12. Sections 1–7 above are preserved unchanged as this document's original Repository Navigation Guide content. This Part is the new material governed by DOC-000's evolved role.)*
+
+## 8. Enterprise Documentation Register
+
+The master inventory. Every governed document appears exactly once. `Version`/`Last Updated` values not independently re-verified against `git log` in this pass are marked accordingly rather than estimated.
+
+### Architecture (Layer 1 — Constitutional)
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| ARCH-000 | Enterprise Operating System Architecture Manifest | Architecture | `architecture/00-Governance/ARCH-000 – Enterprise Operating System Architecture Manifest.md` | Chief Architecture Office | Canonical, top-level authority | AUTHORITATIVE | 1.6 | Not independently dated this pass | All roles |
+| SD-001 | Enterprise Presentation Architecture | Architecture | `architecture/02-Constitutional/SD-001 — Enterprise Presentation Architecture.md` | Product Architecture | Canonical | LOCKED | 2.0 (Gold Standard) | Not independently dated this pass | Architects, Frontend |
+| SD-002 | Universal Business Object Rules | Architecture | `architecture/02-Constitutional/SD-002_Universal_Business_Object_Rules.md` | Product Architecture | Canonical | LOCKED | 2.2 (Gold Standard) | Not independently dated this pass | All engineering roles |
+| SD-003 | Enterprise Interaction Laws | Architecture | `architecture/02-Constitutional/SD-003_Enterprise_Interaction_Laws.md` | Product Architecture | Canonical | LOCKED | 2.0 (Gold Standard) | Not independently dated this pass | Architects, Frontend |
+| URA-001 | User, Role, Permission, Event and Assignment | Architecture | `architecture/02-Constitutional/URA-001 - User, Role, Permission, Event and ssignment.md` | Security Architecture | Canonical | LOCKED | 2.1 (Gold Standard) | Not independently dated this pass | Security, Backend |
+| ERG-001 | Enterprise Structure & Relationship Management | Architecture | `architecture/02-Constitutional/ERG-001 Enterprise Structure & Relationship Management (ESRM).md` | Enterprise Architecture | Canonical | LOCKED | 2.0 (Gold Standard) | Not independently dated this pass | Architects, Backend |
+| CMD-001 | Canonical Data Model | Architecture | `architecture/02-Constitutional/CMD-001_Canonical_Data_Model.md` | Data Architecture | Canonical | LOCKED | 1.3 (Gold Standard) | Not independently dated this pass | Data, Backend |
+| RTA-001 | Runtime Architecture and Execution | Architecture | `architecture/02-Constitutional/RTA-001 - Runtime Architecture and Execution.md` | Chief Architecture Office | Canonical | LOCKED | 1.0 | Not independently dated this pass | Architects, Backend, Runtime engineers |
+| EIA-001 | Enterprise Intelligence Architecture (Vol. I & II) | Architecture | `docs/Product/Implementation/EIS-001` region (per DOC-000 §3 Supporting Artifacts) — canonical volumes referenced, not re-verified this pass | Enterprise Intelligence Architect | Canonical | Frozen v1.0 | 1.0 | Not independently dated this pass | AI/Intelligence engineers |
+| COM-001 | Commercial & Subscription Architecture | Architecture | `architecture/02-Constitutional/COM-001_Commercial_and_Subscription_Architecture.md` | Product Architecture | Canonical | LOCKED | 1.0 | Not independently dated this pass | Commercial domain engineers |
+| GRC-001 | Governance, Risk & Compliance Architecture | Architecture | `architecture/02-Constitutional/GRC-001_Governance_Risk_and_Compliance_Architecture.md` | Product Architecture | Canonical | LOCKED | 1.0 | Not independently dated this pass | GRC domain engineers |
+| PLT-001 | Enterprise Platform Architecture | Architecture | `architecture/02-Constitutional/PLT-001_Enterprise_Platform_Architecture.md` | Product Architecture | Canonical | LOCKED | 1.0 | Not independently dated this pass | Platform/Integration engineers |
+| OPM-001 | Enterprise Operating Model Architecture | Architecture | `architecture/02-Constitutional/OPM-001_Enterprise_Operating_Model_Architecture.md` | Chief Architecture Office | Canonical | LOCKED | 1.0 | Not independently dated this pass | Cross-domain architects |
+| ONT-001 | Enterprise Ontology Architecture | Architecture | `architecture/02-Constitutional/ONT-001_Enterprise_Ontology_Architecture.md` | Chief Architecture Office | Canonical | LOCKED | 1.0 | Not independently dated this pass | Data, Knowledge engineers |
+
+### Experience (Layer 2)
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| PE-001 | Enterprise Experience Blueprint | Experience | `docs/Product/PE-001/PE-001_Enterprise_Experience_Blueprint.md` | Product Architecture | Canonical | LOCKED (evolving under ARCH-000 §12.6) | 1.1 | Not independently dated this pass | Experience/Product engineers |
+| PE-001-Cxxx | Capability-specific Experience Blueprints (14 authored: C-001–008, C-020–024, C-040) | Experience | `docs/Product/PE-001/capabilities/C-0XX/` | Product Architecture | Canonical (per capability) | Varies — see §4 above for the full 14-entry catalogue | Varies | Not independently dated this pass | Capability implementers |
+
+### Engineering (Layer 3)
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| IMP-001 | Implementation Playbook | Engineering | `architecture/03-Engineering/IMP-001_Implementation_Playbook.md` | Engineering Architecture | Canonical | Active (Controlled Evolution, `ARCH-000 §12.6`) | Not independently versioned this pass | Not independently dated this pass | All engineering roles |
+| Master Technical Architecture | Master Technical Architecture | Engineering | `architecture/04-Technical/Master_Technical_Architecture.md` | Engineering Architecture | Canonical | Active, evolving via amendment log | 6.9 | Not independently dated this pass | Backend, Data, Platform |
+| MDP-001 | Master Data Population Specification | Implementation | `architecture/05-Implementation/MDP-001_Master_Data_Population_Specification.md` | Engineering Architecture | Canonical | LOCKED | 1.2 (Gold Standard) | Not independently dated this pass | Backend, DevOps |
+| METH-001 | Engineering Methodology Improvements (Post-WP-04 Retrospective) | Engineering | `architecture/03-Engineering/METH-001_Engineering_Methodology_Improvements.md` | Engineering Governance | Non-canonical (retrospective) | Adopted per `ADR-014` | N/A | 2026-07-30 (recovered) | Engineering Governance |
+| AMD-014 | Domain Business Object Architecture Completion | Engineering | `architecture/04-Technical/AMD-014_Domain_Business_Object_Architecture_Completion.md` | Engineering Architecture | Amendment (Master Technical Architecture) | Architecture completion required | N/A | Not independently dated this pass | Backend |
+
+### Design
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| DS-001 | AUREX Design System | Design | `architecture/02-Constitutional/DS-001 — AUREX Design System.md` | Design Authority | Canonical | RELEASED | 1.0 | Not independently dated this pass | Frontend, Design |
+| DS-001 (Release Record) | DS-001 — Version and Release Record | Design | `architecture/02-Constitutional/DS-001 — Version and Release Record.md` | Design Authority | Canonical (governing release record) | RELEASED | 1.0 | Not independently dated this pass | Design, Frontend |
+
+### Governance
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| CAP-001 | Enterprise Capability Registry | Governance | `architecture/02-Constitutional/CAP-001_Enterprise_Capability_Registry.md` | Product Architecture | Canonical | Architecture Review Complete | 1.5 | Not independently dated this pass | All roles |
+| WPR-001 | Work Package Roadmap | Governance | `architecture/00-Governance/WPR-001_Work_Package_Roadmap.md` | Repository Owner / Engineering Governance | Governance Registry (roadmap/definition authority) | Active | N/A (living registry) | 2026-07-30 | Engineering Governance, Implementers |
+| WP-REG-001 | Enterprise Work Package Register | Governance | `architecture/00-Governance/WP-REG-001_Enterprise_Work_Package_Register.md` | Repository Owner / Engineering Governance | Governance Registry (execution-status authority) | Active | 1.0 | 2026-07-30 | Executives, Architects, Reviewers |
+| DOC-000 | Enterprise Documentation Register (this document) | Governance | `architecture/00-Governance/DOC-000_Documentation_Catalogue.md` | Chief Architecture Office | Governance Registry (document-inventory authority) | Active | 2.0 (evolved from Navigation Guide) | 2026-07-30 | All roles |
+| CBOR-INDEX | Canonical Business Object Register Index | Governance | `architecture/00-Governance/CBOR-INDEX.md` | Engineering Governance | Governance Registry | Active | N/A (living index) | Not independently dated this pass | Engineering |
+| TECH-DEBT | Technical Debt Register | Governance | `architecture/06-Reviews/TECH-DEBT.md` | Repository-wide (per-entry ownership) | Governance Registry | Active | N/A (living register, 78 entries) | 2026-07-30 | All engineering roles |
+| ADR Index | Architecture Decision Records (ADR-001 through ADR-016) | Governance | `architecture/07-Decisions/ADR-*.md` | Repository Owner (per-decision) | Governance (superseding-change authority) | 16 Accepted | N/A (index of 16 documents) | 2026-07-30 (latest: ADR-016) | Architects, Reviewers |
+| IRA Reports | Implementation Readiness Assessments (IRA-001, IRA-001A, IRA-002 through IRA-005, IRA-RTA-001) | Governance | `architecture/05-Implementation/IRA-*.md` | Implementing session per WP | Governance (readiness gate) | 7 Accepted | N/A (index of 7 documents) | 2026-07-30 (latest: IRA-RTA-001) | Implementers, Reviewers |
+| Independent Review / Certification Reports | CERT-WP-01, CERT-WP-01A, CERT-WP-02, CERT-WP-03, CERT-WP-04, CERT-WP-RTA-001 | Governance | `architecture/06-Reviews/CERT-*.md` | Independent (fresh-context) reviewer, per `CLAUDE.md §19.7` | Governance (certification authority) | 6 issued (5 PASS WITH OBSERVATIONS, 1 CERTIFIED WITH CONDITIONS — resolved) | N/A (index of 6 documents) | 2026-07-30 (latest: CERT-WP-RTA-001) | Executives, Reviewers, Auditors |
+| AAR-001 | Architecture Audit Remediation Register | Governance | `architecture/06-Reviews/AAR-001_Architecture_Audit_Remediation_Register.md` | Architecture Governance | Planning artifact (no architecture modified) | CERTIFIED WITH OBSERVATIONS | 2.1 | 2026-07-30 (recovered) | Architecture Governance |
+| ARM-001 | Architecture Remediation Implementation Report (AR-001) | Governance | `architecture/06-Reviews/ARM-001_Implementation_Report.md` | Implementing session | Implementation Report | Complete (committed `770aaad`) | N/A | 2026-07-30 (corrected) | Architecture Governance |
+| ENTERPRISE-AI-ARCHITECTURE-AUDIT | Enterprise AI Architecture Audit | Governance | `architecture/06-Reviews/ENTERPRISE-AI-ARCHITECTURE-AUDIT.md` | Independent architecture reviewer | Architecture Review (read-only) | Final: OPTION B | N/A | 2026-07-30 (recovered) | Architecture Governance, AI engineers |
+| AUTHORIZATION_ENGINE_CONSTITUTIONAL_RESPONSE | Authorization Engine Constitutional Response | Governance | `architecture/06-Reviews/AUTHORIZATION_ENGINE_CONSTITUTIONAL_RESPONSE.md` | Implementing session (Constitutional Review) | Review artifact | Complete — recommendation PARTIAL REUSE | N/A | 2026-07-30 | Architecture Governance |
+| WP-RTA-001_Closure_Report | WP-RTA-001 Closure Report | Governance | `architecture/06-Reviews/WP-RTA-001_Closure_Report.md` | Implementing session | Closure Report (not a certification) | Implementation Complete | N/A | 2026-07-30 | Architecture Governance, Reviewers |
+| WP-RTA-001_Self_Verification_Audit | WP-RTA-001 Self-Verification Audit | Governance | `architecture/06-Reviews/WP-RTA-001_Self_Verification_Audit.md` | Implementing session | Self-verification (explicitly not a certification) | Complete | N/A | 2026-07-30 | Architecture Governance |
+
+### Implementation
+
+| Document ID | Document Name | Category | Repository Path | Owner | Canonical Status | Lifecycle Status | Current Version | Last Updated | Primary Audience |
+|---|---|---|---|---|---|---|---|---|---|
+| Implementation Reports | IMP-REPORT-WP-01 through WP-05, IMP-REPORT-WP-RTA-001 | Implementation | `architecture/05-Implementation/IMP-REPORT-*.md` | Implementing session per WP | Implementation audit trail (not certification, per `CLAUDE.md §19` Implementation Reporting note) | 6 issued (4 Closed, 1 Certified-conditions-resolved, 1 Implementation Complete — Independent Review pending) | N/A (index of 6 documents) | 2026-07-30 (latest: IMP-REPORT-WP-05) | Implementers, Reviewers |
+
+**Total documents registered above: 43** (14 Architecture + 2 Experience-family entries + 5 Engineering + 2 Design + 15 Governance + 1 Implementation-family entry — see §12 for the exact count reconciliation).
+
+---
+
+## 9. Document Ownership Matrix
+
+| Document | Owns | Examples |
+|---|---|---|
+| ARCH-000 | Every document's own responsibility, ownership, and the Constitutional Document Standard itself | Layer assignment, "what document governs X" resolution |
+| CAP-001 | Capability identity, business intent, domain, Primary Specification assignment | C-001–C-151 registry |
+| SD-002 | Universal Business Object rules — CDE, BQ, BA, Evidence, lifecycle | Every canonical business object's own shape rules |
+| URA-001 | Identity, roles, permissions, approval authorities, assignment/escalation model | `AuthorizationTier`, `URA-001-76` precedence |
+| RTA-001 | Runtime execution — Business Activity Engine, Workflow, AI Runtime, Authorization Engine | `WP-RTA-001`'s own governing specification (`§3.8`/`§11`) |
+| CMD-001 | Canonical metadata, CBOR, physical data-shape reference | `CBOR-INDEX.md` |
+| IMP-001 | Engineering methodology, Business Activity Registry, coding/implementation patterns | Business Activity Contract template |
+| WPR-001 | Work Package chartering, capability mapping, sequencing, dependencies, roadmap | `WP-01` → `C-004` assignment |
+| WP-REG-001 | Work Package execution status, BA progress, certification status, lifecycle history | "Is WP-05 In Progress or Ready?" |
+| DOC-000 | Document inventory, metadata, canonical status, navigation, reading order | "Where do I find the ADR index?" |
+| TECH-DEBT | Every disclosed, non-blocking implementation gap | `TD-001`–`TD-078` |
+| ADR Index | Every superseding change to a Locked document | `ADR-016` (Authorization Runtime Consolidation) |
+
+Ownership boundaries are exclusive per `CLAUDE.md §15` Golden Rule 12 ("One entity, one definition") — no two documents above own the same concern.
+
+---
+
+## 10. Document Update Matrix
+
+| Document | Updated When |
+|---|---|
+| CAP-001 | A Capability is added, changes status, or changes Primary Specification |
+| PE-001 / PE-001-Cxxx | Enterprise Experience methodology or a capability's own experience blueprint changes |
+| IMP-001 | Implementation methodology, coding standards, or the Business Activity Registry changes |
+| WPR-001 | A Work Package is chartered, or roadmap/sequencing/dependency information changes |
+| WP-REG-001 | A Business Activity completes/is added/removed, or any Work Package lifecycle state changes (see `WP-REG-001 §3`) |
+| TECH-DEBT | Debt is introduced or resolved |
+| ADR Index | A new Architecture Decision Record is Accepted |
+| DOC-000 | A governed document is added, removed, renamed, retired, or changes canonical status; repository organization changes |
+| CBOR-INDEX | A new Canonical Business Object is registered |
+| Constitutional documents (SD-001–003, URA-001, ERG-001, CMD-001, RTA-001, EIA-001, COM-001, GRC-001, PLT-001, OPM-001, ONT-001) | Only via the Locked-document ADR process, or a certified recertification (per each document's own Freeze Statement) |
+
+---
+
+## 11. Repository Document Hierarchy
+
+```
+DOC-000 (Enterprise Documentation Register — this document)
+        │
+        ▼
+   Architecture (ARCH-000, CAP-001, SD-001..003, URA-001, ERG-001,
+                 CMD-001, RTA-001, EIA-001, COM-001, GRC-001,
+                 PLT-001, OPM-001, ONT-001, DS-001)
+        │
+        ▼
+   Experience (PE-001, PE-001-Cxxx)
+        │
+        ▼
+   Engineering (IMP-001, Master Technical Architecture, METH-001)
+        │
+        ▼
+   Implementation (MDP-001, IMP-REPORT-*, source code, database, infrastructure)
+        │
+        ▼
+   Runtime (RTA-001-specified components — e.g. WP-RTA-001's Authorization Engine —
+             consumed by, never redefining, the Architecture layer above)
+        │
+        ▼
+   Governance (WPR-001, WP-REG-001, TECH-DEBT, ADR Index, IRA Reports,
+                Independent Review / Certification Reports — tracks and gates
+                every layer above; owns none of their content)
+```
+
+Each layer consumes the layer above it and never redefines it — this extends `§2`'s own structure diagram (preserved above) with the Runtime and Governance layers `WP-RTA-001`/`WP-REG-001` introduced, without altering `§2`'s own original diagram.
+
+---
+
+## 12. Repository Statistics
+
+*(Calculated fresh from §8's own register; not estimated.)*
+
+| Statistic | Value |
+|---|---|
+| Total Documents Registered | 43 (per §8's own count, including grouped family entries) |
+| Architecture Documents | 14 |
+| Experience Documents (entries; 14 individual capability blueprints beneath the PE-001-Cxxx family entry) | 2 family entries (16 including the 14 individually-authored blueprints) |
+| Engineering Documents | 5 |
+| Design Documents | 2 |
+| Governance Documents | 15 |
+| Implementation Documents (family entry; 5 individual reports beneath it) | 1 family entry (5 individual reports) |
+| Active Documents (Status: Active/AUTHORITATIVE/RELEASED/LOCKED, currently governing) | 40 of 43 (all except the 3 non-canonical/retrospective entries: METH-001, AMD-014, AAR-001-class review artifacts are Review/Retrospective, not Active-governing) |
+| Deprecated / Retired Documents | 0 — none found in this pass |
+| Canonical Documents (Layer 1 Constitutional, LOCKED or AUTHORITATIVE) | 14 |
+
+---
+
+---
+
+# Enterprise Governance Framework
+
+*(New section. Appended per repository-owner governance decision, 2026-07-30. Explains how the repository's governance registers work together; introduces no new register, renames nothing, and reassigns no existing ownership — every boundary stated below already exists in the register it names, established across `WPR-001`, `WP-REG-001 §2`, and Part II above.)*
+
+## Section 1 — Enterprise Governance Registers
+
+| Register | Governs | Primary Audience | Primary Question Answered |
+|---|---|---|---|
+| **DOC-000** | Enterprise Documentation Register — repository document inventory, metadata, ownership, canonical status, navigation | All roles | *"What governed documents exist?"* |
+| **CAP-001** | Enterprise Capability Register — capability identity, business intent, domain, Primary Specification, status | Product Architecture, all implementers | *"What capabilities exist, and what defines them?"* |
+| **WPR-001** | Enterprise Work Package Roadmap — Work Package chartering, capability→WP mapping, sequencing, dependencies, scope | Engineering Governance, Implementers | *"What Work Packages exist, and why?"* |
+| **WP-REG-001** | Enterprise Work Package Register — Work Package execution status, Business Activity progress, certification status, lifecycle history | Executives, Architects, Reviewers | *"What is the current implementation state?"* |
+| **TECH-DEBT** | Technical Debt Register — every disclosed, non-blocking implementation gap, its severity, and its planned resolution | All engineering roles | *"What engineering obligations remain outstanding, and how urgent are they?"* |
+| **ADR Repository** | Architecture Decision Records — every superseding change to a Locked/Frozen document, or a governance decision requiring a formal, citable record | Architects, Reviewers | *"Why was this architectural or governance decision made, and under what authority?"* |
+| **IRA Reports** | Implementation Readiness Assessments — whether a Work Package or Business Activity is constitutionally and practically ready to begin implementation | Implementers, Reviewers | *"Is this Work Package ready to be built?"* |
+| **Independent Review Reports** | Per-Business-Activity independent review outcomes recorded within each Work Package's own `IMP-REPORT-WP-0X` | Implementers, Certifiers | *"Did this specific Business Activity's implementation pass independent review?"* |
+| **Certification Reports** | Independent Work Package Certification — the formal `CERTIFIED` / `CERTIFIED WITH CONDITIONS` / `REJECTED` determination for a Work Package, issued only by a genuinely independent, fresh-context reviewer (`CLAUDE.md §19.7`) | Executives, Auditors | *"Is this Work Package certified, and under what conditions?"* |
+
+**What each register owns, stated plainly (per the format requested):**
+
+- **DOC-000** — Owns: repository documentation inventory and navigation. Question: *"What governed documents exist?"*
+- **CAP-001** — Owns: capability identity and business intent. Question: *"What capabilities exist?"*
+- **WPR-001** — Owns: Work Package definition, capability mapping, and sequencing. Question: *"What Work Packages exist, and why?"*
+- **WP-REG-001** — Owns: Work Package and Business Activity execution status. Question: *"What is the current implementation state?"*
+- **TECH-DEBT** — Owns: disclosed, non-blocking engineering gaps. Question: *"What remains outstanding?"*
+- **ADR Repository** — Owns: the record of every decision that changed a Locked document or resolved a governance question. Question: *"Why was this decided?"*
+- **IRA Reports** — Owns: the readiness gate before implementation begins. Question: *"Is this ready to build?"*
+- **Independent Review Reports** — Owns: per-Business-Activity review outcomes. Question: *"Did this pass review?"*
+- **Certification Reports** — Owns: the final, independent PASS/FAIL determination. Question: *"Is this certified?"*
+
+## Section 2 — Governance Register Relationships
+
+```
+                          DOC-000
+                             │
+                 Enterprise Documentation
+                             │
+                             ▼
+
+     CAP-001 ─────────── WPR-001 ─────────── WP-REG-001
+        │                    │                    │
+   Capabilities           Planning            Execution
+        │                    │                    │
+        │              (gated by IRA)      (gated by Independent
+        │                    │               Review, then
+        │                    │               Certification)
+        │                    │                    │
+        └────────────────────┴────────────────────┘
+                             │
+                        TECH-DEBT
+                             │
+                  Engineering Quality
+                             │
+                             ▼
+                     ADR Repository
+              (consulted, and written to,
+               from any point above where a
+               Locked document must change or
+               a governance question must be
+               formally decided)
+```
+
+**Responsibility of each register in this relationship:**
+
+- **DOC-000** sits above the whole framework — it is how any reader (executive, architect, developer, reviewer, or AI coding agent) discovers that the other registers exist at all, and where each one lives.
+- **CAP-001** is the root of the implementation side: nothing is built that isn't first a registered Capability.
+- **WPR-001** takes a Capability and turns it into a chartered, sequenced Work Package — but only once an `IRA` (Implementation Readiness Assessment) accepts it as ready.
+- **WP-REG-001** takes a chartered Work Package and tracks its actual execution — Business Activity by Business Activity — through Independent Review and, ultimately, Certification.
+- **TECH-DEBT** sits beneath all three, because any Business Activity in any Work Package, at any stage, may disclose a non-blocking gap into it — it is the shared engineering-quality ledger every register's own execution feeds.
+- **ADR Repository** is not a stage in the pipeline but a cross-cutting record consulted from any point in it — a Locked constitutional document changing, or a governance question needing a formal, citable decision (as `WPR-001`, `WP-REG-001`, and `DOC-000`'s own chartering each required one).
+
+## Section 3 — Governance Ownership Matrix
+
+| Governance Concern | Owning Register |
+|---|---|
+| Enterprise Documentation | → **DOC-000** |
+| Capability Definition | → **CAP-001** |
+| Work Package Definition | → **WPR-001** |
+| Implementation Status | → **WP-REG-001** |
+| Engineering Obligations | → **TECH-DEBT** |
+| Architecture Decisions | → **ADR Repository** |
+| Implementation Readiness | → **IRA Reports** |
+| Business Activity Review Outcome | → **Independent Review Reports** |
+| Certification | → **Certification Reports** |
+
+No concern above appears twice — each row names exactly one owning register, per the Governance Principles below.
+
+## Section 4 — Governance Principles
+
+- **Every governance concern has exactly one authoritative owner.** (`CLAUDE.md §15` Golden Rule 12: "One entity, one definition.")
+- **No governance register duplicates another register.** This is the same discipline applied when `WP-REG-001` was chartered specifically to avoid duplicating `WPR-001`'s own "single source of truth" claim (see `WP-REG-001 §2`) — extended here to the full register set.
+- **Every register answers a distinct governance question.** Section 1's own rightmost column is the proof of this — no two rows share a question.
+- **Cross-references are encouraged.** A register citing another by name (e.g., `WP-REG-001` citing an `IRA` acceptance, or a `CERT-WP-0X` citing the `ADR`s a Work Package registered) is expected and healthy; a register *restating* another's own content in its own words is not.
+- **Duplicate ownership is prohibited.** If two registers ever appear to answer the same question, that is a defect to resolve — by clarifying or narrowing one register's own scope — not a basis for either register's authority to be diluted.
+- **Governance updates shall occur as part of normal implementation.** A Work Package's own Business Activity completion, review, and certification are the events that trigger register updates (`WP-REG-001 §3`/`§11`, `DOC-000`'s own update-trigger list, `TECH-DEBT.md`'s own per-entry discipline) — governance bookkeeping is not a separate, deferred activity.
+- **Repository governance shall evolve through controlled change.** Every register introduced or re-scoped in this framework was itself the product of an explicit repository-owner decision, several formalized as their own `ADR` (`ADR-016`) — this framework does not exempt itself from that discipline.
+
+## Section 5 — Repository Governance Lifecycle
+
+```
+Business Capability
+        │
+        ▼
+     CAP-001                    (Capability registered: identity, business
+        │                        intent, domain, Primary Specification)
+        ▼
+Work Package Planned
+        │
+        ▼
+     WPR-001                    (Work Package chartered: capability mapping,
+        │                        sequencing, dependencies — gated by an
+        │                        accepted IRA before this step is reached)
+        ▼
+  Implementation
+        │
+        ▼
+   WP-REG-001                   (Execution tracked: Business Activity by
+        │                        Business Activity, current status,
+        │                        progress counts, active WP/BA)
+        ▼
+      Review                    (Per-Business-Activity Independent Review,
+        │                        recorded in the Work Package's own
+        │                        IMP-REPORT)
+        │
+        ├─────────────┐
+        │             │
+        ▼             ▼
+   Certified     Technical Debt
+        │               │
+        │               ▼
+        │        Future Resolution        (Tracked in TECH-DEBT until
+        │                                   closed by a future Business
+        │                                   Activity or Work Package)
+        ▼
+  WPR-001 / WP-REG-001 updated to Closed
+```
+
+**How each register participates:**
+
+- **CAP-001** originates the lifecycle — a Business Capability must be a registered capability before any Work Package may target it.
+- **WPR-001** charters the Work Package, recording why it exists and what it depends on, contingent on an **IRA** finding it ready.
+- **WP-REG-001** owns the entire Implementation → Review arc — it is the register that answers, at any moment, which Business Activity is active and how many remain.
+- **Review** produces two possible outputs per Business Activity or Work Package: a clean pass feeding toward **Certification**, or a disclosed, non-blocking gap feeding **TECH-DEBT** — both are legitimate, expected outcomes, not one being a failure state of the other (`CLAUDE.md §19.8`'s own Technical Debt Management discipline).
+- **Certification Reports** close the loop — only a genuinely independent, fresh-context reviewer may issue one (`CLAUDE.md §19.7`), and only after certification does `WPR-001`/`WP-REG-001` record the Work Package as Closed.
+- **TECH-DEBT** items that reach **Future Resolution** re-enter the lifecycle as scoped work within a future Business Activity or Work Package — the loop closes back into `WPR-001`'s own sequencing, not around it.
+
+---
+
+*End of DOC-000. For anything not covered here, start at ARCH-000. For the full document inventory, start at Section 8. For how the governance registers work together, start at the Enterprise Governance Framework above.*

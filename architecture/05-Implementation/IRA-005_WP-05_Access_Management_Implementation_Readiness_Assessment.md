@@ -293,4 +293,23 @@ Registering Access Evaluation Outcome now, independent of §9's unresolved quest
 
 ---
 
-*End of IRA-005. Registration performed at §11 does not authorize implementation, does not resolve the Authorization Engine governance question (§9/§10.2 item 3), and does not amend CMD-001, which remains LOCKED. Do not begin WP-05 Business Activity implementation pending that governance decision.*
+## 12. Repository-Owner Authorization to Begin (2026-07-30)
+
+**§10.2 item 3's governance question is resolved: Option 2.** The Authorization Engine was chartered as a separate, dedicated Runtime Work Package — `WP-RTA-001` (`IRA-RTA-001`) — not as WP-05's own scope (Option 1) and not left permanently deferred (a pure Option 3 with no path to Permitted/Denied ever opening). `WP-RTA-001` has since been implemented (M1–M6) and independently certified (`CERT-WP-RTA-001`, CERTIFIED WITH CONDITIONS, both Blocking Conditions resolved via `ADR-016`).
+
+**`WP-RTA-001` is not yet a usable Permitted/Denied consumer for WP-05.** Per its own Closure Report §7 ("Not production ready") and Certification §5, Non-Conformity 5: no real, production `TierResolver` implementation exists for any of `URA-001-76`'s five tiers, including Domain Permission — every resolver exercised anywhere in that Work Package's own test suite is a test-only stub. `CERT-WP-RTA-001 §13.3` additionally recommends that real consumer integration "should be gap-analyzed fresh under `CLAUDE.md §19`, not treated as a mechanical port" of any prior candidate code. Wiring WP-05's BA-01 Permitted/Denied branches to `WP-RTA-001` today would therefore still require inventing a production `TierResolver` outside any currently-authorized scope — the same category of gap `§9` originally identified, now with a chartered but not-yet-populated home rather than no home at all.
+
+**Repository-owner decision, recorded here:** `WP-05` is authorized to begin now, under **§9's own Option A / this section's own §10.2 Option 3 shape** — the disclosed minimum-scope path, not the full capability:
+
+- **BA-01 — Evaluate Access for a Governed Request**: Unresolved and Deferred outcome branches only (`EX-C002-03`/`EX-C002-04`). Permitted and Denied branches remain explicitly NOT READY and SHALL NOT be implemented as part of this authorization — reaching them requires a separate, future, gap-analyzed integration with `WP-RTA-001` once it has at least one real `TierResolver`, not assumed here.
+- **BA-02 — Preserve and Bound Access Evaluation Outcome Validity**: full scope, no blocker.
+- **BA-03 — Detect and Resolve Access Context Change**: classification/detection portion only. The "re-resolve to a fresh Permitted/Denied determination" path inherits BA-01's own still-open blocker and is out of this authorization.
+- **BA-04 — Resolve Dependent Capability Access Hand-off Rejection**: full scope, no blocker.
+
+This is the identical minimum-scope disposition `§9`/`§10.2 item 3` already disclosed before `WP-RTA-001` existed — its existence changes *why* the full scope remains blocked (a populated-but-not-yet-ready Runtime Work Package, not an unowned gap), not *whether* it remains blocked.
+
+**Governing update:** `WPR-001`'s own WP-05 row and `WP-REG-001`'s own WP-05 row are updated in the same governance pass as this section, per each document's own respective update trigger.
+
+---
+
+*End of IRA-005. Registration performed at §11 does not amend CMD-001, which remains LOCKED. §12 (above) authorizes WP-05 to begin at minimum scope only — Permitted/Denied outcomes remain NOT READY and are explicitly excluded from this authorization.*
