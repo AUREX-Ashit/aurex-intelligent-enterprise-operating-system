@@ -129,6 +129,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # /structural-validations: a Structural Completion carries no
         # organization_id column anywhere in its own model
         # (models/structural_completion.py).
+        # /access-evaluations (WP-05, BA-01 through BA-04; AEO-000001,
+        # ADR-015, IRA-005 §12) is tenant-agnostic for the same narrower
+        # reason as /domain-permissions: an Access Evaluation Outcome IS
+        # organization-scoped data (derived one-hop via membership_id ->
+        # organization_id), but is exempted only because PLATFORM_ADMIN
+        # is the sole caller today (the same interim gate every prior WP
+        # uses, disclosed as its own Technical Debt entry), not because
+        # the evaluation itself is tenant-independent.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
@@ -149,7 +157,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/impact-assessments" or path.startswith("/impact-assessments/") \
           or path == "/structural-reviews" or path.startswith("/structural-reviews/") \
           or path == "/structural-validations" or path.startswith("/structural-validations/") \
-          or path == "/structural-completions" or path.startswith("/structural-completions/"):
+          or path == "/structural-completions" or path.startswith("/structural-completions/") \
+          or path == "/access-evaluations" or path.startswith("/access-evaluations/"):
             return await call_next(request)
 
         tenant_header = request.headers.get("X-Tenant-ID")
