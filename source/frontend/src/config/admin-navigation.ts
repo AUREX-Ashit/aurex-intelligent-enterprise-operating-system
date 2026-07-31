@@ -45,6 +45,42 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: "/platform-admin/organizations",
   },
   {
+    slug: "person-management-admin",
+    label: "Person Management",
+    description: "Recognize, establish, and understand authoritative Person Context.",
+    href: "/platform-admin/enterprise-administration/person",
+  },
+  {
+    slug: "membership-management",
+    label: "Membership Management",
+    description: "Establish, understand, and maintain Membership Context.",
+    href: "/platform-admin/enterprise-administration/membership",
+  },
+  {
+    slug: "enterprise-structure",
+    label: "Enterprise Structure",
+    description: "Establish and view organization nodes.",
+    href: "/platform-admin/enterprise-administration/structure",
+  },
+  {
+    slug: "roles-permissions",
+    label: "Roles & Permissions",
+    description: "Establish and view business and system roles.",
+    href: "/platform-admin/identity-security/roles",
+  },
+  {
+    slug: "domain-permissions",
+    label: "Domain Permissions",
+    description: "Understand domain permission grants.",
+    href: "/platform-admin/identity-security/domain-permissions",
+  },
+  {
+    slug: "access-evaluation",
+    label: "Access Evaluation",
+    description: "Evaluate access requests and review outcomes.",
+    href: "/platform-admin/identity-security/access-evaluation",
+  },
+  {
     slug: "subscriptions",
     label: "Subscription & Commercial Management",
     description: "Subscriptions, plans, and commercial terms.",

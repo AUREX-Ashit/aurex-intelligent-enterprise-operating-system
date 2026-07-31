@@ -3,16 +3,12 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/ui/Sidebar";
-import { Breadcrumb } from "@/components/ui/Breadcrumb";
-import { Menu } from "@/components/ui/Menu";
-import { CommandPaletteTrigger } from "@/components/ui/CommandPalette";
-import { Modal } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { useAuth } from "@/hooks/useAuth";
-import { ADMIN_NAV_ITEMS, ADMIN_WORKSPACE_ROOT } from "@/config/admin-navigation";
-import type { AuthClaims } from "@/types/auth";
+import { workspaceForPathname } from "@/config/workspaces";
 
 const LOGIN_ROUTE = "/platform-admin/login";
 const PLATFORM_ADMIN_ROLE = "PLATFORM_ADMIN";
@@ -52,97 +48,15 @@ function AccessDenied({ roleCode, onSignOut }: { roleCode: string; onSignOut: ()
   );
 }
 
-function NotificationsTrigger() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Notifications"
-        className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm text-muted-foreground transition hover:bg-surface-muted"
-      >
-        Notifications
-      </button>
-
-      <Modal open={open} onClose={() => setOpen(false)} title="Notifications">
-        <p className="text-sm text-muted-foreground">
-          Platform notification delivery is not implemented yet. This entry point exists so the
-          shell is complete and Notification Management (see the workspace navigation) has a
-          fixed, discoverable location to wire into.
-        </p>
-      </Modal>
-    </>
-  );
-}
-
-function AdminHeader({
-  onOpenNav,
-  breadcrumbItems,
-  claims,
-  onSignOut,
-}: {
-  onOpenNav: () => void;
-  breadcrumbItems: { label: string; href?: string }[];
-  claims: AuthClaims;
-  onSignOut: () => void;
-}) {
-  const router = useRouter();
-
-  return (
-    <header className="flex h-16 shrink-0 items-center gap-4 border-b border-border bg-surface px-4 sm:px-6">
-      <button
-        type="button"
-        onClick={onOpenNav}
-        aria-label="Open navigation"
-        className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-foreground sm:hidden"
-      >
-        Menu
-      </button>
-
-      <Breadcrumb items={breadcrumbItems} className="hidden sm:flex" />
-
-      <div className="ml-auto flex items-center gap-2">
-        <input
-          type="search"
-          disabled
-          placeholder="Search (coming soon)"
-          aria-label="Global search"
-          className="hidden h-9 w-56 rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-60 md:block"
-        />
-
-        <CommandPaletteTrigger className="hidden md:inline-flex" />
-        <NotificationsTrigger />
-
-        <Menu
-          trigger={
-            <span className="inline-flex h-9 items-center rounded-md border border-border bg-surface px-3 text-sm font-semibold text-foreground">
-              {claims.role_code}
-            </span>
-          }
-          items={[
-            {
-              label: "Sign out",
-              tone: "danger",
-              onSelect: () => {
-                onSignOut();
-                router.replace(LOGIN_ROUTE);
-              },
-            },
-          ]}
-        />
-      </div>
-    </header>
-  );
-}
-
 /**
- * Application Shell for the Platform Administrator Workspace. Composes
- * the DS-001 Navigation Components (Sidebar, Breadcrumb, Menu, Command
- * Palette) around every /platform-admin/(workspace) route, and is the
- * single place session (useAuth) and role gating happen for that route
- * group — individual pages never re-implement either.
+ * AUREX Enterprise Shell — Application Shell. Composes the Sidebar
+ * (Workspace Navigation) and GlobalHeader (Workspace Switcher, breadcrumb,
+ * Global Search, Notification Area, User Menu) around every
+ * /platform-admin/(workspace) route, driven by the active Workspace
+ * (PE-001 Chapter 13) resolved from the current path. Single place session
+ * (useAuth) and role gating happen for that route group — individual
+ * pages never re-implement either. Reusable across every Workspace, not
+ * tied to any one capability or Work Package.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const { session, logout } = useAuth();
@@ -166,22 +80,29 @@ export function AdminShell({ children }: { children: ReactNode }) {
     return <AccessDenied roleCode={claims.role_code} onSignOut={logout} />;
   }
 
+  const activeWorkspace = workspaceForPathname(pathname);
+
   const activeItem =
-    ADMIN_NAV_ITEMS.find((item) => item.href === pathname) ??
-    ADMIN_NAV_ITEMS.find((item) => item.href === ADMIN_WORKSPACE_ROOT)!;
+    activeWorkspace.navItems.find((item) => item.href === pathname) ??
+    activeWorkspace.navItems.find((item) => item.href === activeWorkspace.homeHref);
 
   const breadcrumbItems =
-    activeItem.href === ADMIN_WORKSPACE_ROOT
-      ? [{ label: activeItem.label }]
-      : [{ label: "Platform Dashboard", href: ADMIN_WORKSPACE_ROOT }, { label: activeItem.label }];
+    !activeItem || activeItem.href === activeWorkspace.homeHref
+      ? [{ label: activeWorkspace.label }]
+      : [{ label: activeWorkspace.label, href: activeWorkspace.homeHref }, { label: activeItem.label }];
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar items={ADMIN_NAV_ITEMS} mobileOpen={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+      <Sidebar
+        items={activeWorkspace.navItems}
+        mobileOpen={mobileNavOpen}
+        onClose={() => setMobileNavOpen(false)}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminHeader
+        <GlobalHeader
           onOpenNav={() => setMobileNavOpen(true)}
+          activeWorkspace={activeWorkspace}
           breadcrumbItems={breadcrumbItems}
           claims={claims}
           onSignOut={logout}

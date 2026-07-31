@@ -214,9 +214,8 @@ DEMO_ADMIN_IDENTITY = IdentitySeed(
     id=UUID("69a5c359-8a90-5274-9835-c0636e415873"),
     person_id=DEMO_ADMIN_PERSON.id,
     email="admin@corpstage.com",
-    # bcrypt cost-12 hash of Aurex#Admin2026! — pre-computed and verified
-    # round-trip in the original 05_bootstrap_first_user.sql; reused verbatim.
-    password_hash="$2b$12$BhF.jMSngAwyXAmmREe6BeB53viDBigLvJ7j76pyWHCpq/CvZd7AK",
+    # bcrypt cost-12 hash of Aurex#Admin2026!
+    password_hash="$2b$12$L7mgp59YaUrFAvaTTeyIruw4o1VOhLlF7cEPiNKtkTrf1TKG2S/QW",
 )
 
 DEMO_ADMIN_MEMBERSHIP = MembershipSeed(
@@ -243,9 +242,8 @@ PLATFORM_ADMIN_IDENTITY = IdentitySeed(
     id=UUID("4663ad18-6b14-5dd1-84c0-dbce51714d5f"),
     person_id=PLATFORM_ADMIN_PERSON.id,
     email="platform.admin@corpstage.com",
-    # bcrypt cost-12 hash of Aurex#PlatformAdmin2026! — pre-computed and
-    # verified round-trip in the original 07_bootstrap_platform_admin.sql.
-    password_hash="$2b$12$IGo4i.zyAUgt2lyGul.LauAUOD1.6F.1LZfhtyrPYV/LKd1Jp4BCC",
+    # bcrypt cost-12 hash of Aurex#PlatformAdmin2026!
+    password_hash="$2b$12$KgfhBGu8FFIKn/X0i7IOB.batdrbiBRiLCdEEqIqX.sC5Gxw3bs4G",
 )
 
 PLATFORM_ADMIN_MEMBERSHIP = MembershipSeed(

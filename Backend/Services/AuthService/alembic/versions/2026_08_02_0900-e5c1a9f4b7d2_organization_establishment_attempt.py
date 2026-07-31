@@ -54,12 +54,12 @@ def upgrade() -> None:
     )
 
     op.create_foreign_key(
-        'fk_organization_establishment_attempts_activated_organization_id',
+        'fk_org_establishment_attempts_activated_org_id',
         'organization_establishment_attempts', 'organizations',
         ['activated_organization_id'], ['id'],
     )
     op.create_check_constraint(
-        'ck_organization_establishment_attempts_domain_verification_status',
+        'ck_org_establishment_attempts_domain_verification_status',
         'organization_establishment_attempts',
         "domain_verification_status IN ('NOT_CLAIMED', 'UNVERIFIED', 'VERIFIED')",
     )
@@ -71,6 +71,6 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index('ix_organization_establishment_attempts_organization_code', table_name='organization_establishment_attempts')
-    op.drop_constraint('ck_organization_establishment_attempts_domain_verification_status', 'organization_establishment_attempts', type_='check')
-    op.drop_constraint('fk_organization_establishment_attempts_activated_organization_id', 'organization_establishment_attempts', type_='foreignkey')
+    op.drop_constraint('ck_org_establishment_attempts_domain_verification_status', 'organization_establishment_attempts', type_='check')
+    op.drop_constraint('fk_org_establishment_attempts_activated_org_id', 'organization_establishment_attempts', type_='foreignkey')
     op.drop_table('organization_establishment_attempts')

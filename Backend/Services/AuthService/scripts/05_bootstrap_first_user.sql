@@ -31,7 +31,7 @@
 --
 -- PASSWORD HASH
 --   Algorithm: bcrypt, cost factor 12
---   Hash:      $2b$12$BhF.jMSngAwyXAmmREe6BeB53viDBigLvJ7j76pyWHCpq/CvZd7AK
+--   Hash:      $2b$12$L7mgp59YaUrFAvaTTeyIruw4o1VOhLlF7cEPiNKtkTrf1TKG2S/QW
 --   Generated: via Python bcrypt.hashpw() — verified round-trip before embedding
 --
 -- PREREQUISITES
@@ -130,7 +130,7 @@ VALUES (
     '69a5c359-8a90-5274-9835-c0636e415873',
     '5385aa88-1e34-57fa-8c0c-fef655ca3773',
     'admin@corpstage.com',
-    '$2b$12$BhF.jMSngAwyXAmmREe6BeB53viDBigLvJ7j76pyWHCpq/CvZd7AK',
+    '$2b$12$L7mgp59YaUrFAvaTTeyIruw4o1VOhLlF7cEPiNKtkTrf1TKG2S/QW',
     'LOCAL',
     true,
     true,
