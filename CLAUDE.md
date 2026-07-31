@@ -245,6 +245,7 @@ A task is complete only when:
 -   architecture is respected
 -   the AUREX Design System (DS-001) is respected
 -   the governing Capability Specification is respected
+-   the Enterprise Experience Standard (§20) is satisfied, where applicable
 -   tests pass
 -   security is verified
 -   accessibility is verified
@@ -1162,3 +1163,142 @@ architectural, security, data-integrity, or tenant-isolation defects, or
 failing tests or build failures) already prohibits deferring severity
 that would itself be disqualifying — this rubric classifies debt that
 has already passed that gate, it does not relax it.
+
+# 20. Enterprise Experience Standard (Mandatory, Prospective Only)
+
+*(Formalized per direct Repository Owner governance instruction,
+2026-07-31.)*
+
+## 20.1 Scope and Applicability
+
+This section governs every Work Package for which implementation has
+not yet begun as of this section's own addition to this document. As
+of this addition, WP-01 through WP-07 are CLOSED; this standard governs
+WP-08 onward.
+
+It does NOT reopen any Work Package already CLOSED. A Work Package
+certified before this section existed remains valid under the
+governance that existed at the time of its own certification — the
+same principle §19.8.7's own severity rubric applies to Technical Debt
+("classifies debt that has already passed that gate, it does not
+relax it"), applied here to Work Package governance itself.
+
+## 20.2 Canonical Authority — No Duplication
+
+This section states an additional Work Package **completion** condition.
+It does not define, and shall never be read to redefine, any of the
+following — each remains sole authority for its own concern, per §16:
+
+- Presentation Architecture (what a screen must be) → SD-001
+- Design System (visual language, tokens, themes, components,
+  accessibility) → DS-001
+- Enterprise Experience methodology (Journeys, Personas, Workspaces,
+  CRBs, ERBs, EXs, Navigation, Context Preservation) → PE-001 /
+  PE-001-Cxxx
+- Engineering implementation standard — including Frontend Standards
+  (IMP-001 §10) and the Business Activity/Business Object
+  implementation pattern (IMP-001 §5/§6) → IMP-001
+
+Where this section states a requirement, it governs **when** a Work
+Package may be considered complete. It does not restate **how** to
+build the frontend, the backend, or any canonical component — IMP-001,
+SD-001, and DS-001 already govern that exhaustively, and this section
+shall never be amended to duplicate them.
+
+## 20.3 Vertical Slice Requirement
+
+Unless a Work Package's own charter explicitly designates it
+infrastructure-only (a Work Package that delivers no Business Activity,
+e.g. WP-RTA-001) or a specific Business Activity within it explicitly
+backend-only, every Work Package SHALL deliver, for each Business
+Activity it charters:
+
+- Database, Domain Model, Repository, Service, API — per IMP-001 §5/§6/§8
+- Frontend, Navigation, Enterprise Experience — per SD-001, DS-001,
+  PE-001, engineered per IMP-001 §10
+- The end-to-end user journey connecting the two
+- Unit tests and integration tests — per IMP-001 §11
+- Documentation — per §19.7's own Implementation Report requirement
+- Independent Certification, Verification & Validation, and Release
+  Readiness — per §19.7 / §19.7b
+
+A Work Package that implements only the backend half of this list,
+without disclosing and justifying the frontend/Enterprise Experience
+half as out of scope through the Gap Analysis (§19.3) and an explicit
+repository-owner charter decision, is incomplete.
+
+## 20.4 Demonstrability
+
+Every Business Activity a Work Package charters SHALL be demonstrable
+through the running application — a real persona, using the real
+frontend, exercising the real API, producing a real, persisted outcome.
+A Business Activity satisfied only by an automated test suite, with no
+operable screen a persona can actually use, does not meet this standard
+unless the Work Package's own charter explicitly designates it
+infrastructure-only or backend-only — a scope decision that SHALL be
+reported and justified per §19.4's own STOP-and-report discipline, not
+silently assumed.
+
+## 20.5 World-Class Frontend Standard — Interaction-Quality Reference Only
+
+Every screen SHALL meet the interaction quality, workflow efficiency,
+discoverability, responsiveness, accessibility, and enterprise
+usability standard exemplified by production enterprise software such
+as Microsoft Fabric, Microsoft Dynamics 365, Salesforce Lightning,
+Stripe Dashboard, Atlassian Cloud, Linear, Notion, Figma, and the
+Vercel Dashboard.
+
+These products are engineering references for interaction quality
+only. Claude Code SHALL NOT copy their visual design, layout, branding,
+or component styling. DS-001 remains the sole authority for every
+visual and component decision, per §19.1. Where DS-001 does not define
+something one of these references suggests, Claude Code SHALL STOP and
+request clarification (§19.1) — never substitute a referenced product's
+own visual treatment for a missing DS-001 definition.
+
+## 20.6 Implementation Quality Baseline
+
+Every screen and widget a Work Package delivers SHALL implement, in
+addition to IMP-001 §10.3's own four content-disclosure states
+(Summary, Details, Evidence, Audit History):
+
+- a loading state
+- an empty state
+- a validation state
+- an error state
+- a confirmation state
+
+against real API integration. Placeholder UI, mocked workflows, and
+hard-coded demonstration data may exist transiently during development
+but SHALL NOT remain at the point a Business Activity is submitted for
+Independent Certification.
+
+Metadata-driven UI (screens rendered from `screen_registry`, per
+IMP-FE-001) and keyboard accessibility are mandatory, per IMP-001 §10.2
+and SD-001's own accessibility principles respectively — restated here
+only as a completion-gate checkpoint, not as a new rule.
+
+## 20.7 Work Package Completion Gate Extension
+
+§19.7's Business Activity Completion Gate and §19.7b's five-gate Work
+Package closure sequence are extended, for every Work Package within
+this section's own scope (§20.1), by one further condition: Independent
+Certification (§19.7) SHALL NOT pass until, in addition to §19.7's own
+existing checklist:
+
+- Backend capability is complete.
+- Enterprise Experience is complete.
+- Navigation is complete.
+- The end-to-end workflow is demonstrable in the running application.
+- Frontend and backend are fully integrated — no mocked API response,
+  no stubbed service call.
+
+An Independent Certification that passes a Work Package meeting only
+the backend half of this list, within this section's own scope, does
+not satisfy §19.7 — for the same reason a same-context self-certification
+does not satisfy it: the completion condition it purports to certify
+was not actually met.
+
+Where a Work Package is explicitly chartered infrastructure-only or
+backend-only (§20.3), this extension does not apply to it — the
+charter's own disclosed scope decision governs, per §19.4.
