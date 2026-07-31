@@ -10,9 +10,9 @@
 | **Status** | Active |
 | **Owner** | Repository Owner / Engineering Governance |
 | **Repository** | Aurex Enterprise Operating System (EOS) |
-| **Last Updated** | 2026-07-31 (WP-06 — C-003, "Domain Permission Read APIs" — CLOSED. All five `CLAUDE.md §19.7b` gates complete: `CERT-WP-06` (Gate 1) and `VV-AUDIT-WP-06` (Gate 2) both PASS WITH OBSERVATIONS, no remediation required (Gates 3–4 not triggered); `RRA-WP-06` (Gate 5) — RELEASE READY. Committed `a82ff87`. `TD-090`/`TD-091` open, Resolution Criteria amended per `VV-AUDIT-WP-06` F-02/F-03) |
+| **Last Updated** | 2026-07-31 (WP-07 — C-006, "Person Management" — CHARTERED by Repository Owner approval. `WP-07_Person_Management.md` charter created. No `IRA-007` yet, no implementation authorized) |
 | **Updated By** | Engineering Governance session (Claude Code) |
-| **Repository Commit** | `a82ff87` (WP-06 — Domain Permission Read APIs, C-003) — this document's own most recent committed revision |
+| **Repository Commit** | `a82ff87` (WP-06 — Domain Permission Read APIs, C-003) — this document's own most recent committed revision; WP-07's own chartering is not yet committed |
 | **Related Documents** | `WPR-001_Work_Package_Roadmap.md` (roadmap/definition authority — see §2 Relationship), `CAP-001_Enterprise_Capability_Registry.md`, `IMP-001_Implementation_Playbook.md`, `CLAUDE.md` §19, `TECH-DEBT.md`, every `IRA-0XX`/`IMP-REPORT-WP-0X`/`CERT-WP-0X` document this register cites by commit hash below |
 
 ---
@@ -65,15 +65,15 @@ The **Last Updated** field (§1) SHALL be updated on every modification to this 
 | Metric | Value |
 |---|---|
 | Enterprise Capabilities (`CAP-001`) | 43 |
-| Capabilities Chartered (have a Work Package) | 5 (C-002, C-003, C-004, C-005, C-007) |
+| Capabilities Chartered (have a Work Package) | 6 (C-002, C-003, C-004, C-005, C-006, C-007) |
 | Runtime Work Packages | 1 (WP-RTA-001) |
 | Completed (Closed) Work Packages | 8 (WP-00, WP-00A, WP-01, WP-02, WP-03, WP-04, WP-05, WP-06) |
 | Certified Work Packages | 7 (WP-01, WP-02, WP-03, WP-04, WP-05, WP-06, WP-RTA-001) — WP-01 via two certifications (original + IRA-001A correction); WP-05 via two independent passes (`CERT-WP-05`, then the F-01/F-02 correction independently re-verified by `VV-AUDIT-WP-05_Remediation_Verification.md`, CONFIRMED WITH OBSERVATIONS); WP-06 via the full five-gate `CLAUDE.md §19.7b` sequence (`CERT-WP-06`, `VV-AUDIT-WP-06`, `RRA-WP-06`, no remediation required) |
-| Current Active Work Package | None — WP-06 (C-003, "Domain Permission Read APIs") CLOSED, committed `a82ff87`. No Work Package is currently In Progress. |
-| Current Active Business Activity | None — BA-01 (Understand Domain Permission Context) is WP-06's own sole Business Activity, now Complete/Certified/Closed. |
+| Current Active Work Package | **WP-07** (C-006, "Person Management") — **CHARTERED**, per `WP-07_Person_Management.md`. No `IRA-007` yet. No implementation authorized. WP-06 (C-003) remains CLOSED, committed `a82ff87`. |
+| Current Active Business Activity | None — no Business Activity decomposition exists for WP-07 until `IRA-007` is drafted and concludes READY (explicitly deferred by the charter, not decided). |
 | Business Activities Completed | 41 (WP-01: 9, WP-02: 9, WP-03: 9, WP-04: 9, WP-05: 4 — minimum scope per `IRA-005 §12`, WP-06: 1 — full scope per `IRA-006 §12`) |
 | Business Activities Remaining (blocked, within Closed WPs) | 2 (WP-03 BA-04, BA-05 — formally BLOCKED, not outstanding work) |
-| Business Activities In Progress | None — WP-06's own BA-01 is now Closed, not In Progress |
+| Business Activities In Progress | None — WP-07 has not reached Business Activity decomposition (pre-IRA) |
 | Repository Health | See §9 and known-issue note below |
 | Last Updated | 2026-07-31 |
 
@@ -93,6 +93,7 @@ The **Last Updated** field (§1) SHALL be updated on every modification to this 
 | WP-04 | C-005 | Maintain enterprise structure | Business | Closed | 9 | 9 | 2026-07-29 | 2026-07-30 | 9× per-BA | `CERT-WP-04` PASS W/ OBS | `3cad7db` | 2026-07-30 | Completes the Structural Context Lifecycle end-to-end |
 | WP-05 | C-002 | Govern access rights | Business | Closed | 4 (BA-01 scoped to Unresolved/Deferred only; BA-03 scoped to classification portion only) | 4/4 | 2026-07-30 | 2026-07-31 (correction re-verified) | Fresh-context independent reviewer (original); `VV-AUDIT-WP-05` (second, more rigorous fresh-context V&V audit); `VV-AUDIT-WP-05_Remediation_Verification.md` (third, independent re-verification of the correction) | `CERT-WP-05` PASS WITH OBSERVATIONS, superseded in substance by `VV-AUDIT-WP-05` (PASS WITH MINOR REMEDIATION), correction independently **CONFIRMED WITH OBSERVATIONS** by `VV-AUDIT-WP-05_Remediation_Verification.md` — including 24 probe checks and 2 negative controls proving the probes genuinely detect the original defects | `84b095b`, `2ff1002`, `2b1c250`, `f853be9` | 2026-07-31 | Minimum-scope authorization per `IRA-005 §12`; full BA-01 Permitted/Denied and BA-03's re-resolution path excluded pending a future, separately gap-analyzed `WP-RTA-001` integration (no real `TierResolver` exists yet). `VV-AUDIT-WP-05` found F-01 (orphan FK, HTTP 500 on PostgreSQL) and F-02 (cross-tenant Approval Authority selection) — both `CLAUDE.md §19.8.5`-class, non-deferrable, undisclosed by the original certification. Both remediated and independently re-verified (structural read, 24 from-scratch probe checks, negative controls against pre-fix `HEAD` code, zero regressions). 36 tests (17 unit + 19 API), 608/608 full suite passing. `TD-079`/`TD-080`/`TD-082`–`TD-089` Open (Low/Medium); `TD-081` Closed. |
 | WP-06 | C-003 | Domain Permission Read APIs (scoped charter) | Business | Closed | 1 (BA-01 — Understand Domain Permission Context, full scope) | 1/1 | 2026-07-31 | 2026-07-31 | `CERT-WP-06` + `VV-AUDIT-WP-06`, both PASS WITH OBSERVATIONS | `RRA-WP-06` — RELEASE READY; all 5 gates of `CLAUDE.md §19.7b` complete (Gates 3–4 not triggered, no remediation required) | `a82ff87` | 2026-07-31 | `IRA-006` READY, no blocker — reuses `DomainPermission` (WP-02), `BaseRepository.get_by_id()`, `DomainPermissionResponse`; realizes `EX-C003-11` (`PE-001-C003` v1.1, `CAR-001`). 14 new tests, 622/622 full suite passing (`IMP-REPORT-WP-06`). Raises `TD-090` (PLATFORM_ADMIN-only gate) and `TD-091` (unbounded `GET /domain-permissions`); both Resolution Criteria amended per `VV-AUDIT-WP-06` F-02/F-03. |
+| WP-07 | C-006 | Person Management | Business | Chartered | Not yet determined — `IRA-007` not yet created | 0/N | Not yet | Not yet | Not yet | Not yet | Not committed | 2026-07-31 | `PE-001-C006` v1.1 — frozen Gold Standard baseline, no Business Capability Gap, no pending Capability Amendment. Chartered following evidence-based recommendation (`WP-07_Person_Management.md`): `C-006` is a structural prerequisite for both `C-001` (Identity) and `C-008` (Workspace), each naming Authoritative Person Context as a required dependency. Disclosed: pre-existing, pre-governance implementation of `EX-C006-01`/`02` already exists (committed `34cf7fe`, before WP-00), never IRA'd/Certified/V&V Audited — disposition deferred to `IRA-007`. No implementation authorized by this charter. |
 | WP-RTA-001 | — (Runtime; serves multiple future capabilities) | Authorization Runtime Engine (`RTA-001 §11`) | Runtime | Certified (conditions resolved) | N/A — 6 Milestones (M1–M6), not Business Activities, by charter (`IRA-RTA-001 §9`) | 6/6 milestones | 2026-07-30 | 2026-07-30 | Self-verification audit (non-certifying) | `CERT-WP-RTA-001` CERTIFIED WITH CONDITIONS → resolved via `ADR-016` | Not committed | 2026-07-30 | Sole Authorization Engine implementation confirmed post-consolidation |
 
 ---
@@ -101,8 +102,12 @@ The **Last Updated** field (§1) SHALL be updated on every modification to this 
 
 | Field | Value |
 |---|---|
-| Current WP | **None.** WP-06 (C-003, "Domain Permission Read APIs") is CLOSED — see §7. No Work Package is currently In Progress. |
-| Next Step | Chartering of the next Work Package awaits a repository-owner decision. See `IMP-REPORT-WP-06`'s own closure summary for a recommended next-Work-Package candidate. |
+| Current WP | **WP-07** (C-006, Person Management) — **CHARTERED**, per repository-owner approval and `WP-07_Person_Management.md`. WP-06 (C-003) remains CLOSED — see §7. |
+| Capability | C-006 — Person Management |
+| Current Status | Chartered only. Governing Capability Specification: `PE-001-C006_Person_Management.docx` v1.1. No `IRA-007` exists. No Business Activity decomposition, design, code, test, API, or database change is authorized. |
+| Next Step | Draft `IRA-007` (Implementation Readiness Assessment) per `METH-002`/`IMP-001` methodology. `IRA-007` shall explicitly evaluate and disclose the disposition of the pre-existing, pre-governance `EX-C006-01`/`EX-C006-02` implementation (§8/charter §4) as part of its own Gap Analysis. Implementation authority begins only once `IRA-007` concludes READY and the repository owner explicitly instructs execution. |
+| Dependencies | None on any not-yet-built capability. Unblocks `C-001` (Identity Management) and `C-008` (Workspace Management), both of which name Authoritative Person Context as a required, consumed dependency. |
+| Blocking Issues | None |
 | Owner | Repository Owner / Engineering Governance |
 
 ---
@@ -129,7 +134,7 @@ The **Last Updated** field (§1) SHALL be updated on every modification to this 
 
 Per this register's own instruction and `WPR-001 §3`'s own no-invention rule: **only Work Packages with an accepted IRA are listed here.** Capabilities without an accepted IRA are excluded — see the separate (advisory, non-authoritative) capability-reconciliation audit for the full list of uncharted capabilities, none of which belongs in this table.
 
-No Work Package currently has an accepted-but-not-yet-Closed IRA. `IRA-006` (WP-06) was accepted, WP-06 completed the full five-gate `CLAUDE.md §19.7b` sequence, and was committed `a82ff87` — it now appears in §7 Completed Work Packages, not here, per this table's own inclusion rule. No other capability has an accepted IRA as of this register's Last Updated date. No future Work Package number is speculatively assigned here.
+No Work Package currently has an accepted-but-not-yet-Closed IRA. `IRA-006` (WP-06) was accepted, WP-06 completed the full five-gate `CLAUDE.md §19.7b` sequence, and was committed `a82ff87` — it now appears in §7 Completed Work Packages, not here, per this table's own inclusion rule. **WP-07 (C-006, Person Management) has been formally Chartered but does not yet have an `IRA-007`, and is therefore correctly excluded from this table per its own inclusion rule** — see §4/§5/§6 for its current status. No other capability has an accepted IRA as of this register's Last Updated date. No future Work Package number is speculatively assigned here.
 
 ---
 
@@ -160,6 +165,7 @@ Scoped to **Work Package-level lifecycle transitions** (chartering, certificatio
 | 2026-07-31 | WP-06 | Certified (Pass with Observations) — Pending V&V Audit | V&V Audited (Pass with Observations) — Pending Release Readiness Audit | Verification & Validation Audit (`CLAUDE.md §19.7b`, Gate 2) performed by a second, independent fresh-context reviewer with no prior WP-06 involvement — deliberately went beyond Certification's own method: built a Requirements Traceability Matrix against `EX-C003-11`'s complete text, read directly from the primary `.docx` source rather than `CAR-001`'s partial quotation; independently re-extracted Contract 5.1's amended text and confirmed character-identical, no drift; reasoned explicitly about which WP-05-class defect shapes actually apply to a read-only Business Activity (the FK-write class is structurally inapplicable — zero writes exist in either new method); wrote and ran a purpose-built, from-scratch, two-Organization probe (`probe_wp06_crossorg.py`, deleted after use) confirming the unfiltered read path's cross-organization behavior is the disclosed, intended contract for the already-platform-wide `PLATFORM_ADMIN` caller, not an unintended leak (F-01, Low). Found two forward-looking, non-blocking observations: F-02 (Medium) — `TD-090`'s own Resolution Criteria describes only an authorization-dependency swap, not query-level scoping, which would reproduce a WP-05-F-02-shaped gap if resolved literally as written; F-03 (Low) — `search()` has no deterministic `ORDER BY`, which will matter once `TD-091`'s pagination lands. Both folded into `TD-090`'s and `TD-091`'s own Resolution Criteria in this same governance pass, per the audit's own recommendation — no standalone remediation required. `VV-AUDIT-WP-06_Domain_Permission_Read_APIs.md` — PASS WITH OBSERVATIONS. No `CLAUDE.md §19.8.5`-class defect found. Gates 3–4 (Remediation, Independent Verification of Remediation) not triggered; Gate 5 (Release Readiness Audit) remains outstanding before any push. | Not committed |
 | 2026-07-31 | WP-06 | V&V Audited (Pass with Observations) — Pending Release Readiness Audit | Release Ready — Awaiting Repository Owner Commit/Push Decision | Release Readiness Audit (`CLAUDE.md §19.7b`, Gate 5) performed by a fourth, independent fresh-context reviewer — independently re-ran the full suite (622/622) and `alembic heads` (single head, `f3a7c5e9b2d8`), confirmed the WP-06 change set (nine modified tracked files + five new architecture documents) matches every prior gate's claims exactly with no leftover scratch/probe script, and confirmed the change set is cleanly scoped with no leakage from the separately in-flight, unrelated WP-RTA-001 documentation set (flagged a staging caution: the eventual commit must target the specific WP-06 path list, not `git add -A`, since both change sets currently coexist as untracked files in the same working tree). Found and directly corrected three governance-documentation staleness items — exactly the class this gate exists to catch: (1) `WP-REG-001` §10's own "pending Independent Review" phrasing, stale since both Gate 1 and Gate 2 were already complete; (2) `DOC-000`'s Certification Reports row trailing sentence, stale since `VV-AUDIT-WP-06` now exists; (3) `DOC-000` §8/§12's own total and category document-count arithmetic, internally inconsistent and not matching a direct row count even before this Work Package's own edits (pre-existing drift, never previously reconciled) — corrected to 45 total / 20 Governance / 6 Engineering / 7 Implementation reports, with the Active-Documents numerator explicitly left undetermined rather than guessed. No implementation, test, or defect-level finding — `RRA-WP-06_Domain_Permission_Read_APIs_Release_Readiness_Audit.md` — **RELEASE READY, authorized for commit/push.** All five `CLAUDE.md §19.7b` gates now complete for WP-06. | Not committed |
 | 2026-07-31 | WP-06 | Release Ready — Awaiting Repository Owner Commit/Push Decision | **Closed** | Repository owner authorized the commit (`AskUserQuestion`, "Yes, commit now"). The exact WP-06 file set `RRA-WP-06` enumerated (nine modified tracked files + five new architecture documents) was staged explicitly (not `git add -A`, per `RRA-WP-06`'s own staging caution, since the separately in-flight WP-RTA-001 documentation coexists as untracked files in the same working tree) and committed as `a82ff87`. WP-06 — Domain Permission Read APIs (C-003) — is now CLOSED, its own commit hash recorded across `WP-REG-001` (§1, §5, §7) and `WPR-001` in this same editing pass, per `ADR-017`/`METH-002`'s documentation-tense discipline. | `a82ff87` |
+| 2026-07-31 | WP-07 | Not Started | **Chartered** | Repository owner requested a governance-only recommendation for the next Work Package. A repository-evidence review (CAP-001, WPR-001, WP-REG-001, and a direct code search) found: (a) `PE-001-C006` v1.1 is a frozen, publication-quality Gold Standard baseline with no Business Capability Gap and no pending Capability Amendment; (b) real, pre-existing implementation of `EX-C006-01`/`EX-C006-02` already exists in `Backend/Services/AuthService`, committed `34cf7fe` one day before WP-00, predating this repository's entire governance discipline and never named in WP-00/WP-00A's own declared scope — disclosed, not previously surfaced in any register; (c) both `PE-001-C001` and `PE-001-C008` name Authoritative Person Context, produced by `C-006`, as a required Cross-Specification Dependency, making `C-006` a structural prerequisite for two other uncharted capabilities. Repository owner reviewed and approved the recommendation. `WP-07_Person_Management.md` charter created (`architecture/05-Implementation/`), recording Status = CHARTERED, Business Objective, Scope, Out of Scope, Dependencies, Success Criteria, Repository Authority, and Governing Documents per the charter protocol's own required fields. `WPR-001` and `WP-REG-001` (§1, §4, §5, §6, §8, this row) synchronized in the same pass. No `IRA-007` created. No implementation, design, Business Activity decomposition, or code change performed or authorized. | Not committed |
 
 ---
 
@@ -169,18 +175,19 @@ Scoped to **Work Package-level lifecycle transitions** (chartering, certificatio
 
 | Statistic | Value |
 |---|---|
-| Total Chartered Work Packages | 8 Business-lifecycle entries (WP-00, WP-00A, WP-01, WP-02, WP-03, WP-04, WP-05, WP-06) + 1 Runtime (WP-RTA-001) = **9** |
+| Total Chartered Work Packages | 9 Business-lifecycle entries (WP-00, WP-00A, WP-01, WP-02, WP-03, WP-04, WP-05, WP-06, WP-07) + 1 Runtime (WP-RTA-001) = **10** |
 | Completed (Closed) | 8 |
 | Certified | 7 (WP-01, WP-02, WP-03, WP-04, WP-05, WP-06, WP-RTA-001) |
 | In Progress | 0 |
 | Ready | 0 |
-| Not Started | 0 (nothing chartered beyond the above) |
-| Business Activities Planned (across Closed/Certified capability WPs) | 43 (WP-01: 9, WP-02: 9, WP-03: 11, WP-04: 9, WP-05: 4 — minimum scope per `IRA-005 §12`, WP-06: 1 — full scope per `IRA-006 §12`) |
+| Chartered (pre-IRA) | 1 (WP-07 — C-006, Person Management; no `IRA-007` yet, no implementation authorized) |
+| Not Started | 0 |
+| Business Activities Planned (across Closed/Certified capability WPs) | 43 (WP-01: 9, WP-02: 9, WP-03: 11, WP-04: 9, WP-05: 4 — minimum scope per `IRA-005 §12`, WP-06: 1 — full scope per `IRA-006 §12`; WP-07 not yet decomposed — pre-IRA) |
 | Business Activities Completed | 41 (includes WP-06 BA-01 — WP-06 is now fully CLOSED, all five `CLAUDE.md §19.7b` gates complete, committed `a82ff87`) |
 | Business Activities Remaining (blocked) | 2 |
 | Business Activities Remaining (in progress, not blocked) | 0 |
-| **Overall Business Activity Completion %** | 41 / 43 = **95.3%** |
-| Overall Work Package Completion % (of the 8 Business-lifecycle entries) | 8 / 8 = **100%** |
+| **Overall Business Activity Completion %** | 41 / 43 = **95.3%** (WP-07 excluded from this denominator — not yet decomposed) |
+| Overall Work Package Completion % (of the 9 Business-lifecycle entries) | 8 / 9 = **88.9%** |
 
 ---
 
