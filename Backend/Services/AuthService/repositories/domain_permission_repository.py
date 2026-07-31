@@ -56,3 +56,26 @@ class DomainPermissionRepository(BaseRepository[DomainPermission]):
         between the two Business Activities.
         """
         return len(await self.get_active_dependents(domain_permission_id)) > 0
+
+    async def search(
+        self,
+        domain_id: uuid.UUID | None = None,
+        membership_id: uuid.UUID | None = None,
+        status: str | None = None,
+    ) -> list[DomainPermission]:
+        """
+        WP-06 BA-01 (EX-C003-11's list/query branch): returns every
+        Domain Permission matching the given, independently optional
+        Domain, Membership, and status criteria. No criterion supplied
+        returns every Domain Permission. Read-only, per EX-C003-11's own
+        Purpose statement.
+        """
+        query = select(DomainPermission)
+        if domain_id is not None:
+            query = query.where(DomainPermission.domain_id == domain_id)
+        if membership_id is not None:
+            query = query.where(DomainPermission.membership_id == membership_id)
+        if status is not None:
+            query = query.where(DomainPermission.status == status)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())

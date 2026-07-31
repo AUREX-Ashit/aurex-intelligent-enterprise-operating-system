@@ -399,3 +399,39 @@ class DomainPermissionService:
             {"domain_permission_id": str(updated.id), "previous_status": previous_status, "status": updated.status},
         )
         return updated
+
+    async def get_by_id(self, domain_permission_id) -> DomainPermission:
+        """
+        Business Activity: Understand Domain Permission Context (BA-01,
+        WP-06 / C-003), realizing PE-001-C003 v1.1's EX-C003-11 —
+        single-item branch. Read-only — no audit record or domain event,
+        on the same basis already established for OrganizationService's
+        and StructuralCompletionService's own get_details() (WP-01/WP-04).
+        Reuses BaseRepository.get_by_id via DomainPermissionRepository
+        as-is — no new repository method required.
+        """
+        domain_permission = await self.domain_permission_repo.get_by_id(domain_permission_id)
+        if domain_permission is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No domain permission found with id '{domain_permission_id}'.",
+            )
+        return domain_permission
+
+    async def search(
+        self,
+        domain_id=None,
+        membership_id=None,
+        status_filter: str | None = None,
+    ) -> list[DomainPermission]:
+        """
+        Business Activity: Understand Domain Permission Context (BA-01,
+        WP-06 / C-003), realizing PE-001-C003 v1.1's EX-C003-11 —
+        filtered-list branch. Read-only — no audit record or domain
+        event, same basis as get_by_id() above. Delegates directly to
+        DomainPermissionRepository.search() (WP-06); no criterion
+        supplied returns every Domain Permission.
+        """
+        return await self.domain_permission_repo.search(
+            domain_id=domain_id, membership_id=membership_id, status=status_filter
+        )

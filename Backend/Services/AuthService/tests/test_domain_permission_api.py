@@ -147,3 +147,127 @@ def test_establish_domain_permission_rejects_invalid_permission_level(
     )
 
     assert response.status_code == 422
+
+
+def test_get_domain_permission_by_id_succeeds_for_platform_admin(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11 single-item branch."""
+    membership_id, domain_id = seeded_membership_and_domain
+    created = client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    ).json()
+
+    response = client.get(f"/domain-permissions/{created['id']}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    assert response.json()["id"] == created["id"]
+
+
+def test_get_domain_permission_by_id_rejects_unknown_id(client: TestClient) -> None:
+    response = client.get(f"/domain-permissions/{uuid.uuid4()}", headers=_auth_headers())
+
+    assert response.status_code == 404
+
+
+def test_get_domain_permission_by_id_requires_authorization_header(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    membership_id, domain_id = seeded_membership_and_domain
+    created = client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    ).json()
+
+    response = client.get(f"/domain-permissions/{created['id']}")
+
+    assert response.status_code == 400
+
+
+def test_get_domain_permission_by_id_rejects_non_platform_admin(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    membership_id, domain_id = seeded_membership_and_domain
+    created = client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    ).json()
+
+    response = client.get(f"/domain-permissions/{created['id']}", headers=_auth_headers(role_code="ESG_MANAGER"))
+
+    assert response.status_code == 403
+
+
+def test_list_domain_permissions_with_no_filters_returns_all(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11 list branch."""
+    membership_id, domain_id = seeded_membership_and_domain
+    client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    )
+    client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "EDIT"},
+    )
+
+    response = client.get("/domain-permissions", headers=_auth_headers())
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+def test_list_domain_permissions_filters_by_domain_id(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    membership_id, domain_id = seeded_membership_and_domain
+    client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    )
+
+    response = client.get(f"/domain-permissions?domain_id={domain_id}", headers=_auth_headers())
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["domain_id"] == domain_id
+
+
+def test_list_domain_permissions_filters_by_status(
+    client: TestClient, seeded_membership_and_domain
+) -> None:
+    membership_id, domain_id = seeded_membership_and_domain
+    created = client.post(
+        "/domain-permissions",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    ).json()
+    client.post(f"/domain-permissions/{created['id']}/deprecate", headers=_auth_headers())
+
+    active_response = client.get("/domain-permissions?status=ACTIVE", headers=_auth_headers())
+    deprecated_response = client.get("/domain-permissions?status=DEPRECATED", headers=_auth_headers())
+
+    assert active_response.json() == []
+    assert len(deprecated_response.json()) == 1
+    assert deprecated_response.json()[0]["id"] == created["id"]
+
+
+def test_list_domain_permissions_requires_authorization_header(client: TestClient) -> None:
+    response = client.get("/domain-permissions")
+
+    assert response.status_code == 400
+
+
+def test_list_domain_permissions_rejects_non_platform_admin(client: TestClient) -> None:
+    response = client.get("/domain-permissions", headers=_auth_headers(role_code="ESG_MANAGER"))
+
+    assert response.status_code == 403

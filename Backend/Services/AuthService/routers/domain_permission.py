@@ -1,11 +1,12 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import require_platform_admin
 from models.database import db_manager
+from models.domain_permission import VersionStatus
 from repositories.domain_permission_repository import DomainPermissionRepository
 from repositories.domain_repository import DomainRepository
 from repositories.membership_repository import MembershipRepository
@@ -292,3 +293,68 @@ async def report_domain_permission_handoff_rejection(
     if grant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No domain permission found with id '{domain_permission_id}'.")
     return await conflict_service.classify_handoff_rejection("domain_permission", grant, domain_permission_repo, request, actor_id=claims.get("person_id"))
+
+
+@router.get(
+    "",
+    response_model=list[DomainPermissionResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List Domain Permissions matching an optional Domain, Membership, or status criterion",
+    description=(
+        "WP-06 Business Activity: Understand Domain Permission Context "
+        "(C-003) — BA-01, realizing PE-001-C003 v1.1's EX-C003-11 "
+        "filtered-list branch. Read-only — establishes, versions, "
+        "deprecates, or retires nothing. domain_id, membership_id, and "
+        "status are each independently optional; omitting all three "
+        "returns every Domain Permission. Requires the PLATFORM_ADMIN "
+        "role (same interim gate as BA-02, TD-022)."
+    ),
+    responses={
+        200: {"description": "Matching Domain Permissions (possibly empty)."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+    },
+)
+async def list_domain_permissions(
+    domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+    domain_id: UUID | None = Query(None, description="Filter to Domain Permissions granted on this Domain."),
+    membership_id: UUID | None = Query(None, description="Filter to Domain Permissions granted to this Membership."),
+    status_filter: VersionStatus | None = Query(None, alias="status", description="Filter to Domain Permissions in this Status."),
+) -> list[DomainPermissionResponse]:
+    domain_permissions = await domain_permission_service.search(
+        domain_id=domain_id,
+        membership_id=membership_id,
+        status_filter=status_filter.value if status_filter is not None else None,
+    )
+    return [DomainPermissionResponse.model_validate(dp) for dp in domain_permissions]
+
+
+@router.get(
+    "/{domain_permission_id}",
+    response_model=DomainPermissionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Retrieve a Domain Permission's current governed state",
+    description=(
+        "WP-06 Business Activity: Understand Domain Permission Context "
+        "(C-003) — BA-01, realizing PE-001-C003 v1.1's EX-C003-11 "
+        "single-item branch. Read-only — establishes, versions, "
+        "deprecates, or retires nothing. Requires the PLATFORM_ADMIN "
+        "role (same interim gate as BA-02, TD-022)."
+    ),
+    responses={
+        200: {"description": "The Domain Permission's current governed state."},
+        400: {"description": "Missing or malformed Authorization header."},
+        401: {"description": "Access token invalid or expired."},
+        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        404: {"description": "No Domain Permission exists with the given id."},
+    },
+)
+async def get_domain_permission(
+    domain_permission_id: UUID,
+    domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
+) -> DomainPermissionResponse:
+    domain_permission = await domain_permission_service.get_by_id(domain_permission_id)
+    return DomainPermissionResponse.model_validate(domain_permission)

@@ -170,3 +170,92 @@ async def test_establish_never_touches_role_permissions(
     await db_session.refresh(role, attribute_names=["role_permissions"])
 
     assert role.role_permissions == []
+
+
+async def test_get_by_id_returns_the_domain_permission(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11 single-item branch: retrieves an existing Domain Permission by id."""
+    membership, domain, _role = seeded_membership_and_domain
+    service = _service(db_session)
+    grant = await service.establish(
+        EstablishDomainPermissionRequest(
+            membership_id=membership.id, domain_id=domain.id, permission_level="VIEW"
+        )
+    )
+
+    found = await service.get_by_id(grant.id)
+
+    assert found.id == grant.id
+    assert found.membership_id == membership.id
+    assert found.domain_id == domain.id
+
+
+async def test_get_by_id_rejects_unknown_id(db_session: AsyncSession) -> None:
+    """BA-01/EX-C003-11: an unknown id is rejected with 404, establishing nothing."""
+    service = _service(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.get_by_id(uuid.uuid4())
+
+    assert exc_info.value.status_code == 404
+
+
+async def test_search_with_no_criteria_returns_all_domain_permissions(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11 list branch: omitting every criterion returns every Domain Permission."""
+    membership, domain, _role = seeded_membership_and_domain
+    service = _service(db_session)
+    await service.establish(
+        EstablishDomainPermissionRequest(membership_id=membership.id, domain_id=domain.id, permission_level="VIEW")
+    )
+    await service.establish(
+        EstablishDomainPermissionRequest(membership_id=membership.id, domain_id=domain.id, permission_level="EDIT")
+    )
+
+    results = await service.search()
+
+    assert len(results) == 2
+
+
+async def test_search_filters_by_domain_id(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11: domain_id narrows the result set to grants on that Domain only."""
+    membership, domain, _role = seeded_membership_and_domain
+    service = _service(db_session)
+    other_domain = Domain(domain_name="Legal")
+    db_session.add(other_domain)
+    await db_session.flush()
+
+    await service.establish(
+        EstablishDomainPermissionRequest(membership_id=membership.id, domain_id=domain.id, permission_level="VIEW")
+    )
+    await service.establish(
+        EstablishDomainPermissionRequest(membership_id=membership.id, domain_id=other_domain.id, permission_level="VIEW")
+    )
+
+    results = await service.search(domain_id=domain.id)
+
+    assert len(results) == 1
+    assert results[0].domain_id == domain.id
+
+
+async def test_search_filters_by_status(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> None:
+    """BA-01/EX-C003-11: status narrows the result set (e.g. ACTIVE excludes DEPRECATED)."""
+    membership, domain, _role = seeded_membership_and_domain
+    service = _service(db_session)
+    grant = await service.establish(
+        EstablishDomainPermissionRequest(membership_id=membership.id, domain_id=domain.id, permission_level="VIEW")
+    )
+    await service.deprecate(grant.id)
+
+    active_results = await service.search(status_filter="ACTIVE")
+    deprecated_results = await service.search(status_filter="DEPRECATED")
+
+    assert active_results == []
+    assert len(deprecated_results) == 1
+    assert deprecated_results[0].id == grant.id
