@@ -660,6 +660,27 @@ build-vs-reuse decision: the smallest sufficient option in that order is
 the correct one, and what it deliberately excludes is disclosed, not
 hidden.
 
+**Second worked example — defect remediation (formalized per ADR-017 —
+METH-002):** WP-05's own F-01 remediation (an Access Evaluation Outcome
+write attempted for a Membership that did not exist, violating a
+non-nullable foreign key) illustrates the same Reuse → Configure →
+Extend → Compose → Create order applied to fixing an already-shipped
+defect, not only to scoping a not-yet-built feature. Three remediation
+shapes were identified — (a) narrow the code path so the invalid case
+becomes structurally unreachable, matching the pre-existing
+domain-not-found precedent already present in the same method; (b) make
+the foreign key nullable; (c) wrap the write in a `try`/`except`
+handler that catches the resulting database error after it occurs.
+Option (a) was selected — Reuse of an existing, already-correct pattern
+in the same file — over (c), which would have added new defensive
+handling around a write that should never have been attempted for that
+case, and over (b), which would have required a schema change and a new
+governance decision about the object's own anchor becoming optional.
+The chosen fix was independently confirmed to make the invalid write
+structurally unreachable, not merely no-longer-observed-to-fail — the
+distinguishing property this rule's own Reuse-first preference is meant
+to produce.
+
 -------------------------------------------------------------------------------
 19.6 Compliance Verification
 -------------------------------------------------------------------------------
@@ -848,6 +869,97 @@ it is not labelled as such.
 
 Only an independently certified Work Package shall be considered
 complete.
+
+-------------------------------------------------------------------------------
+19.7b Multi-Stage Independent Verification Escalation (Mandatory,
+formalized per ADR-017 — METH-002)
+-------------------------------------------------------------------------------
+
+WP-05 demonstrated that Independent Certification (19.7 above), even
+when correctly performed by a genuinely independent, fresh-context
+reviewer, is not by itself sufficient to guarantee that no
+non-deferrable defect (19.8.5) remains undisclosed in a Work Package
+recorded as certified. Certification alone missed two High-severity
+defects that a deeper, differently-scoped audit subsequently found.
+
+Every Work Package SHALL therefore close through the following gate
+sequence, each gate performed by a reviewer independent of every gate
+before it:
+
+1. Independent Certification (19.7).
+
+2. Verification & Validation (V&V) Audit — a fresh-context reviewer,
+   uninvolved in the implementation or the Certification pass,
+   re-examines the Work Package against its own governing
+   specifications with a broader, more exhaustive mandate than
+   Certification's own re-verification (a Requirements Traceability
+   Matrix, exhaustive specification-conformance checking, and
+   empirical probing per the method requirement below) — not merely a
+   repeat of Certification's own method at greater length.
+
+3. Remediation — if the V&V Audit finds anything requiring correction,
+   the implementing session remediates it.
+
+4. Independent Verification of Remediation — a further fresh-context
+   reviewer, uninvolved in the implementation, the original
+   Certification, the V&V Audit, or the remediation itself,
+   independently confirms the remediation before the Work Package's
+   certified status is restored. This step is REQUIRED for every
+   remediation, regardless of the underlying finding's own severity —
+   "the fix is small" or "the fix is obviously correct" is not an
+   exception. A remediation accepted on the implementing session's own
+   say-so, without this step, does not satisfy this section, for the
+   same reason self-certification does not satisfy 19.7.
+
+5. Release Readiness Audit — a further fresh-context reviewer verifies
+   git status, commit history, repository-wide consistency between
+   source, tests, and governance documents, full regression test
+   results, and governance-document accuracy, before authorizing a
+   push to the remote repository. This gate exists specifically to
+   catch governance-documentation staleness (e.g., a status field still
+   describing a superseded or already-completed state) that a
+   content-focused review is not positioned to notice, since checking
+   documentation-versus-actual-repository-state accuracy is not that
+   review's own primary lens.
+
+**Method requirement for gates 2 and 4 (V&V Audit and Independent
+Verification of Remediation):** re-reading source code and re-running
+the existing test suite, by themselves, only prove the implementation
+satisfies what the existing tests already check — they provide no
+evidence about a defect the existing tests were never designed to
+catch, which is exactly how WP-05's own two defects survived a
+correctly-performed Certification. Each such gate SHALL therefore
+include at least one purpose-built, from-scratch runtime probe per
+defect class under review, not adapted from the existing test suite.
+When re-verifying a remediation specifically, the reviewer SHALL also
+run a negative control — the same probe executed against the pre-fix
+code (e.g., extracted from the prior commit) — to confirm the probe
+actually reproduces the original defect, before treating the probe's
+passing against the corrected code as meaningful evidence.
+
+**Harness/fixture production-parity checklist (part of the V&V Audit,
+gate 2):** does the test harness enforce every constraint the declared
+production database enforces unconditionally (foreign keys, check
+constraints, uniqueness)? Does at least one test exercise more than
+one tenant/organization for any capability whose data model includes
+an organization boundary? Both of WP-05's own undetected defects
+existed specifically because the shared test harness and fixtures did
+not answer "yes" to these two questions — this checklist item is not
+speculative, it is the named root cause.
+
+**Interrupted reviewer subagents (informative, not a mandatory gate):**
+where a dispatched independent reviewer (any of gates 2, 4, or 5) is
+interrupted mid-task by a transient infrastructure or connection error
+— as opposed to reaching a substantive conclusion — resume the same
+agent from its own transcript rather than dispatching a fresh agent
+from scratch, so that already-verified partial progress is not
+discarded and is not put at risk of being inconsistently re-derived by
+a second, independent pass.
+
+Only a Work Package that has completed every gate this section
+requires (Certification; V&V Audit; Remediation and its Independent
+Verification, if remediation occurred; Release Readiness Audit) may be
+pushed to the remote repository.
 
 19.8 Technical Debt Management (Mandatory)
 

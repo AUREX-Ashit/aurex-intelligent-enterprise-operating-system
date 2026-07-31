@@ -48,7 +48,7 @@ It does **not redefine architecture**. It operationalizes it.
 
 *(This replaces an earlier planning outline that proposed 20 sections but was superseded during drafting by a different, 7-section structure plus Appendix A. That outline was never updated to match, creating a genuine internal-consistency defect identified during the Version 1.0 constitutional validation and corrected here. The list below is the actual, final structure of this document.)*
 
-Section 1 — Purpose & Guiding Principles. Section 2 — Canonical Implementation Lifecycle (CIL). Section 3 — Canonical Implementation Unit (CIU). Section 4 — Repository Architecture & Project Structure. Section 5 — Canonical Business Object Implementation Pattern. Section 6 — Canonical Business Activity Implementation Pattern (CBAIP). Section 7 — Architectural Alignment & Implementation Guidance. Section 8 — API Standards. Section 9 — Event Implementation Standards. Section 10 — Frontend Standards. Section 11 — Testing Strategy. Section 12 — CI/CD & DevOps. Section 13 — Enterprise Intelligence Implementation Patterns *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3; extended under AMD-013 Phase 3 with Planner, Execution Capability/Discovery Provider/Reasoning Engine Resolver, Execution Strategy, Multi-Agent, Evidence Fusion, Knowledge & Memory, and Discovery Pipeline patterns)*. Appendix A — Canonical Reference Implementation.
+Section 1 — Purpose & Guiding Principles. Section 2 — Canonical Implementation Lifecycle (CIL) *(§2.13a, Work Package Closure & Release Gate Sequence, added per ADR-017 — METH-002)*. Section 3 — Canonical Implementation Unit (CIU). Section 4 — Repository Architecture & Project Structure. Section 5 — Canonical Business Object Implementation Pattern. Section 6 — Canonical Business Activity Implementation Pattern (CBAIP). Section 7 — Architectural Alignment & Implementation Guidance. Section 8 — API Standards. Section 9 — Event Implementation Standards. Section 10 — Frontend Standards. Section 11 — Testing Strategy. Section 12 — CI/CD & DevOps. Section 13 — Enterprise Intelligence Implementation Patterns *(added under the Enterprise Intelligence Engineering Architecture Enhancement, Phase 3; extended under AMD-013 Phase 3 with Planner, Execution Capability/Discovery Provider/Reasoning Engine Resolver, Execution Strategy, Multi-Agent, Evidence Fusion, Knowledge & Memory, and Discovery Pipeline patterns)*. Appendix A — Canonical Reference Implementation. Appendix B — WP-05 Reference Pointer *(added per ADR-017 — METH-002; points to METH-002 as the sole source for retrospective detail, not a restatement)*.
 
 
 **Section 1 — Purpose & Guiding Principles**
@@ -530,6 +530,62 @@ A Canonical Implementation Unit is complete only when:
 
 No implementation shall be considered complete based solely on
 successful coding.
+
+**2.13a Work Package Closure & Release Gate Sequence (validated per WP-05, ADR-017)**
+
+Section 2.13's own Completion Criteria state that a Canonical
+Implementation Unit is complete only when "Tests have passed" and "the
+Definition of Done has been satisfied," without further detail on what
+satisfying those two criteria requires at Work Package closure. WP-05
+(Access Management, C-002) validated the concrete sequence this
+subsection now states explicitly.
+
+The governing rule lives in **CLAUDE.md §19.7 and §19.7b** — this
+subsection presents the same, validated sequence at the engineering
+methodology level and does not restate or duplicate CLAUDE.md's own
+governing text; where the two differ, CLAUDE.md governs.
+
+A Work Package's Business Activities each follow their own
+implementation lifecycle (Section 6.3). Once every authorized Business
+Activity is implemented and unit-tested, and the repository is
+synchronized (documentation, governance registers, and Technical Debt
+entries all reflect the current implementation state), the Work
+Package as a whole closes through:
+
+Business Activity Analysis\
+│\
+Solution Design\
+│\
+Implementation\
+│\
+Unit Testing\
+│\
+Repository Synchronization\
+│\
+Independent Review (Certification)\
+│\
+Verification & Validation (V&V) Audit\
+│\
+Remediation *(only if the V&V Audit finds anything)*\
+│\
+Independent Verification of Remediation *(only if Remediation occurred)*\
+│\
+Regression Testing\
+│\
+Release Readiness Audit\
+│\
+Certification (restored/confirmed)\
+│\
+Git Commit\
+│\
+Git Push\
+│\
+Repository Baseline Updated
+
+Every gate from Independent Review onward is performed by a reviewer
+independent of every gate before it, per `CLAUDE.md §19.7`/`§19.7b`.
+No Work Package may be pushed to the remote repository until every
+gate this sequence requires has completed.
 
 **Architectural Enhancement (Recommended)**
 
@@ -12105,6 +12161,12 @@ Runtime Components follow the same Version Lifecycle and Canonical Version Model
 **13.25 Runtime Component Review, Completion Gate, and Certification**
 
 Every Runtime Component is subject to the same Independent Review, Completion Gate, and Certification discipline CLAUDE.md §19.7 already establishes for Business Activities, substituting "Runtime Component" for "Business Activity" throughout that section's requirements — including that the implementation agent shall not certify its own work, and that no further Runtime Component's implementation shall begin until the current one has passed this same gate. This section references that discipline; it does not restate, redefine, or relocate it.
+
+---
+
+**Appendix B — WP-05 Reference Pointer**
+
+WP-05 (Access Management, C-002) is the canonical reference implementation of the Work Package Closure & Release Gate Sequence defined at §2.13a. The full retrospective — execution statistics, defects discovered, V&V findings, and the methodology improvements they justified — is recorded once, in `METH-002_WP-05_Engineering_Methodology_Improvements.md`, and is not restated here. This document's own §2.13a states the adopted rule; `METH-002` is the sole source for the evidence and history behind it, per this repository's own single-authoritative-source discipline.
 
 ---
 

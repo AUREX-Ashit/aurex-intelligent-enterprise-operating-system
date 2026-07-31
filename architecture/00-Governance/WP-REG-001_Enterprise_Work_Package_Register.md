@@ -50,6 +50,8 @@ This register is **mandatory**. It is not optional operational note-taking — i
 - repository consolidation completes
 - the Work Package closes
 
+Whenever any of the above triggers an update, any forward-looking language elsewhere in this register (or in a document it addends) describing the same transition as pending, in progress, or not yet performed SHALL be corrected to final tense in the same editing pass (formalized per `ADR-017` — `METH-002`, following WP-05's own governance-staleness finding).
+
 **WPR-001 SHALL only be updated when roadmap or governance information changes** (new capability mapping, sequencing/dependency change, IRA acceptance as a governance act) — not for the execution-status changes listed above, which belong exclusively to this register.
 
 The **Last Updated** field (§1) SHALL be updated on every modification to this document.
