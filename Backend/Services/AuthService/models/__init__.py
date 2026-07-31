@@ -22,6 +22,7 @@ from .person_distinction_decision import PersonDistinctionDecision
 from .person_reconciliation_decision import PersonReconciliationDecision
 from .person_correction import PersonCorrection
 from .person_enrichment import PersonEnrichment
+from .identity_recovery_request import IdentityRecoveryRequest
 
 __all__ = [
     "Base",
@@ -45,4 +46,5 @@ __all__ = [
     "PersonReconciliationDecision",
     "PersonCorrection",
     "PersonEnrichment",
+    "IdentityRecoveryRequest",
 ]

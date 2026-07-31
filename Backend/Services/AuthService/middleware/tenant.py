@@ -151,11 +151,19 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # canonically tenant-independent regardless of which role calls
         # it. Prefix-matched, mirroring every other resource's own
         # convention, so no future WP-07 endpoint needs a repeated entry.
+        # /identity (WP-08, C-001 — BA-01 through BA-03) is tenant-agnostic
+        # on the same stronger basis as /person: Identity has no
+        # organization_id column anywhere in its own model, nor does the
+        # new identity_recovery_requests table (IRA-008 §5) — an Identity
+        # traces to exactly one Person (BR-C001-01), and Person is itself
+        # canonically tenant-independent (URA-001-15). Prefix-matched for
+        # the same reason as /person.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
         ] or path == "/person" or path.startswith("/person/") \
+          or path == "/identity" or path.startswith("/identity/") \
           or path == "/organizations" or path.startswith("/organizations/") \
           or path == "/roles" or path.startswith("/roles/") \
           or path == "/domains" or path.startswith("/domains/") \

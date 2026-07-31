@@ -1,8 +1,18 @@
+"use client";
+
+import { useAuth } from "@/hooks/useAuth";
 import { PersonManagementScreen } from "@/features/person/components/PersonManagementScreen";
+import { IdentityRecoverySection } from "@/features/identity/components/IdentityRecoverySection";
+import { IdentityStatusSection } from "@/features/identity/components/IdentityStatusSection";
+import { useIdentityManagement } from "@/features/identity/state/useIdentityManagement";
 import { ProfileSummary } from "@/features/identity-access/components/ProfileSummary";
 import { UnsupportedCapabilityNotice } from "@/features/identity-access/components/UnsupportedCapabilityNotice";
 
 export function IdentityAccessScreen() {
+  const { session } = useAuth();
+  const { state, checkStatus, requestRecovery } = useIdentityManagement();
+  const personId = session.status === "authenticated" ? session.claims.person_id : null;
+
   return (
     <div className="space-y-10">
       <div>
@@ -15,6 +25,16 @@ export function IdentityAccessScreen() {
       </div>
 
       <ProfileSummary />
+
+      <section aria-labelledby="identity-management-heading" className="space-y-6">
+        <h2 id="identity-management-heading" className="sr-only">
+          Identity Management
+        </h2>
+        <IdentityStatusSection state={state} onCheckStatus={checkStatus} />
+        {personId && (
+          <IdentityRecoverySection state={state} personId={personId} onRequestRecovery={requestRecovery} />
+        )}
+      </section>
 
       <section aria-labelledby="person-management-heading" className="space-y-6">
         <h2 id="person-management-heading" className="sr-only">
@@ -34,8 +54,8 @@ export function IdentityAccessScreen() {
         </p>
 
         <UnsupportedCapabilityNotice
-          title="Identity Management"
-          reason="AuthService's Identity model records identity_type, is_primary, is_verified, and last_login_at, but no endpoint reads or lists Identity records — only login and refresh (which return JWT claims, not the full record)."
+          title="Identity Record Detail (View/List)"
+          reason="WP-08 added Identity Context status re-confirmation and self-service recovery requests (above), but AuthService's Identity model's own detail fields — identity_type, is_primary, is_verified, and last_login_at — still have no dedicated endpoint to read or list them; PE-001-C001 does not require one (it governs Identity Context, not raw Identity record presentation)."
         />
         <UnsupportedCapabilityNotice
           title="Membership Management"

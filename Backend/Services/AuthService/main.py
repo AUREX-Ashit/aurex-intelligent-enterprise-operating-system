@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent, structural_proposal, impact_assessment, structural_review, structural_validation, structural_completion, access_evaluation
+from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent, structural_proposal, impact_assessment, structural_review, structural_validation, structural_completion, access_evaluation, identity
 from models.database import db_manager
 from config import settings
 
@@ -102,3 +102,4 @@ app.include_router(structural_review.router, prefix="/structural-reviews", tags=
 app.include_router(structural_validation.router, prefix="/structural-validations", tags=["Structural Validation"])
 app.include_router(structural_completion.router, prefix="/structural-completions", tags=["Structural Completion"])
 app.include_router(access_evaluation.router, prefix="/access-evaluations", tags=["Access Evaluation"])
+app.include_router(identity.router, prefix="/identity", tags=["Identity"])
