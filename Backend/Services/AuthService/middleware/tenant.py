@@ -137,12 +137,26 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # is the sole caller today (the same interim gate every prior WP
         # uses, disclosed as its own Technical Debt entry), not because
         # the evaluation itself is tenant-independent.
+        # /person (WP-07, C-006 — BA-01 through BA-10) is tenant-agnostic
+        # across its entire prefix, not just /recognize and /establish
+        # (the original two-entry exact-list this replaces): Person has
+        # no organization_id column anywhere in its own model, nor in any
+        # of the four new WP-07 tables (person_distinction_decisions,
+        # person_reconciliation_decisions, person_corrections,
+        # person_enrichments) — URA-001-15 states a Person is "independent
+        # of any company, role, license, or permission." This is a
+        # stronger basis than /domain-permissions'/access-evaluations' own
+        # exemption (each IS organization-scoped data, merely exempted
+        # because PLATFORM_ADMIN is the sole caller today): Person is
+        # canonically tenant-independent regardless of which role calls
+        # it. Prefix-matched, mirroring every other resource's own
+        # convention, so no future WP-07 endpoint needs a repeated entry.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
-            "/person/recognize", "/person/establish",
-        ] or path == "/organizations" or path.startswith("/organizations/") \
+        ] or path == "/person" or path.startswith("/person/") \
+          or path == "/organizations" or path.startswith("/organizations/") \
           or path == "/roles" or path.startswith("/roles/") \
           or path == "/domains" or path.startswith("/domains/") \
           or path == "/domain-permissions" or path.startswith("/domain-permissions/") \

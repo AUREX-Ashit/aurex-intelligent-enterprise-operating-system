@@ -18,6 +18,10 @@ from .delegation_policy import DelegationPolicy
 from .runtime_assignment_policy import RuntimeAssignmentPolicy
 from .organization_node import OrganizationNode
 from .organization_establishment_attempt import OrganizationEstablishmentAttempt
+from .person_distinction_decision import PersonDistinctionDecision
+from .person_reconciliation_decision import PersonReconciliationDecision
+from .person_correction import PersonCorrection
+from .person_enrichment import PersonEnrichment
 
 __all__ = [
     "Base",
@@ -37,4 +41,8 @@ __all__ = [
     "RuntimeAssignmentPolicy",
     "OrganizationNode",
     "OrganizationEstablishmentAttempt",
+    "PersonDistinctionDecision",
+    "PersonReconciliationDecision",
+    "PersonCorrection",
+    "PersonEnrichment",
 ]
