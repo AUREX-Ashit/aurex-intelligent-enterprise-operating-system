@@ -1,3 +1,5 @@
+import json
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -71,13 +73,79 @@ async def seeded_domain_with_approval_authority(
     return membership_id, domain_id
 
 
+@pytest.fixture
+async def seeded_membership_and_domain_with_cross_org_approval_authority(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> tuple[str, str]:
+    """VV-AUDIT-WP-05 F-02 regression fixture: an ACTIVE, DOMAIN-scoped Approval Authority owned by a *different* organization than the returned Membership."""
+    membership_id, domain_id, _org_a_id = seeded_membership_and_domain
+
+    org_b = Organization(
+        organization_code="AE-API-TEST-ORG-B",
+        organization_name="Access Evaluation API Test Org B",
+        organization_type="CORPORATE",
+    )
+    db_session.add(org_b)
+    await db_session.flush()
+    other_org_authority = ApprovalAuthority(
+        organization_id=org_b.id,
+        authority_name="ORG-B CONFIDENTIAL APPROVAL BOARD",
+        approval_strategy="ANY_ONE",
+        scope_type="DOMAIN",
+        domain_id=uuid.UUID(domain_id),
+    )
+    db_session.add(other_org_authority)
+    await db_session.commit()
+
+    return membership_id, domain_id
+
+
+@pytest.fixture
+async def seeded_unresolved_outcome_id(
+    db_session: AsyncSession, seeded_membership_and_domain
+) -> tuple[str, str]:
+    """
+    Creates a real, persisted UNRESOLVED outcome via a genuinely-existing
+    but SUSPENDED Membership -- the only production-viable way to obtain
+    one, per VV-AUDIT-WP-05 F-01 (an unknown membership_id now correctly
+    404s instead of writing an invalid foreign key). Used by tests below
+    that only need *some* persisted outcome to exercise BA-02/BA-03/BA-04.
+    Returns (inactive_membership_id, domain_id).
+    """
+    _membership_id, domain_id, organization_id = seeded_membership_and_domain
+    person = Person(first_name="Inactive", last_name="Subject", display_name="Inactive Subject")
+    role = Role(role_code=f"AE_API_INACTIVE_ROLE_{uuid.uuid4().hex[:8]}", role_name="Inactive Fixture Role")
+    db_session.add_all([person, role])
+    await db_session.flush()
+    inactive_membership = Membership(
+        person_id=person.id,
+        organization_id=uuid.UUID(organization_id),
+        role_id=role.id,
+        membership_status="SUSPENDED",
+    )
+    db_session.add(inactive_membership)
+    await db_session.commit()
+
+    return str(inactive_membership.id), domain_id
+
+
+def _create_unresolved_outcome_id(client: TestClient, inactive_membership_id: str, domain_id: str) -> str:
+    created = client.post(
+        "/access-evaluations",
+        headers=_auth_headers(),
+        json={"membership_id": inactive_membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    ).json()
+    return created["id"]
+
+
 # ---------------------------------------------------------------------------
 # BA-01 — Evaluate Access for a Governed Request
 # ---------------------------------------------------------------------------
 
-def test_evaluate_access_returns_201_and_unresolved_for_unknown_membership(
+def test_evaluate_access_rejects_unknown_membership(
     client: TestClient, seeded_membership_and_domain
 ) -> None:
+    """VV-AUDIT-WP-05 F-01: an unknown membership_id is a malformed structural precondition, not an UNRESOLVED outcome."""
     _membership_id, domain_id, _org_id = seeded_membership_and_domain
 
     response = client.post(
@@ -86,10 +154,7 @@ def test_evaluate_access_returns_201_and_unresolved_for_unknown_membership(
         json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
     )
 
-    assert response.status_code == 201
-    body = response.json()
-    assert body["outcome_type"] == "UNRESOLVED"
-    assert body["validity_status"] == "CREATED"
+    assert response.status_code == 404
 
 
 def test_evaluate_access_returns_deferred_when_approval_authority_governs_domain(
@@ -107,6 +172,22 @@ def test_evaluate_access_returns_deferred_when_approval_authority_governs_domain
     body = response.json()
     assert body["outcome_type"] == "DEFERRED"
     assert body["approval_authority_id"] is not None
+
+
+def test_evaluate_access_deferred_branch_never_selects_a_different_organizations_approval_authority(
+    client: TestClient, seeded_membership_and_domain_with_cross_org_approval_authority
+) -> None:
+    """VV-AUDIT-WP-05 F-02: a cross-organization Approval Authority must never be selected."""
+    membership_id, domain_id = seeded_membership_and_domain_with_cross_org_approval_authority
+
+    response = client.post(
+        "/access-evaluations",
+        headers=_auth_headers(),
+        json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+    )
+
+    assert response.status_code == 501
+    assert "ORG-B" not in response.text
 
 
 def test_evaluate_access_returns_501_when_no_approval_authority_governs_domain(
@@ -165,6 +246,31 @@ def test_evaluate_access_rejects_non_platform_admin(
     assert response.status_code == 403
 
 
+def test_evaluate_access_audit_record_attributes_the_authenticated_actor(
+    client: TestClient, seeded_membership_and_domain, caplog: pytest.LogCaptureFixture
+) -> None:
+    """
+    VV-AUDIT-WP-05 F-03: the authenticated caller's own person_id (from
+    _access_token's claims) must reach record_audit's actor_id -- not the
+    "SYSTEM" default every audit record previously fell back to because
+    the router never passed claims through to the service.
+    """
+    membership_id, domain_id, _org_id = seeded_membership_and_domain
+
+    with caplog.at_level(logging.INFO, logger="authservice.audit"):
+        response = client.post(
+            "/access-evaluations",
+            headers=_auth_headers(),
+            json={"membership_id": membership_id, "domain_id": domain_id, "permission_level": "VIEW"},
+        )
+    assert response.status_code == 501
+
+    audit_records = [json.loads(r.message) for r in caplog.records if r.name == "authservice.audit"]
+    assert audit_records, "expected at least one audit record to be emitted"
+    assert all(record["actor_id"] == "11111111-1111-1111-1111-111111111111" for record in audit_records)
+    assert not any(record["actor_id"] == "SYSTEM" for record in audit_records)
+
+
 def test_evaluate_access_rejects_invalid_permission_level(
     client: TestClient, seeded_membership_and_domain
 ) -> None:
@@ -184,15 +290,10 @@ def test_evaluate_access_rejects_invalid_permission_level(
 # ---------------------------------------------------------------------------
 
 def test_preserve_and_expire_lifecycle(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
 
     preserve_response = client.post(
         f"/access-evaluations/{outcome_id}/preserve", headers=_auth_headers(), json={}
@@ -220,17 +321,20 @@ def test_preserve_rejects_unknown_outcome(client: TestClient) -> None:
     assert response.status_code == 404
 
 
+def test_expire_rejects_unknown_outcome(client: TestClient) -> None:
+    response = client.post(
+        f"/access-evaluations/{uuid.uuid4()}/expire", headers=_auth_headers(), json={}
+    )
+
+    assert response.status_code == 404
+
+
 def test_expire_rejects_outcome_that_was_never_preserved(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
     """TD-081: a CREATED (never preserved) outcome may not be expired directly."""
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
 
     response = client.post(
         f"/access-evaluations/{outcome_id}/expire", headers=_auth_headers(), json={}
@@ -244,15 +348,10 @@ def test_expire_rejects_outcome_that_was_never_preserved(
 # ---------------------------------------------------------------------------
 
 def test_context_change_invalidates_outcome(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
 
     response = client.post(
         f"/access-evaluations/{outcome_id}/context-change",
@@ -266,17 +365,22 @@ def test_context_change_invalidates_outcome(
     assert body["re_evaluation_required"] is True
 
 
+def test_context_change_rejects_unknown_outcome(client: TestClient) -> None:
+    response = client.post(
+        f"/access-evaluations/{uuid.uuid4()}/context-change",
+        headers=_auth_headers(),
+        json={"changed_fact": "Anything."},
+    )
+
+    assert response.status_code == 404
+
+
 def test_context_change_rejects_non_live_outcome(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
     """TD-081: a second context-change against an already-invalidated outcome is rejected."""
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
     client.post(
         f"/access-evaluations/{outcome_id}/context-change",
         headers=_auth_headers(),
@@ -297,15 +401,10 @@ def test_context_change_rejects_non_live_outcome(
 # ---------------------------------------------------------------------------
 
 def test_handoff_rejection_classifies_live_outcome(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
 
     response = client.post(
         f"/access-evaluations/{outcome_id}/handoff-rejection",
@@ -319,17 +418,22 @@ def test_handoff_rejection_classifies_live_outcome(
     assert body["object_preserved"] is True
 
 
+def test_handoff_rejection_rejects_unknown_outcome(client: TestClient) -> None:
+    response = client.post(
+        f"/access-evaluations/{uuid.uuid4()}/handoff-rejection",
+        headers=_auth_headers(),
+        json={"reporting_capability": "C-007", "stated_reason": "n/a"},
+    )
+
+    assert response.status_code == 404
+
+
 def test_handoff_rejection_classifies_invalidated_outcome_as_integrity_signal(
-    client: TestClient, seeded_membership_and_domain
+    client: TestClient, seeded_unresolved_outcome_id
 ) -> None:
     """TD-081: the non-live (invalidated) branch, mirrored from the unit-level test."""
-    _membership_id, domain_id, _org_id = seeded_membership_and_domain
-    created = client.post(
-        "/access-evaluations",
-        headers=_auth_headers(),
-        json={"membership_id": str(uuid.uuid4()), "domain_id": domain_id, "permission_level": "VIEW"},
-    ).json()
-    outcome_id = created["id"]
+    inactive_membership_id, domain_id = seeded_unresolved_outcome_id
+    outcome_id = _create_unresolved_outcome_id(client, inactive_membership_id, domain_id)
     client.post(
         f"/access-evaluations/{outcome_id}/context-change",
         headers=_auth_headers(),

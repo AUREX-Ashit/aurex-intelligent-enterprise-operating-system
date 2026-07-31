@@ -68,18 +68,27 @@ class AccessEvaluationService:
         Business Activity: Evaluate Access for a Governed Request (BA-01),
         Unresolved/Deferred branches only (IRA-005 S12).
 
-        Structural rule: the target Domain must already exist (404 if
-        not) -- a governed request against a nonexistent Domain is a
-        malformed request, not a business outcome this Business
-        Activity records (mirrors DomainPermissionService.establish()'s
-        own structural pre-check).
+        Structural rule: the target Domain AND the target Membership must
+        already exist (404 if not) -- a governed request naming a
+        nonexistent Domain or a nonexistent Membership is a malformed
+        request, not a business outcome this Business Activity records
+        (mirrors DomainPermissionService.establish()'s own structural
+        pre-check). This is required, not stylistic: `membership_id` is a
+        non-nullable foreign key on `access_evaluation_outcomes`
+        (`models/access_evaluation_outcome.py`), so persisting an outcome
+        anchored to a nonexistent Membership would violate that
+        constraint on any FK-enforcing database (VV-AUDIT-WP-05 F-01).
 
         Business outcome, in order:
-        1. Membership does not exist, or is not ACTIVE -> UNRESOLVED
-           (EX-C002-03: identity/membership standing cannot be
-           confirmed).
-        2. An ACTIVE, DOMAIN-scoped Approval Authority governs the
-           requested Domain -> DEFERRED (EX-C002-04: the request
+        1. Membership exists but is not ACTIVE -> UNRESOLVED (EX-C002-03:
+           identity/membership standing cannot be confirmed). The
+           Membership itself must be real -- see the structural rule
+           above -- this branch covers a real Membership whose standing
+           cannot be confirmed, not a phantom identifier.
+        2. An ACTIVE, DOMAIN-scoped Approval Authority governing the
+           requested Domain within the Membership's own Organization
+           (VV-AUDIT-WP-05 F-02 -- the lookup is organization-scoped, not
+           merely domain-scoped) -> DEFERRED (EX-C002-04: the request
            requires approval before resolution can proceed).
         3. Otherwise, resolving this request would require a
            Permitted/Denied determination -- explicitly out of this
@@ -101,12 +110,21 @@ class AccessEvaluationService:
             )
 
         membership = await self.membership_repo.get_by_id(request.membership_id)
-        if membership is None or membership.membership_status != "ACTIVE":
-            reason = (
-                "Membership not found."
-                if membership is None
-                else f"Membership standing is not ACTIVE (current standing: '{membership.membership_status}')."
+        if membership is None:
+            record_audit(
+                action="EVALUATE_ACCESS",
+                resource=f"membership:{request.membership_id}",
+                status=AuditStatus.DENIED,
+                actor_id=actor_id or "SYSTEM",
+                metadata={"reason": "target membership does not exist"},
             )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No membership found with id '{request.membership_id}'.",
+            )
+
+        if membership.membership_status != "ACTIVE":
+            reason = f"Membership standing is not ACTIVE (current standing: '{membership.membership_status}')."
             outcome = await self.outcome_repo.create(
                 {
                     "membership_id": request.membership_id,
@@ -130,7 +148,9 @@ class AccessEvaluationService:
             )
             return outcome
 
-        approval_authority = await self.outcome_repo.get_active_domain_approval_authority(request.domain_id)
+        approval_authority = await self.outcome_repo.get_active_domain_approval_authority(
+            request.domain_id, membership.organization_id
+        )
         if approval_authority is not None:
             outcome = await self.outcome_repo.create(
                 {

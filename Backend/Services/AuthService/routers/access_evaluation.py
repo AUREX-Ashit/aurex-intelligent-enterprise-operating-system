@@ -75,7 +75,7 @@ async def get_access_evaluation_service(
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
         403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
-        404: {"description": "The target Domain does not exist."},
+        404: {"description": "The target Domain does not exist, or the target Membership does not exist."},
         422: {"description": "Invalid request (e.g., permission_level not one of URA-001-47's eight values)."},
         501: {"description": "Permitted/Denied determination is not implemented by this Work Package (IRA-005 S12)."},
     },
@@ -85,7 +85,7 @@ async def evaluate_access(
     service: Annotated[AccessEvaluationService, Depends(get_access_evaluation_service)],
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> AccessEvaluationOutcomeResponse:
-    outcome = await service.evaluate(request)
+    outcome = await service.evaluate(request, actor_id=claims.get("person_id"))
     return AccessEvaluationOutcomeResponse.model_validate(outcome)
 
 
@@ -111,7 +111,7 @@ async def preserve_access_evaluation_outcome(
     service: Annotated[AccessEvaluationService, Depends(get_access_evaluation_service)],
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> AccessEvaluationOutcomeResponse:
-    outcome = await service.preserve(outcome_id)
+    outcome = await service.preserve(outcome_id, actor_id=claims.get("person_id"))
     return AccessEvaluationOutcomeResponse.model_validate(outcome)
 
 
@@ -133,7 +133,7 @@ async def expire_access_evaluation_outcome(
     service: Annotated[AccessEvaluationService, Depends(get_access_evaluation_service)],
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> AccessEvaluationOutcomeResponse:
-    outcome = await service.expire(outcome_id)
+    outcome = await service.expire(outcome_id, actor_id=claims.get("person_id"))
     return AccessEvaluationOutcomeResponse.model_validate(outcome)
 
 
@@ -163,7 +163,7 @@ async def detect_access_context_change(
     service: Annotated[AccessEvaluationService, Depends(get_access_evaluation_service)],
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> AccessContextChangeOutcome:
-    return await service.detect_context_change(outcome_id, request)
+    return await service.detect_context_change(outcome_id, request, actor_id=claims.get("person_id"))
 
 
 # ---------------------------------------------------------------------------
@@ -187,4 +187,4 @@ async def resolve_access_handoff_rejection(
     service: Annotated[AccessEvaluationService, Depends(get_access_evaluation_service)],
     claims: Annotated[dict, Depends(require_platform_admin)],
 ) -> AccessHandoffRejectionOutcome:
-    return await service.resolve_handoff_rejection(outcome_id, request)
+    return await service.resolve_handoff_rejection(outcome_id, request, actor_id=claims.get("person_id"))
