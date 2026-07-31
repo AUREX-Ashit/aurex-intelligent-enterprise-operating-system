@@ -109,6 +109,14 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 | TD-079 | BA-01 through BA-04 (WP-05/C-002, Access Management) gate every `/access-evaluations` endpoint on the existing `PLATFORM_ADMIN` role claim only — PE-001-C002 names no distinct, enforceable persona claim for Access Evaluation actions today, the same class of gap as TD-021 through TD-025/TD-031/TD-034/TD-035/TD-036/TD-039/TD-042. See detailed entry below the table for full fields. | BA-01 through BA-04 (self-identified, IRA-005 §12) | Security | Low | A persona-specific authorization model for C-002 (future, separately-scoped Business Activity or architecture amendment), followed by a persona-specific authorization dependency replacing `PLATFORM_ADMIN` for these endpoints | Open | AuthService (Backend) |
 | TD-080 | No `GET` read endpoint exists for Access Evaluation Outcome — only `POST /access-evaluations` (create) and its four sub-resource action endpoints (`preserve`, `expire`, `context-change`, `handoff-rejection`) exist. Mirrors TD-051/TD-055/TD-058/TD-061/TD-064's identical disposition for the Structural Context Lifecycle objects. | BA-01 implementation (self-identified, IRA-005 §12's own authorized scope — no Query-type Business Activity chartered) | Architecture | Low | A future, separately-scoped WP-05 Business Activity, once a real caller needs to resolve an Access Evaluation Outcome by id independently of the response already returned by whichever action created or transitioned it | Open | AuthService (Backend) |
 | TD-081 | `test_access_evaluation_api.py` (WP-05) exercised only one branch of several two-branch service behaviors at the API layer: BA-04's `handoff-rejection` endpoint was tested only for the live-outcome (`CAPABILITY_SCOPED_INSUFFICIENCY`) classification, not the invalidated-outcome (`INTEGRITY_SIGNAL`) classification; BA-02's `expire` endpoint was tested for the double-preserve 409 but not the expire-without-preserve 409; BA-03's `context-change` endpoint was tested only for the invalidating path, not its own 409 rejection of a non-live outcome. All of these branches were already fully covered at the unit (service) layer in `test_access_evaluation_service.py`. | Independent Review (CERT-WP-05) | Testing | Low | **Resolved:** the three missing branch-level API assertions (`test_expire_rejects_outcome_that_was_never_preserved`, `test_context_change_rejects_non_live_outcome`, `test_handoff_rejection_classifies_invalidated_outcome_as_integrity_signal`) were added to `test_access_evaluation_api.py`; 14/14 API tests pass, 601/601 full suite passes | Closed | AuthService (Backend) |
+| TD-082 | BA-02's own "Bound" / `EX-C002-06`'s Scope Boundary is not modelled — no execution-scope identifier, no expiry timestamp, and no automatic expiry exist; expiry is manual/caller-invoked only. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-08 | Architecture | Medium | A future, separately-scoped Business Activity or architecture decision introduces a real execution-scope concept and/or an automatic expiry trigger | Open | AuthService (Backend) |
+| TD-083 | BA-03 performs no real detection — invalidation is driven entirely by an unvalidated caller-supplied `changed_fact` string, never re-checked against Membership/Domain/Approval Authority state. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-09 | Business Rule Compliance | Medium | A future Business Activity implementing the excluded re-resolution path would naturally also supply real detection | Open | AuthService (Backend) |
+| TD-084 | `AccessEvaluationValidityStatus.SUPERSEDED` is declared but permanently unreachable by any WP-05 code path — same class as WP-04's TD-052/057/062/065/069. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-11 | Architecture | Low | A future Work Package performing a real fresh-evaluation supersession | Open | AuthService (Backend) |
+| TD-085 | `IRA-005 §11`'s "Full history retained" is only partially met — transitions overwrite `validity_status`/`reason` in place; no prior-state row or version history exists. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-12 | Data Integrity | Low | A future transition/version history mechanism, if a real consumer needs to query prior states | Open | AuthService (Backend) |
+| TD-086 | `CMD-001 §26.7` Physical Implementation Mapping for `AEO-000001` was never updated to record the now-known table/APIs/events WP-05 supplied. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-13 | Documentation | Low | Update `CMD-001 §26.7` (or equivalent) to record the now-known Physical Implementation Mapping | Open | AuthService (Backend) |
+| TD-087 | Dependent capability hand-off rejections (BA-04) are never persisted — no queryable record exists beyond the audit log and the synchronous API response. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-15 | Data Integrity | Low | A dedicated persisted record, if a real future consumer needs queryable hand-off-rejection history | Open | AuthService (Backend) |
+| TD-088 | `approval_authority_id` foreign key column is not indexed — immaterial at current volumes. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-19 | Performance | Low | Add an index if table volume or `approval_authorities` mutation frequency ever make this material | Open | AuthService (Backend) |
+| TD-089 | Four of five `/access-evaluations` routes omit 400/401/403 from their OpenAPI `responses` maps — cosmetic only, all codes are correctly enforced at runtime. See detailed entry below the table for full fields. | VV-AUDIT-WP-05 F-21 | Documentation | Low | Add 400/401/403 to the four sub-resource endpoints' `responses` maps | Open | AuthService (Backend) |
 
 ---
 
@@ -976,6 +984,158 @@ Per CLAUDE.md §19.8.5, Technical Debt SHALL NOT be used to defer architectural,
 - **Related Business Activity:** BA-01 — Evaluate Access for a Governed Request
 - **Source:** BA-01 implementation (self-identified during this Business Activity's own gap analysis, IRA-005 §12's own authorized scope)
 - **Resolution Criteria:** A read path for Access Evaluation Outcome exists, if and only if a future Business Activity's own gap analysis determines one is required.
+
+---
+
+### TD-081 — Detailed Entry
+
+- **Title:** API-Layer Test Coverage Narrower Than Unit-Layer for Several Two-Branch Behaviors
+- **Category:** Testing
+- **Description:** `test_access_evaluation_api.py` originally exercised only one branch of several two-branch service behaviors: BA-04's `handoff-rejection` endpoint was tested only for the live-outcome classification; BA-02's `expire` endpoint was tested for the double-preserve 409 but not the expire-without-preserve 409; BA-03's `context-change` endpoint was tested only for its invalidating path. All three branches were already fully covered at the unit layer.
+- **Root Cause:** The API test suite was written to exercise the happy path and the most obvious negative path per endpoint, without a systematic cross-check against the unit suite's own branch coverage.
+- **Impact:** None on correctness — every omitted branch was independently proven correct at the unit layer. A narrow, self-contained API-layer coverage gap.
+- **Severity:** Low — per `CLAUDE.md §19.8.7`, a non-critical testing-completeness gap with no effect on correctness, security, or another capability's ability to depend on this one (this field was missing from the original entry — VV-AUDIT-WP-05 F-10).
+- **Status:** **Resolved and Closed.** The three missing branch-level API assertions (`test_expire_rejects_outcome_that_was_never_preserved`, `test_context_change_rejects_non_live_outcome`, `test_handoff_rejection_classifies_invalidated_outcome_as_integrity_signal`) were added to `test_access_evaluation_api.py`; 14/14 API tests passed and 601/601 full suite passed at closure. Genuineness of this closure was independently re-verified by `VV-AUDIT-WP-05` §13.3 (all three named tests located and individually executed, confirmed passing) — the one caveat recorded there (F-06) is a process observation that the remediation was authored and self-attested by the implementing session rather than reviewed by a second party before closure, not a doubt about whether the tests actually exist or pass.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-02, BA-03, BA-04
+- **Source:** Independent Review (`CERT-WP-05`); severity gap found by `VV-AUDIT-WP-05` F-10
+- **Resolution Criteria:** Met — see Status.
+
+---
+
+### TD-082 — Detailed Entry
+
+- **Title:** BA-02's "Bound" / EX-C002-06's Scope Boundary Is Not Modelled — Expiry Is Manual-Only, No Object/Event/Time Scoping Exists
+- **Category:** Architecture
+- **Description:** BA-02's own name is "Preserve and **Bound** Access Evaluation Outcome Validity"; `EX-C002-06` is "Expire ... **at Scope Boundary**"; `IRA-005 §11` states validity is "Object Scoped, Event Scoped, and Time Scoped to the single governed execution it was produced for." No execution-scope identifier, no expiry timestamp, and no automatic expiry exist anywhere in the schema or code — an outcome remains `PRESERVED` indefinitely until a caller explicitly calls `expire()`.
+- **Root Cause:** Building real Object/Event/Time scoping would require either a new architectural component (a scheduler) or a new concept (an execution-scope identifier) neither of which is documented anywhere in `IRA-005` or `ADR-015` — inventing one was correctly declined as an unauthorized architectural addition (`CLAUDE.md §18`), consistent with `services/access_evaluation_service.py`'s own documented reasoning for why expiry is caller-invoked only.
+- **Impact:** What is implemented is a valid, minimum-scope manual status flip; the gap is that nothing currently *causes* expiry to be called at the actual boundary of a governed execution — that trigger does not exist anywhere in this repository yet.
+- **Severity:** Medium — per `CLAUDE.md §19.8.7`, an internal completeness/robustness concern expected to require resolution before this capability is exercised at production scale or depended on by a downstream capability, but not itself a defeat of BA-02's stated Business Intent for its own authorized (manual) scope, and not a security/tenant-isolation boundary.
+- **Status:** Open
+- **Target Resolution:** A future, separately-scoped Business Activity or architecture decision introduces a real execution-scope concept and/or a caller (e.g. the governed execution's own completion handler) that invokes `expire()` automatically at the correct boundary.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-02 — Preserve and Bound Access Evaluation Outcome Validity
+- **Source:** `VV-AUDIT-WP-05` F-08 (previously disclosed only in a code docstring, `services/access_evaluation_service.py:210-217`, in violation of `CLAUDE.md §19.8.2`)
+- **Resolution Criteria:** A real execution-scope identifier and/or an automatic trigger at the governed execution's own boundary exists, tested, and documented.
+
+---
+
+### TD-083 — Detailed Entry
+
+- **Title:** BA-03 Performs No Detection — Invalidation Is Driven Entirely by an Unvalidated Caller-Supplied String
+- **Category:** Business Rule Compliance
+- **Description:** The Business Activity is named "**Detect** and Resolve Access Context Change." `changed_fact` (the request body's sole field) is validated only for length (1–500 characters) and is never checked against Membership, Domain, or Approval Authority state. Any live outcome is invalidated purely on the caller's own assertion.
+- **Root Cause:** Real detection would require re-reading the governing authorities (Membership standing, Domain state, Approval Authority state) and comparing against the state captured at evaluation time — a "re-resolve to determine same-or-different" mechanism `IRA-005 §12` explicitly places out of this Work Package's own authorized scope (it re-enters BA-01's own excluded branches). What is implemented is the classification/detection portion's only non-excluded behavior: trusting a reported change and invalidating.
+- **Impact:** Any caller with `PLATFORM_ADMIN` access can invalidate any live outcome by asserting an arbitrary string, whether or not the asserted fact is true. No downstream consequence beyond invalidation exists yet (no automatic re-evaluation is triggered), so the practical impact is bounded, but the gap between the Business Activity's own name and its behavior is real.
+- **Severity:** Medium — per `CLAUDE.md §19.8.7`, an internal completeness concern (the endpoint does less than its own name implies) that does not itself defeat BA-03's authorized classification-only scope and does not weaken a security/tenant-isolation boundary (the caller must still be `PLATFORM_ADMIN`), but should be resolved before this capability is relied upon by a downstream consumer expecting genuine fact-verification.
+- **Status:** Open
+- **Target Resolution:** A future, separately-scoped Business Activity implementing the excluded "re-resolve to a fresh determination" path (which necessarily requires the same authorities BA-01 itself consults) would naturally also supply real detection; not built speculatively ahead of that need.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-03 — Detect and Resolve Access Context Change
+- **Source:** `VV-AUDIT-WP-05` F-09 (previously disclosed only in a code docstring, `services/access_evaluation_service.py:256-260`, in violation of `CLAUDE.md §19.8.2`)
+- **Resolution Criteria:** `changed_fact` (or its replacement) is verified against a real, re-read authority before an outcome is invalidated.
+
+---
+
+### TD-084 — Detailed Entry
+
+- **Title:** `AccessEvaluationValidityStatus.SUPERSEDED` Is Permanently Unreachable
+- **Category:** Architecture
+- **Description:** No code path in WP-05 writes `SUPERSEDED`. This is correct given the authorized scope — reaching it would require a fresh BA-01 re-evaluation producing a new record, itself gated by the same Permitted/Denied exclusion — and the model's own docstring says so.
+- **Root Cause:** Same class of gap as `TD-052`/`TD-057`/`TD-062`/`TD-065`/`TD-069` (WP-04): the full registered Lifecycle Model is declared for schema correctness even though this Work Package's own authorized scope writes only a subset.
+- **Impact:** None — declared for schema completeness only, not a functional gap.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** A future, separately-scoped Work Package or Business Activity that performs a real fresh-evaluation supersession, once BA-01's Permitted/Denied branches are ever authorized.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-01 — Evaluate Access for a Governed Request
+- **Source:** `VV-AUDIT-WP-05` F-11 (previously disclosed only in a code docstring, `models/access_evaluation_outcome.py:38`, in violation of `CLAUDE.md §19.8.2` — WP-04's five equivalent cases each received a register entry; this one did not)
+- **Resolution Criteria:** Either `SUPERSEDED` becomes reachable by a future Business Activity, or this entry is affirmed as a permanent, intentional gap at that Work Package's own closure.
+
+---
+
+### TD-085 — Detailed Entry
+
+- **Title:** "Full History Retained" Is Only Partially Met — Transitions Overwrite Prior State In Place
+- **Category:** Data Integrity
+- **Description:** `IRA-005 §11` states the Versioning Policy is "Full history retained for audit and traceability." `preserve()`/`expire()`/`detect_context_change()` each overwrite `validity_status` in place; `detect_context_change()` additionally rewrites `reason` by string concatenation. No prior-state row, version column, or transition table exists — the audit log (previously anonymized per the now-resolved `VV-AUDIT-WP-05` F-03 gap — record_audit's actor_id, unrelated to TD-086) is the only remaining history.
+- **Root Cause:** No versioning/history mechanism (a transition table, a version column, or an event-sourced reconstruction) was built — this Work Package's own minimum scope did not charter one, and inventing one would be a new architectural component (`CLAUDE.md §18`).
+- **Impact:** The current `validity_status`/`reason` is always correct, but the specific prior value at each transition cannot be queried from the outcome row itself once overwritten.
+- **Severity:** Low — a completeness gap in an audit-trail nicety, not a correctness defect (the audit log, once actor attribution is fixed, still records each transition's occurrence and its actor).
+- **Status:** Open
+- **Target Resolution:** A future, separately-scoped Business Activity or architecture decision introduces a transition/version history table, if a real consumer needs to query prior states rather than only the current one.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-02, BA-03
+- **Source:** `VV-AUDIT-WP-05` F-12
+- **Resolution Criteria:** A real prior-state history mechanism exists, if and only if a future gap analysis determines one is required.
+
+---
+
+### TD-086 — Detailed Entry
+
+- **Title:** `CMD-001 §26.7` Physical Implementation Mapping for `AEO-000001` Was Never Recorded
+- **Category:** Documentation / Repository Governance
+- **Description:** `ADR-015`'s "Explicitly Not Decided" section and `IRA-005:289` both record `AEO-000001`'s Physical Tables/APIs/Events as Pending. WP-05 has since supplied all three (one table, five endpoints, five Domain Event types), but no document was updated to record them — `AEO-000001`'s registration still reads as having no physical realization.
+- **Root Cause:** Recording the Physical Implementation Mapping back into `CMD-001 §26.7` (or an equivalent register) was not included in this Work Package's own "Documents Updated" list at implementation time.
+- **Impact:** A reader consulting `CMD-001 §26.7` or `ADR-015` alone, without also reading `IMP-REPORT-WP-05`, would not learn that `AEO-000001` now has a real physical mapping.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** Update `CMD-001 §26.7` (or the equivalent Canonical Business Object register) to record `access_evaluation_outcomes`, the five `/access-evaluations` endpoints, and the five Domain Event types as `AEO-000001`'s now-known Physical Implementation Mapping.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** All (BA-01 through BA-04)
+- **Source:** `VV-AUDIT-WP-05` F-13
+- **Resolution Criteria:** `CMD-001 §26.7` (or equivalent) reflects the actual, now-known Physical Implementation Mapping.
+
+---
+
+### TD-087 — Detailed Entry
+
+- **Title:** Dependent Capability Hand-off Rejections Are Never Persisted
+- **Category:** Data Integrity
+- **Description:** BA-04's `resolve_handoff_rejection()` mutates no row and creates no row — the rejection exists only as an audit log line and a synchronous API response. No queryable record of any dependent capability's rejection exists after the response is returned.
+- **Root Cause:** No governing document (`IRA-005`, `ADR-015`) requires persistence of a hand-off rejection as its own record; the classification-and-respond behavior implemented is a complete, minimal realization of `BR-C002-05`/Contract 5.6 as stated.
+- **Impact:** None against any stated requirement — this is a disclosed design choice, not a violation. A future capability wanting to query "how many hand-off rejections has this outcome received" would find no data to query.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** If a future consumer needs a queryable history of hand-off rejections, a dedicated persisted record (mirroring `AccessEvaluationOutcome`'s own shape) would need its own gap analysis and authorization — not built speculatively ahead of that need.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-04 — Resolve Dependent Capability Access Hand-off Rejection
+- **Source:** `VV-AUDIT-WP-05` F-15
+- **Resolution Criteria:** N/A unless a real future consumer is identified.
+
+---
+
+### TD-088 — Detailed Entry
+
+- **Title:** `approval_authority_id` Foreign Key Column Is Not Indexed
+- **Category:** Performance
+- **Description:** `access_evaluation_outcomes.approval_authority_id` carries a foreign key to `approval_authorities.id` but no index. PostgreSQL does not auto-index FK child columns, so a `DELETE`/`UPDATE` against `approval_authorities` performs a sequential scan of `access_evaluation_outcomes` to check for referencing rows.
+- **Root Cause:** Only the two columns actually used for lookups (`membership_id`, `domain_id`) were indexed at implementation time; `approval_authority_id` is written but never independently queried by any current code path.
+- **Impact:** Immaterial at current table volumes; would become a real concern only at a scale where `approval_authorities` deletes/updates are frequent and `access_evaluation_outcomes` is large.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** Add `ix_access_evaluation_outcomes_approval_authority_id` in a future migration if table volumes or `approval_authorities` mutation frequency ever make this material.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-01 — Evaluate Access for a Governed Request
+- **Source:** `VV-AUDIT-WP-05` F-19
+- **Resolution Criteria:** Index added if and when volume/frequency justifies it.
+
+---
+
+### TD-089 — Detailed Entry
+
+- **Title:** Four of Five `/access-evaluations` Routes Omit 400/401/403 From Their OpenAPI `responses` Maps
+- **Category:** Documentation
+- **Description:** All five endpoints can return 400 (missing/malformed Authorization header), 401 (invalid/expired token), and 403 (non-`PLATFORM_ADMIN`) via the shared `require_platform_admin` dependency. Only `POST /access-evaluations` documents these in its `responses` map; the four sub-resource action endpoints (`preserve`, `expire`, `context-change`, `handoff-rejection`) do not.
+- **Root Cause:** The `responses` map for each sub-resource endpoint was written to document only that endpoint's own distinctive outcomes (200/404/409), omitting the shared-dependency codes already documented once on the first endpoint.
+- **Impact:** Purely cosmetic — the codes are real and correctly enforced at runtime (confirmed by test); only the generated OpenAPI/Swagger documentation under-describes four of the five endpoints.
+- **Severity:** Low.
+- **Status:** Open
+- **Target Resolution:** Add 400/401/403 to the `responses` map of the four sub-resource endpoints, mirroring `POST /access-evaluations`'s own map.
+- **Owning Work Package:** WP-05 — Access Management (C-002)
+- **Related Business Activity:** BA-02, BA-03, BA-04
+- **Source:** `VV-AUDIT-WP-05` F-21
+- **Resolution Criteria:** All five endpoints' `responses` maps document 400/401/403.
 
 ---
 
