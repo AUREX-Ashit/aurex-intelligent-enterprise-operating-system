@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { WORKSPACES } from "@/config/workspaces";
 
 const WORKSPACE_ID = "enterprise-administration";
@@ -17,10 +18,7 @@ export default function EnterpriseAdministrationWorkspaceHome() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{workspace.label}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{workspace.description}</p>
-      </div>
+      <PageHeader title={workspace.label} description={workspace.description} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workspace.navItems.map((item) => (

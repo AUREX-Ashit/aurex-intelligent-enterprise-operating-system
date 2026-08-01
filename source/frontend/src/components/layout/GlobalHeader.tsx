@@ -17,12 +17,14 @@ import type { AuthClaims } from "@/types/auth";
  */
 export function GlobalHeader({
   onOpenNav,
+  mobileNavOpen,
   activeWorkspace,
   breadcrumbItems,
   claims,
   onSignOut,
 }: {
   onOpenNav: () => void;
+  mobileNavOpen: boolean;
   activeWorkspace: Workspace;
   breadcrumbItems: { label: string; href?: string }[];
   claims: AuthClaims;
@@ -34,18 +36,22 @@ export function GlobalHeader({
         type="button"
         onClick={onOpenNav}
         aria-label="Open navigation"
+        aria-expanded={mobileNavOpen}
+        aria-controls="platform-admin-sidebar"
         className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-foreground sm:hidden"
       >
         Menu
       </button>
 
-      <div className="hidden items-center gap-4 sm:flex">
-        <WorkspaceSwitcher activeWorkspace={activeWorkspace} />
-        <Breadcrumb items={breadcrumbItems} />
+      <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-4">
+        <div className="hidden sm:block">
+          <WorkspaceSwitcher activeWorkspace={activeWorkspace} />
+        </div>
+        <Breadcrumb items={breadcrumbItems} className="min-w-0" />
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <GlobalSearch className="hidden md:inline-flex" />
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <GlobalSearch />
         <NotificationCenter />
         <UserMenu claims={claims} onSignOut={onSignOut} />
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useOverlay } from "@/hooks/useOverlay";
 import { cn } from "@/lib/utils";
 
 export interface DrawerProps {
@@ -14,21 +15,13 @@ export interface DrawerProps {
 /**
  * DS-001 Navigation/Overlay Components — Drawer. A slide-in side panel for
  * detail/quick-view content that doesn't warrant a full navigation away
- * from the current list or screen. Mirrors Modal's own escape/backdrop
- * pattern exactly (same event-handling shape, same z-index layer) rather
- * than inventing a new overlay convention.
+ * from the current list or screen. Mirrors Modal's own escape/backdrop/
+ * focus-trap pattern exactly (both consume the shared useOverlay hook)
+ * rather than inventing a new overlay convention.
  */
 export function Drawer({ open, onClose, title, children, className }: DrawerProps) {
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useOverlay({ open, onClose, containerRef });
 
   if (!open) return null;
 
@@ -39,12 +32,14 @@ export function Drawer({ open, onClose, title, children, className }: DrawerProp
       onClick={onClose}
     >
       <div
+        ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
         className={cn(
-          "flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-border bg-surface p-6 shadow-lg",
+          "flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-border bg-surface p-6 shadow-lg outline-none",
           className,
         )}
       >

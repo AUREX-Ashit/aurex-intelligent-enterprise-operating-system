@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useOverlay } from "@/hooks/useOverlay";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,27 +16,15 @@ import { cn } from "@/lib/utils";
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
+  useOverlay({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    trapRef: panelRef,
+    closeOnOutsideClick: true,
+  });
 
   return (
     <div ref={containerRef} className="relative inline-block">
@@ -52,10 +41,12 @@ export function NotificationCenter() {
 
       {open && (
         <div
+          ref={panelRef}
           role="region"
           aria-label="Notifications"
+          tabIndex={-1}
           className={cn(
-            "absolute right-0 z-40 mt-2 w-80 rounded-md border border-border bg-surface p-4 shadow-lg",
+            "absolute right-0 z-40 mt-2 w-80 rounded-md border border-border bg-surface p-4 shadow-lg outline-none",
           )}
         >
           <h2 className="text-sm font-bold text-foreground">Notifications</h2>

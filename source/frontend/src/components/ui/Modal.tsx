@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useOverlay } from "@/hooks/useOverlay";
 import { cn } from "@/lib/utils";
 
 export interface ModalProps {
@@ -12,16 +13,8 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useOverlay({ open, onClose, containerRef });
 
   if (!open) return null;
 
@@ -32,12 +25,14 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       onClick={onClose}
     >
       <div
+        ref={containerRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
         className={cn(
-          "w-full max-w-lg rounded-lg border border-border bg-surface p-6 shadow-lg",
+          "w-full max-w-lg rounded-lg border border-border bg-surface p-6 shadow-lg outline-none",
           className,
         )}
       >

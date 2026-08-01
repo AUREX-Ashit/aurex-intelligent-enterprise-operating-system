@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useRef } from "react";
+import { useOverlay } from "@/hooks/useOverlay";
 import { cn } from "@/lib/utils";
 
 export interface SidebarNavItem {
@@ -15,8 +16,10 @@ export interface SidebarNavItem {
  * DS-001 Navigation Components — Sidebar. Persistent left navigation for
  * the Platform Administrator Workspace. On small viewports it renders as
  * an off-canvas panel (SD-001 §11 Mobile & Multi-Device Principles)
- * toggled by AdminShell, with a backdrop that closes it on outside click
- * or Escape.
+ * toggled by AdminShell, with a backdrop that closes it on outside click.
+ * Shares Modal/Drawer/Menu's own Escape/focus-trap/focus-restore behaviour
+ * via the shared useOverlay hook rather than hand-rolling it; the backdrop
+ * click already covers outside-click, so closeOnOutsideClick stays off.
  */
 export function Sidebar({
   items,
@@ -28,17 +31,9 @@ export function Sidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname();
+  const panelRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    if (!mobileOpen) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [mobileOpen, onClose]);
+  useOverlay({ open: mobileOpen, onClose, containerRef: panelRef });
 
   return (
     <>
@@ -52,8 +47,11 @@ export function Sidebar({
       )}
 
       <aside
+        id="platform-admin-sidebar"
+        ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "fixed inset-y-0 left-0 z-30 w-64 shrink-0 overflow-y-auto border-r border-border bg-surface transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0",
+          "fixed inset-y-0 left-0 z-30 w-64 shrink-0 overflow-y-auto border-r border-border bg-surface outline-none transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

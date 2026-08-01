@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/ui/Sidebar";
-import { Spinner } from "@/components/ui/Spinner";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
@@ -12,15 +12,6 @@ import { workspaceForPathname } from "@/config/workspaces";
 
 const LOGIN_ROUTE = "/platform-admin/login";
 const PLATFORM_ADMIN_ROLE = "PLATFORM_ADMIN";
-
-function FullPageLoading() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
-      <Spinner className="mr-2 h-5 w-5" />
-      <span className="text-sm font-medium">Loading…</span>
-    </div>
-  );
-}
 
 function AccessDenied({ roleCode, onSignOut }: { roleCode: string; onSignOut: () => void }) {
   const router = useRouter();
@@ -71,7 +62,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   }, [session.status, router]);
 
   if (session.status === "loading" || session.status === "unauthenticated") {
-    return <FullPageLoading />;
+    return <LoadingState fullScreen />;
   }
 
   const { claims } = session;
@@ -102,6 +93,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <GlobalHeader
           onOpenNav={() => setMobileNavOpen(true)}
+          mobileNavOpen={mobileNavOpen}
           activeWorkspace={activeWorkspace}
           breadcrumbItems={breadcrumbItems}
           claims={claims}

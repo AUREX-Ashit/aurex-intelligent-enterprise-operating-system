@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent as ReactChangeEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
@@ -28,19 +34,22 @@ function search(query: string): SearchResult[] {
 }
 
 /**
- * Reusable Platform Asset — Global Search. Searches across every
- * Workspace's own navigation destinations (label, description, workspace
- * name) and jumps directly to the selected destination. Scoped to
- * navigation search only: no cross-entity (Organization/Person/etc.)
- * search backend exists yet in any WP-01 through WP-08 API, and inventing
- * one is new architecture this instruction does not authorize
- * (CLAUDE.md §18) — this realizes a genuinely working search capability
- * within that boundary rather than leaving the entry point non-functional
- * (the prior CommandPaletteTrigger's own explicit placeholder state).
+ * Reusable Platform Asset — Global Search. Realizes DS-001's canonical
+ * Command Palette navigation component. Searches across every Workspace's
+ * own navigation destinations (label, description, workspace name) and
+ * jumps directly to the selected destination. Scoped to navigation search
+ * only: no cross-entity (Organization/Person/etc.) search backend exists
+ * yet in any WP-01 through WP-08 API, and inventing one is new
+ * architecture this instruction does not authorize (CLAUDE.md §18) — this
+ * realizes a genuinely working search capability within that boundary
+ * rather than leaving the entry point non-functional. Reachable on every
+ * viewport (not just ⌘K/Ctrl+K) so it satisfies SD-001 §11's Mobile Is a
+ * First-Class Citizen principle.
  */
 export function GlobalSearch({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const router = useRouter();
   const results = useMemo(() => search(query), [query]);
 
@@ -59,11 +68,35 @@ export function GlobalSearch({ className }: { className?: string }) {
   function close() {
     setOpen(false);
     setQuery("");
+    setHighlightedIndex(0);
   }
 
   function goTo(href: string) {
     close();
     router.push(href);
+  }
+
+  function handleQueryChange(event: ReactChangeEvent<HTMLInputElement>) {
+    setQuery(event.target.value);
+    setHighlightedIndex(0);
+  }
+
+  function handleInputKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
+    if (results.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedIndex((index) => Math.min(index + 1, results.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === "Enter") {
+      const target = results[highlightedIndex];
+      if (target) {
+        event.preventDefault();
+        goTo(target.href);
+      }
+    }
   }
 
   return (
@@ -77,7 +110,7 @@ export function GlobalSearch({ className }: { className?: string }) {
         )}
       >
         <span>Search</span>
-        <kbd className="rounded border border-border-muted bg-surface-muted px-1.5 py-0.5 text-xs font-semibold">
+        <kbd className="hidden rounded border border-border-muted bg-surface-muted px-1.5 py-0.5 text-xs font-semibold sm:inline-block">
           ⌘K
         </kbd>
       </button>
@@ -86,7 +119,8 @@ export function GlobalSearch({ className }: { className?: string }) {
         <Input
           autoFocus
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={handleQueryChange}
+          onKeyDown={handleInputKeyDown}
           placeholder="Search workspaces and capabilities…"
           aria-label="Global search"
         />
@@ -98,14 +132,18 @@ export function GlobalSearch({ className }: { className?: string }) {
             </p>
           ) : (
             <ul className="space-y-1">
-              {results.map((result) => (
+              {results.map((result, index) => (
                 <li key={`${result.workspaceLabel}-${result.slug}`}>
                   <button
                     type="button"
                     role="option"
-                    aria-selected="false"
+                    aria-selected={index === highlightedIndex}
                     onClick={() => goTo(result.href)}
-                    className="block w-full rounded-md px-3 py-2 text-left transition hover:bg-surface-muted"
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                    className={cn(
+                      "block w-full rounded-md px-3 py-2 text-left transition hover:bg-surface-muted",
+                      index === highlightedIndex && "bg-surface-muted",
+                    )}
                   >
                     <span className="block text-sm font-semibold text-foreground">{result.label}</span>
                     <span className="block text-xs text-muted-foreground">

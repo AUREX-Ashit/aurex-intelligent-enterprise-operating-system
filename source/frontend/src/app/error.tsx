@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/Button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
-import { logger } from "@/lib/logger";
+import { ErrorState } from "@/components/layout/ErrorState";
 
 /**
  * Root error boundary (Next.js App Router convention: `error.tsx` at any
@@ -16,22 +13,12 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    logger.error("Unhandled UI error", { message: error.message, digest: error.digest });
-  }, [error]);
-
   return (
-    <div className="flex flex-1 items-center justify-center py-16">
-      <Card className="max-w-md text-center">
-        <CardTitle>Something went wrong</CardTitle>
-        <CardDescription>
-          An unexpected error occurred while rendering this page. You can try again, or return
-          later.
-        </CardDescription>
-        <Button className="mt-6" onClick={reset}>
-          Try again
-        </Button>
-      </Card>
-    </div>
+    <ErrorState
+      error={error}
+      reset={reset}
+      scope="UI"
+      description="An unexpected error occurred while rendering this page. You can try again, or return later."
+    />
   );
 }

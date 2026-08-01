@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { ADMIN_NAV_ITEMS, ADMIN_WORKSPACE_ROOT } from "@/config/admin-navigation";
@@ -21,12 +22,10 @@ export default function PlatformDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Platform Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Platform Administrator Workspace{roleCode ? ` — signed in as ${roleCode}` : ""}.
-        </p>
-      </div>
+      <PageHeader
+        title="Platform Dashboard"
+        description={`Platform Administrator Workspace${roleCode ? ` — signed in as ${roleCode}` : ""}.`}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {featureAreas.map((item) => (

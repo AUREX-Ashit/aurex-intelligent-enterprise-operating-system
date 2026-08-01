@@ -1,4 +1,5 @@
 import { Card, CardDescription, CardTitle } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
 /**
@@ -10,10 +11,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 export function PlaceholderPage({ title, description }: { title: string; description: string }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
+      <PageHeader title={title} description={description} />
 
       <Card className="max-w-md">
         <CardTitle className="flex items-center gap-2">

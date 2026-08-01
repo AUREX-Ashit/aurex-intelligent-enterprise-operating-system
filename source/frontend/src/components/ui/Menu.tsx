@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useOverlay } from "@/hooks/useOverlay";
 import { cn } from "@/lib/utils";
 
 export interface MenuItem {
@@ -11,8 +12,11 @@ export interface MenuItem {
 
 /**
  * DS-001 Navigation Components — Menu. A trigger that opens a small
- * anchored panel of actions (used for the Profile Menu). Closes on
- * Escape and on outside click, consistent with Modal's Escape handling.
+ * anchored panel of actions (used for the Workspace Switcher and Profile
+ * Menu). Closes on Escape and outside click, traps and restores focus
+ * (via the shared useOverlay hook), and supports Up/Down/Home/End
+ * navigation between items per the WAI-ARIA menu pattern that its own
+ * `role="menu"`/`role="menuitem"` markup implies.
  */
 export function Menu({
   trigger,
@@ -25,27 +29,37 @@ export function Menu({
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
+  useOverlay({
+    open,
+    onClose: () => setOpen(false),
+    containerRef,
+    trapRef: panelRef,
+    closeOnOutsideClick: true,
+  });
 
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+  function handlePanelKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const itemButtons = Array.from(
+      event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
+    );
+    if (itemButtons.length === 0) return;
+    const currentIndex = itemButtons.indexOf(document.activeElement as HTMLButtonElement);
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      itemButtons[(currentIndex + 1) % itemButtons.length]?.focus();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      itemButtons[(currentIndex - 1 + itemButtons.length) % itemButtons.length]?.focus();
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      itemButtons[0]?.focus();
+    } else if (event.key === "End") {
+      event.preventDefault();
+      itemButtons[itemButtons.length - 1]?.focus();
     }
-
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
+  }
 
   return (
     <div ref={containerRef} className="relative inline-block">
@@ -61,9 +75,12 @@ export function Menu({
 
       {open && (
         <div
+          ref={panelRef}
           role="menu"
+          tabIndex={-1}
+          onKeyDown={handlePanelKeyDown}
           className={cn(
-            "absolute z-40 mt-2 min-w-[12rem] rounded-md border border-border bg-surface p-1 shadow-lg",
+            "absolute z-40 mt-2 min-w-[12rem] rounded-md border border-border bg-surface p-1 shadow-lg outline-none",
             align === "end" ? "right-0" : "left-0",
           )}
         >

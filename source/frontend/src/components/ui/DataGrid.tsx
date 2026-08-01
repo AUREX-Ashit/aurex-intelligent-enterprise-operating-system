@@ -97,7 +97,18 @@ export function DataGrid<T>({
           <TableHead>
             <TableRow>
               {columns.map((column) => (
-                <TableHeaderCell key={column.key}>
+                <TableHeaderCell
+                  key={column.key}
+                  aria-sort={
+                    !column.sortable
+                      ? undefined
+                      : sortField === column.key
+                        ? sortOrder === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                  }
+                >
                   {column.sortable && onSort ? (
                     <button
                       type="button"
