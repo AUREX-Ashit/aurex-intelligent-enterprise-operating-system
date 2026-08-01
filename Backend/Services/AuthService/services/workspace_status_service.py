@@ -50,6 +50,21 @@ class WorkspaceStatusService:
             checked_at=datetime.now(timezone.utc),
         )
 
+    async def resolve_status(self, membership_id: UUID) -> WorkspaceContextStatus:
+        """
+        WP-09 BA-03 (Classify Workspace Hand-off Rejection, EX-C008-11)
+        reuse entry point — the same status-determination core refresh()
+        (BA-02, unmodified above) already uses, without requiring an
+        organization_id echo value BA-03's own caller has no canonical
+        source for when reporting an arbitrary handed-off membership_id.
+        Added per CLAUDE.md §19.5's Reuse-first order, per IRA-009 §5's
+        own instruction that BA-03 classify via "BA-02's own refresh()
+        logic" — not a duplicate implementation of the classification
+        rule itself.
+        """
+        membership = await self.membership_repo.get_by_id(membership_id)
+        return await self._resolve_status(membership)
+
     async def _resolve_status(self, membership: Membership | None) -> WorkspaceContextStatus:
         if membership is None or membership.membership_status != "ACTIVE":
             return WorkspaceContextStatus.UNRESOLVED

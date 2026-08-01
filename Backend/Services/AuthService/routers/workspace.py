@@ -8,7 +8,13 @@ from dependencies import get_current_claims
 from models.database import db_manager
 from repositories.membership_repository import MembershipRepository
 from repositories.organization_node_repository import OrganizationNodeRepository
-from schemas.workspace import WorkspaceCandidatesResponse, WorkspaceStatusResponse
+from schemas.workspace import (
+    ClassifyWorkspaceHandoffRejectionRequest,
+    WorkspaceCandidatesResponse,
+    WorkspaceHandoffRejectionOutcome,
+    WorkspaceStatusResponse,
+)
+from services.workspace_handoff_classification_service import WorkspaceHandoffClassificationService
 from services.workspace_resolution_service import WorkspaceResolutionService
 from services.workspace_status_service import WorkspaceStatusService
 
@@ -42,6 +48,12 @@ async def get_workspace_status_service(
     organization_node_repo: Annotated[OrganizationNodeRepository, Depends(get_organization_node_repository)],
 ) -> WorkspaceStatusService:
     return WorkspaceStatusService(membership_repo, organization_node_repo)
+
+
+async def get_workspace_handoff_classification_service(
+    status_service: Annotated[WorkspaceStatusService, Depends(get_workspace_status_service)],
+) -> WorkspaceHandoffClassificationService:
+    return WorkspaceHandoffClassificationService(status_service)
 
 
 # ---------------------------------------------------------------------------
@@ -90,3 +102,26 @@ async def refresh_workspace_status(
     membership_id = UUID(claims["membership_id"])
     organization_id = UUID(claims["organization_id"])
     return await status_service.refresh(membership_id, organization_id)
+
+
+@router.post(
+    "/classify-handoff-rejection",
+    response_model=WorkspaceHandoffRejectionOutcome,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve dependent capability Workspace hand-off rejection (WP-09 BA-03, EX-C008-11)",
+    description=(
+        "Classifies a dependent capability's Workspace Context hand-off rejection as "
+        "either capability-scoped insufficiency (Workspace Context preserved) or a "
+        "Workspace Context integrity signal (routed to BA-02 for re-resolution). "
+        "Computed entirely from the Workspace Context's own independently-verifiable "
+        "current state, never from the reporting capability's stated reason."
+    ),
+)
+async def classify_handoff_rejection(
+    request: ClassifyWorkspaceHandoffRejectionRequest,
+    claims: Annotated[dict, Depends(get_current_claims)],
+    classification_service: Annotated[
+        WorkspaceHandoffClassificationService, Depends(get_workspace_handoff_classification_service)
+    ],
+) -> WorkspaceHandoffRejectionOutcome:
+    return await classification_service.classify(request, actor_id=claims.get("person_id"))

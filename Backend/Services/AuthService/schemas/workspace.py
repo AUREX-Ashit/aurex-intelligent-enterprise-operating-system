@@ -73,3 +73,54 @@ class WorkspaceStatusResponse(BaseModel):
     checked_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class WorkspaceHandoffClassification(str, Enum):
+    """
+    BR-C008-06's own two-value classification, mirroring
+    IdentityHandoffClassification (WP-08 BA-03)/AuthorizationPolicyHandoff's
+    own analogous-but-distinct enum shape — a governed C-008 concept, not
+    a re-labelled C-001 one, per this repository's own one-enum-per-
+    governing-capability precedent.
+    """
+    CAPABILITY_SCOPED_INSUFFICIENCY = "CAPABILITY_SCOPED_INSUFFICIENCY"
+    INTEGRITY_SIGNAL = "INTEGRITY_SIGNAL"
+
+
+class ClassifyWorkspaceHandoffRejectionRequest(BaseModel):
+    """
+    Request body for BA-03 — Classify Workspace Hand-off Rejection
+    (EX-C008-11). membership_id names the Workspace Context that was
+    handed off and rejected; stated_reason is recorded for audit
+    traceability only — per BR-C008-06 it never itself determines the
+    classification (IRA-009 §5, BA-03), mirrored from
+    ClassifyHandoffRejectionRequest's own identical shape (WP-08 BA-03).
+    """
+    membership_id: UUID = Field(..., description="The Workspace Context (Membership) that was handed off and rejected.")
+    rejecting_capability: str = Field(..., min_length=1, max_length=50, description="The capability reporting the rejection, e.g. 'C-007'.")
+    stated_reason: str = Field(..., min_length=1, max_length=1000, description="The reporting capability's own stated rejection reason — recorded, never independently adjudicated as this classification's own basis.")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "membership_id": "550e8400-e29b-41d4-a716-446655440000",
+                "rejecting_capability": "C-007",
+                "stated_reason": "Membership hand-off could not confirm the presented Workspace Context.",
+            }
+        }
+    }
+
+
+class WorkspaceHandoffRejectionOutcome(BaseModel):
+    """
+    Result of BA-03. Realizes EX-C008-11's own Context Produced,
+    mirroring HandoffRejectionOutcome's own shape (WP-08 BA-03).
+    """
+    membership_id: UUID
+    classification: WorkspaceHandoffClassification
+    context_preserved: bool = Field(..., description="True only for CAPABILITY_SCOPED_INSUFFICIENCY.")
+    routed_to: str | None = Field(None, description="Populated only for INTEGRITY_SIGNAL — names BA-02's own endpoint as the governed next step (BR-C008-06: routed to EX-C008-10, never auto-corrected here).")
+    explanation: str
+    checked_at: datetime
+
+    model_config = {"from_attributes": True}
