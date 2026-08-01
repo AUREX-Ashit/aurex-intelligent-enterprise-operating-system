@@ -158,12 +158,22 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # traces to exactly one Person (BR-C001-01), and Person is itself
         # canonically tenant-independent (URA-001-15). Prefix-matched for
         # the same reason as /person.
+        # /workspaces (WP-09, C-008 — BA-01, EX-C008-01/02) is
+        # tenant-agnostic on the same basis as /memberships' own
+        # cross-organization portfolio view (MembershipPortfolioResponse,
+        # WP-03 BA-08): GET /workspaces/candidates resolves the caller's
+        # own candidate Workspace Contexts across every Organization they
+        # hold an active Membership in, by definition — a single-tenant
+        # header would contradict the endpoint's own cross-organization
+        # purpose, not merely be an unrelated formality. Prefix-matched
+        # for the same reason as /memberships, /person, and /identity.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
         ] or path == "/person" or path.startswith("/person/") \
           or path == "/identity" or path.startswith("/identity/") \
+          or path == "/workspaces" or path.startswith("/workspaces/") \
           or path == "/organizations" or path.startswith("/organizations/") \
           or path == "/roles" or path.startswith("/roles/") \
           or path == "/domains" or path.startswith("/domains/") \
