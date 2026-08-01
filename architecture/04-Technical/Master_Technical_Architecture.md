@@ -1,4 +1,4 @@
-AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.1)
+AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.2)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -268,6 +268,21 @@ DOCUMENT VERSION HISTORY
     0 other tables altered.
     Final verified total: 150 distinct tables, 109 RLS policies — net
     +1/+1 from v7.0.
+  v7.2 (this version): AMD-015 applied — Prompt/Model Configuration
+    Reconciliation. Closes the `llm_prompt_registry`/`reasoning_engine_
+    registry` duplicate `ENTERPRISE-AI-ARCHITECTURE-AUDIT.md` §4/§6.6
+    identified, per Release A2's own Repository Owner decision
+    (`IMP-REPORT-RELEASE-A2_Governance.md`). `reasoning_engine_registry`
+    confirmed canonical (vendor-neutral by design, per this document's own
+    AMD-013 Phase 1A "Execution Capability" note's stated technology
+    posture — not RTA-001 §13.9b, an earlier-pass misattribution corrected
+    per this release's own independent verification); `llm_prompt_registry` annotated
+    DEPRECATED in place, not removed — no Alembic migration exists for
+    either table, so no runtime data is affected. Net addition: 0 new
+    tables, 0 columns altered — a status annotation on each table's own
+    PURPOSE comment only. See AMD-015 CHANGELOG (below) for full detail.
+    Final verified total: 150 distinct tables, 109 RLS policies —
+    unchanged from v7.1 (no structural change).
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -609,6 +624,61 @@ untouched and fully in force.
 
 ======================================================================
 END AMD-013 CHANGELOG
+======================================================================
+
+======================================================================
+AMD-015 CHANGELOG — PROMPT/MODEL CONFIGURATION RECONCILIATION
+======================================================================
+
+CONTEXT: `ENTERPRISE-AI-ARCHITECTURE-AUDIT.md` §4/§6.6 identified `llm_prompt_registry`
+(pre-AMD-012, Azure-OpenAI-specific) and `reasoning_engine_registry` (AMD-013,
+vendor-neutral) as an unreconciled duplicate — both governed "which AI
+configuration answers a given request," with no document stating which
+supersedes, complements, or is scoped apart from the other. Validated
+independently against repository evidence by `RELEASE-A2-AI-CONFIGURATION-
+GOVERNANCE-REVIEW.md` and confirmed by Repository Owner decision (Release A2,
+2026-08-01, per `IMP-REPORT-RELEASE-A2_Governance.md`).
+
+DECISION: `reasoning_engine_registry` is confirmed the canonical prompt/model
+configuration mechanism, on the basis that it is vendor-neutral by design —
+matching this repository's own stated technology posture (**this document's
+own AMD-013 Phase 1A "Execution Capability" note, above**: "the Enterprise
+Operating System's engineering architecture shall remain independent of any
+specific AI vendor, LLM vendor" — corrected citation; an earlier pass of this
+review misattributed this quote to RTA-001 §13.9b, whose own, differently-
+worded text makes a related but textually distinct vendor-neutrality
+statement — caught by this release's own independent verification pass) —
+while `llm_prompt_registry` hardcodes `azure_openai_model` as a column and
+structurally cannot represent a non-Azure-OpenAI provider without a schema
+change.
+
+TABLES ALTERED: none, in the structural sense — no column added, removed, or
+retyped on either table (backward compatibility preserved; neither table has
+an Alembic migration yet, so no runtime data is affected either way).
+`llm_prompt_registry`'s own PURPOSE comment (below its `CREATE TABLE`
+statement) is annotated **DEPRECATED — superseded by reasoning_engine_
+registry (AMD-015)**, rather than removed, per this amendment's own "no
+existing content removed or redefined" discipline (AMD-013's own precedent,
+below). `reasoning_engine_registry`'s own PURPOSE comment is annotated
+**CONFIRMED CANONICAL (AMD-015)**.
+
+`llm_execution_log`'s own FK to `llm_prompt_registry.prompt_id` is
+unmodified — this amendment does not require or perform a data migration;
+future work building against prompt execution logging should target
+`reasoning_engine_registry`'s own contract shape going forward, per this
+decision, not retrofit `llm_execution_log` under this amendment's own narrow
+scope.
+
+NEW/EXTENDED SECTIONS: none. This is a status annotation, not new
+architecture.
+
+NO EXISTING CONTENT REMOVED OR REDEFINED: no table, column, RLS policy, Part
+A-E section, Part F/G content, or Appendix H/I finding present before this
+amendment is altered beyond the two PURPOSE-comment annotations described
+above.
+
+======================================================================
+END AMD-015 CHANGELOG
 ======================================================================
 
 BLUEPRINT v2.2 ALIGNMENT SUMMARY (v5.0 changes)
@@ -3245,6 +3315,7 @@ CREATE TABLE agent_tool_grant (
 -- =========================================================================
 -- reasoning_engine_registry
 -- PURPOSE: AMD-013. The vendor-neutral Multi-LLM registry and the physical realization of the Reasoning Contract: the Enterprise Operating System defines the input/output contract; the reasoning implementation behind a given row remains model-independent. No reasoning algorithm is defined here — only the contract's shape, reusing ai_tool_registry's (AMD-012) input_schema_json/output_schema_json pattern.
+-- STATUS: CONFIRMED CANONICAL (AMD-015) for prompt/model configuration — see AMD-015 CHANGELOG. Supersedes llm_prompt_registry.
 -- FK (per Chapter 9 — authoritative): organization_id -> organization_master
 -- =========================================================================
 CREATE TABLE reasoning_engine_registry (
@@ -3407,6 +3478,7 @@ CREATE TABLE event_acceptance_log (
 -- =========================================================================
 -- llm_prompt_registry
 -- PURPOSE: Defines: every AI prompt template in Aurex Controls: what data the LLM may use what the LLM is forbidden from doing what format output must return in which Azure OpenAI model and region to use Enables: versioned, governed, auditable AI behaviour
+-- STATUS: DEPRECATED — superseded by reasoning_engine_registry (AMD-015 CHANGELOG). Retained, not removed, per this document's own "no existing content removed or redefined" discipline; no Alembic migration exists for this table, so no runtime data is affected. Do not build new work against this table.
 -- FK (per Chapter 9 — authoritative): deprecated_by_prompt_id -> llm_prompt_registry (self-referencing)
 -- =========================================================================
 CREATE TABLE llm_prompt_registry (
