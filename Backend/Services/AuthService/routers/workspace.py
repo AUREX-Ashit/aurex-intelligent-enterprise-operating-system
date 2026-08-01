@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import get_current_claims
+from dependencies import get_current_claims, require_platform_admin
 from models.database import db_manager
 from repositories.membership_repository import MembershipRepository
 from repositories.organization_node_repository import OrganizationNodeRepository
@@ -114,12 +114,18 @@ async def refresh_workspace_status(
         "either capability-scoped insufficiency (Workspace Context preserved) or a "
         "Workspace Context integrity signal (routed to BA-02 for re-resolution). "
         "Computed entirely from the Workspace Context's own independently-verifiable "
-        "current state, never from the reporting capability's stated reason."
+        "current state, never from the reporting capability's stated reason. Gated by "
+        "PLATFORM_ADMIN — the caller-supplied membership_id is not verified against the "
+        "caller's own claims (the endpoint's own purpose is to classify a hand-off "
+        "reported by a dependent capability, not necessarily the caller's own "
+        "Membership), so an unrestricted caller could otherwise learn another tenant's "
+        "own Membership status. Same interim gate as /access-evaluations/"
+        "/domain-permissions pending a real dependent-capability trust mechanism (TD-113)."
     ),
 )
 async def classify_handoff_rejection(
     request: ClassifyWorkspaceHandoffRejectionRequest,
-    claims: Annotated[dict, Depends(get_current_claims)],
+    claims: Annotated[dict, Depends(require_platform_admin)],
     classification_service: Annotated[
         WorkspaceHandoffClassificationService, Depends(get_workspace_handoff_classification_service)
     ],

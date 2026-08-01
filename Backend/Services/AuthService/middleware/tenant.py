@@ -158,15 +158,23 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # traces to exactly one Person (BR-C001-01), and Person is itself
         # canonically tenant-independent (URA-001-15). Prefix-matched for
         # the same reason as /person.
-        # /workspaces (WP-09, C-008 — BA-01, EX-C008-01/02) is
-        # tenant-agnostic on the same basis as /memberships' own
-        # cross-organization portfolio view (MembershipPortfolioResponse,
+        # /workspaces (WP-09, C-008 — BA-01/02/03) is tenant-agnostic at
+        # the TenantMiddleware layer on the same basis as /memberships'
+        # own cross-organization portfolio view (MembershipPortfolioResponse,
         # WP-03 BA-08): GET /workspaces/candidates resolves the caller's
         # own candidate Workspace Contexts across every Organization they
         # hold an active Membership in, by definition — a single-tenant
         # header would contradict the endpoint's own cross-organization
         # purpose, not merely be an unrelated formality. Prefix-matched
         # for the same reason as /memberships, /person, and /identity.
+        # This exemption is orthogonal to each endpoint's own separate
+        # authorization gate: GET /candidates and POST /refresh-status
+        # (BA-01/BA-02) remain authenticated-only (self-referential,
+        # claims-derived lookups); POST /classify-handoff-rejection
+        # (BA-03) additionally requires PLATFORM_ADMIN (TD-113) because
+        # its own caller-supplied membership_id is not claims-derived —
+        # the tenant-header exemption below does not imply every
+        # /workspaces endpoint shares the same authorization requirement.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",

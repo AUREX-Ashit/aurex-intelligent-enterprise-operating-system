@@ -185,9 +185,30 @@ No frontend file added or modified this pass (per `IRA-009 §7`, `EX-C008-11` is
 
 ---
 
+## Governance Closure — Five-Gate Sequence (`CLAUDE.md §19.7b`)
+
+Per Repository Owner Instruction "WP-09 Certification & Closure Authorization," 2026-08-02, the full five-gate closure sequence was performed by independent, fresh-context reviewers, each with no prior WP-09 involvement:
+
+1. **Independent Certification (Gate 1)** — `CERT-WP-09_Workspace_Management.md`: **CERTIFIED WITH OBSERVATIONS**. No blocking defect; two findings escalated to Gate 2.
+2. **V&V Audit (Gate 2)** — `VV-AUDIT-WP-09_Workspace_Management.md`: rated Finding 1 (BA-02 never requests an Access Evaluation Outcome from C-002) **Medium, deferrable** — registered as `TD-112`. Rated Finding 2 (BA-03's `POST /workspaces/classify-handoff-rejection` disclosed another tenant's own Membership status to any authenticated caller, confirmed via an empirical two-tenant runtime probe) **High, `CLAUDE.md §19.8.5`-class, non-deferrable** — remediation required before Gate 5.
+3. **Remediation** — `POST /workspaces/classify-handoff-rejection` gated with `require_platform_admin`, the same interim measure `/access-evaluations`/`/domain-permissions` already use — registered as `TD-113`. Two new negative-control tests added (`test_classify_handoff_rejection_rejects_non_platform_admin`, `test_classify_handoff_rejection_cross_tenant_status_requires_platform_admin`).
+4. **Independent Verification of Remediation (Gate 4)** — `VV-AUDIT-WP-09_Remediation_Verification.md`: **REMEDIATION VERIFIED**, via a negative control that restored and reproduced the original defect against the pre-fix commit (`d648150`) before confirming the fix. Incidentally found the identical disclosure shape in the already-CLOSED WP-08's own `/identity/classify-handoff-rejection` — disclosed as `TD-114`; WP-08 not reopened, per `CLAUDE.md §20.1`.
+5. **Release Readiness Audit (Gate 5)** — `RRA-WP-09_Workspace_Management_Release_Readiness_Audit.md`: **RELEASE READY — authorized for commit**, having found WP-09's own governing charter/IRA and both review documents (`WP-09-BUSINESS-VALUE-ASSESSMENT.md`, `PLATFORM-DEPENDENCY-ASSESSMENT-TIERRESOLVER.md`) had never been committed to the repository despite being cited by already-committed documents — directing this closure commit to include all four, alongside the governance-document corrections this section itself represents.
+
+**Files modified by the remediation (Gate 3), this closure pass:**
+- `Backend/Services/AuthService/routers/workspace.py` (modified — `classify_handoff_rejection` now requires `require_platform_admin`, not `get_current_claims`)
+- `Backend/Services/AuthService/tests/test_workspace_handoff_classification_api.py` (modified — default role switched to `PLATFORM_ADMIN`; two new negative-control tests added)
+- `Backend/Services/AuthService/middleware/tenant.py` (modified — exemption comment clarified to note BA-03's own additional authorization gate, per Gate 4's own observation)
+
+---
+
 ## Technical Debt Raised
 
-None new, any pass. `ERB-C008-02`/`03`/`04`/`05`'s own exclusion was already consolidated as `TD-111` during Governance Consolidation, prior to BA-01. BA-02's own dormant `home_node_id`-absent branch is the same disclosed class as `TD-104` — cross-referenced, not duplicated. BA-03 raises no new debt: it consumes BA-02's own already-disclosed status logic unchanged.
+- **`TD-112`** (Medium, deferrable) — BA-02 never requests an Access Evaluation Outcome from C-002, in tension with `ERB-C008-06`'s own unconditional Context Required text. Root cause `TD-111`. Found by Gate 2.
+- **`TD-113`** (Low) — `POST /workspaces/classify-handoff-rejection` gated on `PLATFORM_ADMIN` only, pending a real dependent-capability trust mechanism. Documents the interim nature of Finding 2's own remediation. Found by Gate 2; remediated same pass; independently re-verified at Gate 4.
+- **`TD-114`** (Low) — the identical information-disclosure shape exists in the already-CLOSED WP-08's own `/identity/classify-handoff-rejection`. Found incidentally by Gate 4; WP-08 not reopened, disclosed only.
+
+`ERB-C008-02`/`03`/`04`/`05`'s own exclusion was already consolidated as `TD-111` during Governance Consolidation, prior to BA-01. BA-02's own dormant `home_node_id`-absent branch is the same disclosed class as `TD-104` — cross-referenced, not duplicated.
 
 ---
 
@@ -197,16 +218,22 @@ None new, any pass. `ERB-C008-02`/`03`/`04`/`05`'s own exclusion was already con
 |---|---|---|
 | BA-01 — Resolve and Present Available Workspace Candidates | Complete | `90544cb` |
 | BA-02 — Detect and Resolve Disrupted Workspace Context | Complete | `6ce9bd3` |
-| BA-03 — Classify Workspace Hand-off Rejection | Complete | *(this pass — see commit hash in the accompanying report)* |
+| BA-03 — Classify Workspace Hand-off Rejection | Complete | `d648150` (remediation of `TD-113`/Finding 2 committed as part of this closure pass) |
 
 `IRA-009 §4.8`'s own authorized scope (BA-01, BA-02, BA-03) is now fully implemented. No BA-04 or later Business Activity exists in this Work Package's own authorized scope — `ERB-C008-02`/`03`/`04`/`05` remain excluded in full (`TD-111`), not deferred to a numbered future Business Activity within WP-09 itself.
 
 ---
 
-## Status (BA-01, BA-02, BA-03)
+## Final Validation (post-remediation)
 
-BA-01: **Implementation Complete**, committed `90544cb`. BA-02: **Implementation Complete**, committed `6ce9bd3`. BA-03: **Implementation Complete**, this pass. `EX-C008-03`–`09` (`ERB-C008-02`/`03`/`04`/`05`): **Excluded** (disclosed, `TD-111`). **All three Business Activities `IRA-009 §4.8` authorized are now complete.** Ready for Independent Certification per `CLAUDE.md §19.7`/`§19.7b`, extended by `§20.7`, per this Work Package's own precedent (`WP-08` submitted BA-01 through BA-03 together for Certification, not per-BA) — pending a separate, explicit Repository Owner instruction to proceed to that gate.
+Full regression suite, independently re-run at Gate 4 and Gate 5: **718 passed, 0 failed** (708 prior to BA-03 + 8 BA-03 tests + 2 remediation negative-control tests). `alembic heads` — single head, `b1d6f4c8a3e7`, unchanged.
 
 ---
 
-*End of IMP-REPORT-WP-09 (BA-01, BA-02, BA-03).*
+## Status (BA-01, BA-02, BA-03) — CLOSED
+
+BA-01: **Implementation Complete**, committed `90544cb`. BA-02: **Implementation Complete**, committed `6ce9bd3`. BA-03: **Implementation Complete**, committed `d648150` (remediated this closure pass). `EX-C008-03`–`09` (`ERB-C008-02`/`03`/`04`/`05`): **Excluded** (disclosed, `TD-111`). **All three Business Activities `IRA-009 §4.8` authorized are complete. All five `CLAUDE.md §19.7b` gates are complete. WP-09 is CLOSED — CERTIFIED.**
+
+---
+
+*End of IMP-REPORT-WP-09 (BA-01, BA-02, BA-03) — CLOSED.*
