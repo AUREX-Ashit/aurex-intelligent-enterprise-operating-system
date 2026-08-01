@@ -1,6 +1,6 @@
 # ARCH-000 – Enterprise Operating System (EOS) Architecture Manifest
 
-**Version:** 1.6  
+**Version:** 1.7  
 **Status:** AUTHORITATIVE  
 **Classification:** Architecture Governance  
 **Audience:** Enterprise Architects, Product Architects, Solution Architects, Developers, AI Coding Agents (Claude Code, GitHub Copilot, Cursor, ChatGPT, etc.)
@@ -256,7 +256,7 @@ Every AI governance dimension already has either a certified constitutional owne
 | Auditability | SD-002 §7 (Event, Lifecycle & Audit Rules) | Owned |
 | AI policy boundaries | SD-003 §10 (AI Assistant & Human Interaction Laws) | Partially owned — interaction-level boundaries only |
 | Prompt governance | RTA-001 §13.15 (AI Governance) | **Owned** — corrected per ARM-001/AR-001. RTA-001 §13.15 already states the AI Runtime shall support Prompt Governance operationally; this table previously recorded this dimension as Deferred, contradicting RTA-001. RTA-001 §13.15 is unmodified; this table is corrected to match it. |
-| Knowledge governance | — | **Deferred.** EIA-001 Vol. I §8.4 explicitly reserves this for a future volume; not established here. RTA-001 §13.15 makes no claim over this dimension, so no contradiction exists here. |
+| Knowledge governance | RTA-001 §12.16 (Knowledge Graph Governance) — Knowledge Graph lifecycle mechanics only | **Owned, partially — corrected per Release A1 Foundation Repairs (`IRA-RELEASE-A`), 2026-08-01.** RTA-001 §12.16 already states the Enterprise Knowledge Graph "shall remain governed throughout its lifecycle" (Ontology Management, Entity Governance, Relationship Governance, Version Management, AI Validation, Audit, Retention, Archival); this table previously deferred Knowledge Governance in full while checking only against RTA-001 §13.15 (which indeed makes no claim here) and never addressing §12.16. RTA-001 §12.16 is unmodified; this table is corrected to match it, for the Knowledge Graph's own runtime governance mechanics specifically. EIA-001 Vol. I §8.4's own deferral of Knowledge Governance's broader business-semantic completeness (beyond the Knowledge Graph's own lifecycle mechanics) stands unchanged — this correction narrows, not removes, that deferral. |
 | Memory governance | — | **Deferred.** Same reservation; also consistent with Enterprise Memory's mechanics being deliberately unbuilt (EIA-001 Vol. II). RTA-001 §13.15 makes no claim over this dimension, so no contradiction exists here. |
 | Model governance | RTA-001 §13.15 (AI Governance) | **Owned** — corrected per ARM-001/AR-001, same reasoning as Prompt Governance above. |
 | Explainability | SD-002-016 (Universal Explainability); SD-001 LAW-26 ("Explainability Is One Click Away") | **Owned** — added per ARM-001/AR-001. RTA-001 §13.15 lists Explainability among the AI Runtime's governance guarantees but is not itself the substantive source; SD-002-016 and SD-001 LAW-26 are the owning definitions this table now cites. |

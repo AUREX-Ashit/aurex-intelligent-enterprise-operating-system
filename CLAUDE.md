@@ -70,12 +70,23 @@ Industry Packs extend the CIL. They never replace canonical concepts.
 
 ## source/
 
--   backend --- business logic
 -   frontend --- presentation
--   database --- schema and migrations
--   infrastructure --- deployment
--   scripts --- automation
--   tests --- verification
+
+`source/backend`, `source/database`, `source/infrastructure`,
+`source/scripts`, and `source/tests` exist as empty placeholder
+directories only. Actual implementation lives elsewhere in the
+repository:
+
+-   Backend/ --- business logic (Backend/Services/* per service,
+    Backend/Runtime/AuthorizationEngine, Backend/Shared/* shared
+    platform framework)
+-   database/ --- schema and migrations (repo root; each service under
+    Backend/Services/* also carries its own alembic/ migration chain)
+
+Corrected per Release A1 (Foundation Repairs), 2026-08-01 — this section
+previously stated `source/backend`/`source/database` as the business
+logic and schema locations; direct verification found both empty and
+the real implementation at the paths above.
 
 ## prompts/
 
