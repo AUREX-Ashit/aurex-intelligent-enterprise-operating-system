@@ -9,7 +9,7 @@ import type { OrganizationResponse } from "@/types/organization";
  */
 export function OrganizationDetailsList({ organization }: { organization: OrganizationResponse }) {
   return (
-    <dl className="mt-4 grid grid-cols-[140px_1fr] gap-y-3 text-sm">
+    <dl className="mt-4 grid grid-cols-[160px_1fr] gap-y-3 text-sm">
       <dt className="font-semibold text-muted-foreground">Organization ID</dt>
       <dd className="text-foreground">{organization.id}</dd>
 

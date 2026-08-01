@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { FormField, FormLabel, FormBanner, FormHelperText } from "@/components/ui/Form";
-import type { MembershipManagementState } from "@/features/membership/state/useMembershipManagement";
+import type { MembershipEstablishState } from "@/features/membership/state/useMembershipManagement";
 import type { EstablishMembershipRequest, LicenseType, MembershipType } from "@/types/membership";
 
 const MEMBERSHIP_TYPES: MembershipType[] = ["INTERNAL", "EXTERNAL"];
@@ -16,7 +16,7 @@ export function EstablishMembershipSection({
   state,
   onEstablish,
 }: {
-  state: MembershipManagementState;
+  state: MembershipEstablishState;
   onEstablish: (fields: EstablishMembershipRequest) => void;
 }) {
   const [personId, setPersonId] = useState("");

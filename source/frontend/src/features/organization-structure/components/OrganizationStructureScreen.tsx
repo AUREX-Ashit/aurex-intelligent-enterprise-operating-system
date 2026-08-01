@@ -6,7 +6,7 @@ import { EstablishOrganizationNodeSection } from "@/features/organization-struct
 import { ViewOrganizationNodeSection } from "@/features/organization-structure/components/ViewOrganizationNodeSection";
 
 export function OrganizationStructureScreen() {
-  const { state, establish, view } = useOrganizationStructure();
+  const { establishState, viewState, establish, view } = useOrganizationStructure();
 
   return (
     <div className="space-y-6">
@@ -17,8 +17,8 @@ export function OrganizationStructureScreen() {
         </p>
       </div>
 
-      <ViewOrganizationNodeSection state={state} onView={view} />
-      <EstablishOrganizationNodeSection state={state} onEstablish={establish} />
+      <ViewOrganizationNodeSection state={viewState} onView={view} />
+      <EstablishOrganizationNodeSection state={establishState} onEstablish={establish} />
 
       <Card>
         <CardTitle>Structural Transitions</CardTitle>

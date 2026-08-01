@@ -6,7 +6,8 @@ import { MyPortfolioSection } from "@/features/membership/components/MyPortfolio
 import { UnderstandMembershipSection } from "@/features/membership/components/UnderstandMembershipSection";
 
 export function MembershipManagementScreen() {
-  const { state, establish, understand, changeTerms, loadPortfolio } = useMembershipManagement();
+  const { establishState, understandState, portfolioState, establish, understand, changeTerms, loadPortfolio } =
+    useMembershipManagement();
 
   return (
     <div className="space-y-6">
@@ -17,9 +18,9 @@ export function MembershipManagementScreen() {
         </p>
       </div>
 
-      <MyPortfolioSection state={state} onLoad={loadPortfolio} />
-      <UnderstandMembershipSection state={state} onUnderstand={understand} onChangeTerms={changeTerms} />
-      <EstablishMembershipSection state={state} onEstablish={establish} />
+      <MyPortfolioSection state={portfolioState} onLoad={loadPortfolio} />
+      <UnderstandMembershipSection state={understandState} onUnderstand={understand} onChangeTerms={changeTerms} />
+      <EstablishMembershipSection state={establishState} onEstablish={establish} />
     </div>
   );
 }

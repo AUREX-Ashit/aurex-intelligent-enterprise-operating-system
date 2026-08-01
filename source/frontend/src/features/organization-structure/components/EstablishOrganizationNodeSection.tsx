@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { FormField, FormLabel, FormBanner, FormHelperText } from "@/components/ui/Form";
-import type { OrganizationStructureState } from "@/features/organization-structure/state/useOrganizationStructure";
+import type { OrganizationStructureEstablishState } from "@/features/organization-structure/state/useOrganizationStructure";
 import type { EstablishOrganizationNodeRequest } from "@/types/organization-node";
 
 export function EstablishOrganizationNodeSection({
   state,
   onEstablish,
 }: {
-  state: OrganizationStructureState;
+  state: OrganizationStructureEstablishState;
   onEstablish: (fields: EstablishOrganizationNodeRequest) => void;
 }) {
   const [nodeCode, setNodeCode] = useState("");

@@ -7,7 +7,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { FormField, FormLabel, FormBanner } from "@/components/ui/Form";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { MembershipManagementState } from "@/features/membership/state/useMembershipManagement";
+import type { MembershipUnderstandState } from "@/features/membership/state/useMembershipManagement";
 import type { ChangeMembershipTermsRequest } from "@/types/membership";
 
 /**
@@ -22,7 +22,7 @@ export function UnderstandMembershipSection({
   onUnderstand,
   onChangeTerms,
 }: {
-  state: MembershipManagementState;
+  state: MembershipUnderstandState;
   onUnderstand: (membershipId: string) => void;
   onChangeTerms: (membershipId: string, fields: ChangeMembershipTermsRequest) => void;
 }) {

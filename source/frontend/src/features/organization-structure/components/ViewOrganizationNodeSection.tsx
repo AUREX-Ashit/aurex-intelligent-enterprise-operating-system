@@ -7,13 +7,13 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { FormField, FormLabel, FormBanner } from "@/components/ui/Form";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { OrganizationStructureState } from "@/features/organization-structure/state/useOrganizationStructure";
+import type { OrganizationStructureViewState } from "@/features/organization-structure/state/useOrganizationStructure";
 
 export function ViewOrganizationNodeSection({
   state,
   onView,
 }: {
-  state: OrganizationStructureState;
+  state: OrganizationStructureViewState;
   onView: (organizationNodeId: string) => void;
 }) {
   const [nodeId, setNodeId] = useState("");

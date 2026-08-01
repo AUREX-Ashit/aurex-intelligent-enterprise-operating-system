@@ -7,7 +7,7 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { FormBanner } from "@/components/ui/Form";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/ui/Table";
-import type { MembershipManagementState } from "@/features/membership/state/useMembershipManagement";
+import type { MembershipPortfolioState } from "@/features/membership/state/useMembershipManagement";
 
 /**
  * WP-03 BA-08 — Present the caller's own cross-organization Membership
@@ -18,7 +18,7 @@ export function MyPortfolioSection({
   state,
   onLoad,
 }: {
-  state: MembershipManagementState;
+  state: MembershipPortfolioState;
   onLoad: () => void;
 }) {
   const isLoading = state.status === "loading-portfolio";
