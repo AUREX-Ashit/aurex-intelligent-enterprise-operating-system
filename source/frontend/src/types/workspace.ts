@@ -17,3 +17,12 @@ export interface WorkspaceCandidate {
 export interface WorkspaceCandidatesResponse {
   candidates: WorkspaceCandidate[];
 }
+
+export type WorkspaceContextStatus = "CURRENT" | "UNRESOLVED";
+
+export interface WorkspaceStatusResponse {
+  membership_id: string;
+  organization_id: string;
+  status: WorkspaceContextStatus;
+  checked_at: string;
+}

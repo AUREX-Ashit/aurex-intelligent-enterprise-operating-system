@@ -1,3 +1,5 @@
+from datetime import datetime
+from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -37,3 +39,37 @@ class WorkspaceCandidatesResponse(BaseModel):
     Package's scope, IRA-009 §4.2).
     """
     candidates: list[WorkspaceCandidate]
+
+
+class WorkspaceContextStatus(str, Enum):
+    """
+    EX-C008-10's own two-outcome resolution result, mirrored in shape
+    from IdentityContextStatus (WP-08 BA-01) but deliberately a distinct
+    enum — a governed C-008 concept, not a re-labelled C-001 one, per
+    this repository's own precedent of one classification enum per
+    governing capability (e.g. IdentityHandoffClassification vs.
+    AuthorizationPolicyHandoff's own analogous-but-distinct enum).
+    """
+    CURRENT = "CURRENT"
+    UNRESOLVED = "UNRESOLVED"
+
+
+class WorkspaceStatusResponse(BaseModel):
+    """
+    Response for BA-02 — Detect and Resolve Disrupted Workspace Context
+    (EX-C008-10). Re-confirms the Membership and structural placement
+    underlying the caller's own current session Workspace Context remain
+    valid, per IRA-009 §5 — never a silent 200 with stale data: even a
+    deactivated or removed Membership resolves to UNRESOLVED (200), not
+    a 404, since detecting exactly that disruption is this Business
+    Activity's own purpose (IRA-009 §5's own testing note). membership_id
+    and organization_id are always echoed back from the caller's own
+    session claims, independent of whether the underlying row still
+    exists — naming what was checked, not what was found.
+    """
+    membership_id: UUID
+    organization_id: UUID
+    status: WorkspaceContextStatus
+    checked_at: datetime
+
+    model_config = {"from_attributes": True}
