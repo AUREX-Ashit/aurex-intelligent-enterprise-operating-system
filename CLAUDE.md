@@ -1313,3 +1313,91 @@ was not actually met.
 Where a Work Package is explicitly chartered infrastructure-only or
 backend-only (§20.3), this extension does not apply to it — the
 charter's own disclosed scope decision governs, per §19.4.
+
+------------------------------------------------------------------------
+
+# 21. Implementation Methodology v2.0 (WP-10 onward, Prospective Only)
+
+*(Formalized per direct Repository Owner governance instruction,
+"Implementation Methodology v2.0 Establishment / WP-10 Planning
+Authorization," 2026-08-02, following WP-09's complete, certified,
+five-gate closure — the first Work Package to run this repository's own
+full lifecycle end to end under §20. Adopted via `ADR-018`.)*
+
+## 21.1 Scope and Applicability
+
+This section governs every Work Package for which implementation has
+not yet begun as of this section's own addition to this document —
+WP-10 onward. It does NOT reopen any Work Package already CLOSED, the
+same principle §20.1 already applies to §20 itself.
+
+## 21.2 Canonical Authority — No Duplication
+
+This section states additional Work Package process requirements. It
+does not redefine, and shall never be read to redefine, any canonical
+authority §16 already assigns elsewhere — `IMP-001` (implementation
+pattern), `PE-001`/`SD-001`/`DS-001` (Enterprise Experience, Presentation
+Architecture, Design System). The full synthesis, evidentiary basis, and
+detailed checklists this section summarizes are recorded in
+`METH-003_Implementation_Methodology_v2.md`
+(`architecture/03-Engineering/`) — this section states the binding
+process requirements at constitutional-document weight; `METH-003`
+carries the full detail and is not duplicated here a second time.
+
+## 21.3 Standard Work Package Lifecycle
+
+Every Work Package from WP-10 onward SHALL follow this sequence:
+
+Release → Work Package (Charter + IRA) → Strategic Enhancement Review
+(against `SER-001_Strategic_Enhancement_Register.md`, classifying every
+relevant enhancement Implemented / Partially Implemented / Deferred /
+Not Applicable) → Historical Screen Review (against
+`HISTORICAL-SCREEN-REALIZATION-MATRIX.md`) → Executive Cognition Review
+(against `EXECUTIVE-COGNITION-REALIZATION-STRATEGY.md`) → Business
+Activity → Enterprise Experience → Backend → Frontend → Testing
+(including the Mandatory Tenant-Isolation Test Checklist, §21.4 below)
+→ Logical Commits → Independent Certification (Gate 1) → Verification &
+Validation Audit (Gate 2) → Release Readiness Audit (Gate 5) → Closure,
+per the existing five-gate sequence §19.7b already governs in full
+(Gates 3–4 triggered only if Gate 2 finds a defect requiring
+remediation).
+
+No relevant Strategic Enhancement may remain unclassified; no relevant
+historical screen may be ignored; no relevant Executive capability may
+be silently deferred without naming the Release/Work Package expected
+to pick it up.
+
+## 21.4 Mandatory Tenant-Isolation Test Checklist
+
+For every new endpoint whose underlying data model carries an
+organization/tenant boundary, the implementing Business Activity's own
+test suite SHALL include, before submission for Independent
+Certification: (a) at least one test seeding two distinct, unrelated
+Organizations with no shared row; (b) at least one test confirming a
+caller in one Organization cannot retrieve or infer another
+Organization's own data through that endpoint, unless the endpoint's own
+governing specification explicitly authorizes cross-organization
+visibility; (c) where a request accepts a foreign-object identifier not
+derived from the caller's own claims, an explicit probe of whether an
+unrelated tenant's identifier is accepted — if so, the endpoint SHALL be
+gated before submission, not left ungated pending a future audit to
+discover it. This directly closes the root cause `VV-AUDIT-WP-05`'s own
+F-02 and `VV-AUDIT-WP-09`'s own Finding 2 each independently found.
+
+## 21.5 Commit and Approval Cadence
+
+One Repository Owner authorization SHALL execute one complete Work
+Package, not one Business Activity. Multiple logical commits during
+implementation are encouraged — `git add -A` remains prohibited under
+all circumstances. Repository Owner approval occurs after Work Package
+completion, not after each Business Activity, unless an exceptional
+architectural issue requires earlier intervention per §17/§19.4's own
+STOP-and-report discipline, which this section does not relax.
+
+## 21.6 Relationship to §19.7b
+
+The five-gate closure sequence (§19.7b) is unchanged and mandatory in
+full for every Work Package this section governs, including every
+independence and negative-control requirement it already states. §21
+adds process steps that precede Business Activity work and a Testing
+requirement within it; it does not modify, relax, or shorten any gate.
