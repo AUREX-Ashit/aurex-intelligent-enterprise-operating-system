@@ -4,7 +4,7 @@
 **Work Package:** WP-10
 **Capability:** C-041 — Configuration Management
 **Governing Specification:** `SD-002_Universal_Business_Object_Rules.md §10` (object pattern, Primary Specification per `CAP-001`) + `CMD-001_Canonical_Data_Model.md §12` (canonical content — Configuration Categories, Scope Hierarchy) + `DS-001 — AUREX Design System.md` Chapter 11 (Theme Model)
-**Status:** SUBMITTED FOR REVIEW — READY at the scope determined in §4
+**Status:** ACCEPTED — READY at the scope determined in §4; implementation complete, WP-10 CLOSED — CERTIFIED (see §13)
 **Prepared By:** Engineering Governance session (Claude Code), under Repository Owner instruction
 **Date:** 2026-08-02
 
@@ -252,8 +252,12 @@ Per `CLAUDE.md §19.7`/`§19.7b`/`§20.7`/`§21`, applied to the scope in §4.8/
 
 ## 13. Repository-Owner Authorization
 
-**Not yet granted.** This IRA is submitted for review. Per the charter's own §13 and this repository's established process, full-lifecycle implementation authority requires a separate, explicit Repository Owner decision after this IRA — and specifically its §4's scope determinations (particularly the dual-logo/White-label and AI Configuration exclusions) — has been reviewed, distinct from the instruction that authorized this charter/IRA pair's own creation.
+**IRA Acceptance: GRANTED, 2026-08-02**, per Repository Owner Instruction "WP-10 Implementation Authorization" — this IRA's own §4 scope determinations (dual-logo Branding, White-label Theme, Configuration Profiles, and AI Configuration each excluded, independently reasoned) were reviewed and accepted.
+
+**Full-lifecycle implementation authority: GRANTED, 2026-08-02**, per the same "WP-10 Implementation Authorization" instruction — the separate, distinct decision this section originally identified as outstanding. Both Business Activities §5/§8 authorized (BA-01, BA-02) were subsequently implemented, committed (`ae50998`/`9865bac`/`709d663`), and closed through the full five-gate sequence (`CLAUDE.md §19.7b`), including remediation of a High/`§19.8.5`-class finding (Finding B-1, a cross-tenant Configuration disclosure) and its independent re-verification — WP-10 is **CLOSED — CERTIFIED**, per `IMP-REPORT-WP-10_Configuration_Management.md`.
+
+*Corrected 2026-08-02 — this section previously still read "Not yet granted... Awaiting Repository Owner review" despite authorization having already been granted and recorded in every other governing document (IMP-REPORT-WP-10, WP-REG-001) — found by the WP-10 final independent validation. Mirrors IRA-009 §13's own precedent format.*
 
 ---
 
-*End of IRA-010. Awaiting Repository Owner review, specifically of §4's scope determinations, before implementation authorization.*
+*End of IRA-010. Accepted; WP-10 implemented and CLOSED — CERTIFIED.*

@@ -57,6 +57,18 @@ export function useConfigurationManagement() {
         setEstablishState({ status: "established", entry });
         notify(`Configuration "${entry.key}" established for ${entry.facet}.`, "success");
         void loadEntries();
+
+        // Release B integration finding: establishing a THEME override
+        // previously had no visible effect until the next full page
+        // reload — useResolvedTheme only resolves once per authenticated
+        // session mount. Applying it immediately here gives the same
+        // instant confirmation every other establish-type action already
+        // provides (CLAUDE.md §20.6's own confirmation state), and is
+        // what makes a live "establish a Boardroom theme" demonstration
+        // actually demonstrable for EDR-1.
+        if (entry.facet === "THEME" && entry.key === "theme_class" && typeof entry.value === "string") {
+          document.documentElement.setAttribute("data-theme", entry.value.toLowerCase().replace(/_/g, "-"));
+        }
       } catch (error) {
         const message = describeError(error);
         if (error instanceof ApiError && error.status === 0) notify(message, "danger");
