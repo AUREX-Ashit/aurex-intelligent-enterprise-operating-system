@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { setAuthTokenProvider, setRefreshHandler } from "@/lib/api-client";
+import { setAuthTokenProvider, setRefreshHandler, setTenantIdProvider } from "@/lib/api-client";
 import { authStorage } from "@/lib/auth-storage";
+import { decodeJwtPayload } from "@/lib/jwt";
 import { refresh as refreshRequest } from "@/services/auth-api";
 import { NotificationProvider } from "@/lib/notifications";
 import { Toaster } from "@/components/ui/Toaster";
+import type { AuthClaims } from "@/types/auth";
 
 /**
  * Application-wide providers, mounted once in the root layout.
@@ -18,6 +20,13 @@ import { Toaster } from "@/components/ui/Toaster";
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     setAuthTokenProvider(() => authStorage.getToken());
+
+    setTenantIdProvider(() => {
+      const token = authStorage.getToken();
+      if (!token) return null;
+      const claims = decodeJwtPayload<AuthClaims>(token);
+      return claims?.organization_id ?? null;
+    });
 
     setRefreshHandler(async () => {
       const refreshToken = authStorage.getRefreshToken();

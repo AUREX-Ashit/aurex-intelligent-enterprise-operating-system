@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/layout/PlaceholderPage";
+import { ConfigurationManagementScreen } from "@/features/configuration/components/ConfigurationManagementScreen";
 
 export default function SystemConfigurationPage() {
-  return <PlaceholderPage title="System Configuration" description="Platform and tenant configuration." />;
+  return <ConfigurationManagementScreen />;
 }

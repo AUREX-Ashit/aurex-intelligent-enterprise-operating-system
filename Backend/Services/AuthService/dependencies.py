@@ -17,9 +17,11 @@ documented simplification, not a silent gap.
 """
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, status
 
+from middleware.tenant import get_current_tenant
 from services.auth_service import decode_access_token
 
 PLATFORM_ADMIN_ROLE_CODE = "PLATFORM_ADMIN"
@@ -46,5 +48,41 @@ async def require_platform_admin(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"This operation requires the {PLATFORM_ADMIN_ROLE_CODE} role.",
+        )
+    return claims
+
+
+async def require_matching_tenant_or_platform_admin(
+    claims: Annotated[dict, Depends(get_current_claims)],
+    tenant_id: Annotated[UUID, Depends(get_current_tenant)],
+) -> dict:
+    """
+    403 unless the authenticated caller's own JWT `organization_id` claim
+    matches the request's `X-Tenant-ID`, or the caller holds
+    PLATFORM_ADMIN (who may act on any tenant).
+
+    Introduced by WP-10 (`routers/configuration.py`'s `GET /configuration`)
+    to close a cross-tenant disclosure `CERT-WP-10` Finding B-1 confirmed
+    empirically: without this check, any authenticated caller — including
+    one with no Membership whatsoever in the target Organization — could
+    read that Organization's Configuration simply by naming its UUID in
+    `X-Tenant-ID`, since `get_current_tenant()` alone only verifies the
+    header is a well-formed UUID, never that the caller has any
+    relationship to it. This is the first endpoint in this codebase
+    combining an intentionally-open (non-`PLATFORM_ADMIN`) authorization
+    posture with a genuinely non-exempted tenant header — every prior
+    genuinely-tenant-scoped resource used `require_platform_admin` alone
+    (`TD-021`-class), which was sufficient there because those endpoints
+    already restricted every caller to `PLATFORM_ADMIN` regardless of
+    tenant. `GET /configuration` cannot reuse that gate without
+    regressing BA-01's own Business Intent (every caller resolves their
+    own tenant, not only an administrator's).
+    """
+    if claims.get("role_code") == PLATFORM_ADMIN_ROLE_CODE:
+        return claims
+    if claims.get("organization_id") != str(tenant_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="X-Tenant-ID must match your own Organization, unless you hold PLATFORM_ADMIN.",
         )
     return claims

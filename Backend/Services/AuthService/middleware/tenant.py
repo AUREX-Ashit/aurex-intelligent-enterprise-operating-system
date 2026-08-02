@@ -175,6 +175,25 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # its own caller-supplied membership_id is not claims-derived —
         # the tenant-header exemption below does not imply every
         # /workspaces endpoint shares the same authorization requirement.
+        # /configuration (WP-10, C-041 — BA-01/BA-02; CFG-000001, ADR-019) is
+        # deliberately NOT exempted — the first prefix in this codebase to
+        # exercise the "normal" (non-exempted) tenant-scoped path this
+        # middleware's own get_current_tenant() dependency was designed for,
+        # rather than the PLATFORM_ADMIN-sole-caller interim exemption every
+        # other genuinely organization-scoped resource above uses
+        # (/domain-permissions, /approval-authorities, /delegation-policies,
+        # /runtime-assignment-policies, /memberships, /access-evaluations).
+        # BA-01 (GET, resolve) is deliberately open to any authenticated
+        # caller, not PLATFORM_ADMIN-gated — every already-certified screen
+        # resolves its own caller's Configuration, not only an administrator's
+        # (IRA-010 §7) — so an interim PLATFORM_ADMIN-only exemption would be
+        # wrong here, not merely unnecessary: X-Tenant-ID is the correct,
+        # already-existing mechanism for "which tenant is this request for,"
+        # independent of who is allowed to call it. BA-02 (POST, establish)
+        # remains PLATFORM_ADMIN-gated at the router itself (TD-113's own
+        # interim-gate precedent), orthogonal to this middleware's tenant
+        # resolution, exactly as /workspaces' own BA-03 gate is orthogonal to
+        # that prefix's own tenant-header exemption above.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",

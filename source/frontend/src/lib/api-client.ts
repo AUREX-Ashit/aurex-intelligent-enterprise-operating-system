@@ -46,6 +46,21 @@ export function setAuthTokenProvider(provider: () => string | null): void {
 }
 
 /**
+ * Resolves the caller's own current tenant (Organization) to attach as
+ * X-Tenant-ID, if any. Introduced by WP-10 (Configuration Management,
+ * C-041) — the first backend prefix (/configuration) genuinely requiring
+ * this header rather than being exempted by AuthService's own
+ * TenantMiddleware (middleware/tenant.py's own new comment block).
+ * Wired to the session's own decoded organization_id claim (see
+ * src/app/providers.tsx), mirroring `tokenProvider`'s identical shape.
+ */
+let tenantIdProvider: () => string | null = () => null;
+
+export function setTenantIdProvider(provider: () => string | null): void {
+  tenantIdProvider = provider;
+}
+
+/**
  * Attempts to silently renew the session (via AuthService's POST
  * /auth/refresh — see src/services/auth-api.ts) when a request comes back
  * 401. Resolves `true` if a new access token is now available and the
@@ -91,6 +106,11 @@ async function request<T>(
   const token = tokenProvider();
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const tenantId = tenantIdProvider();
+  if (tenantId && !headers.has("X-Tenant-ID")) {
+    headers.set("X-Tenant-ID", tenantId);
   }
 
   logger.debug("API request", { method, url });

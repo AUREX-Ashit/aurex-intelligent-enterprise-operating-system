@@ -18,13 +18,13 @@ This index does not itself register anything. Each entry's registering ADR remai
 
 Per ADR-014 §4 item 4, this index was backfilled by searching the repository for existing registrations, not assumed. `IRA-001`, `IRA-002`, and `IRA-003` (WP-01, WP-02, WP-03) were checked for Business Object Identifier / CMD-001 §26 registrations and contain none. No capability-specification review for an equivalent Context Model section (analogous to PE-001-C005 §38.15) was performed for PE-001-C004 or PE-001-C007 as part of this backfill — this remains genuinely unresolved, as ADR-014 §7 step 4 itself discloses, and is not asserted here as "no Business Objects exist" for those capabilities, only as "none are yet registered."
 
-Every entry below originates from WP-04 (Enterprise Structure Management, C-005).
+Entries originate from WP-04 (Enterprise Structure Management, C-005), WP-05 (Access Management, C-002), and WP-10 (Configuration Management, C-041). The `AEO-000001` row was added 2026-08-02 as an incidental correction (`ADR-019` §Decision item 6): `ADR-015` registered it but this Index's own Amendment Procedure was not separately executed at WP-05 closure, so the row was missing until now — `ADR-015`'s own decision is unchanged.
 
 ---
 
 ## 3. Register
 
-| Business Object Identifier | Canonical Name | Owning Capability | Registering ADR | IRA-004 Section |
+| Business Object Identifier | Canonical Name | Owning Capability | Registering ADR | Source IRA Section |
 |---|---|---|---|---|
 | `SCI-000001` | Structural Change Intent | C-005 (Enterprise Structure Management) | ADR-006 | §21 |
 | `POC-000001` | Proposed Outcome Context | C-005 (Enterprise Structure Management) | ADR-008 | §22 |
@@ -32,6 +32,8 @@ Every entry below originates from WP-04 (Enterprise Structure Management, C-005)
 | `RVC-000001` | Review Context | C-005 (Enterprise Structure Management) | ADR-011 | §25 |
 | `VLC-000001` | Validation Context | C-005 (Enterprise Structure Management) | ADR-012 | §26 |
 | `RSC-000001` | Resulting Structural Context | C-005 (Enterprise Structure Management) | ADR-013 | §27 |
+| `AEO-000001` | Access Evaluation Outcome | C-002 (Access Management) | ADR-015 | IRA-005 §11 |
+| `CFG-000001` | Configuration Entry | C-041 (Configuration Management) | ADR-019 | IRA-010 §6 |
 
 **Pattern-level decision (not itself a registration):** `ADR-010` recognizes the six objects above as one coherent Structural Context Lifecycle (IRA-004 §24). It is cited by `ADR-011`, `ADR-012`, and `ADR-013` for eligibility rather than each re-deriving the Cross-Experience Reference Test independently, but it does not register a Business Object of its own and therefore has no row in §3.
 

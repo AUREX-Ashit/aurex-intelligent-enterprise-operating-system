@@ -58,6 +58,117 @@
   }
 }
 
+/*
+ * WP-10 (Configuration Management, C-041) — DS-001 §11.3's own closed,
+ * five-class Theme Model. Light is the :root default above; Dark mirrors
+ * the @media block above so an explicitly-resolved Dark override (an
+ * enterprise's own Configuration, not the visitor's OS preference) wins
+ * identically. `[data-theme]` is stamped on <html> by
+ * useResolvedTheme.ts (WP-10 BA-01) once the caller's own tenant
+ * Configuration resolves — White-label is excluded (IRA-010 §4.3,
+ * unspecified anywhere in DS-001) and therefore has no block here.
+ */
+:root[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #171717;
+  --surface: #ffffff;
+  --surface-muted: #f7fbf7;
+  --border: #dbe9df;
+  --border-muted: #e5e7eb;
+  --muted: #64748b;
+  --muted-foreground: #475569;
+  --success-bg: #ecfdf5;
+  --warning-bg: #fffbeb;
+  --danger-bg: #fef2f2;
+  --info-bg: #eff6ff;
+}
+
+:root[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --surface: #111111;
+  --surface-muted: #171717;
+  --border: #262626;
+  --border-muted: #27272a;
+  --muted: #a1a1aa;
+  --muted-foreground: #d4d4d8;
+  --success-bg: #052e1f;
+  --warning-bg: #341c02;
+  --danger-bg: #350707;
+  --info-bg: #0b1f38;
+}
+
+/*
+ * High-Contrast — maximum-legibility accessibility mode (SE-002),
+ * WCAG-oriented: pure black/white ground, no muted-tone subtlety, wider
+ * borders so structural boundaries never rely on color contrast alone.
+ */
+:root[data-theme="high-contrast"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface: #000000;
+  --surface-muted: #1a1a1a;
+  --border: #ffffff;
+  --border-muted: #ffffff;
+
+  --brand: #33d17a;
+  --brand-strong: #5ee89a;
+  --brand-foreground: #000000;
+
+  --accent: #6fb1ff;
+  --accent-foreground: #000000;
+
+  --muted: #ffffff;
+  --muted-foreground: #ffffff;
+
+  --success: #33d17a;
+  --success-bg: #062611;
+  --warning: #ffcc33;
+  --warning-bg: #332600;
+  --danger: #ff6b6b;
+  --danger-bg: #330a0a;
+  --info: #6fb1ff;
+  --info-bg: #061a33;
+}
+
+/*
+ * Boardroom — a subdued, presentation-grade theme for executive/board
+ * screens (low-glare deep-navy ground, a restrained brass accent in
+ * place of the working-app green) rather than an accessibility mode.
+ * Concrete values, not restated taxonomy: DS-001 defines the Boardroom
+ * class itself but no token values (per this repository's own prior
+ * finding that DS-001 supplies taxonomy, not concrete tokens) — chosen
+ * here to meet DS-001's own accessibility/contrast rules while reading
+ * as deliberately distinct from Dark, not merely Dark renamed.
+ */
+:root[data-theme="boardroom"] {
+  --background: #12151c;
+  --foreground: #e8e6df;
+  --surface: #1a1e27;
+  --surface-muted: #21252f;
+  --border: #343a48;
+  --border-muted: #2a2f3b;
+
+  --brand: #b08d57;
+  --brand-strong: #c9a96e;
+  --brand-foreground: #12151c;
+
+  --accent: #8fa8c9;
+  --accent-foreground: #12151c;
+
+  --muted: #9ca3af;
+  --muted-foreground: #c3c7ce;
+
+  --success: #6fae8a;
+  --success-bg: #16241d;
+  --warning: #d3a75c;
+  --warning-bg: #2c220f;
+  --danger: #c76a6a;
+  --danger-bg: #2b1414;
+  --info: #8fa8c9;
+  --info-bg: #16202c;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -8,6 +8,7 @@ import { Card, CardTitle, CardDescription } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { useAuth } from "@/hooks/useAuth";
+import { useResolvedTheme } from "@/features/configuration/state/useResolvedTheme";
 import { workspaceForPathname } from "@/config/workspaces";
 
 const LOGIN_ROUTE = "/platform-admin/login";
@@ -54,6 +55,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useResolvedTheme(session.status === "authenticated");
 
   useEffect(() => {
     if (session.status === "unauthenticated") {
