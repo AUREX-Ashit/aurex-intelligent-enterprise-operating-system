@@ -33,6 +33,13 @@ interface RequestOptions {
    * to silently recover from.
    */
   skipAuthRetry?: boolean;
+  /**
+   * Overrides the default base URL (`appConfig.authServiceUrl`) for this
+   * call. Introduced by WP-11 (Enterprise Search, C-093) — the first
+   * backend domain hosted outside AuthService (`AIService`,
+   * `appConfig.aiServiceUrl`); see `src/services/search-api.ts`.
+   */
+  baseUrl?: string;
 }
 
 /**
@@ -99,7 +106,7 @@ async function request<T>(
   options: RequestOptions = {},
   isRetryAfterRefresh = false,
 ): Promise<T> {
-  const url = path.startsWith("http") ? path : `${appConfig.authServiceUrl}${path}`;
+  const url = path.startsWith("http") ? path : `${options.baseUrl ?? appConfig.authServiceUrl}${path}`;
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
 

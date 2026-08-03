@@ -4,13 +4,21 @@ from models.extraction import ESGExtractionModel
 from models.validation import ESGValidationModel
 from models.scoring import ESGScoringModel
 from models.rag import RAGConfigModel
+from models.search import (
+    VectorIndexRegistryModel,
+    EvidenceRegistryModel,
+    DocumentChunkRegistryModel,
+)
 
 __all__ = [
-    "Base", 
-    "get_db", 
-    "init_db", 
-    "ESGExtractionModel", 
-    "ESGValidationModel", 
-    "ESGScoringModel", 
-    "RAGConfigModel"
+    "Base",
+    "get_db",
+    "init_db",
+    "ESGExtractionModel",
+    "ESGValidationModel",
+    "ESGScoringModel",
+    "RAGConfigModel",
+    "VectorIndexRegistryModel",
+    "EvidenceRegistryModel",
+    "DocumentChunkRegistryModel",
 ]

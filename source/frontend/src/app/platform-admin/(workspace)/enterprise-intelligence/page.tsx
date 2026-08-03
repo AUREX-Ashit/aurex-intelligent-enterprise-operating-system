@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/layout/PlaceholderPage";
+import { EnterpriseSearchScreen } from "@/features/search/components/EnterpriseSearchScreen";
 
 export default function EnterpriseIntelligencePage() {
-  return <PlaceholderPage title="Enterprise Intelligence Administration" description="Enterprise Intelligence configuration." />;
+  return <EnterpriseSearchScreen />;
 }

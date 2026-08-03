@@ -6,8 +6,14 @@ from config.settings import settings
 
 class TenantHeaderMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Exclude documentation, swagger and health checks from tenant check
-        bypass_paths = ["/docs", "/openapi.json", "/redoc", "/ai/health"]
+        # Exclude documentation, swagger and health checks from tenant check.
+        # "/search" (WP-11, IRA-011 §5) is also excluded: its own three endpoints
+        # derive organization_id from a real, verified JWT claim
+        # (dependencies.get_current_claims) — the raw, unverified X-Tenant-ID
+        # header this middleware enforces elsewhere is superseded, not
+        # required in addition, for these routes specifically. Pre-existing
+        # endpoints (/ai/extract, /ai/validate, /ai/scoring) are unaffected.
+        bypass_paths = ["/docs", "/openapi.json", "/redoc", "/ai/health", "/search"]
         if any(request.url.path.startswith(p) for p in bypass_paths) or request.url.path == "/":
             return await call_next(request)
 

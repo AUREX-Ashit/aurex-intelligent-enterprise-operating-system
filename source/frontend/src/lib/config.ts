@@ -20,6 +20,14 @@ export const appConfig = {
   /** Base URL of AuthService — identity, person, and session endpoints. */
   authServiceUrl: readPublicEnv("NEXT_PUBLIC_AUTH_SERVICE_URL", "http://localhost:8000"),
 
+  /**
+   * Base URL of AIService — WP-11 Enterprise Search (C-093) endpoints
+   * (`/search/*`). The first frontend integration against a backend
+   * service other than AuthService — `api-client.ts`'s own `baseUrl`
+   * request option exists specifically to support this.
+   */
+  aiServiceUrl: readPublicEnv("NEXT_PUBLIC_AI_SERVICE_URL", "http://localhost:3000"),
+
   /** Current runtime environment, as Next.js itself reports it. */
   environment: process.env.NODE_ENV ?? "development",
 
