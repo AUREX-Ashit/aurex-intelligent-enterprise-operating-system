@@ -72,4 +72,4 @@ This does not affect the R4 decision's own substance at any point — independen
 
 ---
 
-*End of IMP-REPORT-RELEASE-A2. Status: Governance Decisions Resolved (R4, Observations 1–2), R5 Correctly Deferred — pending independent verification and Release Readiness Audit.*
+*End of IMP-REPORT-RELEASE-A2. Status: Governance Decisions Resolved (R4, Observations 1–2), R5 Correctly Deferred — independent verification of remediation confirmed, Release Readiness Audit passed, RELEASE READY.*
