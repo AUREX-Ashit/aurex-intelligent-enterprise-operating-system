@@ -21,7 +21,7 @@ class ESGMetrics(BaseModel):
     board_size: Optional[int] = Field(None, description="Size of the board of directors")
     independent_directors_ratio: Optional[float] = Field(None, description="Independent directors percentage share")
     anti_corruption_policy: Optional[bool] = Field(False, description="Is anti-corruption policy active")
-    whistleblower_ hotline_active: Optional[bool] = Field(False, description="Active channel for whistleblower disclosures")
+    whistleblower_hotline_active: Optional[bool] = Field(False, description="Active channel for whistleblower disclosures")
 
 class ExtractionRequest(BaseModel):
     document_name: str = Field(..., description="Target file name for ESG Extraction processing")
