@@ -12039,10 +12039,12 @@ Knowledge Graph Repository (§13.2) → Retrieval Service (§13.3), which depend
 
 An Engineering Specialization is a domain of implementable units sharing a common Layer 1 constitutional source of truth (per ARCH-000 §3) but requiring engineering treatment distinct from Business Activity Engineering's own experiential shape (ERB/EX/Persona, derived via PE-001 from CAP-001). Section 13 is IMP-001's canonical home for every such specialization, per IMP-001's own Layer 3 mandate (ARCH-000 §3: "these documents define how constitutional architecture is engineered") and the unqualified "Enterprise Engineering" concern ARCH-000 §6 assigns to IMP-001 alone.
 
-Two specializations exist as of this version:
+Four specializations exist as of this version:
 
 - **Enterprise Intelligence Engineering** (§§13.1-13.16) — implements EIA-001's Knowledge Graph, Memory, and AI Runtime Components (RTA-001 §§12, 13, 21, 22), engineered directly through this Section with no Layer 2 intermediary, per the precedent this Section itself already established.
 - **Runtime Component Engineering** (§§13.17-13.25) — implements RTA-001's remaining Runtime Components (§§6-11, 14-19), following the identical precedent.
+- **AI Session Management Engineering** (§§13.26-13.38) — implements RTA-001 §13.15a's Conversation, Interaction, and Cross-Lifecycle Agent Handoff constructs, per `ADR-020`, following the identical precedent.
+- **AI-Native Enterprise Experience Engineering** (§§13.39-13.53) — implements `SD-001 §16`'s AI-Native Enterprise Experience Framework, per `ADR-021`, following the identical precedent.
 
 **Governing rule.** Every specialization added to this Section MAY define its own Contract, Registry, and Readiness Assessment, shaped to its own object type. Every specialization SHALL reuse, never re-invent, the common Enterprise Engineering lifecycle (§6.23's Version Lifecycle and Canonical Version Model), governance principles (§6.22.12's Registry Governance principle, generalized), review methodology, Completion Gate, and Certification discipline (CLAUDE.md §19.7). A specialization's Contract, Registry, and Readiness Assessment are permitted to differ from every other specialization's; its lifecycle, governance, review, gate, and certification discipline are not.
 
@@ -12161,6 +12163,236 @@ Runtime Components follow the same Version Lifecycle and Canonical Version Model
 **13.25 Runtime Component Review, Completion Gate, and Certification**
 
 Every Runtime Component is subject to the same Independent Review, Completion Gate, and Certification discipline CLAUDE.md §19.7 already establishes for Business Activities, substituting "Runtime Component" for "Business Activity" throughout that section's requirements — including that the implementation agent shall not certify its own work, and that no further Runtime Component's implementation shall begin until the current one has passed this same gate. This section references that discipline; it does not restate, redefine, or relocate it.
+
+---
+
+**13.26 AI Session Management Engineering — Purpose**
+
+This specialization engineers RTA-001 §13.15a's AI Session Management constructs — Conversation, Interaction, Conversation Boundary, System of Record, Interaction State and Continuity, and Cross-Lifecycle Agent Handoff — per `ADR-020` (Repository Owner Constitutional Design Workshop, 2026-08-07). Per §13.17, this is a specialization of Enterprise Engineering, not a separate discipline. It does not redefine RTA-001 §13.15a, which remains the sole constitutional authority; each pattern below cites the RTA-001 §13.15a element it implements rather than restating it, exactly as §§13.2-13.16 and §§13.18-13.25 already do for their own constitutional sources.
+
+**Scope exclusion, stated explicitly.** Frontend and conversational-interaction presentation patterns (how a Conversation or Interaction is rendered to a user) are **not** engineered by this specialization. No constitutional decision equivalent to `ADR-020` exists for that concern — the Canonical AI Interaction Pattern Discovery and its own Governance Validation (session record, 2026-08-07) concluded that a reusable interaction pattern should be explicitly documented before Release D, but that documentation was never itself produced or approved through a decision workshop, unlike Session Management's own five concepts. Engineering a frontend pattern now, without that grounding, would repeat exactly the gap `CLAUDE.md §17`/`§18`/`§19.4` require stopping for. This specialization is backend/runtime scope only.
+
+**13.27 AI Session Object Model**
+
+A Session Object (a Conversation or an Interaction) is the implementable realization of one RTA-001 §13.15a construct. Every Session Object has:
+
+- **Constitutional Source** — the owning RTA-001 §13.15a paragraph (Conversation and Interaction; Conversation Boundary; System of Record; Interaction State and Continuity; Cross-Lifecycle Agent Handoff).
+- **Constitutional Responsibilities** — consumed by reference from that paragraph, never restated.
+- **Constitutional Constraints** — consumed by reference (e.g., Interaction State "shall never depend upon Enterprise Memory"; Handoff "shall never cross Conversation boundaries").
+
+This model describes engineering shape only. RTA-001 §13.15a remains the sole authority for what Conversation and Interaction are and how they behave; this Section states only how an engineer builds them, mirroring the boundary §13.1/§13.18 already draw for their own specializations.
+
+**13.28 Session Domain Model and Service Boundary Pattern**
+
+A `ConversationService` domain service and an `InteractionService` domain service, each following the same Canonical Business Object Stack Section 5.3 already mandates (Aggregate Root → Metadata → Business Rules → Validation → Persistence → Repository → Domain Service), applied respectively to the Conversation and Interaction constructs RTA-001 §13.15a defines:
+
+- `ConversationService` owns Conversation Boundary transitions (RTA-001 §13.15a, "Conversation Boundary" paragraph) and never executes an Interaction itself — Interaction execution remains the existing AI Request Lifecycle/Agent Execution Lifecycle's own responsibility (§13.5 `AgentOrchestrator`, unmodified), consistent with the constitutional principle that Business Activity accountability is fixed at the Interaction, never the Conversation.
+- `InteractionService` wraps one AI Request Lifecycle/Agent Execution Lifecycle execution (§13.5) and is the only caller permitted to read or write that execution's own durable record; no other service accesses an Interaction's record directly.
+- Per `CLAUDE.md §8`, both services are owned by the same service already owning `C-093`'s own realization (`AIService`, per the `WP-11` precedent) — no new service boundary is introduced by this pattern.
+
+**13.29 Session Boundary and System of Record Pattern**
+
+A `ConversationStateResolver` interface implementing RTA-001 §13.15a's Conversation State Model: `resolve(triggerEvent) → ConversationState`, where `triggerEvent` originates from either a Runtime Policy evaluation (§13.10, e.g., inactivity timeout) or an explicit Repository Owner/system/user action — the resolver itself never originates a transition, per the constitutional principle that "a Runtime Policy may trigger a Conversation state transition, but it shall never define the constitutional lifecycle model itself." The state model and its transition triggers remain two separately injected concerns, never merged into one class.
+
+A `SessionRecordRepository` interface providing the canonical System of Record for Conversation and Interaction, following the same Repository pattern §13.2 already establishes: one interface, with Session Cache (RTA-001 §15.5) as an injected, optional acceleration layer that resolves exclusively from this Repository's own writes and is never itself queried as a fallback system of record — mirroring `KnowledgeGraphRepository`'s own dual-layer coordination discipline (§13.2), adapted from dual-persistence to persistence-plus-cache.
+
+**13.30 Interaction Continuity and Handoff Pattern**
+
+An `InteractionStateAssembler` implementing RTA-001 §13.15a's Interaction State and Continuity paragraph: `assemble(conversationId, priorInteractions) → InteractionState`, producing a bounded, structured object — never a raw transcript — consumed by Context Assembly (§13.3/RTA-001 §13.7) as one additional named input, alongside Enterprise Context and Retrieved Evidence, exactly as RTA-001 §13.8 already lists. `InteractionStateAssembler` shall never read from, or write to, any Enterprise Memory-related interface (§13.13 `MemoryRepository`) — the constitutional principle that Conversation Continuity never depends on Enterprise Memory is enforced structurally, by omitting the dependency entirely, not by a runtime check.
+
+A `SessionHandoffResolver` interface generalizing Capability Delegation (§13.6e's `agent_tool_grant` gating and RTA-001 §13.9b's role/contract-based Execution Capability Selection) to the Cross-Lifecycle Agent Handoff scope RTA-001 §13.15a defines: `handoff(fromInteractionId, toExecutionCapability) → InteractionState`, transferring only the `InteractionStateAssembler`'s own structured output — never runtime execution state, and never `ConversationService`'s own ownership of the Conversation. `SessionHandoffResolver` shall reject any request where `ConversationStateResolver.resolve()` reports the Conversation is not in its Open state, or where the target Interaction belongs to a different Conversation — both rejections structural, per RTA-001 §13.15a's own boundary.
+
+**13.31 AI Session Event Model**
+
+Conversation and Interaction state transitions are Runtime Events, extending RTA-001 §22.12's existing taxonomy following the same precedent `AMD-013`'s `EVIDENCE_FUSED`/`REPLANNED` additions already established: `CONVERSATION_OPENED`, `CONVERSATION_STATE_TRANSITIONED`, `CONVERSATION_CLOSED`, `INTERACTION_STARTED`, `INTERACTION_COMPLETED`, `HANDOFF_INITIATED`, `HANDOFF_COMPLETED`. Every event emits telemetry through the same Observability Platform every other Section 13 pattern already reports to (`IMP-CICD-005`) — this specialization introduces no separate, parallel telemetry mechanism.
+
+**13.32 AI Session Contract (ASC)**
+
+Every Session Object shall have an AI Session Contract, the AI Session Management specialization of Engineering Contract (§13.17):
+
+  -----------------------------------------------------------------------
+  **Attribute**              **Description**
+  -------------------------- --------------------------------------------
+  Object Identifier           Unique ID
+
+  Object Type                 Conversation | Interaction
+
+  Constitutional Source       Owning RTA-001 §13.15a paragraph (§13.27)
+
+  Input Contract               Required inputs
+
+  Output Contract              Expected outputs
+
+  Authorization                 Required permissions (per §13.9c Reasoning Contract validation and `SD-002 §13` tenant-isolation cross-reference, `ADR-020`)
+
+  Events                         Published events (§13.31)
+
+  Observability                  Required telemetry (§13.31)
+
+  Dependencies                    See §13.33
+
+  Definition of Done               Completion criteria
+  -----------------------------------------------------------------------
+
+The ASC is the authoritative specification for implementation, mirroring the role BAC (§6.7) and RCC (§13.20) play for their own object types.
+
+**13.33 AI Session Dependencies**
+
+Every ASC's Dependencies attribute is populated per this model:
+
+- **Depends On** — every other Session Object, Runtime Component, or Enterprise Intelligence pattern this object's own behavior presumes (e.g., an Interaction depends on the AI Request Lifecycle/Agent Execution Lifecycle it wraps, §13.5; a Handoff depends on Capability Delegation, §13.6e).
+- **Required** — the subset without which this object cannot operate at all.
+- **Optional** — the subset this object degrades gracefully without.
+
+Dependency declarations are recorded in the AI Session Registry (§13.34) and verified during the AI Session Readiness Assessment (§13.35) before implementation begins, mirroring §13.21's own generalized model.
+
+**13.34 AI Session Registry (ASR)**
+
+The AI Session Registry is the canonical inventory of Session Object realizations, analogous to BAR (§6.22) and RCR (§13.22) — an independent registry, not an extension of either, per the same one-concern-one-owner discipline.
+
+Lifecycle status reuses the same six states already governing Business Activities and Runtime Components (§6.23) — **Draft, Registered, Approved, Active, Deprecated, Retired**. No new state model is introduced.
+
+**This Registry lifecycle is distinct from, and must never be conflated with, the runtime Conversation State Model (RTA-001 §13.15a, ADR-020 Decision 2).** The ASR's own Draft/Registered/Approved/Active/Deprecated/Retired states track whether the *engineering pattern* for Conversation/Interaction has been implemented and certified; the Conversation State Model's own states track whether a *specific, running Conversation instance* is open. An Active-status `ConversationService` implementation may execute many Conversations, each independently open or closed per its own state — the two lifecycles operate at different levels entirely and share no state value.
+
+**13.35 AI Session Readiness Assessment (Session-RA)**
+
+Every Session Object shall undergo a Session Readiness Assessment before implementation begins, occupying the same lifecycle position an IRA occupies for a Business Activity and an RRA occupies for a Runtime Component:
+
+- Constitutional Responsibilities (per §13.27)
+- Session Identity Resolution
+- Conversation Boundary and State Transition Handling
+- System of Record Integration (§13.29)
+- Interaction State Continuity Handling, including the structural Enterprise Memory exclusion (§13.30)
+- Cross-Lifecycle Handoff Handling, where the Session Object's own scope includes it (§13.30)
+- Tenant Isolation (`SD-002 §13` cross-reference, `ADR-020`; `CLAUDE.md §21.4` Mandatory Tenant-Isolation Test Checklist)
+- Observability (§13.31)
+- Performance and Scalability
+- Dependency Readiness (verified against §13.33's declarations)
+- Constitutional Guarantees (per §13.27)
+
+**13.36 AI Session API and Testing Conventions**
+
+Session Object endpoints follow the existing Business Activity API pattern (Section 8) without modification — no new API convention is introduced. Testing follows `IMP-TEST-001`'s Contract-testing discipline, extended per the same precedent `IMP-TEST-005`/`IMP-TEST-006` already establish for Enterprise Intelligence and Runtime Component boundaries: a Session Object implementation with passing unit tests but no contract test at each of the following boundaries is not done — (1) `ConversationStateResolver` — a transition is verified reachable only from an actual Runtime Policy evaluation or an actual explicit action, never a default; (2) `SessionRecordRepository` — a write is verified visible through the canonical record and never solely through Session Cache; (3) `InteractionStateAssembler` — a test asserts no `MemoryRepository` dependency is reachable from the assembler's own public surface, mirroring `IMP-TEST-006`'s own vendor-SDK-absence check pattern; (4) `SessionHandoffResolver` — a test asserts a Handoff is refused when the Conversation is not Open and when the target Interaction belongs to a different Conversation, both as explicit negative-control cases. Per `CLAUDE.md §21.4`, at least one test seeds two distinct Organizations and confirms a caller in one cannot retrieve or infer another's Conversation or Interaction records through any Session Object endpoint.
+
+**13.37 AI Session Versioning**
+
+Session Objects follow the same Version Lifecycle and Canonical Version Model already defined at §6.23, applied to Session Objects rather than Business Activities or Runtime Components. No new lifecycle or version model is introduced here.
+
+**13.38 AI Session Review, Completion Gate, and Certification**
+
+Every Session Object is subject to the same Independent Review, Completion Gate, and Certification discipline `CLAUDE.md §19.7` already establishes for Business Activities, substituting "Session Object" for "Business Activity" throughout that section's requirements — including that the implementation agent shall not certify its own work, and that no further Session Object's implementation shall begin until the current one has passed this same gate. This section references that discipline; it does not restate, redefine, or relocate it.
+
+---
+
+**13.39 AI-Native Enterprise Experience Engineering — Purpose**
+
+This specialization engineers `SD-001 §16`'s AI-Native Enterprise Experience Framework — the accountability boundary, Workspace relationship, composition model, contract-reuse discipline, and capability-layer adoption model (`SD-001-111` through `SD-001-116`) — per `ADR-021`. Per §13.17, this is a specialization of Enterprise Engineering, not a separate discipline. It does not redefine `SD-001 §16`, which remains the sole constitutional authority; each pattern below cites the `SD-001 §16` principle it implements rather than restating it. Consistent with `ADR-021`'s own Explicit Non-Decisions, this specialization defines no frontend implementation, React component, API, REST or GraphQL endpoint, database schema, persistence mechanism, runtime algorithm, UI layout, or screen mockup — it remains entirely technology-neutral, at the same level of abstraction `§13.2`–`§13.16` and `§§13.26`–`13.38` already use.
+
+**13.40 Experience Object Model**
+
+An Experience Object is the implementable realization of one `SD-001 §16` principle. Every Experience Object has:
+
+- **Constitutional Source** — the owning `SD-001-111` through `SD-001-116` principle.
+- **Constitutional Responsibilities** — consumed by reference from that principle, never restated.
+- **Constitutional Constraints** — consumed by reference (e.g., `SD-001-112`: never owns canonical state; `SD-001-116`: applies only when content-triggered).
+
+This model describes engineering shape only. `SD-001 §16` remains the sole authority for what AI-Native Experience is and how it behaves; this Section states only how an engineer builds it.
+
+**13.41 Experience Composition Resolver and Mandatory Rule Enforcement**
+
+An `ExperienceCompositionResolver` interface implementing `SD-001-114`'s Composition Model: `resolve(capabilityContext, contentOrigin) → ExperienceComposition`, where `contentOrigin` evaluates `SD-001-111`'s two-tier test and `capabilityContext` identifies which capability-owned extension points (`SD-001-114`) a specific capability's own CRB has requested. The resolver never decides composition by hardcoded capability identity — mirroring `§13.9b`'s own role/contract-based Execution Capability Selection, it resolves against declared composition requests, never against which capability is asking.
+
+Mandatory universal rules (`SD-001-112`: accountability; `SD-001-113`: Workspace embedding; Explainability, Runtime Event/Policy reuse) are enforced structurally, not by runtime check, mirroring the same discipline `§13.13`'s `PermissionEnforcingKnowledgeGraphRepository` decorator and `§13.30`'s `InteractionStateAssembler` Enterprise-Memory exclusion already establish: an `ExperienceAccountabilityGuard` decorator wraps every Experience Object's own data access, making a durable/canonical state write from the presentation layer structurally unreachable rather than merely disallowed by convention.
+
+Mandatory component reuse (`SD-001-115`) is implemented as a resolution lookup, not new storage: an `ExistingContractRegistry` interface resolves which of Progressive Disclosure (`SD-001` Section 3, `§10.3`), the Evidence Panel (`SD-001` Section 4, `§10.4`), or the Action Center (`SD-001` Section 7, `§10.2`) already serves a given AI-Native content shape, returning a reference to the existing contract — this specialization never returns, and never defines, a new contract of its own.
+
+**13.42 Contract-Specific Integrations**
+
+Three named integrations, each consuming an existing contract unchanged, per `SD-001-115`:
+
+- **Conversation Experience Integration** — where a capability's own content includes a Conversation (`RTA-001 §13.15a`), the `ExperienceCompositionResolver` consumes `InteractionStateAssembler`'s own structured output (`§13.30`) as a composition input. It never re-derives Conversation or Interaction state itself, per `SD-001-112`'s non-ownership constraint.
+- **Evidence Composition** — the Evidence Panel (`SD-001 §4`, `§13.4` Reference Component) is consumed unchanged wherever AI Runtime output carries a confidence score or evidence reference, per `§13.9c`'s Reasoning Contract output shape (Evidence, Confidence, Citations).
+- **Progressive Disclosure Integration** — the existing four-state contract (`IMP-FE-004`) is consumed unchanged as the default rendering shape for AI-Native content falling inside `SD-001-111`'s inner (pattern-novelty) boundary as already-served.
+
+**13.43 Workspace Integration**
+
+An `ExperienceWorkspaceBinding` resolves an Experience Object's own Workspace placement through the existing `PE-001` CRB/ERB mechanism (`SD-001-113`), never through a new navigation registry. A Conversation's own portability decision — Workspace-bound or portable, per `SD-001-113`'s own confirmation of `PE-001 §13.5`'s existing delegation — is read from the consuming capability's own CRB; this specialization never hardcodes that decision for any capability.
+
+**13.44 Runtime Event Consumption**
+
+Experience Objects consume, and never emit a new, parallel taxonomy of, Runtime Events beyond what `RTA-001 §22.12` and `§13.31`'s own Session Management event model already define (`CONVERSATION_OPENED`, `INTERACTION_STARTED`, and so on) — rendering a state change is a consumption of an existing event, never the introduction of a new one. This mirrors `IMP-CICD-005`'s own principle, now applied a third time: "no Section 13.6-13.14 pattern introduces a separate, parallel telemetry mechanism."
+
+**13.45 Authorization and Explainability**
+
+Every Experience Object's own read access is gated by the same authorization-boundary and tenant-isolation test discipline `§11.3` (`IMP-TEST-002`) and `CLAUDE.md §21.4` already establish — no new authorization model is introduced. Explainability (`SD-001 LAW-26`) is consumed, never redefined: an Experience Object rendering AI-Native content must expose the Evidence Panel's own existing "one click away" mechanism; this specialization states the consumption obligation only, never a new explainability mechanism of its own.
+
+**13.46 Observability**
+
+Experience Objects emit telemetry through the same Observability Platform every other Section 13 pattern already reports to, per `IMP-CICD-005`. No parallel or Experience-specific telemetry mechanism is introduced.
+
+**13.47 Experience Contract (EC)**
+
+Every Experience Object shall have an Experience Contract, the AI-Native Enterprise Experience specialization of Engineering Contract (§13.17):
+
+  -----------------------------------------------------------------------
+  **Attribute**              **Description**
+  -------------------------- --------------------------------------------
+  Object Identifier           Unique ID
+
+  Constitutional Source       Owning `SD-001 §16` principle (§13.40)
+
+  Composition Inputs           Which existing contracts/extension points apply (§13.41-13.42)
+
+  Authorization                  Required permissions (§13.45)
+
+  Events                          Consumed events (§13.44)
+
+  Observability                   Required telemetry (§13.46)
+
+  Dependencies                    See §13.48
+
+  Definition of Done               Completion criteria
+  -----------------------------------------------------------------------
+
+The EC is the authoritative specification for implementation, mirroring the role BAC (§6.7), RCC (§13.20), and ASC (§13.32) play for their own object types.
+
+**13.48 Experience Dependencies**
+
+Every EC's Dependencies attribute is populated per the same model §13.21/§13.33 already establish: **Depends On** (e.g., a Conversation Experience Integration depends on `InteractionStateAssembler`, §13.30), **Required**, and **Optional**. Declarations are recorded in the Experience Registry (§13.49) and verified during the Experience Readiness Assessment (§13.50).
+
+**13.49 Experience Registry (ER)**
+
+The Experience Registry is the canonical inventory of Experience Object realizations, analogous to BAR, RCR, and ASR — an independent registry, not an extension of any of them. Lifecycle status reuses the same six states already governing every other specialization (§6.23) — Draft, Registered, Approved, Active, Deprecated, Retired.
+
+**This Registry lifecycle is distinct from, and must never be conflated with, `SD-001-116`'s own content-triggered adoption model.** The ER's own states track whether the *engineering pattern* for a given Experience Object has been implemented and certified; `SD-001-116`'s own trigger tracks whether the *mandatory tier applies to a specific, running capability invocation* at a given moment. An Active-status Experience Object implementation may serve many capabilities, each independently triggered or not per its own content — mirroring exactly the same distinction §13.34 already draws for AI Session Management's own Registry versus the runtime Conversation State Model.
+
+**13.50 Experience Readiness Assessment (Experience-RA)**
+
+Every Experience Object shall undergo a Readiness Assessment before implementation begins, occupying the same lifecycle position an IRA, RRA, and Session-RA each occupy for their own object types:
+
+- Constitutional Responsibilities (per §13.40)
+- Composition Resolution Correctness (§13.41)
+- Mandatory Rule Enforcement, verified structural (§13.41)
+- Contract-Specific Integration Handling (§13.42)
+- Workspace Binding Handling (§13.43)
+- Runtime Event Consumption Handling (§13.44)
+- Tenant Isolation and Authorization (§13.45; `CLAUDE.md §21.4`)
+- Explainability Consumption (§13.45)
+- Observability (§13.46)
+- Dependency Readiness (verified against §13.48's declarations)
+- Constitutional Guarantees (per §13.40)
+
+**13.51 Experience API and Testing Conventions**
+
+Experience Object endpoints follow the existing Business Activity API pattern (Section 8) without modification. Testing follows `IMP-TEST-001`'s Contract-testing discipline, extended per the same precedent `IMP-TEST-005`/`006` already establish: an Experience Object implementation with passing unit tests but no contract test at each of the following boundaries is not done — (1) `ExperienceCompositionResolver` — a test asserts composition never resolves by hardcoded capability identity, mirroring `IMP-TEST-006`'s own vendor-identity-absence check; (2) `ExperienceAccountabilityGuard` — a test asserts a durable/canonical state write attempt is structurally unreachable, not merely rejected at runtime; (3) `ExistingContractRegistry` — a test asserts the lookup never returns a contract this specialization itself defines, only ones already owned elsewhere; (4) `ExperienceWorkspaceBinding` — a test asserts Workspace placement is read from the capability's own CRB, never hardcoded. Per `CLAUDE.md §21.4`, at least one test seeds two distinct Organizations and confirms a caller in one cannot retrieve or infer another's Experience-composed content through any Experience Object endpoint.
+
+**13.52 Experience Versioning**
+
+Experience Objects follow the same Version Lifecycle and Canonical Version Model already defined at §6.23. No new lifecycle or version model is introduced here.
+
+**13.53 Experience Review, Completion Gate, and Certification**
+
+Every Experience Object is subject to the same Independent Review, Completion Gate, and Certification discipline `CLAUDE.md §19.7` already establishes, substituting "Experience Object" for "Business Activity" throughout that section's requirements — including that the implementation agent shall not certify its own work, and that no further Experience Object's implementation shall begin until the current one has passed this same gate. This section references that discipline; it does not restate, redefine, or relocate it.
 
 ---
 
