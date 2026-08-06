@@ -567,6 +567,8 @@ The only business-object content legitimately shared across tenant boundaries is
 
 When a tenant migrates infrastructure or offboards from the platform, that tenant's full object graph — including event history, evidence, relationships, and audit trails — must export as a complete, self-consistent, historically-reconstructable package. Organizational memory (SD-002-100) belongs to the tenant, not to the platform, and must be portable on request.
 
+**Cross-Reference** *(added per `ADR-020`, Repository Owner Constitutional Design Workshop, 2026-08-07 — references this Section's existing guarantee; adds no new principle number)*: the tenant boundary and isolation guarantees `SD-002-108` through `SD-002-112` establish apply without exception to Conversation and Interaction, the AI Session Management constructs `RTA-001 §13.15a` defines.
+
 ---
 
 ## Full Principle Index

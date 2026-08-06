@@ -11123,6 +11123,25 @@ as:
 This classification distinguishes stable knowledge definitions from
 runtime AI interactions.
 
+**24.4a AI Conversation — Interaction Relationship** *(added per ADR-020,
+Repository Owner Constitutional Design Workshop, 2026-08-07)*
+
+Interaction is not a new, independent Business Object. It is a
+subordinate record realized within AI Conversation's own decomposition
+(§24.5), per RTA-001 §13.15a's own constitutional definition: "A
+Conversation may contain zero or more Interactions." AI Conversation
+remains the sole registered Business Object for this domain.
+
+Prompt Execution (already registered above, Transaction Data) is the
+finer-grained record of a single reasoning/model invocation (RTA-001
+§13.9c, Reasoning Contract Execution). An Interaction is the
+coarser-grained record of one complete AI Request Lifecycle/Agent
+Execution Lifecycle instance, which may itself invoke a Reasoning
+Engine more than once (RTA-001 §13.9b's own "Multi-LLM delegation
+within one execution"). An Interaction therefore contains, and is
+realized partly through, one or more Prompt Execution records — a
+containment relationship, not a duplicate or competing concept.
+
 **24.5 Business Object Realization**
 
 Example:

@@ -2938,6 +2938,21 @@ Compliance
 Every AI interaction shall remain traceable.
 
 
+### 13.15a AI Session Management *(added per ADR-020, Repository Owner Constitutional Design Workshop, 2026-08-07)*
+
+The AI Runtime governs AI Session Management as an extension of, and without modification to, the AI Request Lifecycle (§13.6), Agent Execution Lifecycle (§13.6a), Capability Delegation (§13.6e), Context Assembly (§13.7), Prompt Orchestration (§13.8), Reasoning Contract Execution (§13.9c), and Runtime Cache Architecture (§15).
+
+**Conversation and Interaction.** A Conversation is the durable business context representing one logical AI engagement. An Interaction is a discrete runtime execution occurring within a Conversation — one bounded AI Request Lifecycle together with its associated Agent Execution Lifecycle(s). A Conversation may contain zero or more Interactions. Conversation represents business continuity; Interaction represents execution continuity. Business Activity accountability (§13.2, §13.3) remains fixed at the Interaction, not the Conversation — each Interaction is itself one Business-Activity-invoked AI Request Lifecycle instance, and a Conversation creates no accountability of its own.
+
+**Conversation Boundary.** The Conversation Boundary shall be governed by an explicit Conversation State Model, a constitutional concern distinct from the mechanisms that trigger transitions within it. Runtime Policies (§13.10), including inactivity timeout, and explicit Repository Owner, system, or user actions may each trigger a Conversation state transition; neither defines the state model itself. Interaction termination remains governed exclusively by the existing AI Request Lifecycle and Agent Execution Lifecycle.
+
+**System of Record.** Conversation and Interaction shall each be durably persisted against a canonical System of Record. Session Cache (§15.5) shall remain an acceleration mechanism only, resolving its state exclusively from that canonical record; cache invalidation shall never alter the canonical record. This restates, and does not modify, §15.7's own principle: "Caches are accelerators. They are never systems of record."
+
+**Interaction State and Continuity.** Interaction State is Conversation-scoped, structured runtime context — never an unbounded transcript — existing solely to preserve continuity between successive Interactions within the same Conversation. It shall become an additional named input to Context Assembly (§13.7) for a subsequent Interaction, alongside Enterprise Context, Retrieved Evidence, and every other input §13.8 already names. Conversation Continuity and Enterprise Memory (§21) are distinct constitutional concerns: Conversation Continuity is Conversation-scoped and exists only while the Conversation remains Open; Enterprise Memory is enterprise-scoped, cross-conversation, and remains deferred under C-095 pending a separate Repository Owner decision to lift ARCH-000 §7c's own deferral. Conversation Continuity shall never depend upon Enterprise Memory, and Enterprise Memory shall never become a prerequisite for Conversation Continuity.
+
+**Cross-Lifecycle Agent Handoff.** A Handoff is the constitutional transfer of execution responsibility between successive Interactions belonging to the same Conversation. A Handoff shall transfer only the structured Interaction State required for the next Interaction — never runtime execution state, and never ownership of the Conversation itself, which remains the durable business context throughout. A Handoff generalizes Capability Delegation (§13.6e) to this scope without modifying §13.6e itself, and remains subject to the same grant-gating (`agent_tool_grant`) and role/contract-based Execution Capability Selection (§13.9b) discipline. A Handoff may occur only while the Conversation remains Open; shall never cross Conversation boundaries; and shall never depend upon Enterprise Memory.
+
+
 ### 13.16 Relationship with IMP-001
 IMP-001 defines where AI may assist Business Activities.
 The AI Runtime defines how AI assistance is executed.
@@ -3266,6 +3281,8 @@ Workflow Cache
 Workflow Registry
 AI Cache
 AI Runtime Repository
+Session Cache
+Conversation & Interaction System of Record *(resolved per ADR-020, §13.15a — previously unassigned)*
 Caches are accelerators.
 They are never systems of record.
 
