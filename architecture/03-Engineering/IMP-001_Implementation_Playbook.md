@@ -12292,9 +12292,9 @@ This specialization engineers `SD-001 §16`'s AI-Native Enterprise Experience Fr
 
 An Experience Object is the implementable realization of one `SD-001 §16` principle. Every Experience Object has:
 
-- **Constitutional Source** — the owning `SD-001-111` through `SD-001-116` principle.
+- **Constitutional Source** — the owning `SD-001-113` through `SD-001-118` principle.
 - **Constitutional Responsibilities** — consumed by reference from that principle, never restated.
-- **Constitutional Constraints** — consumed by reference (e.g., `SD-001-112`: never owns canonical state; `SD-001-116`: applies only when content-triggered).
+- **Constitutional Constraints** — consumed by reference (e.g., `SD-001-114`: never owns canonical state; `SD-001-118`: applies only when content-triggered).
 
 This model describes engineering shape only. `SD-001 §16` remains the sole authority for what AI-Native Experience is and how it behaves; this Section states only how an engineer builds it.
 
@@ -12304,19 +12304,19 @@ An `ExperienceCompositionResolver` interface implementing `SD-001-114`'s Composi
 
 Mandatory universal rules (`SD-001-112`: accountability; `SD-001-113`: Workspace embedding; Explainability, Runtime Event/Policy reuse) are enforced structurally, not by runtime check, mirroring the same discipline `§13.13`'s `PermissionEnforcingKnowledgeGraphRepository` decorator and `§13.30`'s `InteractionStateAssembler` Enterprise-Memory exclusion already establish: an `ExperienceAccountabilityGuard` decorator wraps every Experience Object's own data access, making a durable/canonical state write from the presentation layer structurally unreachable rather than merely disallowed by convention.
 
-Mandatory component reuse (`SD-001-115`) is implemented as a resolution lookup, not new storage: an `ExistingContractRegistry` interface resolves which of Progressive Disclosure (`SD-001` Section 3, `§10.3`), the Evidence Panel (`SD-001` Section 4, `§10.4`), or the Action Center (`SD-001` Section 7, `§10.2`) already serves a given AI-Native content shape, returning a reference to the existing contract — this specialization never returns, and never defines, a new contract of its own.
+Mandatory component reuse (`SD-001-117`) is implemented as a resolution lookup, not new storage: an `ExistingContractRegistry` interface resolves which of Progressive Disclosure (`SD-001` Section 3, `§10.3`), the Evidence Panel (`SD-001` Section 4, `§10.4`), or the Action Center (`SD-001` Section 7, `§10.2`) already serves a given AI-Native content shape, returning a reference to the existing contract — this specialization never returns, and never defines, a new contract of its own.
 
 **13.42 Contract-Specific Integrations**
 
-Three named integrations, each consuming an existing contract unchanged, per `SD-001-115`:
+Three named integrations, each consuming an existing contract unchanged, per `SD-001-117`:
 
-- **Conversation Experience Integration** — where a capability's own content includes a Conversation (`RTA-001 §13.15a`), the `ExperienceCompositionResolver` consumes `InteractionStateAssembler`'s own structured output (`§13.30`) as a composition input. It never re-derives Conversation or Interaction state itself, per `SD-001-112`'s non-ownership constraint.
+- **Conversation Experience Integration** — where a capability's own content includes a Conversation (`RTA-001 §13.15a`), the `ExperienceCompositionResolver` consumes `InteractionStateAssembler`'s own structured output (`§13.30`) as a composition input. It never re-derives Conversation or Interaction state itself, per `SD-001-114`'s non-ownership constraint.
 - **Evidence Composition** — the Evidence Panel (`SD-001 §4`, `§13.4` Reference Component) is consumed unchanged wherever AI Runtime output carries a confidence score or evidence reference, per `§13.9c`'s Reasoning Contract output shape (Evidence, Confidence, Citations).
-- **Progressive Disclosure Integration** — the existing four-state contract (`IMP-FE-004`) is consumed unchanged as the default rendering shape for AI-Native content falling inside `SD-001-111`'s inner (pattern-novelty) boundary as already-served.
+- **Progressive Disclosure Integration** — the existing four-state contract (`IMP-FE-004`) is consumed unchanged as the default rendering shape for AI-Native content falling inside `SD-001-113`'s inner (pattern-novelty) boundary as already-served.
 
 **13.43 Workspace Integration**
 
-An `ExperienceWorkspaceBinding` resolves an Experience Object's own Workspace placement through the existing `PE-001` CRB/ERB mechanism (`SD-001-113`), never through a new navigation registry. A Conversation's own portability decision — Workspace-bound or portable, per `SD-001-113`'s own confirmation of `PE-001 §13.5`'s existing delegation — is read from the consuming capability's own CRB; this specialization never hardcodes that decision for any capability.
+An `ExperienceWorkspaceBinding` resolves an Experience Object's own Workspace placement through the existing `PE-001` CRB/ERB mechanism (`SD-001-115`), never through a new navigation registry. A Conversation's own portability decision — Workspace-bound or portable, per `SD-001-115`'s own confirmation of `PE-001 §13.5`'s existing delegation — is read from the consuming capability's own CRB; this specialization never hardcodes that decision for any capability.
 
 **13.44 Runtime Event Consumption**
 

@@ -690,29 +690,29 @@ A deprecated field, widget, or screen template remains functional for a minimum 
 
 *(Added per `ADR-021`, Repository Owner Constitutional Design Workshop, 2026-08-07. This Section specializes this document's own existing Presentation Architecture authority; it does not introduce a new Layer 1 concern, and it modifies no principle in Sections 1–15.)*
 
-**SD-001-111: AI-Native Experience — Definition and Scope**
+**SD-001-113: AI-Native Experience — Definition and Scope**
 
 AI-Native Experience is defined on two tiers. The outer, inclusive membership boundary is content-origin-based: any Enterprise Experience whose content originates, even partially, from an AI Runtime execution (`RTA-001 §13`) is AI-Native by definition. The inner boundary, determining what requires new Framework architecture, is pattern-novelty-based: only Experience whose interaction pattern itself — not merely its content — is structurally different from what this document's existing contracts already serve requires new work. Content inside the outer boundary but outside the inner one is AI-Native by definition and is already adequately served by Sections 4, 7, and 9 below.
 
-**SD-001-112: Accountability Boundary**
+**SD-001-114: Accountability Boundary**
 
 AI-Native Experience gains no new constitutional status beyond this Section, never executes a Business Activity, and never owns canonical or durable state. Accountability remains fixed exclusively with Business Activities (`RTA-001 §13.2`/`§13.3`), inherited from `ADR-020`'s own precedent that Interaction, not Conversation, carries accountability — regardless of how many layers of presentation sit between a Business Activity and the AI Runtime output it presents.
 
-**SD-001-113: Workspace Provides Context, Conversation Provides Continuity**
+**SD-001-115: Workspace Provides Context, Conversation Provides Continuity**
 
 Workspace (`PE-001 §13.5`) provides Context; Conversation (`RTA-001 §13.15a`, `ADR-020`) provides Continuity — independent, non-conflicting properties. AI-Native Experience is embedded within Workspace navigation, never a new parallel navigation layer, consistent with SD-001-107 (Screen Independence) and every prior capability's own delivery precedent. Whether a specific capability's own Conversation is Workspace-bound or portable across Workspaces remains that capability's own CRB/ERB decision, per `PE-001 §13.5`'s own existing delegation — this Section does not override that delegation with a universal rule.
 
-**SD-001-114: Composition Model**
+**SD-001-116: Composition Model**
 
-AI-Native Experience is a Composition Framework: a small set of universally mandatory rules (Business Activity accountability, SD-001-112; Explainability, `LAW-26`; Runtime Event and Runtime Policy reuse with no parallel mechanism; Workspace embedding, SD-001-113), a set of mandatory-reuse component contracts applied wherever content shape matches and never re-invented (Progressive Disclosure, Section 3; the Evidence Panel and Confidence, Section 4), and a set of capability-owned extension points pulled in only where a specific capability's own content requires them, each remaining governed by its own existing document (AI Session Management, Agent Collaboration, Human Approval/Override, Recommendations, Enterprise Intelligence).
+AI-Native Experience is a Composition Framework: a small set of universally mandatory rules (Business Activity accountability, SD-001-114; Explainability, `LAW-26`; Runtime Event and Runtime Policy reuse with no parallel mechanism; Workspace embedding, SD-001-115), a set of mandatory-reuse component contracts applied wherever content shape matches and never re-invented (Progressive Disclosure, Section 3; the Evidence Panel and Confidence, Section 4), and a set of capability-owned extension points pulled in only where a specific capability's own content requires them, each remaining governed by its own existing document (AI Session Management, Agent Collaboration, Human Approval/Override, Recommendations, Enterprise Intelligence).
 
-**SD-001-115: Reuse of Existing Contracts — No New Principle, No New Contract**
+**SD-001-117: Reuse of Existing Contracts — No New Principle, No New Contract**
 
 This Section owns interaction composition only. It introduces no new interaction principle and no new interaction contract. Progressive Disclosure (Section 3), the Evidence Panel, Confidence, and Trust Presentation (Section 4), Universal Design Laws (Section 9) including Explainability, and the Action Center (Section 7) are inherited unchanged by every AI-Native Experience this Section governs.
 
-**SD-001-116: Capability-Layer Relationship and Adoption Model**
+**SD-001-118: Capability-Layer Relationship and Adoption Model**
 
-Adoption is content-triggered and capability-agnostic: the mandatory tier (SD-001-114) applies automatically, without exception, whenever — and only when — a capability's own Experience presents content originating from an AI Runtime execution, regardless of that capability's own `CAP-001` domain, and not restricted to D-005 (Enterprise Intelligence). This Section is not itself a `CAP-001` entry and owns no capability behavior. The governing chain is: Framework (this Section, capability-agnostic) → Capability (`CAP-001`, triggers the mandatory tier if AI-content is present) → CRB (capability-specific realization, `PE-001 §13.5`) → ERB (enterprise-specific variation) → Work Package (charters implementation) → Implementation (`IMP-001`-governed build) — each step consuming, never redefining, the step above it.
+Adoption is content-triggered and capability-agnostic: the mandatory tier (SD-001-116) applies automatically, without exception, whenever — and only when — a capability's own Experience presents content originating from an AI Runtime execution, regardless of that capability's own `CAP-001` domain, and not restricted to D-005 (Enterprise Intelligence). This Section is not itself a `CAP-001` entry and owns no capability behavior. The governing chain is: Framework (this Section, capability-agnostic) → Capability (`CAP-001`, triggers the mandatory tier if AI-content is present) → CRB (capability-specific realization, `PE-001 §13.5`) → ERB (enterprise-specific variation) → Work Package (charters implementation) → Implementation (`IMP-001`-governed build) — each step consuming, never redefining, the step above it.
 
 **SD-001-111: Enterprise Memory Principle** — nothing a customer has configured, extended, or answered is ever silently discarded across an upgrade; see LAW-24.
 
