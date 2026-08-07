@@ -714,6 +714,18 @@ This Section owns interaction composition only. It introduces no new interaction
 
 Adoption is content-triggered and capability-agnostic: the mandatory tier (SD-001-116) applies automatically, without exception, whenever — and only when — a capability's own Experience presents content originating from an AI Runtime execution, regardless of that capability's own `CAP-001` domain, and not restricted to D-005 (Enterprise Intelligence). This Section is not itself a `CAP-001` entry and owns no capability behavior. The governing chain is: Framework (this Section, capability-agnostic) → Capability (`CAP-001`, triggers the mandatory tier if AI-content is present) → CRB (capability-specific realization, `PE-001 §13.5`) → ERB (enterprise-specific variation) → Work Package (charters implementation) → Implementation (`IMP-001`-governed build) — each step consuming, never redefining, the step above it.
 
+**SD-001-119: Conversational Experience — Definition and Structural Anchor** *(added per `ADR-022`, Repository Owner Constitutional Design Workshop, 2026-08-07 — a specialization of this Section's own Composition Model, SD-001-116)*
+
+A Conversational Experience presents exactly one Conversation. The Conversation is composed of one or more Interactions as defined by `ADR-020`/`RTA-001 §13.15a`. The presentation model shall preserve the identity, ordering, and accountability of those Interactions. The visual representation of an Interaction (including turns, streaming, progressive rendering, or other presentation constructs) is governed by this specialization and is not constitutionally required to maintain a strict one-to-one visual mapping with the Interaction.
+
+**SD-001-120: Reuse of Existing Constitutional Constructs**
+
+Whenever a Conversational Experience presents behavior that is already governed by an existing constitutional construct, the Experience shall compose and surface that construct rather than introducing an independent presentation-specific mechanism. This Section's own Composition Model (SD-001-116) shall remain a composition layer, never a source of parallel runtime behavior. Human approval pauses shall compose the existing Ask User Gate (`RTA-001 §13.12a`). Multi-agent visualization shall compose the existing Cross-Lifecycle Agent Handoff (`ADR-020` Decision 5). Any future constitutional construct introduced elsewhere in the repository shall automatically fall under this same reuse principle, without requiring amendment to this specialization.
+
+**SD-001-121: Contract Composition Remains Interaction-Scoped**
+
+Contract composition remains Interaction-scoped. A Conversation does not own Evidence, Confidence, Explainability, Progressive Disclosure, or any other presentation contract. These remain properties of individual Interaction outputs. A Conversation provides continuity and ordering only, never presentation aggregation. Every Interaction independently composes the existing `SD-001` contracts (SD-001-117). Any future Conversation-level roll-up, summary, dashboard, analytics, or similar presentation shall be treated as a separate capability requiring its own constitutional justification, never implicitly introduced through this specialization.
+
 **SD-001-111: Enterprise Memory Principle** — nothing a customer has configured, extended, or answered is ever silently discarded across an upgrade; see LAW-24.
 
 **SD-001-112: The Platform Adapts to the Enterprise** — restated as the closing principle of this document: every mechanism above exists so that Aurex bends to fit the customer, never the reverse.
