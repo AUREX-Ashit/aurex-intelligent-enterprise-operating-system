@@ -111,6 +111,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: "/platform-admin/enterprise-intelligence",
   },
   {
+    slug: "ai-conversation",
+    label: "AI Conversation",
+    description: "Exchange turns within a bounded AI Conversation and review evidence-cited responses.",
+    href: "/platform-admin/ai-conversation",
+  },
+  {
     slug: "integrations",
     label: "Integration Administration",
     description: "External system integrations.",
