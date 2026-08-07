@@ -18,6 +18,7 @@ from routers.extraction import router as extraction_router
 from routers.validation import router as validation_router
 from routers.scoring import router as scoring_router
 from routers.search import router as search_router
+from routers.conversation import router as conversation_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,6 +59,7 @@ app.include_router(extraction_router)
 app.include_router(validation_router)
 app.include_router(scoring_router)
 app.include_router(search_router)
+app.include_router(conversation_router)
 
 @app.get("/", tags=["Root"])
 async def root_welcome_portal():
