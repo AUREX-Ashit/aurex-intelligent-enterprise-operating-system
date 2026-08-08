@@ -248,14 +248,22 @@ async def retire_domain_permission(
     description=(
         "WP-02 Business Activity: Detect and Resolve Authorization "
         "Policy Dependency Conflict (C-003) — BA-09, realizing "
-        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires the "
-        "PLATFORM_ADMIN role."
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires an active "
+        "DomainPermission grant of ADMIN on the target Domain "
+        "Permission's own Domain (URA-001-45/-46 Domain Owner/Domain "
+        "Admin authority, realized via the Authorization Runtime Engine "
+        "per WP-13 — the same 'proposing authority' EX-C003-09's own "
+        "text ties this pre-check to, invoked before that same "
+        "authority's own establish_domain_permission/deprecate/retire "
+        "calls; `TD-139`'s own interim PLATFORM_ADMIN-only gate remains "
+        "a bypass, never narrowed). The target Domain Permission is "
+        "fetched first (404 if unknown), then its own Domain is checked."
     ),
     responses={
         200: {"description": "Dependency conflict report produced."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain Permission's own Domain."},
         404: {"description": "The target Domain Permission does not exist."},
     },
 )
@@ -263,11 +271,13 @@ async def check_domain_permission_dependencies(
     domain_permission_id: UUID,
     domain_permission_repo: Annotated[DomainPermissionRepository, Depends(get_domain_permission_repository)],
     conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DependencyConflictReport:
     grant = await domain_permission_repo.get_by_id(domain_permission_id)
     if grant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No domain permission found with id '{domain_permission_id}'.")
+    await enforce_domain_permission(claims, session, grant.domain_id, DomainPermissionLevel.ADMIN)
     return await conflict_service.detect_conflicts("domain_permission", grant, domain_permission_repo)
 
 
@@ -279,14 +289,21 @@ async def check_domain_permission_dependencies(
     description=(
         "WP-02 Business Activity: Detect and Resolve Authorization "
         "Policy Dependency Conflict (C-003) — BA-09, realizing "
-        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires the "
-        "PLATFORM_ADMIN role."
+        "PE-001-C003's ERB-C003-03 / EX-C003-09. Requires an active "
+        "DomainPermission grant of ADMIN on the target Domain "
+        "Permission's own Domain — the same 'proposing authority' "
+        "EX-C003-09's own text names as the party recording this "
+        "resolution statement, the same gate `check_domain_permission_dependencies`/"
+        "`deprecate_domain_permission`/`retire_domain_permission` use "
+        "(`TD-139`; PLATFORM_ADMIN remains a bypass, never narrowed). "
+        "The target Domain Permission is fetched first (404 if "
+        "unknown), then its own Domain is checked."
     ),
     responses={
         200: {"description": "Resolution recorded; current dependency conflict report returned."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain Permission's own Domain."},
         404: {"description": "The target Domain Permission, or the supplied replacement_target_id, does not exist."},
         409: {"description": "The supplied replacement_target_id is not the current ACTIVE version."},
         422: {"description": "REASSIGNMENT_CONFIRMED requires replacement_target_id, or it names the object being replaced."},
@@ -297,11 +314,13 @@ async def resolve_domain_permission_dependency(
     request: ResolveDependencyConflictRequest,
     domain_permission_repo: Annotated[DomainPermissionRepository, Depends(get_domain_permission_repository)],
     conflict_service: Annotated[AuthorizationPolicyConflictService, Depends(get_authorization_policy_conflict_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DependencyConflictReport:
     grant = await domain_permission_repo.get_by_id(domain_permission_id)
     if grant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No domain permission found with id '{domain_permission_id}'.")
+    await enforce_domain_permission(claims, session, grant.domain_id, DomainPermissionLevel.ADMIN)
     return await conflict_service.resolve_conflict("domain_permission", grant, domain_permission_repo, request, actor_id=claims.get("person_id"))
 
 
