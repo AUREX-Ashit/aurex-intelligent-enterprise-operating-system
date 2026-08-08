@@ -4,8 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import require_platform_admin
+from dependencies import enforce_domain_permission, get_current_claims, require_platform_admin
+from models.approval_authority import ApprovalScopeType
 from models.database import db_manager
+from models.domain_permission import DomainPermissionLevel
 from repositories.approval_authority_repository import ApprovalAuthorityRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
@@ -66,20 +68,27 @@ async def get_authorization_policy_conflict_service(
     summary="Establish a new Approval Authority",
     description=(
         "WP-02 Business Activity: Establish Approval Authority (C-003), "
-        "realizing PE-001-C003's ERB-C003-01 / EX-C003-03. Requires the "
-        "PLATFORM_ADMIN role (interim gate, mirroring BA-01/BA-02 — "
-        "confirmed Corporate Admin/Domain Owner authority is not yet "
-        "implementable, tracked as technical debt). Declares exactly one "
-        "approval_strategy and exactly one scope_type (GLOBAL/COMPANY/"
-        "DOMAIN/OBJECT, URA-001-61); an ambiguous, dual-stated, or "
-        "incomplete scope is rejected with 422. Rejects an unknown "
-        "Organization or Domain with 404."
+        "realizing PE-001-C003's ERB-C003-01 / EX-C003-03. For a DOMAIN-"
+        "scoped Approval Authority, requires an active DomainPermission "
+        "grant of ADMIN on the target Domain (URA-001-45 Domain Owner "
+        "authority, realized via the Authorization Runtime Engine per "
+        "WP-13 — the same mechanism `establish_domain_permission` uses; "
+        "`TD-023`'s own interim PLATFORM_ADMIN-only gate remains a "
+        "bypass, never narrowed). For GLOBAL, COMPANY, or OBJECT scope, "
+        "the interim PLATFORM_ADMIN-only gate is unchanged — URA-001-32 "
+        "Corporate Admin authority remains unmodeled (`TD-023`, `TD-021`'s "
+        "own ADR-002 root cause), and no authority is named anywhere for "
+        "OBJECT scope. Declares exactly one approval_strategy and "
+        "exactly one scope_type (GLOBAL/COMPANY/DOMAIN/OBJECT, "
+        "URA-001-61); an ambiguous, dual-stated, or incomplete scope is "
+        "rejected with 422. Rejects an unknown Organization or Domain "
+        "with 404."
     ),
     responses={
         201: {"description": "Approval Authority established."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN; for DOMAIN scope, an active ADMIN-level DomainPermission grant on the target Domain also satisfies this."},
         404: {"description": "The target Organization or Domain does not exist."},
         422: {"description": "Invalid request (e.g., scope_type's required anchor missing, or an anchor supplied for the wrong scope_type)."},
     },
@@ -87,8 +96,16 @@ async def get_authorization_policy_conflict_service(
 async def establish_approval_authority(
     request: EstablishApprovalAuthorityRequest,
     approval_authority_service: Annotated[ApprovalAuthorityService, Depends(get_approval_authority_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> ApprovalAuthorityResponse:
+    if request.scope_type == ApprovalScopeType.DOMAIN:
+        await enforce_domain_permission(claims, session, request.domain_id, DomainPermissionLevel.ADMIN)
+    elif claims.get("role_code") != "PLATFORM_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Establishing a GLOBAL, COMPANY, or OBJECT-scoped Approval Authority requires the PLATFORM_ADMIN role.",
+        )
     approval_authority = await approval_authority_service.establish(request, actor_id=claims.get("person_id"))
     return ApprovalAuthorityResponse.model_validate(approval_authority)
 
