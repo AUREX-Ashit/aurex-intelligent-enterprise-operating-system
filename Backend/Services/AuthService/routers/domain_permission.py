@@ -118,13 +118,23 @@ async def establish_domain_permission(
         "domain_id, and permission_level are outside this Business "
         "Activity's non-breaking scope). Preserves the prior version as "
         "an inspectable, SUPERSEDED historical record (BR-C003-05). "
-        "Requires the PLATFORM_ADMIN role (same interim gate as BA-02)."
+        "Requires an active DomainPermission grant of ADMIN on the "
+        "target Domain Permission's own Domain (URA-001-45/-46 Domain "
+        "Owner/Domain Admin authority, realized via the Authorization "
+        "Runtime Engine per WP-13 — the same gate `establish_domain_permission` "
+        "uses, per this Business Activity's own prior disclosure that it "
+        "shares BA-02's authority requirement; `TD-137`'s own interim "
+        "PLATFORM_ADMIN-only gate remains a bypass, never narrowed). The "
+        "target Domain Permission is fetched first (404 if unknown), "
+        "then its own Domain is checked — existence resolved before "
+        "authorization, the same order `get_domain_permission` already "
+        "uses."
     ),
     responses={
         201: {"description": "New version established; prior version preserved as SUPERSEDED."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain Permission's own Domain."},
         404: {"description": "The target Domain Permission does not exist."},
         409: {"description": "The target Domain Permission id does not name the current ACTIVE version."},
         422: {"description": "Invalid request."},
@@ -134,8 +144,11 @@ async def version_domain_permission(
     domain_permission_id: UUID,
     request: VersionDomainPermissionRequest,
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DomainPermissionResponse:
+    current = await domain_permission_service.get_by_id(domain_permission_id)
+    await enforce_domain_permission(claims, session, current.domain_id, DomainPermissionLevel.ADMIN)
     domain_permission = await domain_permission_service.create_new_version(
         domain_permission_id, request, actor_id=claims.get("person_id")
     )
