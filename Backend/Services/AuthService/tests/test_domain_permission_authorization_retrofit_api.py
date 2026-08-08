@@ -316,3 +316,108 @@ async def test_version_domain_permission_denies_caller_with_no_grant_on_unrelate
     response = client.post(f"/domain-permissions/{record.id}/versions", headers=headers, json={})
 
     assert response.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# deprecate_domain_permission / retire_domain_permission (BA-08, TD-138) —
+# POST /domain-permissions/{id}/deprecate, /retire
+# ---------------------------------------------------------------------------
+
+async def test_deprecate_domain_permission_succeeds_with_admin_grant_on_records_domain(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "ADMIN")
+    headers = _headers_for(ctx, "a")
+
+    response = client.post(f"/domain-permissions/{record.id}/deprecate", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(record.id)
+
+
+async def test_deprecate_domain_permission_denies_insufficient_grant_level(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    """A VIEW grant must not satisfy deprecate_domain_permission's own ADMIN requirement."""
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "VIEW")
+    headers = _headers_for(ctx, "a")
+
+    response = client.post(f"/domain-permissions/{record.id}/deprecate", headers=headers)
+
+    assert response.status_code == 403
+
+
+async def test_deprecate_domain_permission_denies_caller_with_no_grant_on_unrelated_orgs_record(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    """
+    Tenant isolation (CLAUDE.md §21.4b/c): a Domain Permission record
+    governed by Domain A must not be deprecatable by Membership B
+    (Organization B), who holds no grant on Domain A — an explicit
+    probe of a foreign-object identifier (domain_permission_id) not
+    derived from Membership B's own claims. Membership B's own ADMIN
+    grant on its own Domain B must not leak into authorizing an
+    operation on Domain A's own record.
+    """
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_b"], ctx["domain_b"], "ADMIN")
+    headers = _headers_for(ctx, "b")
+
+    response = client.post(f"/domain-permissions/{record.id}/deprecate", headers=headers)
+
+    assert response.status_code == 403
+
+
+async def test_retire_domain_permission_succeeds_with_admin_grant_on_records_domain(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "ADMIN")
+    headers = _headers_for(ctx, "a")
+
+    response = client.post(f"/domain-permissions/{record.id}/retire", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(record.id)
+
+
+async def test_retire_domain_permission_denies_insufficient_grant_level(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    """A VIEW grant must not satisfy retire_domain_permission's own ADMIN requirement."""
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "VIEW")
+    headers = _headers_for(ctx, "a")
+
+    response = client.post(f"/domain-permissions/{record.id}/retire", headers=headers)
+
+    assert response.status_code == 403
+
+
+async def test_retire_domain_permission_denies_caller_with_no_grant_on_unrelated_orgs_record(
+    client: TestClient, db_session: AsyncSession, two_orgs: dict
+) -> None:
+    """
+    Tenant isolation (CLAUDE.md §21.4b/c): a Domain Permission record
+    governed by Domain A must not be retirable by Membership B
+    (Organization B), who holds no grant on Domain A — an explicit
+    probe of a foreign-object identifier (domain_permission_id) not
+    derived from Membership B's own claims. Membership B's own ADMIN
+    grant on its own Domain B must not leak into authorizing an
+    operation on Domain A's own record.
+    """
+    ctx = two_orgs
+    record = await _grant(db_session, ctx["membership_a"], ctx["domain_a"], "EDIT")
+    await _grant(db_session, ctx["membership_b"], ctx["domain_b"], "ADMIN")
+    headers = _headers_for(ctx, "b")
+
+    response = client.post(f"/domain-permissions/{record.id}/retire", headers=headers)
+
+    assert response.status_code == 403

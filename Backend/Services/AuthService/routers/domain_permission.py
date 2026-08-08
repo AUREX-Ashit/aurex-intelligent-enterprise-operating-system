@@ -165,13 +165,23 @@ async def version_domain_permission(
         "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
         "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
         "version to DEPRECATED (Hidden, URA-001-127) in place. "
-        "Requires the PLATFORM_ADMIN role."
+        "Requires an active DomainPermission grant of ADMIN on the "
+        "target Domain Permission's own Domain (URA-001-45/-46 Domain "
+        "Owner/Domain Admin authority, realized via the Authorization "
+        "Runtime Engine per WP-13 — IMP-REPORT-WP-02's own BA-08 "
+        "Authorization Rules already disclosed this endpoint reuses "
+        "BA-02's own gate/TD-022, not a distinct requirement; `TD-138`'s "
+        "own interim PLATFORM_ADMIN-only gate remains a bypass, never "
+        "narrowed). The target Domain Permission is fetched first (404 "
+        "if unknown), then its own Domain is checked — the same "
+        "fetch-then-check order `get_domain_permission`/`version_domain_permission` "
+        "already use."
     ),
     responses={
         200: {"description": "Domain permission deprecated."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain Permission's own Domain."},
         404: {"description": "The target Domain Permission does not exist."},
         409: {"description": "The target Domain Permission is not the current ACTIVE version, or has an active dependency remaining unresolved (BR-C003-04)."},
     },
@@ -179,8 +189,11 @@ async def version_domain_permission(
 async def deprecate_domain_permission(
     domain_permission_id: UUID,
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DomainPermissionResponse:
+    current = await domain_permission_service.get_by_id(domain_permission_id)
+    await enforce_domain_permission(claims, session, current.domain_id, DomainPermissionLevel.ADMIN)
     domain_permission = await domain_permission_service.deprecate(domain_permission_id, actor_id=claims.get("person_id"))
     return DomainPermissionResponse.model_validate(domain_permission)
 
@@ -195,13 +208,22 @@ async def deprecate_domain_permission(
         "Policy Object (C-003) — BA-08, realizing PE-001-C003's "
         "ERB-C003-02 / EX-C003-08. Transitions the current ACTIVE "
         "version to RETIRED (Archived, URA-001-127) in place — terminal, "
-        "never reversible. Requires the PLATFORM_ADMIN role."
+        "never reversible. Requires an active DomainPermission grant of "
+        "ADMIN on the target Domain Permission's own Domain (URA-001-45/-46 "
+        "Domain Owner/Domain Admin authority, realized via the "
+        "Authorization Runtime Engine per WP-13 — the same gate "
+        "`deprecate_domain_permission` uses, per IMP-REPORT-WP-02's own "
+        "BA-08 disclosure that this endpoint reuses BA-02's own "
+        "gate/TD-022; `TD-138`'s own interim PLATFORM_ADMIN-only gate "
+        "remains a bypass, never narrowed). The target Domain Permission "
+        "is fetched first (404 if unknown), then its own Domain is "
+        "checked."
     ),
     responses={
         200: {"description": "Domain permission retired."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain Permission's own Domain."},
         404: {"description": "The target Domain Permission does not exist."},
         409: {"description": "The target Domain Permission is not the current ACTIVE version, or has an active dependency remaining unresolved (BR-C003-04)."},
     },
@@ -209,8 +231,11 @@ async def deprecate_domain_permission(
 async def retire_domain_permission(
     domain_permission_id: UUID,
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DomainPermissionResponse:
+    current = await domain_permission_service.get_by_id(domain_permission_id)
+    await enforce_domain_permission(claims, session, current.domain_id, DomainPermissionLevel.ADMIN)
     domain_permission = await domain_permission_service.retire(domain_permission_id, actor_id=claims.get("person_id"))
     return DomainPermissionResponse.model_validate(domain_permission)
 
