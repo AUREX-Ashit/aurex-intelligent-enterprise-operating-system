@@ -1,9 +1,10 @@
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.domain_permission import DomainPermission
+from models.domain_permission import DomainPermission, DomainPermissionLevel
 from repositories.base_repository import BaseRepository
 
 
@@ -32,6 +33,45 @@ class DomainPermissionRepository(BaseRepository[DomainPermission]):
                 DomainPermission.domain_id == domain_id,
                 DomainPermission.permission_level == permission_level,
                 DomainPermission.effective_to.is_(None),
+            )
+        )
+        return result.scalars().first()
+
+    async def get_active_grant_at_or_above(
+        self, membership_id, domain_id, minimum_level: str
+    ) -> DomainPermission | None:
+        """
+        WP-13 (Authorization Runtime Integration) — the query the
+        DomainPermission precedence tier (URA-001-76, least specific of
+        five) actually needs: does this Membership hold a currently
+        active grant, for this Domain, at or above the requested
+        DomainPermissionLevel? Distinct from get_active_grant() (WP-02
+        BA-02's own exact-triple duplicate check) — this method compares
+        by rank, not exact match, and additionally respects `status`
+        (ACTIVE only — SUPERSEDED/DEPRECATED/RETIRED never authorize)
+        and the effective_from/effective_to time window, neither of
+        which get_active_grant() checks (it predates BA-07/BA-08's own
+        temporal/status model).
+
+        Rank is DomainPermissionLevel's own declared enum order
+        (VIEW < ENTER < EDIT < REVIEW < APPROVE < ASSIGN < DELEGATE <
+        ADMIN, per URA-001-47) — no separate rank column exists in this
+        schema; this is a disclosed interpretive choice, not an
+        assumption silently made.
+        """
+        levels = list(DomainPermissionLevel)
+        minimum_rank = levels.index(DomainPermissionLevel(minimum_level))
+        qualifying_levels = [level.value for level in levels[minimum_rank:]]
+
+        now = datetime.now(timezone.utc)
+        result = await self.session.execute(
+            select(DomainPermission).where(
+                DomainPermission.membership_id == membership_id,
+                DomainPermission.domain_id == domain_id,
+                DomainPermission.permission_level.in_(qualifying_levels),
+                DomainPermission.status == "ACTIVE",
+                DomainPermission.effective_from <= now,
+                (DomainPermission.effective_to.is_(None)) | (DomainPermission.effective_to > now),
             )
         )
         return result.scalars().first()

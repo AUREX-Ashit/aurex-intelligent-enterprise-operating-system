@@ -16,12 +16,15 @@ Role & Permission Management work package. This is a deliberate,
 documented simplification, not a silent gap.
 """
 
-from typing import Annotated
+from typing import Annotated, Callable
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from middleware.tenant import get_current_tenant
+from models.database import db_manager
+from models.domain_permission import DomainPermissionLevel
 from services.auth_service import decode_access_token
 
 PLATFORM_ADMIN_ROLE_CODE = "PLATFORM_ADMIN"
@@ -86,3 +89,65 @@ async def require_matching_tenant_or_platform_admin(
             detail="X-Tenant-ID must match your own Organization, unless you hold PLATFORM_ADMIN.",
         )
     return claims
+
+
+def require_domain_permission(domain_id: UUID, minimum_level: DomainPermissionLevel) -> Callable:
+    """
+    WP-13 (Authorization Runtime Integration) — dependency factory
+    gating an endpoint on a real, database-backed DomainPermission grant
+    (URA-001-76's fifth precedence tier), evaluated through the
+    Authorization Runtime Engine (`Backend/Runtime/AuthorizationEngine`,
+    WP-RTA-001), rather than the interim `PLATFORM_ADMIN`-only pattern
+    every prior Work Package in this repository used (`TD-021`-class).
+
+    `PLATFORM_ADMIN` remains a universal bypass — this is a strictly
+    additive replacement, never a narrowing of who was already permitted
+    to act; no existing caller loses access by an endpoint adopting this
+    dependency in place of `require_platform_admin`.
+
+    A fresh `ResolverRegistry`/`EvaluationPipeline`/`AuthorizationAdapter`
+    is constructed per request, since the governed request itself (which
+    Domain, which minimum level) is injected into the bound resolver's
+    own constructor and therefore varies per call site — consistent with
+    `authorization.tier_resolvers`'s own documented integration contract
+    (Runtime Engine, M2), not a deviation from it.
+    """
+
+    async def _dependency(
+        claims: Annotated[dict, Depends(get_current_claims)],
+        session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+    ) -> dict:
+        if claims.get("role_code") == PLATFORM_ADMIN_ROLE_CODE:
+            return claims
+
+        from authz_integration.domain_permission_resolver import AuthServiceDomainPermissionResolver
+        from authorization.models import AuthorizationDecision
+        from authorization.pipeline import EvaluationPipeline
+        from authorization.registry import ResolverRegistry
+        from adapters.authorization_adapter import AuthorizationAdapter, AuthorizationRequest
+        from repositories.domain_permission_repository import DomainPermissionRepository
+
+        repository = DomainPermissionRepository(session)
+        resolver = AuthServiceDomainPermissionResolver(repository, domain_id, minimum_level)
+        registry = ResolverRegistry().register(resolver)
+        pipeline = EvaluationPipeline(registry)
+        adapter = AuthorizationAdapter(pipeline)
+
+        result = await adapter.evaluate(
+            AuthorizationRequest(
+                identity_id=claims.get("person_id", ""),
+                organization_id=claims.get("organization_id", ""),
+                membership_id=claims.get("membership_id"),
+            )
+        )
+        if result.decision != AuthorizationDecision.ALLOW:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    f"This operation requires an active DomainPermission grant of "
+                    f"'{minimum_level.value}' or higher on domain {domain_id}."
+                ),
+            )
+        return claims
+
+    return _dependency
