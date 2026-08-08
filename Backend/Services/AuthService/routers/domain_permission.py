@@ -4,9 +4,9 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import require_platform_admin
+from dependencies import enforce_domain_permission, get_current_claims, require_platform_admin
 from models.database import db_manager
-from models.domain_permission import VersionStatus
+from models.domain_permission import DomainPermissionLevel, VersionStatus
 from repositories.domain_permission_repository import DomainPermissionRepository
 from repositories.domain_repository import DomainRepository
 from repositories.membership_repository import MembershipRepository
@@ -74,18 +74,20 @@ async def get_authorization_policy_conflict_service(
     summary="Establish a new Domain Permission",
     description=(
         "WP-02 Business Activity: Establish Domain Permission (C-003), "
-        "realizing PE-001-C003's ERB-C003-01 / EX-C003-02. Requires the "
-        "PLATFORM_ADMIN role (interim gate, mirroring BA-01 — confirmed "
-        "Domain Owner/Domain Admin authority per URA-001-45/-46 is not yet "
-        "implementable, tracked as technical debt). Independent of any "
-        "Business Role (BR-C003-02). Rejects an unknown Domain or "
-        "Membership with 404, and a duplicate active grant with 409."
+        "realizing PE-001-C003's ERB-C003-01 / EX-C003-02. Requires an "
+        "active DomainPermission grant of ADMIN on the target Domain "
+        "(URA-001-45/-46 Domain Owner/Domain Admin authority, realized "
+        "via the Authorization Runtime Engine per WP-13 — TD-022's own "
+        "interim PLATFORM_ADMIN-only gate remains a bypass, never "
+        "narrowed). Independent of any Business Role (BR-C003-02). "
+        "Rejects an unknown Domain or Membership with 404, and a "
+        "duplicate active grant with 409."
     ),
     responses={
         201: {"description": "Domain Permission established."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active ADMIN-level DomainPermission grant on the target Domain."},
         404: {"description": "The target Domain or Membership does not exist."},
         409: {"description": "An active grant of this permission level already exists for this membership/domain pair."},
         422: {"description": "Invalid request (e.g., permission_level not one of URA-001-47's eight values)."},
@@ -94,8 +96,10 @@ async def get_authorization_policy_conflict_service(
 async def establish_domain_permission(
     request: EstablishDomainPermissionRequest,
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DomainPermissionResponse:
+    await enforce_domain_permission(claims, session, request.domain_id, DomainPermissionLevel.ADMIN)
     domain_permission = await domain_permission_service.establish(request, actor_id=claims.get("person_id"))
     return DomainPermissionResponse.model_validate(domain_permission)
 
@@ -306,23 +310,36 @@ async def report_domain_permission_handoff_rejection(
         "filtered-list branch. Read-only — establishes, versions, "
         "deprecates, or retires nothing. domain_id, membership_id, and "
         "status are each independently optional; omitting all three "
-        "returns every Domain Permission. Requires the PLATFORM_ADMIN "
-        "role (same interim gate as BA-02, TD-022)."
+        "returns every Domain Permission. When domain_id is supplied, "
+        "requires an active VIEW-or-higher DomainPermission grant on "
+        "that Domain (WP-13, TD-090); an unscoped query (no domain_id) "
+        "has no single Domain to check a grant against and remains "
+        "PLATFORM_ADMIN-only, since allowing any single-Domain grant to "
+        "authorize a cross-Domain listing would be a real widening of "
+        "access, not a like-for-like replacement of the interim gate."
     ),
     responses={
         200: {"description": "Matching Domain Permissions (possibly empty)."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN, or (when domain_id is supplied) an active VIEW-or-higher DomainPermission grant on that Domain."},
     },
 )
 async def list_domain_permissions(
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
     domain_id: UUID | None = Query(None, description="Filter to Domain Permissions granted on this Domain."),
     membership_id: UUID | None = Query(None, description="Filter to Domain Permissions granted to this Membership."),
     status_filter: VersionStatus | None = Query(None, alias="status", description="Filter to Domain Permissions in this Status."),
 ) -> list[DomainPermissionResponse]:
+    if domain_id is not None:
+        await enforce_domain_permission(claims, session, domain_id, DomainPermissionLevel.VIEW)
+    elif claims.get("role_code") != "PLATFORM_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="An unscoped listing (no domain_id) requires the PLATFORM_ADMIN role.",
+        )
     domain_permissions = await domain_permission_service.search(
         domain_id=domain_id,
         membership_id=membership_id,
@@ -340,21 +357,27 @@ async def list_domain_permissions(
         "WP-06 Business Activity: Understand Domain Permission Context "
         "(C-003) — BA-01, realizing PE-001-C003 v1.1's EX-C003-11 "
         "single-item branch. Read-only — establishes, versions, "
-        "deprecates, or retires nothing. Requires the PLATFORM_ADMIN "
-        "role (same interim gate as BA-02, TD-022)."
+        "deprecates, or retires nothing. Fetches the grant first (404 if "
+        "unknown), then requires an active VIEW-or-higher DomainPermission "
+        "grant on that same grant's own Domain (WP-13, TD-090) — the "
+        "target Domain is only known once the record itself is read, so "
+        "existence is resolved before authorization, the same order "
+        "every other id-scoped endpoint in this router already uses."
     ),
     responses={
         200: {"description": "The Domain Permission's current governed state."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN or an active VIEW-or-higher DomainPermission grant on the record's own Domain."},
         404: {"description": "No Domain Permission exists with the given id."},
     },
 )
 async def get_domain_permission(
     domain_permission_id: UUID,
     domain_permission_service: Annotated[DomainPermissionService, Depends(get_domain_permission_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DomainPermissionResponse:
     domain_permission = await domain_permission_service.get_by_id(domain_permission_id)
+    await enforce_domain_permission(claims, session, domain_permission.domain_id, DomainPermissionLevel.VIEW)
     return DomainPermissionResponse.model_validate(domain_permission)
