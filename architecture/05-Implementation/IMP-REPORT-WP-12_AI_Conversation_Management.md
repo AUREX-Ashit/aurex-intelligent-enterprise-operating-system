@@ -3,7 +3,7 @@
 **Work Package:** WP-12
 **Capability:** C-094 — AI Conversation Management
 **Governing documents:** `IRA-012_WP-12_AI_Conversation_Management_Implementation_Readiness_Assessment.md` (Plan A/Plan B), `TDS-012_WP-12_AI_Conversation_Management_Technical_Design.md`, `RTA-001 §13.15a`, `SD-001 §16`/`SD-001-119`–`121`, `IMP-001 §13.26–53`.
-**Status:** IMPLEMENTATION COMPLETE. Pending Independent Certification (`CLAUDE.md §19.7`/`§20.7`).
+**Status:** CLOSED — CERTIFIED. All five `CLAUDE.md §19.7b` gates complete: Gate 1 (`CERT-WP-12`) CERTIFIED WITH FINDINGS (non-blocking — two Medium, two Low, none `§19.8.5`-class); Gate 2 (`VV-AUDIT-WP-12`) found one new Medium finding (`TD-134`, concurrency race on `UNIQUE(conversation_id, sequence_number)`) and confirmed one Low finding (`TD-135`), neither `§19.8.5`-class — no Gate 3/4 remediation triggered; Gate 5 (`RRA-WP-12`) RELEASE READY.
 
 ---
 
@@ -72,4 +72,4 @@ Cross-Lifecycle Agent Handoff, multi-agent visualization, Ask User Gate integrat
 
 ## Governance Closure
 
-Pending — Independent Certification, V&V Audit, and Release Readiness Audit (`CLAUDE.md §19.7b`/`§20.7`) to be performed by reviewers independent of this implementation, per `ADR-014`'s fresh-context reviewer requirement.
+Complete. Gate 1 (`CERT-WP-12_AI_Conversation_Management.md`) — CERTIFIED WITH FINDINGS (non-blocking). Gate 2 (`VV-AUDIT-WP-12_AI_Conversation_Management.md`) — one new Medium finding (`TD-134`) and one Low finding (`TD-135`) registered, neither `§19.8.5`-class, no Gate 3/4 remediation required. Gate 5 (`RRA-WP-12_AI_Conversation_Management_Release_Readiness_Audit.md`) — RELEASE READY. All five `CLAUDE.md §19.7b` gates complete per `ADR-014`'s fresh-context reviewer requirement; the implementing session did not self-certify at any gate.
