@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Roles & Permissions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;font-size:13px;}
+.tb{background:#0f3d25;height:52px;display:flex;align-items:center;padding:0 20px;gap:12px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.tbr{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.av-p{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.1);border-radius:20px;padding:3px 11px 3px 3px;}
+.av{width:25px;height:25px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0f3d25;}
+.av-n{color:#d1fae5;font-size:12px;}
+.sn{background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding:0 20px;height:42px;}
+.ni{display:flex;align-items:center;gap:5px;padding:0 11px;height:42px;font-size:12.5px;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;text-decoration:none;}
+.ni:hover{color:#0f172a;}
+.ni.a{color:#1a5c37;border-bottom-color:#1a5c37;font-weight:500;}
+.ni i{font-size:14px;}
+.bd{padding:20px;max-width:1100px;margin:0 auto;}
+.pg-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.pg-title{font-size:18px;font-weight:600;color:#0f172a;letter-spacing:-0.3px;margin-bottom:3px;}
+.pg-sub{font-size:12.5px;color:#64748b;line-height:1.5;}
+.tabs{display:flex;background:#fff;border-radius:10px 10px 0 0;border:1px solid #e2e8f0;border-bottom:none;padding:0 16px;}
+.tab{padding:11px 14px;font-size:12.5px;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.tab:hover{color:#0f172a;}
+.tab.a{color:#1a5c37;border-bottom-color:#1a5c37;font-weight:500;}
+.tab i{font-size:13px;}
+.panel{background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;padding:20px;}
+.roles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.role-card{border:1px solid #e2e8f0;border-radius:9px;padding:14px 15px;cursor:pointer;transition:border-color .15s;}
+.role-card:hover{border-color:#2A854F;}
+.role-card.sel{border:1.5px solid #2A854F;background:rgba(42,133,79,0.04);}
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.rc-name{font-size:13px;font-weight:600;color:#0f172a;}
+.rc-badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.bg-green{background:#dcfce7;color:#166534;}
+.bg-blue{background:#dbeafe;color:#1e40af;}
+.bg-amber{background:#fef9c3;color:#854d0e;}
+.bg-slate{background:#f1f5f9;color:#475569;}
+.bg-purple{background:#f3e8ff;color:#6b21a8;}
+.rc-desc{font-size:11px;color:#64748b;line-height:1.4;margin-bottom:10px;}
+.rc-count{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px;}
+.rc-actions{display:flex;gap:5px;margin-top:10px;}
+.matrix-wrap{overflow-x:auto;}
+.matrix{width:100%;border-collapse:collapse;}
+.matrix th{font-size:10.5px;font-weight:600;color:#64748b;padding:8px 10px;text-align:left;border-bottom:1px solid #e2e8f0;white-space:nowrap;letter-spacing:.03em;}
+.matrix th.rc{text-align:center;min-width:80px;}
+.matrix td{padding:9px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.matrix tr:last-child td{border-bottom:none;}
+.matrix tr:hover td{background:#fafafa;}
+.domain-row td{background:#f8fafc;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#94a3b8;padding:6px 10px;}
+.perm-name{font-size:12.5px;color:#0f172a;font-weight:500;}
+.perm-desc{font-size:11px;color:#64748b;margin-top:1px;}
+.pc{text-align:center;}
+.ck{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;margin:0 auto;}
+.ck.on{background:#1a5c37;}
+.ck.on i{font-size:11px;color:#fff;}
+.ck.off{background:#f8fafc;border:1px solid #e2e8f0;}
+.ck.custom{background:#fff;border:1.5px solid #2A854F;cursor:pointer;}
+.ck.custom:hover{background:#f0fdf4;}
+.ck.custom.on{background:#1a5c37;border-color:#1a5c37;}
+.btn{padding:7px 14px;border-radius:7px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;}
+.btn-green{background:#1a5c37;color:#fff;border:none;}
+.btn-green:hover{background:#0f3d25;}
+.btn-ghost{background:#fff;color:#64748b;border:1px solid #e2e8f0;}
+.btn-ghost:hover{background:#f8fafc;}
+.btn-danger{background:#fff;color:#dc2626;border:1px solid #fecaca;}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:6px;}
+.user-table{width:100%;border-collapse:collapse;}
+.user-table th{font-size:10.5px;font-weight:600;color:#94a3b8;padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:left;letter-spacing:.04em;text-transform:uppercase;}
+.user-table td{padding:10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.user-table tr:hover td{background:#fafafa;}
+.uav{width:27px;height:27px;border-radius:50%;background:#dcfce7;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#166534;margin-right:7px;vertical-align:middle;}
+.un{font-weight:500;font-size:12.5px;}
+.ue{font-size:11px;color:#94a3b8;margin-top:1px;}
+.role-sel{height:27px;padding:0 8px;font-size:12px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;}
+.info-box{display:flex;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:11px 13px;margin-bottom:16px;font-size:12.5px;color:#14532d;line-height:1.5;}
+.info-box i{flex-shrink:0;font-size:14px;color:#16a34a;margin-top:1px;}
+.warn-box{display:flex;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:11px 13px;margin-bottom:16px;font-size:12.5px;color:#78350f;line-height:1.5;}
+.warn-box i{flex-shrink:0;font-size:14px;color:#d97706;margin-top:1px;}
+.legend{margin-top:12px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:#64748b;}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.hidden{display:none;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.28);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal{background:#fff;border-radius:12px;width:560px;max-height:82vh;overflow-y:auto;border:1px solid #e2e8f0;box-shadow:0 8px 40px rgba(0,0,0,0.14);}
+.modal-head{padding:18px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;}
+.modal-title{font-size:15px;font-weight:600;color:#0f172a;}
+.modal-close{background:none;border:none;cursor:pointer;color:#64748b;font-size:18px;padding:3px;}
+.modal-body{padding:18px 20px;}
+.mf{margin-bottom:13px;}
+.mf label{font-size:12px;font-weight:500;color:#0f172a;display:block;margin-bottom:4px;}
+.mf input,.mf textarea{width:100%;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.mf input{height:36px;padding:0 11px;}
+.mf input:focus,.mf textarea:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.perm-group{margin-bottom:14px;}
+.pg-t{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:8px;}
+.ptr{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f1f5f9;}
+.ptr:last-child{border-bottom:none;}
+.pt-name{font-size:12.5px;font-weight:500;color:#0f172a;}
+.pt-desc{font-size:11px;color:#64748b;margin-top:1px;}
+.toggle{width:32px;height:17px;border-radius:9px;background:#e2e8f0;position:relative;cursor:pointer;transition:background .15s;flex-shrink:0;}
+.toggle.on{background:#1a5c37;}
+.toggle-k{position:absolute;top:2.5px;left:2.5px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+.toggle.on .toggle-k{left:17.5px;}
+.modal-foot{padding:14px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff;}
+.sod-note{background:#fef9c3;border:1px solid #fde047;border-radius:7px;padding:9px 12px;font-size:11.5px;color:#713f12;line-height:1.5;margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="tb">
+  <div class="lm">CS</div><span class="ln">CorpStage 360</span>
+  <div class="tbr"><div class="av-p"><div class="av">AP</div><span class="av-n">Ashit Padhi</span></div></div>
+</div>
+<div class="sn">
+  <a class="ni" href="index.html"><i class="ti ti-home"></i> Home</a>
+  <a class="ni" href="#"><i class="ti ti-building"></i> Entities</a>
+  <a class="ni" href="#"><i class="ti ti-search"></i> Discovery</a>
+  <a class="ni" href="#"><i class="ti ti-database"></i> Intelligence</a>
+  <a class="ni" href="#"><i class="ti ti-file-text"></i> Reports</a>
+  <a class="ni a" href="#"><i class="ti ti-settings"></i> Settings</a>
+</div>
+<div class="bd">
+  <div class="pg-head">
+    <div>
+      <div class="pg-title">Roles & permissions</div>
+      <div class="pg-sub">Manage who can do what in your workspace. Assign roles to users or create custom roles for your organisation.</div>
+    </div>
+    <button class="btn btn-green" onclick="openModal()"><i class="ti ti-plus" style="font-size:13px;"></i> Create custom role</button>
+  </div>
+  <div class="tabs">
+    <div class="tab a" onclick="showTab('Roles',this)"><i class="ti ti-shield"></i> Roles</div>
+    <div class="tab" onclick="showTab('Matrix',this)"><i class="ti ti-table"></i> Permission matrix</div>
+    <div class="tab" onclick="showTab('Users',this)"><i class="ti ti-users"></i> User assignments</div>
+  </div>
+
+  <!-- Roles -->
+  <div class="panel" id="tabRoles">
+    <div class="info-box"><i class="ti ti-info-circle"></i> System roles are defined by CorpStage and cannot be deleted or modified. Create custom roles to match your organisation's governance structure. All role changes are logged in the audit trail.</div>
+    <div class="roles-grid">
+      <div class="role-card sel" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Workspace Admin</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Full access including user management, billing, and all platform features</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 1 user assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">ESG Manager</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Manages data collection, frameworks, discovery and reporting workflows</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 2 users assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Contributor</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Submits data and uploads evidence. Cannot approve or validate others' work</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 3 users assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Reviewer</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Reviews and validates submitted data. Adds comments and flags issues</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 1 user assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Approver</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Approves data and reports. Cannot submit own data (separation of duties)</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 1 user assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Auditor</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Read-only access to all evidence, audit trails and disclosures</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 0 users assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">Executive</span><span class="rc-badge bg-slate">System</span></div><div class="rc-desc">Read-only on dashboards, KPIs, board packs and executive reports</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 2 users assigned</div></div>
+      <div class="role-card" onclick="selRole(this)"><div class="rc-top"><span class="rc-name">CFO View</span><span class="rc-badge bg-green">Custom</span></div><div class="rc-desc">Executive access + financial intelligence + carbon cost exposure. Created for finance leadership</div><div class="rc-count"><i class="ti ti-users" style="font-size:12px;"></i> 1 user assigned</div><div class="rc-actions"><button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();openModal()"><i class="ti ti-edit"></i> Edit</button><button class="btn btn-danger btn-xs" onclick="event.stopPropagation()"><i class="ti ti-trash"></i></button></div></div>
+    </div>
+  </div>
+
+  <!-- Matrix -->
+  <div class="panel hidden" id="tabMatrix">
+    <div class="warn-box"><i class="ti ti-alert-triangle"></i> System role permissions are managed by CorpStage and cannot be changed. The CFO View column (custom role) is fully editable — click any checkbox to toggle. Separation-of-duties rules are enforced automatically.</div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="min-width:210px;">Permission</th>
+            <th class="rc">WS Admin</th><th class="rc">ESG Mgr</th><th class="rc">Contributor</th><th class="rc">Reviewer</th><th class="rc">Approver</th><th class="rc">Auditor</th><th class="rc">Executive</th>
+            <th class="rc" style="color:#1a5c37;">CFO View ✎</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="domain-row"><td colspan="9">Workspace & user management</td></tr>
+          <tr><td><div class="perm-name">Manage users</div><div class="perm-desc">Add, remove, suspend users</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Manage billing & licences</div><div class="perm-desc">View invoices, request licences</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr class="domain-row"><td colspan="9">Data & submissions</td></tr>
+          <tr><td><div class="perm-name">Submit business data</div><div class="perm-desc">Create and edit data entries</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Validate data</div><div class="perm-desc">Review and comment on submissions</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Approve data</div><div class="perm-desc">Final approval for reporting</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr class="domain-row"><td colspan="9">Evidence & discovery</td></tr>
+          <tr><td><div class="perm-name">Upload evidence</div><div class="perm-desc">Add documents and source files</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Run AI discovery</div><div class="perm-desc">Trigger extraction and discovery</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr class="domain-row"><td colspan="9">Reporting & intelligence</td></tr>
+          <tr><td><div class="perm-name">Create & edit reports</div><div class="perm-desc">Build disclosures and narratives</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Approve & publish reports</div><div class="perm-desc">Final sign-off for disclosures</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">View analytics & KPIs</div><div class="perm-desc">Dashboards, benchmarks, trends</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck custom on" onclick="tck(this)"><i class="ti ti-check"></i></div></td></tr>
+          <tr><td><div class="perm-name">View financial intelligence</div><div class="perm-desc">Carbon cost, green capex, ROI</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom on" onclick="tck(this)"><i class="ti ti-check"></i></div></td></tr>
+          <tr><td><div class="perm-name">View executive board packs</div><div class="perm-desc">Board-level summaries</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck custom on" onclick="tck(this)"><i class="ti ti-check"></i></div></td></tr>
+          <tr class="domain-row"><td colspan="9">Audit & compliance</td></tr>
+          <tr><td><div class="perm-name">View audit trail</div><div class="perm-desc">Full evidence chain and history</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck custom off" onclick="tck(this)"></div></td></tr>
+          <tr><td><div class="perm-name">Export data & reports</div><div class="perm-desc">Download disclosures and datasets</div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck off"></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck on"><i class="ti ti-check"></i></div></td><td class="pc"><div class="ck custom on" onclick="tck(this)"><i class="ti ti-check"></i></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="ck on" style="width:14px;height:14px;border-radius:3px;"><i class="ti ti-check" style="font-size:9px;"></i></div> System granted</div>
+      <div class="legend-item"><div class="ck off" style="width:14px;height:14px;border-radius:3px;"></div> Not granted</div>
+      <div class="legend-item"><div class="ck custom" style="width:14px;height:14px;border-radius:3px;border:1.5px solid #2A854F;"></div> Custom — click to toggle</div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="panel hidden" id="tabUsers">
+    <div class="info-box"><i class="ti ti-info-circle"></i> Role changes take effect immediately and are logged in the audit trail with the admin's name, timestamp, and previous role. A user cannot hold both Contributor and Approver roles simultaneously (separation of duties).</div>
+    <table class="user-table">
+      <thead><tr><th>User</th><th>Current role</th><th>Last role change</th><th>Status</th><th>Changed by</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><span class="uav">AP</span><div style="display:inline-block;vertical-align:middle;"><div class="un">Ashit Kumar Padhi</div><div class="ue">ashit@corpstage.com</div></div></td><td><span style="font-size:12px;font-weight:500;">Workspace Admin</span></td><td style="font-size:11.5px;color:#94a3b8;">— (Owner)</td><td><span style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-weight:500;">Active</span></td><td style="font-size:11.5px;color:#94a3b8;">System</td><td></td></tr>
+        <tr><td><span class="uav">NK</span><div style="display:inline-block;vertical-align:middle;"><div class="un">Nisha Kohli</div><div class="ue">nisha@corpstage.com</div></div></td><td><select class="role-sel"><option>ESG Manager</option><option>Contributor</option><option>Reviewer</option><option>Approver</option><option>Auditor</option><option>Executive</option><option>CFO View</option></select></td><td style="font-size:11.5px;color:#94a3b8;">3 days ago</td><td><span style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-weight:500;">Active</span></td><td style="font-size:11.5px;color:#94a3b8;">Ashit Padhi</td><td><button class="btn btn-ghost btn-xs"><i class="ti ti-history"></i> History</button></td></tr>
+        <tr><td><span class="uav">RS</span><div style="display:inline-block;vertical-align:middle;"><div class="un">Rahul Sharma</div><div class="ue">rahul@corpstage.com</div></div></td><td><select class="role-sel"><option>Contributor</option><option>ESG Manager</option><option>Reviewer</option><option>Approver</option><option>Auditor</option><option>Executive</option><option>CFO View</option></select></td><td style="font-size:11.5px;color:#94a3b8;">On invite</td><td><span style="font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 7px;border-radius:20px;font-weight:500;">Invite pending</span></td><td style="font-size:11.5px;color:#94a3b8;">Ashit Padhi</td><td><button class="btn btn-ghost btn-xs"><i class="ti ti-history"></i> History</button></td></tr>
+        <tr><td><span class="uav" style="background:#fef9c3;color:#854d0e;">VK</span><div style="display:inline-block;vertical-align:middle;"><div class="un">Vikram Kapoor</div><div class="ue">vikram@corpstage.com</div></div></td><td><select class="role-sel"><option>Executive</option><option>ESG Manager</option><option>Contributor</option><option>Reviewer</option><option>Approver</option><option>Auditor</option><option>CFO View</option></select></td><td style="font-size:11.5px;color:#94a3b8;">1 week ago</td><td><span style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-weight:500;">Active</span></td><td style="font-size:11.5px;color:#94a3b8;">Ashit Padhi</td><td><button class="btn btn-ghost btn-xs"><i class="ti ti-history"></i> History</button></td></tr>
+        <tr><td><span class="uav" style="background:#f3e8ff;color:#6b21a8;">SM</span><div style="display:inline-block;vertical-align:middle;"><div class="un">Sunita Menon</div><div class="ue">sunita@corpstage.com</div></div></td><td><select class="role-sel"><option>CFO View</option><option>ESG Manager</option><option>Contributor</option><option>Reviewer</option><option>Approver</option><option>Auditor</option><option>Executive</option></select></td><td style="font-size:11.5px;color:#94a3b8;">Today</td><td><span style="font-size:11px;background:#dcfce7;color:#166534;padding:2px 7px;border-radius:20px;font-weight:500;">Active</span></td><td style="font-size:11.5px;color:#94a3b8;">Ashit Padhi</td><td><button class="btn btn-ghost btn-xs"><i class="ti ti-history"></i> History</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay hidden" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Create custom role</span>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="mf"><label>Role name</label><input type="text" placeholder="e.g. CFO View, Sustainability Lead, Regional Manager"/></div>
+      <div class="mf"><label>Description</label><textarea placeholder="What is this role for? Who should it be assigned to?" style="min-height:52px;"></textarea></div>
+      <div style="font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;margin-bottom:12px;margin-top:6px;">Permissions</div>
+      <div class="perm-group">
+        <div class="pg-t">Data & submissions</div>
+        <div class="ptr"><div><div class="pt-name">Submit business data</div><div class="pt-desc">Create and edit data entries</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">Upload evidence</div><div class="pt-desc">Add documents and source files</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">Validate data</div><div class="pt-desc">Review and comment on submissions</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">Approve data</div><div class="pt-desc">Final approval for reporting</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+      </div>
+      <div class="perm-group">
+        <div class="pg-t">Reporting & intelligence</div>
+        <div class="ptr"><div><div class="pt-name">Create & edit reports</div><div class="pt-desc">Build disclosures and narratives</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">View analytics & KPIs</div><div class="pt-desc">Dashboards and benchmarks</div></div><div class="toggle on" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">View financial intelligence</div><div class="pt-desc">Carbon cost, green capex, financing ROI</div></div><div class="toggle on" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">View executive board packs</div><div class="pt-desc">Board-level summaries and reports</div></div><div class="toggle on" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">Export data & reports</div><div class="pt-desc">Download disclosures and datasets</div></div><div class="toggle on" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+      </div>
+      <div class="perm-group">
+        <div class="pg-t">Audit & compliance</div>
+        <div class="ptr"><div><div class="pt-name">View audit trail</div><div class="pt-desc">Full evidence chain and history</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+        <div class="ptr"><div><div class="pt-name">Run AI discovery</div><div class="pt-desc">Trigger extraction and discovery workflows</div></div><div class="toggle" onclick="tog(this)"><div class="toggle-k"></div></div></div>
+      </div>
+      <div class="sod-note"><strong>Separation of duties:</strong> A role with "Submit data" enabled cannot also have "Approve data" enabled. This is enforced automatically to protect governance integrity.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green">Create role</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTab(n,el){['Roles','Matrix','Users'].forEach(t=>document.getElementById('tab'+t).classList.add('hidden'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('a'));document.getElementById('tab'+n).classList.remove('hidden');el.classList.add('a');}
+function selRole(el){document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');}
+function tck(el){el.classList.toggle('on');el.innerHTML=el.classList.contains('on')?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'';}
+function tog(el){el.classList.toggle('on');}
+function openModal(){document.getElementById('modal').classList.remove('hidden');}
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+</script>
+</body>
+</html>

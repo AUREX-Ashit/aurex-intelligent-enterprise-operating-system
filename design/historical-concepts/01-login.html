@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CorpStage 360 — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.card{display:flex;width:960px;min-height:620px;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.left{width:52%;background:#0f3d25;display:flex;flex-direction:column;}
+.left-inner{flex:1;padding:48px 52px;display:flex;flex-direction:column;}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:60px;}
+.lm{width:32px;height:32px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:15px;font-weight:500;letter-spacing:-0.2px;}
+.eyebrow{font-size:10.5px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#4ade80;margin-bottom:18px;opacity:.85;}
+.headline{font-size:27px;font-weight:600;color:#fff;line-height:1.28;letter-spacing:-0.5px;margin-bottom:18px;}
+.headline em{color:#86efac;font-style:normal;}
+.body-text{font-size:13.5px;color:#6ee7b7;line-height:1.72;margin-bottom:36px;opacity:.85;}
+.pillars{display:flex;flex-direction:column;gap:14px;}
+.pillar{display:flex;align-items:flex-start;gap:13px;}
+.pdot{width:5px;height:5px;border-radius:50%;background:#4ade80;flex-shrink:0;margin-top:7px;opacity:.7;}
+.pt{font-size:12.5px;font-weight:500;color:#d1fae5;}
+.ps{font-size:11.5px;color:#6ee7b7;margin-top:2px;line-height:1.5;opacity:.8;}
+.left-footer{padding:24px 52px;border-top:1px solid rgba(255,255,255,0.06);}
+.trust{display:flex;align-items:center;gap:18px;}
+.ti-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#6ee7b7;opacity:.55;}
+.right{flex:1;display:flex;flex-direction:column;justify-content:center;padding:52px 56px;background:#fff;}
+.form-ey{font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:#2A854F;margin-bottom:18px;opacity:.8;}
+.form-title{font-size:22px;font-weight:600;color:#0f172a;letter-spacing:-0.4px;margin-bottom:5px;}
+.form-sub{font-size:13.5px;color:#64748b;margin-bottom:32px;line-height:1.5;}
+.field{margin-bottom:15px;}
+.field-lrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.field-lrow label,.field>label{font-size:12px;font-weight:500;color:#0f172a;}
+.field-lrow a{font-size:12px;color:#2A854F;cursor:pointer;text-decoration:none;}
+.field input{width:100%;height:40px;padding:0 13px;font-size:13.5px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#0f172a;outline:none;transition:border-color .15s,box-shadow .15s;}
+.field input:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.1);}
+.field input::placeholder{color:#94a3b8;font-size:13px;}
+.btn-primary{width:100%;height:40px;background:#1a5c37;color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;margin-top:6px;transition:background .15s;letter-spacing:-0.1px;}
+.btn-primary:hover{background:#0f3d25;}
+.divider{display:flex;align-items:center;gap:14px;margin:20px 0;}
+.dl{flex:1;height:1px;background:#f1f5f9;}
+.dt{font-size:12px;color:#94a3b8;}
+.btn-google{width:100%;height:40px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;font-size:13.5px;font-family:'Inter',sans-serif;color:#0f172a;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s;}
+.btn-google:hover{background:#f8fafc;}
+.form-footer{margin-top:22px;text-align:center;font-size:13px;color:#64748b;}
+.form-footer a{color:#2A854F;font-weight:500;cursor:pointer;}
+.sec-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:20px;padding-top:18px;border-top:1px solid #f1f5f9;}
+.si{display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="left">
+    <div class="left-inner">
+      <div class="logo"><div class="lm">CS</div><span class="ln">CorpStage 360</span></div>
+      <div class="eyebrow">Business Intelligence Platform</div>
+      <div class="headline">Turn sustainability into <em>capital, compliance and competitive edge.</em></div>
+      <div class="body-text">Boards and investors no longer accept sustainability narratives without verified data. CorpStage 360 gives your organisation the governed intelligence infrastructure to meet that standard — and profit from it.</div>
+      <div class="pillars">
+        <div class="pillar"><div class="pdot"></div><div><div class="pt">Financial intelligence</div><div class="ps">Carbon cost, green capex, sustainability ROI and financing readiness — linked to your ESG data</div></div></div>
+        <div class="pillar"><div class="pdot"></div><div><div class="pt">Regulatory compliance</div><div class="ps">ISSB · CSRD · BRSR · GRI · CDP — audit-ready before regulators ask, not after</div></div></div>
+        <div class="pillar"><div class="pdot"></div><div><div class="pt">Risk and assurance</div><div class="ps">Supply chain ESG risk, climate exposure and board governance — all traceable to evidence</div></div></div>
+        <div class="pillar"><div class="pdot"></div><div><div class="pt">Sustainability intelligence</div><div class="ps">AI discovers facts, humans govern outcomes — no manual questionnaires or spreadsheets</div></div></div>
+      </div>
+    </div>
+    <div class="left-footer">
+      <div class="trust">
+        <span class="ti-item"><i class="ti ti-shield-check"></i> SOC 2 ready</span>
+        <span class="ti-item"><i class="ti ti-lock"></i> End-to-end encrypted</span>
+        <span class="ti-item"><i class="ti ti-certificate"></i> GDPR compliant</span>
+        <span class="ti-item" style="margin-left:auto;opacity:.35;">© 2025 CorpStage Pte. Ltd.</span>
+      </div>
+    </div>
+  </div>
+  <div class="right">
+    <div class="form-ey">Secure access</div>
+    <div class="form-title">Sign in to your workspace</div>
+    <div class="form-sub">Welcome back. Enter your credentials to continue.</div>
+    <div class="field"><label>Work email</label><input type="email" placeholder="you@organisation.com" style="margin-top:5px;"/></div>
+    <div class="field">
+      <div class="field-lrow"><label>Password</label><a>Forgot password?</a></div>
+      <input type="password" placeholder="••••••••••••"/>
+    </div>
+    <button class="btn-primary">Sign in</button>
+    <div class="divider"><div class="dl"></div><span class="dt">or</span><div class="dl"></div></div>
+    <button class="btn-google">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+    <div class="form-footer">New to CorpStage? <a>Request access →</a></div>
+    <div class="sec-row">
+      <span class="si"><i class="ti ti-lock" style="font-size:12px;"></i> 256-bit SSL</span>
+      <span class="si"><i class="ti ti-shield" style="font-size:12px;"></i> PCI compliant</span>
+      <span class="si"><i class="ti ti-eye-off" style="font-size:12px;"></i> Zero data sharing</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

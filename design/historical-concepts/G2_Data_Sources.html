@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CorpStage · Data Sources</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050608;--s1:#09090c;--s2:#0d0e11;
+  --b0:rgba(255,255,255,0.016);--b1:rgba(255,255,255,0.044);
+  --b2:rgba(255,255,255,0.074);--b3:rgba(255,255,255,0.11);
+  --t0:rgba(242,238,228,0.97);--t1:rgba(242,238,228,0.50);
+  --t2:rgba(242,238,228,0.22);--t3:rgba(242,238,228,0.08);
+  --gold:#b88e4e;--coral:#a04a3a;--teal:#2e6a5e;
+  --blue:#3a6492;--purple:#5a4b92;--green:#3b6044;
+  --serif:'Georgia','Times New Roman',serif;
+  --sans:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+}
+
+/* LIGHT MODE — G screens default per design system */
+body.light{
+  --bg:#f7f6f3;--s1:#f0efe9;--s2:#e8e7e1;
+  --b0:rgba(0,0,0,0.016);--b1:rgba(0,0,0,0.072);
+  --b2:rgba(0,0,0,0.11);--b3:rgba(0,0,0,0.18);
+  --t0:rgba(18,18,20,0.92);--t1:rgba(18,18,20,0.55);
+  --t2:rgba(18,18,20,0.35);--t3:rgba(18,18,20,0.22);
+}
+
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t0);font-family:var(--sans)}
+
+/* TOGGLE BUTTON */
+.theme-toggle{
+  display:flex;align-items:center;gap:7px;cursor:pointer;
+  padding:4px 10px;border:1px solid var(--b1);
+  background:transparent;color:var(--t2);
+  font-size:8px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;
+  font-family:var(--sans);transition:color .2s,border-color .2s;
+}
+.theme-toggle:hover{color:var(--t1);border-color:var(--b2)}
+.tt-icon{font-size:11px;line-height:1}
+body{display:grid;grid-template-rows:48px 1fr}
+.canvas{overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.canvas::-webkit-scrollbar{width:2px}
+.canvas::-webkit-scrollbar-thumb{background:var(--b2)}
+
+/* NAV */
+nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 64px;border-bottom:1px solid var(--b1);
+  background:linear-gradient(180deg,rgba(255,255,255,0.008),transparent)}
+.wm{font-size:9px;letter-spacing:.30em;text-transform:uppercase;color:rgba(242,238,228,0.20);font-weight:600}
+.nav-c{font-size:11.5px;font-weight:500;color:var(--t1);text-align:center;letter-spacing:.015em}
+.nav-r{display:flex;align-items:center;justify-content:flex-end;gap:9px}
+.fnav{display:flex;gap:0;margin-left:10px}
+.fn{font-size:8.5px;letter-spacing:.08em;padding:3px 11px;color:var(--t3);border:1px solid var(--b1);text-decoration:none;cursor:pointer}
+.fn.active{color:var(--teal);border-color:rgba(46,106,94,.28);background:rgba(46,106,94,.05)}
+.fn:not(.active):hover{color:var(--t1)}
+
+/* ══ HERO ══════════════════════════════════════════════════════════════════
+   Atmosphere: connected, live, flowing.
+   Blue — the colour of data in motion, sources feeding intelligence.
+   The feeling of an enterprise becoming known.
+   Not a form. A live intelligence picture.
+══════════════════════════════════════════════════════════════════════════ */
+.hero{
+  min-height:calc(100vh - 48px);
+  display:grid;grid-template-columns:1fr 1px 340px;
+  position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 52% 70% at 28% 50%,rgba(242,238,228,0.011) 0%,transparent 55%),
+    radial-gradient(ellipse 20% 28% at 28% 50%,rgba(58,100,146,0.022) 0%,transparent 42%),
+    radial-gradient(ellipse 78% 58% at 0% 100%,rgba(58,100,146,0.012) 0%,transparent 54%)}
+.hero-l{padding:80px 64px 72px 92px;display:flex;flex-direction:column;position:relative;z-index:2;overflow-y:auto}
+.eyebrow{display:flex;align-items:center;gap:18px;margin-bottom:28px}
+.ey-rule{width:28px;height:1px;background:var(--b2)}
+.ey-text{font-size:8px;letter-spacing:.30em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.hero-dec{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--t0);line-height:1.44;letter-spacing:-.016em;max-width:500px;margin-bottom:6px}
+.hero-sub{font-size:12px;color:var(--t2);line-height:1.6;max-width:480px;margin-bottom:32px}
+
+/* confidence summary strip */
+.conf-strip{display:flex;align-items:center;gap:20px;padding:16px 20px;border:1px solid var(--b1);background:rgba(255,255,255,0.010);margin-bottom:32px}
+.cs-i{display:flex;flex-direction:column;gap:3px}
+.cs-l{font-size:7.5px;letter-spacing:.20em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.cs-v{font-size:13px;font-weight:500}
+.cs-v.pos{color:var(--teal)}.cs-v.warn{color:var(--gold)}.cs-v.neu{color:var(--t1)}.cs-v.blue{color:var(--blue)}
+.cs-sep{width:1px;height:24px;background:var(--b1)}
+
+/* section header */
+.sec-hed{font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--b1)}
+
+/* ── SOURCE CARDS ── */
+.sources-group{margin-bottom:32px}
+.src-card{
+  display:grid;grid-template-columns:44px 1fr auto;
+  gap:0;border:1px solid var(--b1);background:var(--bg);
+  margin-bottom:6px;position:relative;
+  transition:border-color .15s;
+}
+.src-card:hover{border-color:var(--b2)}
+.src-card.connected{border-color:rgba(46,106,94,.24);background:rgba(46,106,94,.02)}
+.src-card.auto{border-color:rgba(58,100,146,.24);background:rgba(58,100,146,.02)}
+.src-card.error{border-color:rgba(160,74,58,.24);background:rgba(160,74,58,.02)}
+
+/* status stripe */
+.src-stripe{display:flex;align-items:center;justify-content:center;border-right:1px solid var(--b1)}
+.ss-dot{width:8px;height:8px;border-radius:50%}
+.ss-dot.live{background:var(--teal);box-shadow:0 0 6px rgba(46,106,94,.40)}
+.ss-dot.auto{background:var(--blue);box-shadow:0 0 6px rgba(58,100,146,.40)}
+.ss-dot.idle{background:var(--b2)}
+.ss-dot.error{background:var(--coral)}
+.ss-dot.pending{background:var(--gold)}
+
+/* source body */
+.src-body{padding:14px 16px}
+.sb-top{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.sb-name{font-size:12.5px;font-weight:500;color:var(--t0);letter-spacing:.005em}
+.sb-badge{font-size:7.5px;letter-spacing:.10em;font-weight:600;padding:2px 7px;border-radius:1px}
+.sb-badge.free{color:var(--teal);border:1px solid rgba(46,106,94,.24);background:rgba(46,106,94,.05)}
+.sb-badge.auto{color:var(--blue);border:1px solid rgba(58,100,146,.24);background:rgba(58,100,146,.05)}
+.sb-badge.byol{color:var(--gold);border:1px solid rgba(184,142,78,.24);background:rgba(184,142,78,.05)}
+.sb-badge.paid{color:var(--purple);border:1px solid rgba(90,75,146,.24);background:rgba(90,75,146,.05)}
+.sb-badge.y2{color:var(--t3);border:1px solid var(--b1)}
+.sb-badge.y3{color:var(--t3);border:1px solid var(--b1)}
+.sb-desc{font-size:10.5px;color:var(--t2);line-height:1.5;letter-spacing:.005em;margin-bottom:6px}
+.sb-meta{display:flex;align-items:center;gap:12px}
+.sbm-i{display:flex;align-items:center;gap:5px}
+.sbm-l{font-size:8.5px;color:var(--t3);letter-spacing:.06em}
+.sbm-v{font-size:8.5px;font-weight:600}
+.sbm-v.live{color:var(--teal)}.sbm-v.auto{color:var(--blue)}.sbm-v.pend{color:var(--gold)}.sbm-v.idle{color:var(--t3)}
+
+/* source action */
+.src-action{padding:14px 16px;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:8px;min-width:130px}
+.sa-btn{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:7px 14px;border-radius:1px;cursor:pointer;white-space:nowrap}
+.sa-btn.connected{color:var(--teal);border:1px solid rgba(46,106,94,.24);background:rgba(46,106,94,.05)}
+.sa-btn.connect{color:var(--t2);border:1px solid var(--b1);background:transparent}
+.sa-btn.connect:hover{color:var(--t0);border-color:var(--b2)}
+.sa-btn.auto{color:var(--blue);border:1px solid rgba(58,100,146,.24);background:rgba(58,100,146,.05)}
+.sa-btn.configure{color:var(--purple);border:1px solid rgba(90,75,146,.24);background:rgba(90,75,146,.05)}
+.sa-btn.error{color:var(--coral);border:1px solid rgba(160,74,58,.24);background:rgba(160,74,58,.05)}
+.sa-last{font-size:8.5px;color:var(--t3)}
+
+/* upload card — special */
+.upload-card{
+  border:1px dashed var(--b2);padding:24px 28px;
+  display:flex;align-items:center;gap:20px;
+  cursor:pointer;transition:all .15s;margin-bottom:6px;
+}
+.upload-card:hover{border-color:rgba(46,106,94,.32);background:rgba(46,106,94,.02)}
+.uc-icon{font-size:22px;color:var(--t3);flex-shrink:0}
+.uc-body{flex:1}
+.uc-title{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px}
+.uc-desc{font-size:10.5px;color:var(--t3);line-height:1.5}
+.uc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.uc-tag{font-size:8px;letter-spacing:.06em;color:var(--t3);border:1px solid var(--b1);padding:2px 7px}
+.uc-btn{font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:8px 16px;border:1px solid rgba(46,106,94,.28);color:var(--teal);background:rgba(46,106,94,.06);cursor:pointer;white-space:nowrap}
+#fileInput2{display:none}
+
+/* year badge */
+.year-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--b0);margin-top:4px}
+.yr-label{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.yr-pill{font-size:8px;letter-spacing:.08em;padding:3px 9px;border:1px solid var(--b1);color:var(--t3)}
+
+/* hero divider + right */
+.hero-div{background:var(--b1);position:relative;z-index:2}
+.hero-r{padding:80px 36px 72px 36px;display:flex;flex-direction:column;position:relative;z-index:2;background:linear-gradient(to right,transparent,rgba(255,255,255,0.005))}
+.hr-hed{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:24px}
+
+/* intelligence flow */
+.flow-list{display:flex;flex-direction:column}
+.fl-item{padding:13px 0;border-bottom:1px solid rgba(255,255,255,0.010)}
+.fl-item:first-child{border-top:1px solid rgba(255,255,255,0.010)}
+.fl-stage{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.fl-title{font-size:11.5px;color:var(--t0);margin-bottom:3px}
+.fl-sources{font-size:10px;color:var(--t2);line-height:1.5}
+.fl-conf{font-size:8.5px;font-weight:600;margin-top:4px}
+.fl-conf.hi{color:var(--teal)}.fl-conf.med{color:var(--gold)}.fl-conf.lo{color:var(--blue)}
+
+/* retrieval health */
+.health-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);border:1px solid var(--b1);margin-top:28px}
+.hg-cell{background:var(--bg);padding:14px 14px;display:flex;flex-direction:column;gap:4px}
+.hgc-l{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.hgc-v{font-size:18px;font-family:var(--serif);font-weight:400;line-height:1}
+.hgc-v.hi{color:var(--teal)}.hgc-v.med{color:var(--gold)}.hgc-v.blue{color:var(--blue)}.hgc-v.neu{color:var(--t1)}
+.hgc-s{font-size:9.5px;color:var(--t2)}
+
+/* found by section on right */
+.found-sec{margin-top:28px;padding-top:20px;border-top:1px solid var(--b1)}
+.found-hed{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:14px}
+.found-item{padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.010)}
+.found-item:first-child{border-top:1px solid rgba(255,255,255,0.010)}
+.fi-src{font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:4px}
+.fi-name{font-size:11px;color:var(--t0);margin-bottom:3px;line-height:1.3}
+.fi-pts{font-size:9.5px;color:var(--t2)}
+.fi-btns{display:flex;gap:6px;margin-top:7px}
+.fi-btn{font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:4px 10px;border-radius:1px;cursor:pointer}
+.fi-btn.yes{color:var(--teal);border:1px solid rgba(46,106,94,.22);background:rgba(46,106,94,.05)}
+.fi-btn.no{color:var(--t3);border:1px solid var(--b1)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wm">CorpStage</div>
+  <div class="nav-c">Meridian Industrial Group</div>
+  <div class="nav-r">
+    <div class="fnav">
+      <a class="fn" href="G1_Organisation_Setup.html">G1 · Setup</a>
+      <a class="fn active">G2 · Data Sources</a>
+      <a class="fn">G3 · Lenses</a>
+      <a class="fn">G4 · Users</a>
+      <a class="fn">G5 · Workflow</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+      <span class="tt-icon" id="themeIcon">○</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
+</nav>
+
+<div class="canvas">
+<section class="hero">
+
+<!-- LEFT — DATA SOURCES -->
+<div class="hero-l">
+  <div class="eyebrow"><div class="ey-rule"></div><div class="ey-text">G2 · Data Sources & Integrations</div></div>
+  <div class="hero-dec">What does CorpStage know about your enterprise — and where are the gaps?</div>
+  <div class="hero-sub">Connect sources, upload documents, or let CorpStage retrieve what it can automatically. Every source strengthens the intelligence engine. Every gap has a financial consequence.</div>
+
+  <div class="conf-strip">
+    <div class="cs-i"><div class="cs-l">Overall confidence</div><div class="cs-v warn">61%</div></div>
+    <div class="cs-sep"></div>
+    <div class="cs-i"><div class="cs-l">Sector median · Day 3</div><div class="cs-v neu">48%</div></div>
+    <div class="cs-sep"></div>
+    <div class="cs-i"><div class="cs-l">Sources active</div><div class="cs-v blue">16</div></div>
+    <div class="cs-sep"></div>
+    <div class="cs-i"><div class="cs-l">Auto-retrieved</div><div class="cs-v pos">12 sources</div></div>
+    <div class="cs-sep"></div>
+    <div class="cs-i"><div class="cs-l">Data points extracted</div><div class="cs-v neu">1,081</div></div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="sec-hed">Upload documents</div>
+  <div class="upload-card" onclick="document.getElementById('fileInput2').click()">
+    <input type="file" id="fileInput2" multiple>
+    <div class="uc-icon">↓</div>
+    <div class="uc-body">
+      <div class="uc-title">Drop any document here — CorpStage reads and classifies automatically</div>
+      <div class="uc-desc">Annual reports, <span data-vocab="document.intelligence_foundation">Intelligence Foundation Documents</span>, board minutes, contracts, invoices, certifications, spreadsheets, earnings transcripts. Any language. No categorisation needed.</div>
+      <div class="uc-tags">
+        <span class="uc-tag">PDF</span><span class="uc-tag">Excel</span><span class="uc-tag">Word</span>
+        <span class="uc-tag">CSV</span><span class="uc-tag">Scans</span><span class="uc-tag">Transcripts</span>
+      </div>
+    </div>
+    <div class="uc-btn">Browse files</div>
+  </div>
+
+  <!-- INTERNAL CONNECTIONS -->
+  <div class="sec-hed" style="margin-top:28px">Internal systems & shared drives</div>
+
+  <div class="src-card connected">
+    <div class="src-stripe"><div class="ss-dot live"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">SharePoint</div>
+        <div class="sb-badge free">Connected</div>
+      </div>
+      <div class="sb-desc">Monitoring 3 document libraries. New documents ingested automatically within 15 minutes of upload.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Last sync</div><div class="sbm-v live">4 minutes ago</div></div>
+        <div class="sbm-i"><div class="sbm-l">Documents</div><div class="sbm-v live">47 ingested</div></div>
+        <div class="sbm-i"><div class="sbm-l">Data points</div><div class="sbm-v live">614 extracted</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn connected">✓ Connected</div>
+      <div class="sa-last">Configure</div>
+    </div>
+  </div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot idle"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Google Drive</div>
+        <div class="sb-badge free">Free</div>
+      </div>
+      <div class="sb-desc">Connect shared folders. CorpStage monitors and ingests new documents automatically.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Status</div><div class="sbm-v idle">Not connected</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn connect">Connect</div>
+    </div>
+  </div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot idle"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Email Inbox</div>
+        <div class="sb-badge free">Free</div>
+      </div>
+      <div class="sb-desc">Forward documents or email threads to your CorpStage inbox address. Auto-classified on arrival.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Your address</div><div class="sbm-v idle">meridian@in.corpstage.ai</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn configure">Copy address</div>
+    </div>
+  </div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot idle"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Supplier Portal</div>
+        <div class="sb-badge free">Free</div>
+      </div>
+      <div class="sb-desc">Invite suppliers to submit certifications, reports, and questionnaire responses directly into CorpStage. Eliminates manual collection.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Status</div><div class="sbm-v idle">Not activated</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn connect">Activate</div>
+    </div>
+  </div>
+
+  <!-- Year 2 -->
+  <div class="year-row">
+    <div class="yr-label">Year 2 — unlocks</div>
+    <div class="yr-pill">HR System → Talent Competitiveness +22%</div>
+    <div class="yr-pill">Energy Mgmt → Direct Cost precision +18%</div>
+    <div class="yr-pill">EHS → Operational Continuity Risk quantified</div>
+    <div class="yr-pill">Procurement → Value Chain Cost modelled</div>
+  </div>
+  <div class="year-row" style="border-top:none;padding-top:0;margin-top:0">
+    <div class="yr-label">Year 3 — unlocks</div>
+    <div class="yr-pill">SAP ERP → Financial Intelligence +31%</div>
+    <div class="yr-pill">Oracle ERP → Resilience P&L automated</div>
+    <div class="yr-pill">Workday → Workforce Risk real-time</div>
+  </div>
+
+  <!-- EXTERNAL — AUTO-RETRIEVED -->
+  <div class="sec-hed" style="margin-top:28px">External intelligence — auto-retrieved</div>
+  <div class="src-body" style="margin-bottom:12px;padding:0"><div class="sb-desc">CorpStage retrieves these sources automatically based on your organisation profile. No action needed. Review and accept what is relevant.</div></div>
+
+  <div class="src-card auto">
+    <div class="src-stripe"><div class="ss-dot auto"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">BSE / NSE / SEBI Filings</div>
+        <div class="sb-badge auto">Auto · Free</div>
+      </div>
+      <div class="sb-desc">Annual reports, BRSR filings, financial statements, board resolutions. Retrieved and monitored continuously.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Last retrieved</div><div class="sbm-v auto">Today · live</div></div>
+        <div class="sbm-i"><div class="sbm-l">Filings tracked</div><div class="sbm-v auto">FY22–FY25</div></div>
+        <div class="sbm-i"><div class="sbm-l">Data points</div><div class="sbm-v auto">134</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn auto">✓ Active</div>
+      <div class="sa-last">Pause</div>
+    </div>
+  </div>
+
+  <div class="src-card auto">
+    <div class="src-stripe"><div class="ss-dot auto"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">MCA Public Filings · India</div>
+        <div class="sb-badge auto">Auto · Free</div>
+      </div>
+      <div class="sb-desc">Entity structure, subsidiaries, directorships, registered offices. Corporate identity foundation.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Entities tracked</div><div class="sbm-v auto">4</div></div>
+        <div class="sbm-i"><div class="sbm-l">Last updated</div><div class="sbm-v auto">2 days ago</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn auto">✓ Active</div>
+      <div class="sa-last">Pause</div>
+    </div>
+  </div>
+
+  <div class="src-card auto">
+    <div class="src-stripe"><div class="ss-dot auto"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">EU CBAM Regulation Database</div>
+        <div class="sb-badge auto">Auto · Free</div>
+      </div>
+      <div class="sb-desc">Live regulatory updates. Rates, timelines, product categories, and jurisdiction mapping for your EU export exposure.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">CBAM effective</div><div class="sbm-v auto">Q3 2025</div></div>
+        <div class="sbm-i"><div class="sbm-l">Your exposure</div><div class="sbm-v auto">₹18–42Cr estimated</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn auto">✓ Active</div>
+      <div class="sa-last">Pause</div>
+    </div>
+  </div>
+
+  <div class="src-card auto">
+    <div class="src-stripe"><div class="ss-dot auto"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Strategic Commitment Registry</div>
+        <div class="sb-badge auto">Auto · Free</div>
+      </div>
+      <div class="sb-desc">Science Based Targets registry — tracks sector peer commitments, validation status, and pathway alignment. Powers Strategic Commitment integrity monitoring and competitive positioning.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Your commitment</div><div class="sbm-v auto">Not registered</div></div>
+        <div class="sbm-i"><div class="sbm-l">Sector peers registered</div><div class="sbm-v auto">34% — competitive signal</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn auto">✓ Active</div>
+      <div class="sa-last">Pause</div>
+    </div>
+  </div>
+
+  <div class="src-card auto">
+    <div class="src-stripe"><div class="ss-dot auto"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">NewsAPI · GDELT</div>
+        <div class="sb-badge auto">Auto · Low cost</div>
+      </div>
+      <div class="sb-desc">Real-time news monitoring for Meridian Industrial Group and 12 related entities. Reputational signals, regulatory actions, supply chain events.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Signals today</div><div class="sbm-v auto">3 articles</div></div>
+        <div class="sbm-i"><div class="sbm-l">Material signals</div><div class="sbm-v auto">0</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn auto">✓ Active</div>
+      <div class="sa-last">Pause</div>
+    </div>
+  </div>
+
+  <!-- PREMIUM SOURCES -->
+  <div class="sec-hed" style="margin-top:28px">Premium intelligence sources</div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot pending"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Climate X</div>
+        <div class="sb-badge paid">$15–40k/yr</div>
+      </div>
+      <div class="sb-desc">Asset-level physical climate risk by latitude/longitude. Flood, heat, drought, wildfire to 2050. Dollar-quantified. Maps to your 6 facility locations.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Facilities to map</div><div class="sbm-v pend">6 detected</div></div>
+        <div class="sbm-i"><div class="sbm-l" data-vocab="ui.financial_consequence">Financial Consequence</div><div class="sbm-v pend">CRO priority</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn configure">Request trial</div>
+    </div>
+  </div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot pending"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Bloomberg Terminal</div>
+        <div class="sb-badge byol">BYOL — your license</div>
+      </div>
+      <div class="sb-desc">Live commodity prices, carbon credits, bond yields, peer financials, Business Resilience benchmarks. Zero cost to CorpStage — connects to your existing Bloomberg license.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Your license</div><div class="sbm-v pend">Not connected</div></div>
+        <div class="sbm-i"><div class="sbm-l">Value</div><div class="sbm-v pend">CFO · dollar translation</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn configure">Connect license</div>
+    </div>
+  </div>
+
+  <div class="src-card">
+    <div class="src-stripe"><div class="ss-dot pending"></div></div>
+    <div class="src-body">
+      <div class="sb-top">
+        <div class="sb-name">Dataminr</div>
+        <div class="sb-badge paid">$15–30k/yr</div>
+      </div>
+      <div class="sb-desc">Real-time incident monitoring matched to your supply chain — strikes, factory fires, sanctions. Catches what becomes a 10-K disclosure before it happens.</div>
+      <div class="sb-meta">
+        <div class="sbm-i"><div class="sbm-l">Supply chain nodes</div><div class="sbm-v pend">~47 to monitor</div></div>
+        <div class="sbm-i"><div class="sbm-l">Value</div><div class="sbm-v pend">CEO · CRO priority</div></div>
+      </div>
+    </div>
+    <div class="src-action">
+      <div class="sa-btn configure">Request trial</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DIVIDER -->
+<div class="hero-div"></div>
+
+<!-- RIGHT — INTELLIGENCE FLOW + HEALTH -->
+<div class="hero-r">
+  <div class="hr-hed">How sources feed intelligence</div>
+
+  <div class="flow-list">
+    <div class="fl-item">
+      <div class="fl-stage" data-vocab="idal.extract">Extract — Internal Documents</div>
+      <div class="fl-title">Internal documents & SharePoint</div>
+      <div class="fl-sources">4 uploaded docs · 47 SharePoint docs · 847 data points</div>
+      <div class="fl-conf hi">Confidence contribution: High</div>
+    </div>
+    <div class="fl-item">
+      <div class="fl-stage" data-vocab="idal.retrieve">Retrieve — External Sources</div>
+      <div class="fl-title">12 external sources active</div>
+      <div class="fl-sources">BSE/NSE · MCA · CBAM · Strategic Commitment Registry · NewsAPI · GDELT · OpenCorporates · GRI DB · CDP · UNGC · Companies House · SEC EDGAR</div>
+      <div class="fl-conf med">Confidence contribution: Medium-High</div>
+    </div>
+    <div class="fl-item">
+      <div class="fl-stage" data-vocab="idal.infer">Infer — Combined Intelligence</div>
+      <div class="fl-title">143 inferences from combined sources</div>
+      <div class="fl-sources">Supplier concentration · Financial sensitivity · Strategic Commitment trajectory · Regulatory Cost Exposure · Competitive signals</div>
+      <div class="fl-conf med">Confidence contribution: Directional</div>
+    </div>
+    <div class="fl-item">
+      <div class="fl-stage" data-vocab="idal.confirm">Confirm — Pending Review</div>
+      <div class="fl-title">3 sources would add ~18% confidence</div>
+      <div class="fl-sources">Climate X → Operational Continuity Risk quantified · Bloomberg → financial translation · Dataminr → real-time Value Chain Cost signals</div>
+      <div class="fl-conf lo">Available on request</div>
+    </div>
+  </div>
+
+  <!-- HEALTH GRID -->
+  <div class="health-grid">
+    <div class="hg-cell">
+      <div class="hgc-l">Sources connected</div>
+      <div class="hgc-v blue">16</div>
+      <div class="hgc-s">1 internal · 12 auto · 3 premium pending</div>
+    </div>
+    <div class="hg-cell">
+      <div class="hgc-l">Data points total</div>
+      <div class="hgc-v hi">1,081</div>
+      <div class="hgc-s">614 internal · 467 external</div>
+    </div>
+    <div class="hg-cell">
+      <div class="hgc-l">Last refresh</div>
+      <div class="hgc-v neu">4 min</div>
+      <div class="hgc-s">Auto-refresh every 15 min</div>
+    </div>
+    <div class="hg-cell">
+      <div class="hgc-l" data-vocab="ui.intelligence_gap">Intelligence Gap</div>
+      <div class="hgc-v med">39%</div>
+      <div class="hgc-s">Supplier Ecosystem · Operational Continuity weakly understood — financial consequence unquantified</div>
+    </div>
+  </div>
+
+  <!-- FOUND BY CORPSTAGE -->
+  <div class="found-sec">
+    <div class="found-hed">Found by CorpStage · 3 new today</div>
+    <div class="found-item">
+      <div class="fi-src">SEBI Filing · Retrieved 2 hrs ago</div>
+      <div class="fi-name">BRSR FY24 Filing — Meridian Industrial</div>
+      <div class="fi-pts">89 data points · BRSR sections A, B, C extracted</div>
+      <div class="fi-btns"><div class="fi-btn yes">Accept</div><div class="fi-btn no">Ignore</div></div>
+    </div>
+    <div class="found-item">
+      <div class="fi-src">CBAM Update · Retrieved today</div>
+      <div class="fi-name">CBAM Definitive Period — Rate Schedule Jan 2026</div>
+      <div class="fi-pts">Updated cost model · Your exposure revised to ₹18–42Cr</div>
+      <div class="fi-btns"><div class="fi-btn yes">Accept</div><div class="fi-btn no">Ignore</div></div>
+    </div>
+    <div class="found-item">
+      <div class="fi-src">Peer Intelligence · Retrieved today</div>
+      <div class="fi-name">Competitor Annual Report FY24 — EU Expansion Signal</div>
+      <div class="fi-pts">Competitive context · Q8 Competitive Position strengthened</div>
+      <div class="fi-btns"><div class="fi-btn yes">Accept</div><div class="fi-btn no">Ignore</div></div>
+    </div>
+  </div>
+</div>
+
+</section>
+</div><!-- /canvas -->
+
+<script>
+// ─── FILE UPLOAD HANDLER ─────────────────────────────────────────────────────
+document.getElementById('fileInput2').addEventListener('change', e => {
+  if(e.target.files.length){
+    const uc = document.querySelector('.uc-title');
+    uc.textContent = e.target.files.length + ' file' + (e.target.files.length > 1 ? 's' : '') + ' received — processing…';
+    uc.style.color = 'var(--teal)';
+  }
+});
+
+// ─── LIGHT / DARK TOGGLE ─────────────────────────────────────────────────────
+// G screens: light mode default per design system.
+// Executive screens (S1–S12): dark default.
+// Toggle persists across G screens via sessionStorage.
+(function(){
+  const stored = sessionStorage.getItem('cs_theme') || 'light';
+  applyTheme(stored);
+})();
+
+function applyTheme(mode) {
+  document.body.classList.toggle('light', mode === 'light');
+  const icon  = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+  if(icon)  icon.textContent  = mode === 'light' ? '●' : '○';
+  if(label) label.textContent = mode === 'light' ? 'Dark' : 'Light';
+  sessionStorage.setItem('cs_theme', mode);
+}
+
+function toggleTheme() {
+  const current = sessionStorage.getItem('cs_theme') || 'light';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+
+// ─── VOCAB.JS INTEGRATION SHIM ───────────────────────────────────────────────
+// In production: import { t, setLens, loadOverrides } from './vocab.js'
+// This shim mirrors the three-layer resolution for standalone screen preview.
+//
+// IMPORTANT: ESG terms below (e.g. 'Carbon Emissions', 'Scope 3') are
+// LENS TRANSLATIONS only — they appear when the Sustainability Lens is active.
+// They are never shown on the Executive Lens. This is correct behaviour,
+// not a language violation. The platform default layer is always business language.
+(function() {
+
+  // LAYER 3 — Platform defaults (mirrors vocab.js default layer)
+  // Always business language. Never ESG.
+  const DEFAULTS = {
+    'metric.business_resilience_index':  'Business Resilience Index',
+    'metric.energy_cost_and_transition': 'Energy Cost & Transition Exposure',
+    'metric.direct_cost':                'Direct Cost',
+    'metric.procurement_cost':           'Procurement Cost',
+    'metric.value_chain_cost':           'Value Chain Cost',
+    'metric.regulatory_cost_exposure':   'Regulatory Cost Exposure',
+    'metric.talent_competitiveness':     'Talent Competitiveness',
+    'metric.strategic_commitment':       'Strategic Commitment',
+    'metric.financial_obligation':       'Financial Obligation with Performance Condition',
+    'metric.operational_continuity_risk':'Operational Continuity Risk',
+    'document.intelligence_foundation':  'Intelligence Foundation Document',
+    'idal.extract':                      'Extract — Internal Documents',
+    'idal.retrieve':                     'Retrieve — External Sources',
+    'idal.infer':                        'Infer — Combined Intelligence',
+    'idal.confirm':                      'Confirm — Pending Review',
+    'idal.route':                        'Routed to Named Owner',
+    'ui.intelligence_gap':               'Intelligence Gap',
+    'ui.financial_consequence':          'Financial Consequence',
+    'ui.owner':                          'Owner',
+    'ui.trajectory':                     'Trajectory',
+    'ui.last_updated':                   'Intelligence current as of',
+    'confidence.verified':               'Verified',
+    'confidence.inferred':               'Inferred',
+    'confidence.retrieved':              'Retrieved',
+    'confidence.unconfirmed':            'Unconfirmed',
+  };
+
+  // LAYER 2 — Lens vocabulary (mirrors vocab.js lens layers)
+  // Only active when the named lens is selected. Not violations.
+  const LENS = {
+    sustainability: {
+      'metric.business_resilience_index':  'ESG Score',
+      'metric.energy_cost_and_transition': 'Carbon Emissions',
+      'metric.direct_cost':                'Scope 1 Emissions',
+      'metric.procurement_cost':           'Scope 2 Emissions',
+      'metric.value_chain_cost':           'Scope 3 Emissions',
+      'metric.strategic_commitment':       'Net Zero / Sustainability Target',
+      'metric.regulatory_cost_exposure':   'CSRD Compliance',
+      'metric.talent_competitiveness':     'Diversity Metrics',
+      'metric.financial_obligation':       'Green Bond / Sustainability-Linked Finance',
+      'document.intelligence_foundation':  'Sustainability Report',
+      'confidence.inferred':               'Estimated',
+    },
+    risk: {
+      'metric.business_resilience_index':  'Enterprise Resilience Rating',
+      'metric.energy_cost_and_transition': 'Carbon & Energy Cost Risk',
+      'metric.direct_cost':                'Direct Operational Cost Risk',
+      'metric.value_chain_cost':           'Value Chain Risk',
+      'metric.strategic_commitment':       'Commitment Breach Exposure',
+      'metric.regulatory_cost_exposure':   'Regulatory Breach Risk',
+      'metric.operational_continuity_risk':'Operational Disruption Risk',
+      'metric.financial_obligation':       'Covenant-Linked Financial Instrument',
+      'ui.intelligence_gap':               'Information Risk',
+      'ui.financial_consequence':          'Financial Impact',
+      'confidence.inferred':               'Modelled',
+    }
+  };
+
+  // LAYER 1 — Customer (org-level) overrides
+  // Loaded from LENS_VOCABULARY_MAP table at runtime via G3.
+  // Example: window.CORPSTAGE_ORG_OVERRIDES = { 'metric.business_resilience_index': 'Resilience Rating' }
+  const ORG = window.CORPSTAGE_ORG_OVERRIDES || {};
+
+  // Resolution: org override → lens → platform default
+  function t(key) {
+    if (ORG[key] != null) return ORG[key];
+    const lens = window.CORPSTAGE_LENS || 'executive';
+    if (LENS[lens] && LENS[lens][key] != null) return LENS[lens][key];
+    return DEFAULTS[key] || key; // Fail visible — never silent wrong label (L11)
+  }
+
+  function applyVocab() {
+    document.querySelectorAll('[data-vocab]').forEach(el => {
+      el.textContent = t(el.dataset.vocab);
+    });
+  }
+
+  // Apply on load
+  applyVocab();
+
+  // Expose globally — G3 Lens Configuration calls these on lens switch
+  window.CORPSTAGE_SET_LENS = function(lensId) {
+    window.CORPSTAGE_LENS = lensId;
+    applyVocab();
+  };
+  window.CORPSTAGE_SET_OVERRIDE = function(key, value) {
+    window.CORPSTAGE_ORG_OVERRIDES = window.CORPSTAGE_ORG_OVERRIDES || {};
+    window.CORPSTAGE_ORG_OVERRIDES[key] = value;
+    applyVocab();
+  };
+  window.CORPSTAGE_APPLY_VOCAB = applyVocab;
+
+})();
+</script>
+</body>
+</html>

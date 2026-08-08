@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CorpStage · Organisation Setup</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  /* LIGHT MODE — default for config screens */
+  --bg:#f7f6f3;
+  --bg2:#ffffff;
+  --bg3:#f0ede8;
+  --border:#e2ddd6;
+  --border2:#d4cfc8;
+  --t0:#1a1814;
+  --t1:#4a4640;
+  --t2:#7a7470;
+  --t3:#aba8a3;
+  --t4:#d4d0cb;
+  --purple:#5a4b92;
+  --purple-l:rgba(90,75,146,0.10);
+  --purple-b:rgba(90,75,146,0.22);
+  --teal:#2e6a5e;
+  --teal-l:rgba(46,106,94,0.09);
+  --teal-b:rgba(46,106,94,0.22);
+  --gold:#9a7030;
+  --gold-l:rgba(154,112,48,0.09);
+  --gold-b:rgba(154,112,48,0.22);
+  --coral:#a04a3a;
+  --coral-l:rgba(160,74,58,0.08);
+  --coral-b:rgba(160,74,58,0.20);
+  --blue:#2d5a8a;
+  --blue-l:rgba(45,90,138,0.09);
+  --shadow:0 1px 3px rgba(0,0,0,0.07);
+  --shadow2:0 2px 8px rgba(0,0,0,0.08);
+  --serif:'Georgia','Times New Roman',serif;
+  --sans:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+}
+body.dark{
+  --bg:#050608;
+  --bg2:#09090c;
+  --bg3:#0d0e11;
+  --border:rgba(255,255,255,0.044);
+  --border2:rgba(255,255,255,0.074);
+  --t0:rgba(242,238,228,0.97);
+  --t1:rgba(242,238,228,0.60);
+  --t2:rgba(242,238,228,0.32);
+  --t3:rgba(242,238,228,0.16);
+  --t4:rgba(242,238,228,0.06);
+  --purple:#8b7fc0;
+  --purple-l:rgba(90,75,146,0.12);
+  --purple-b:rgba(90,75,146,0.30);
+  --teal:#4a9a8a;
+  --teal-l:rgba(46,106,94,0.12);
+  --teal-b:rgba(46,106,94,0.28);
+  --gold:#b88e4e;
+  --gold-l:rgba(184,142,78,0.10);
+  --gold-b:rgba(184,142,78,0.26);
+  --coral:#c06858;
+  --coral-l:rgba(160,74,58,0.10);
+  --coral-b:rgba(160,74,58,0.24);
+  --blue:#5a88c0;
+  --shadow:0 1px 3px rgba(0,0,0,0.30);
+  --shadow2:0 2px 8px rgba(0,0,0,0.40);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t0);font-family:var(--sans);transition:background .25s,color .25s}
+body{display:grid;grid-template-rows:48px 1fr}
+.canvas{overflow-y:auto;overflow-x:hidden}
+.canvas::-webkit-scrollbar{width:3px}
+.canvas::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* NAV */
+nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 48px;border-bottom:1px solid var(--border);background:var(--bg2);
+  box-shadow:var(--shadow);position:relative;z-index:10}
+.wm{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.nav-c{font-size:11.5px;font-weight:500;color:var(--t1);text-align:center;letter-spacing:.01em}
+.nav-r{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.fnav{display:flex;gap:0}
+.fn{font-size:8.5px;letter-spacing:.07em;padding:3px 11px;color:var(--t3);
+  border:1px solid var(--border);text-decoration:none;cursor:pointer;background:transparent;transition:all .12s}
+.fn.active{color:var(--purple);border-color:var(--purple-b);background:var(--purple-l)}
+.fn:not(.active):hover{color:var(--t1);border-color:var(--border2)}
+
+/* THEME TOGGLE */
+.theme-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;padding:4px 10px;
+  border:1px solid var(--border);border-radius:20px;background:var(--bg3);transition:all .15s}
+.theme-toggle:hover{border-color:var(--border2)}
+.tt-icon{font-size:13px}
+.tt-label{font-size:8.5px;letter-spacing:.08em;color:var(--t2);font-weight:500}
+
+/* ══ THREE MOMENTS ══ */
+.page{max-width:860px;margin:0 auto;padding:56px 48px 96px}
+
+/* moment header */
+.moment{margin-bottom:48px}
+.moment-num{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.mn-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s}
+.mn-circle.active{background:var(--purple);color:#fff}
+.mn-circle.done{background:var(--teal);color:#fff}
+.mn-circle.pend{background:var(--bg3);color:var(--t3);border:1.5px solid var(--border)}
+.mn-line{flex:1;height:1px;background:var(--border)}
+.mn-label{font-size:8px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;color:var(--t3)}
+.mn-label.active{color:var(--purple)}.mn-label.done{color:var(--teal)}
+
+/* ══ MOMENT 1 — SEARCH ══ */
+.m1-card{background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow2);padding:40px 48px}
+.m1-title{font-family:var(--serif);font-size:26px;font-weight:400;color:var(--t0);
+  line-height:1.36;letter-spacing:-.018em;margin-bottom:8px}
+.m1-sub{font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:32px;max-width:520px}
+.search-wrap{display:flex;gap:0;margin-bottom:16px}
+.search-input{flex:1;border:2px solid var(--border);border-right:none;
+  background:var(--bg);color:var(--t0);font-size:15px;padding:14px 20px;
+  font-family:var(--sans);outline:none;letter-spacing:.005em;transition:border-color .15s}
+.search-input:focus{border-color:var(--purple)}
+.search-input::placeholder{color:var(--t3);font-size:14px}
+.search-btn{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+  padding:14px 28px;background:var(--purple);color:#fff;border:2px solid var(--purple);
+  cursor:pointer;transition:all .15s;white-space:nowrap}
+.search-btn:hover{background:#4a3c7a;border-color:#4a3c7a}
+.search-hint{font-size:10.5px;color:var(--t3);line-height:1.5}
+.search-hint span{color:var(--t2)}
+
+/* searching state */
+.searching{display:none;align-items:center;gap:14px;padding:16px 20px;
+  background:var(--teal-l);border:1px solid var(--teal-b);margin-top:16px}
+.searching.on{display:flex}
+.spin{width:16px;height:16px;border:2px solid var(--teal-b);border-top-color:var(--teal);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.search-status{font-size:11px;color:var(--teal);letter-spacing:.005em}
+.search-sources{font-size:9.5px;color:var(--t3);margin-top:2px}
+
+/* ══ MOMENT 2 — CONFIRM ══ */
+.m2-card{background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow2);display:none}
+.m2-card.on{display:block}
+/* company identity bar */
+.m2-identity{padding:28px 40px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:24px}
+.m2-logo{width:44px;height:44px;border-radius:4px;background:var(--purple-l);
+  border:1px solid var(--purple-b);display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:var(--purple);flex-shrink:0}
+.m2-co{flex:1}
+.m2-name{font-size:19px;font-weight:600;color:var(--t0);letter-spacing:-.01em;margin-bottom:3px}
+.m2-meta{font-size:11px;color:var(--t2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.m2-sep{color:var(--t4)}
+.m2-confidence{display:flex;align-items:center;gap:8px;margin-left:auto}
+.m2c-label{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.m2c-score{font-size:13px;font-weight:700;color:var(--teal)}
+.m2c-src{font-size:9px;color:var(--t3)}
+/* found badge */
+.found-badge{font-size:8.5px;letter-spacing:.10em;font-weight:700;padding:3px 10px;border-radius:2px;
+  color:var(--teal);background:var(--teal-l);border:1px solid var(--teal-b)}
+
+/* confirm grid */
+.confirm-grid{padding:28px 40px;display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-bottom:1px solid var(--border)}
+.cg-item{padding:14px 0;border-bottom:1px solid var(--border);display:grid;
+  grid-template-columns:180px 1fr auto;gap:12px;align-items:start}
+.cg-item:last-child{border-bottom:none}
+.cg-label{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;padding-top:2px}
+.cg-value-wrap{display:flex;flex-direction:column;gap:4px}
+.cg-value{font-size:12.5px;color:var(--t0);letter-spacing:.005em;line-height:1.3}
+.cg-value.editable{border-bottom:1px dashed var(--border2);padding-bottom:1px;cursor:text}
+.cg-source{font-size:9px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.src-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.src-dot.hi{background:var(--teal)}.src-dot.med{background:var(--gold)}.src-dot.lo{background:var(--coral)}
+/* inline edit */
+.cg-edit{display:none}
+.cg-edit.on{display:flex;flex-direction:column;gap:6px}
+.cg-input{border:1.5px solid var(--border);background:var(--bg);color:var(--t0);
+  font-size:12.5px;padding:6px 10px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.cg-input:focus{border-color:var(--purple)}
+.cg-select{border:1.5px solid var(--border);background:var(--bg);color:var(--t0);
+  font-size:12px;padding:6px 10px;font-family:var(--sans);outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7470' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.cg-select option{background:var(--bg)}
+/* actions */
+.cg-actions{display:flex;gap:6px;flex-shrink:0}
+.ca-btn{font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  padding:5px 10px;border-radius:2px;cursor:pointer;white-space:nowrap;transition:all .12s}
+.ca-btn.confirm{color:var(--teal);background:var(--teal-l);border:1px solid var(--teal-b)}
+.ca-btn.confirm.done{opacity:.5;cursor:default}
+.ca-btn.edit{color:var(--t2);background:transparent;border:1px solid var(--border)}
+.ca-btn.edit:hover{color:var(--t0);border-color:var(--border2)}
+
+/* entity list in confirm */
+.entity-confirm{padding:0 40px 28px}
+.ec-title{font-size:8px;letter-spacing:.20em;text-transform:uppercase;color:var(--t3);font-weight:600;
+  padding:20px 0 12px;border-top:1px solid var(--border)}
+.ec-list{display:flex;flex-direction:column;gap:6px}
+.ec-item{display:grid;grid-template-columns:8px 1fr auto auto auto;align-items:center;gap:12px;
+  padding:12px 16px;border:1px solid var(--border);background:var(--bg);transition:border-color .12s}
+.ec-item:hover{border-color:var(--border2)}
+.ec-dot{width:6px;height:6px;border-radius:50%}
+.ec-dot.hi{background:var(--teal)}.ec-dot.med{background:var(--gold)}.ec-dot.lo{background:var(--coral)}
+.ec-main{flex:1}
+.ec-n{font-size:12px;color:var(--t0);font-weight:500}
+.ec-s{font-size:10px;color:var(--t2);margin-top:2px}
+.ec-type{font-size:8px;letter-spacing:.10em;font-weight:600;padding:2px 8px;border-radius:2px}
+.ec-type.parent{color:var(--purple);background:var(--purple-l);border:1px solid var(--purple-b)}
+.ec-type.sub{color:var(--teal);background:var(--teal-l);border:1px solid var(--teal-b)}
+.ec-type.jv{color:var(--gold);background:var(--gold-l);border:1px solid var(--gold-b)}
+.ec-conf-label{font-size:9px;color:var(--t3)}
+.ec-confirm-btn{font-size:8px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  padding:4px 10px;cursor:pointer;border-radius:2px;transition:all .12s;
+  color:var(--teal);background:var(--teal-l);border:1px solid var(--teal-b)}
+.ec-confirm-btn.done{opacity:.45;cursor:default}
+.add-entity-small{display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:10px 16px;border:1.5px dashed var(--border);transition:all .12s;margin-top:4px}
+.add-entity-small:hover{border-color:var(--purple-b);background:var(--purple-l)}
+.ae-icon{color:var(--purple);font-size:13px}
+.ae-txt{font-size:11px;color:var(--t2)}
+
+/* confirm actions bar */
+.m2-actions{padding:20px 40px;display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--border);background:var(--bg3)}
+.m2-prog{display:flex;align-items:center;gap:12px;flex:1}
+.mp-label{font-size:9px;color:var(--t2);letter-spacing:.06em;white-space:nowrap}
+.mp-bar{width:120px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.mp-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .4s}
+.mp-pct{font-size:10px;font-weight:600;color:var(--teal)}
+.mp-missing{font-size:10px;color:var(--coral)}
+.m2-proceed{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+  padding:11px 24px;background:var(--purple);color:#fff;border:none;cursor:pointer;transition:all .15s}
+.m2-proceed:hover{background:#4a3c7a}
+.m2-proceed:disabled{opacity:.35;cursor:not-allowed}
+
+/* ══ MOMENT 3 — THREE QUESTIONS ══ */
+.m3-card{background:var(--bg2);border:1px solid var(--border);box-shadow:var(--shadow2);display:none}
+.m3-card.on{display:block}
+.m3-header{padding:28px 40px 24px;border-bottom:1px solid var(--border)}
+.m3-title{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--t0);line-height:1.4;margin-bottom:6px}
+.m3-sub{font-size:12px;color:var(--t2);line-height:1.65}
+.m3-questions{padding:0 40px}
+.m3q{padding:24px 0;border-bottom:1px solid var(--border)}
+.m3q:last-child{border-bottom:none}
+.m3q-num{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.m3q-n{width:22px;height:22px;border-radius:50%;background:var(--purple);color:#fff;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.m3q-label{font-size:8px;letter-spacing:.20em;text-transform:uppercase;color:var(--purple);font-weight:600}
+.m3q-why{font-size:10px;color:var(--t3);margin-left:32px;margin-bottom:8px;letter-spacing:.005em}
+.m3q-text{font-size:15px;color:var(--t0);font-weight:500;line-height:1.4;letter-spacing:-.005em;margin-bottom:14px}
+/* contact pairs */
+.contact-rows{display:flex;flex-direction:column;gap:6px}
+.contact-row{display:grid;grid-template-columns:160px 1fr 1fr;gap:8px;align-items:center}
+.cr-role{font-size:9px;color:var(--t2);letter-spacing:.06em;font-weight:600}
+.cr-input{border:1.5px solid var(--border);background:var(--bg);color:var(--t0);
+  font-size:12px;padding:8px 12px;font-family:var(--sans);outline:none;transition:border-color .15s;width:100%}
+.cr-input:focus{border-color:var(--purple)}
+.cr-input::placeholder{color:var(--t3);font-size:11px}
+.cr-hint{font-size:9px;color:var(--t3);letter-spacing:.005em}
+/* finance tags */
+.tag-wrap-light{border:1.5px solid var(--border);background:var(--bg);padding:8px 12px;
+  min-height:42px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;cursor:text;transition:border-color .15s}
+.tag-wrap-light:focus-within{border-color:var(--purple)}
+.tag-l{font-size:10.5px;padding:3px 10px;border-radius:2px;display:flex;align-items:center;gap:6px}
+.tag-l.gold{background:var(--gold-l);border:1px solid var(--gold-b);color:var(--gold)}
+.tag-l.purple{background:var(--purple-l);border:1px solid var(--purple-b);color:var(--purple)}
+.tag-rm{cursor:pointer;font-size:10px;opacity:.55}.tag-rm:hover{opacity:1;color:var(--coral)}
+.tag-input-l{background:transparent;border:none;outline:none;color:var(--t0);
+  font-size:12px;font-family:var(--sans);min-width:160px;flex:1}
+.tag-input-l::placeholder{color:var(--t3)}
+/* nz select */
+.nz-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nz-opt{padding:14px 16px;border:1.5px solid var(--border);cursor:pointer;transition:all .12s;background:var(--bg)}
+.nz-opt:hover{border-color:var(--border2);background:var(--bg3)}
+.nz-opt.sel{border-color:var(--purple-b);background:var(--purple-l)}
+.nz-opt-title{font-size:12px;font-weight:600;color:var(--t0);margin-bottom:3px}
+.nz-opt.sel .nz-opt-title{color:var(--purple)}
+.nz-opt-desc{font-size:10px;color:var(--t2);line-height:1.4}
+.nz-consequence{font-size:10px;color:var(--purple);margin-top:8px;display:none}
+.nz-consequence.on{display:block}
+
+/* m3 footer */
+.m3-footer{padding:20px 40px;border-top:1px solid var(--border);background:var(--bg3);
+  display:flex;align-items:center;justify-content:space-between}
+.m3-note{font-size:10.5px;color:var(--t2);font-style:italic;max-width:460px;line-height:1.6}
+.m3-launch{font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  padding:13px 32px;background:var(--purple);color:#fff;border:none;cursor:pointer;transition:all .15s}
+.m3-launch:hover{background:#4a3c7a}
+
+/* SUCCESS STATE */
+.success-card{display:none;background:var(--bg2);border:1px solid var(--teal-b);
+  box-shadow:var(--shadow2);padding:56px 48px;text-align:center}
+.success-card.on{display:block}
+.success-icon{font-size:36px;margin-bottom:20px}
+.success-title{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--t0);margin-bottom:10px}
+.success-sub{font-size:13px;color:var(--t2);line-height:1.65;max-width:480px;margin:0 auto 32px}
+.success-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-bottom:32px;text-align:left}
+.ss-cell{background:var(--bg);padding:16px 18px}
+.ss-l{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:5px}
+.ss-v{font-size:19px;font-family:var(--serif);font-weight:400;color:var(--teal)}
+.ss-s{font-size:9.5px;color:var(--t2);margin-top:2px}
+.success-btn{font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  padding:13px 32px;background:var(--purple);color:#fff;border:none;cursor:pointer;transition:all .15s}
+.success-btn:hover{background:#4a3c7a}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wm">CorpStage</div>
+  <div class="nav-c">Organisation Setup</div>
+  <div class="nav-r">
+    <div class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+      <div class="tt-icon" id="themeIcon">☀️</div>
+      <div class="tt-label" id="themeLabel">Light</div>
+    </div>
+    <div class="fnav">
+      <a class="fn active">G1 · Setup</a>
+      <a class="fn" href="G2_Data_Sources.html">G2 · Data Sources</a>
+      <a class="fn">G3 · Lenses</a>
+      <a class="fn">G4 · Users</a>
+      <a class="fn">G5 · Workflow</a>
+    </div>
+  </div>
+</nav>
+
+<div class="canvas">
+<div class="page">
+
+  <!-- MOMENT INDICATORS -->
+  <div class="moment-num" style="margin-bottom:36px">
+    <div class="mn-circle active" id="m1circle">1</div>
+    <div class="mn-label active" id="m1label">Find your company</div>
+    <div class="mn-line"></div>
+    <div class="mn-circle pend" id="m2circle">2</div>
+    <div class="mn-label pend" id="m2label">Confirm what we found</div>
+    <div class="mn-line"></div>
+    <div class="mn-circle pend" id="m3circle">3</div>
+    <div class="mn-label pend" id="m3label">Answer three questions</div>
+  </div>
+
+  <!-- ══ MOMENT 1 — SEARCH ══ -->
+  <div class="m1-card" id="m1card">
+    <div class="m1-title">What is your company called?</div>
+    <div class="m1-sub">Enter your company name, website, or stock ticker. CorpStage will search 20+ global registries simultaneously and return everything it can find — in under 30 seconds.</div>
+
+    <div class="search-wrap">
+      <input class="search-input" type="text" id="searchInput"
+        placeholder="Company name, website, or stock ticker…"
+        onkeydown="if(event.key==='Enter')startSearch()">
+      <button class="search-btn" onclick="startSearch()">Search →</button>
+    </div>
+    <div class="search-hint">
+      <span>Searches:</span> SEC EDGAR · Companies House UK · MCA India · Bundesanzeiger Germany · ACRA Singapore · ASX Australia · BSE/NSE · OpenCorporates · 12 more registries
+    </div>
+
+    <div class="searching" id="searchingState">
+      <div class="spin"></div>
+      <div>
+        <div class="search-status" id="searchStatus">Searching SEC EDGAR…</div>
+        <div class="search-sources" id="searchSources">Checking 20 global registries simultaneously</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MOMENT 2 — CONFIRM ══ -->
+  <div class="m2-card" id="m2card">
+    <div class="m2-identity">
+      <div class="m2-logo" id="m2logo">AC</div>
+      <div class="m2-co">
+        <div class="m2-name" id="m2companyName">Acme Corporation Ltd</div>
+        <div class="m2-meta">
+          <span id="m2country">United States</span>
+          <span class="m2-sep">·</span>
+          <span id="m2exchange">Listed NYSE</span>
+          <span class="m2-sep">·</span>
+          <span id="m2industry">Manufacturing — Industrial</span>
+          <span class="m2-sep">·</span>
+          <span id="m2entities">4 entities found</span>
+        </div>
+      </div>
+      <div class="m2-confidence">
+        <div>
+          <div class="m2c-label">Retrieved from</div>
+          <div class="m2c-score">SEC EDGAR</div>
+          <div class="m2c-src">+ 3 other registries</div>
+        </div>
+        <div class="found-badge" style="margin-left:16px">◎ Found</div>
+      </div>
+    </div>
+
+    <!-- CONFIRM FIELDS -->
+    <div class="confirm-grid">
+
+      <div style="padding:0 0 0 0;grid-column:1/-1">
+        <div style="font-size:8px;letter-spacing:.20em;text-transform:uppercase;color:var(--t3);font-weight:600;padding:16px 0 14px;border-bottom:1px solid var(--border)">Group-level information — confirm or correct each item</div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Legal Name</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-legal">Acme Corporation Limited</div>
+          <div class="cg-edit" id="ce-legal">
+            <input class="cg-input" type="text" value="Acme Corporation Limited" id="ci-legal">
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>SEC EDGAR · 10-K FY2024 · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('legal',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('legal')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Primary Industry</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-industry">Manufacturing — Industrial</div>
+          <div class="cg-edit" id="ce-industry">
+            <select class="cg-select" id="ci-industry" onchange="updateIndustryNote()">
+              <option>Manufacturing — Industrial</option>
+              <option>Apparel & Textiles</option><option>Automotive</option>
+              <option>Banking & Financial Services</option><option>Chemicals</option>
+              <option>Construction & Real Estate</option><option>Consumer Goods</option>
+              <option>Energy & Utilities</option><option>Food & Agriculture</option>
+              <option>Healthcare & Pharma</option><option>Mining & Metals</option>
+              <option>Oil & Gas</option><option>Retail</option>
+              <option>Technology</option><option>Telecommunications</option>
+              <option>Transport & Logistics</option>
+            </select>
+            <div style="font-size:9px;color:var(--purple);margin-top:4px" id="industryNote">↳ All 70 business questions will use manufacturing language</div>
+          </div>
+          <div class="cg-source"><div class="src-dot med"></div>Inferred from SIC code 3315 · Medium confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('industry',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('industry')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Country of Incorporation</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-country">United States</div>
+          <div class="cg-edit" id="ce-country">
+            <select class="cg-select" id="ci-country" onchange="updateCountryNote()">
+              <option selected>United States</option>
+              <option>Australia</option><option>Brazil</option><option>Canada</option>
+              <option>China</option><option>France</option><option>Germany</option>
+              <option>Hong Kong</option><option>India</option><option>Japan</option>
+              <option>Netherlands</option><option>Singapore</option><option>South Africa</option>
+              <option>South Korea</option><option>Sweden</option><option>Switzerland</option>
+              <option>UAE</option><option>United Kingdom</option><option>Other</option>
+            </select>
+            <div style="font-size:9px;color:var(--purple);margin-top:4px" id="countryNote">↳ SEC Climate Rule applicable. California SB-253/261 if CA operations.</div>
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>SEC EDGAR · State of incorporation · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('country',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('country')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Registration Number</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-reg">EIN: 12-3456789</div>
+          <div class="cg-edit" id="ce-reg">
+            <input class="cg-input" type="text" value="12-3456789" id="ci-reg">
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>SEC EDGAR · Verified · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('reg',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('reg')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Primary Listing</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-listing">NYSE · ISIN: US0231351067</div>
+          <div class="cg-edit" id="ce-listing">
+            <input class="cg-input" type="text" value="NYSE" placeholder="Exchange name" id="ci-listing" style="margin-bottom:5px">
+            <input class="cg-input" type="text" value="US0231351067" placeholder="ISIN — 12 characters">
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>SEC EDGAR · EDGAR filing match · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('listing',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('listing')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Financial Year Start</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-fy">January</div>
+          <div class="cg-edit" id="ce-fy">
+            <select class="cg-select">
+              <option selected>January</option><option>February</option><option>March</option>
+              <option>April</option><option>May</option><option>June</option>
+              <option>July</option><option>August</option><option>September</option>
+              <option>October</option><option>November</option><option>December</option>
+            </select>
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>10-K filing period · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('fy',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('fy')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Base Currency</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-curr">USD — US Dollar</div>
+          <div class="cg-edit" id="ce-curr">
+            <select class="cg-select">
+              <option selected>USD — US Dollar</option><option>EUR — Euro</option>
+              <option>GBP — British Pound</option><option>INR — Indian Rupee</option>
+              <option>JPY — Japanese Yen</option><option>SGD — Singapore Dollar</option>
+              <option>AUD — Australian Dollar</option><option>CAD — Canadian Dollar</option>
+              <option>CHF — Swiss Franc</option><option>BRL — Brazilian Real</option>
+              <option>CNY — Chinese Yuan</option><option>ZAR — South African Rand</option>
+            </select>
+          </div>
+          <div class="cg-source"><div class="src-dot hi"></div>10-K filing currency · High confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('curr',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('curr')">Edit</div>
+        </div>
+      </div>
+
+      <div class="cg-item">
+        <div class="cg-label">Revenue Band</div>
+        <div class="cg-value-wrap">
+          <div class="cg-value" id="cv-rev">$450M – $1B</div>
+          <div class="cg-edit" id="ce-rev">
+            <select class="cg-select">
+              <option>Under $10M</option><option>$10M – $40M</option><option>$40M – $150M</option>
+              <option>$150M – $450M</option><option selected>$450M – $1B</option>
+              <option>$1B – $5B</option><option>$5B+</option>
+            </select>
+          </div>
+          <div class="cg-source"><div class="src-dot med"></div>Inferred from 10-K revenue narrative · Medium confidence</div>
+        </div>
+        <div class="cg-actions">
+          <div class="ca-btn confirm" onclick="confirmField('rev',this)">✓ Correct</div>
+          <div class="ca-btn edit" onclick="editField('rev')">Edit</div>
+        </div>
+      </div>
+
+    </div><!-- /confirm-grid -->
+
+    <!-- ENTITIES -->
+    <div class="entity-confirm">
+      <div class="ec-title">Legal entities found — confirm each</div>
+      <div class="ec-list">
+        <div class="ec-item">
+          <div class="ec-dot hi"></div>
+          <div class="ec-main">
+            <div class="ec-n">Acme Corporation Ltd</div>
+            <div class="ec-s">United States · EIN: 12-3456789 · Listed NYSE · SEC EDGAR · High confidence</div>
+          </div>
+          <div class="ec-type parent">Parent</div>
+          <div class="ec-conf-label">◎ Verified</div>
+          <div class="ec-confirm-btn done">✓ Confirmed</div>
+        </div>
+        <div class="ec-item">
+          <div class="ec-dot hi"></div>
+          <div class="ec-main">
+            <div class="ec-n">Acme UK Ltd</div>
+            <div class="ec-s">United Kingdom · CRN: 08765432 · Unlisted · Companies House · High confidence</div>
+          </div>
+          <div class="ec-type sub">Subsidiary</div>
+          <div class="ec-conf-label">◎ Verified</div>
+          <div class="ec-confirm-btn" onclick="confirmEntity(this)">Confirm</div>
+        </div>
+        <div class="ec-item">
+          <div class="ec-dot med"></div>
+          <div class="ec-main">
+            <div class="ec-n">Acme GmbH</div>
+            <div class="ec-s">Germany · HRB 54321 Munich · Unlisted · Bundesanzeiger · Medium confidence — please verify</div>
+          </div>
+          <div class="ec-type sub">Subsidiary</div>
+          <div class="ec-conf-label" style="color:var(--gold)">⚑ Verify</div>
+          <div class="ec-confirm-btn" onclick="confirmEntity(this)">Confirm</div>
+        </div>
+        <div class="ec-item">
+          <div class="ec-dot med"></div>
+          <div class="ec-main">
+            <div class="ec-n">Acme Asia Pte Ltd</div>
+            <div class="ec-s">Singapore · UEN: 201512345K · Unlisted · Inferred from annual report · Medium confidence</div>
+          </div>
+          <div class="ec-type sub">Subsidiary</div>
+          <div class="ec-conf-label" style="color:var(--gold)">⚑ Verify</div>
+          <div class="ec-confirm-btn" onclick="confirmEntity(this)">Confirm</div>
+        </div>
+        <div class="add-entity-small" onclick="addEntityRow()">
+          <div class="ae-icon">+</div>
+          <div class="ae-txt">Add an entity CorpStage missed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS BAR -->
+    <div class="m2-actions">
+      <div class="m2-prog">
+        <div class="mp-label">Setup confirmed</div>
+        <div class="mp-bar"><div class="mp-fill" id="m2fill" style="width:25%"></div></div>
+        <div class="mp-pct" id="m2pct">2 of 8</div>
+        <div class="mp-missing" id="m2missing">· 6 items to confirm</div>
+      </div>
+      <button class="m2-proceed" id="m2proceedBtn" onclick="goToM3()" disabled>
+        Confirm all → Answer 3 questions
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ MOMENT 3 — FIVE QUESTIONS ══ -->
+  <div class="m3-card" id="m3card">
+    <div class="m3-header">
+      <div class="m3-title">Five things only you can tell us.</div>
+      <div class="m3-sub">CorpStage searched every public source. These five things are not there. Each answer activates a core intelligence capability that cannot function without it. Five minutes. Then the platform is live.</div>
+    </div>
+
+    <div class="m3-questions">
+
+      <!-- Q1 — WHO RECEIVES ALERTS -->
+      <div class="m3q">
+        <div class="m3q-num">
+          <div class="m3q-n">1</div>
+          <div class="m3q-label">Who receives intelligence when it needs a decision?</div>
+        </div>
+        <div class="m3q-why">The intelligence routing engine (Stage 5a) needs named owners with email addresses. Every gap, contradiction, and escalation routes automatically to the right person. Without email addresses the routing engine cannot function — intelligence gaps stay unattended indefinitely.</div>
+        <div class="m3q-text">Who are the key decision-makers across each business domain?</div>
+        <div class="contact-rows">
+          <div style="display:grid;grid-template-columns:180px 1fr 1fr;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px">
+            <div style="font-size:8.5px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;font-weight:600">Domain</div>
+            <div style="font-size:8.5px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;font-weight:600">Full Name</div>
+            <div style="font-size:8.5px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;font-weight:600">Email <span style="color:var(--coral)">*</span></div>
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">CFO — Financial Intelligence</div>
+            <input class="cr-input" type="text" placeholder="Full name" oninput="calcM3Prog()">
+            <input class="cr-input" type="email" placeholder="email@company.com" oninput="calcM3Prog()">
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">Company Secretary — Governance</div>
+            <input class="cr-input" type="text" placeholder="Full name">
+            <input class="cr-input" type="email" placeholder="email@company.com" oninput="calcM3Prog()">
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">COO — Operational Intelligence</div>
+            <input class="cr-input" type="text" placeholder="Full name">
+            <input class="cr-input" type="email" placeholder="email@company.com">
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">CRO — Risk & Resilience</div>
+            <input class="cr-input" type="text" placeholder="Full name">
+            <input class="cr-input" type="email" placeholder="email@company.com">
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">CHRO — Workforce & Capability</div>
+            <input class="cr-input" type="text" placeholder="Full name">
+            <input class="cr-input" type="email" placeholder="email@company.com">
+          </div>
+          <div class="contact-row">
+            <div class="cr-role">CPO — Supplier & Ecosystem</div>
+            <input class="cr-input" type="text" placeholder="Full name">
+            <input class="cr-input" type="email" placeholder="email@company.com">
+          </div>
+        </div>
+        <div class="cr-hint" style="margin-top:10px">Minimum required: CFO email and Company Secretary email. All others can be added in G4 — Users & Roles.</div>
+      </div>
+
+      <!-- Q2 — FINANCIAL OBLIGATIONS WITH PERFORMANCE CONDITIONS -->
+      <div class="m3q">
+        <div class="m3q-num">
+          <div class="m3q-n">2</div>
+          <div class="m3q-label">What financial obligations carry performance conditions?</div>
+        </div>
+        <div class="m3q-why">Financial instruments with performance covenants — bonds, loans, credit facilities, earn-outs — create tracked obligations with measurable financial consequences if missed. CorpStage can find headline debt from filings but cannot find the specific performance conditions attached. These seed the Commitment Integrity Monitor (Q5) and the Financial Resilience P&L (Q3) immediately.</div>
+        <div class="m3q-text">List any bonds, loans, or credit facilities where a financial condition triggers a penalty, rate change, or covenant breach.</div>
+        <div class="tag-wrap-light" id="bondsWrap">
+          <input class="tag-input-l" id="bondsInput" placeholder="e.g. '$500M Bond 2023 — interest step-up +25bps if revenue falls below $400M by FY25'  · press Enter to add" onkeydown="addCommitment(event,'bondsWrap','gold')">
+        </div>
+        <div class="cr-hint" style="margin-top:8px">Examples: green bonds with milestone covenants, sustainability-linked loans with KPI triggers, revolving credit with leverage ratio conditions, earn-out structures. Each one added here is tracked against actual performance continuously.</div>
+      </div>
+
+      <!-- Q3 — PUBLIC COMMITMENTS LEADERSHIP HAS MADE -->
+      <div class="m3q">
+        <div class="m3q-num">
+          <div class="m3q-n">3</div>
+          <div class="m3q-label">What has leadership publicly committed to that investors and regulators are tracking?</div>
+        </div>
+        <div class="m3q-why">CEO statements, board resolutions, investor day commitments, and regulatory consent orders create real obligations — but they are rarely machine-readable from public sources. CorpStage found some from filings and transcripts. These are what it could not find. Each commitment entered here is immediately tracked against operational trajectory. The gap between what was said and what is happening is the most valuable intelligence CorpStage generates.</div>
+        <div class="m3q-text">What public commitments has leadership made to investors, regulators, or the market that are not captured above?</div>
+
+        <!-- What CorpStage already found -->
+        <div style="padding:14px 16px;background:var(--bg3);border:1px solid var(--border);margin-bottom:12px">
+          <div style="font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:10px">◎ Already found in public sources — confirm or remove</div>
+          <div id="foundCommitments" style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 10px;background:var(--bg2);border:1px solid var(--border)">
+              <div>
+                <div style="font-size:12px;color:var(--t0)">Expand manufacturing capacity by 40% by FY2026</div>
+                <div style="font-size:9.5px;color:var(--t3);margin-top:2px">Investor Day 2023 · CEO statement · High confidence</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <div class="ca-btn confirm" onclick="this.classList.add('done');this.textContent='✓'">✓ Keep</div>
+                <div class="ca-btn edit" onclick="this.closest('div[style]').remove()">Remove</div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 10px;background:var(--bg2);border:1px solid var(--border)">
+              <div>
+                <div style="font-size:12px;color:var(--t0)">Achieve investment grade credit rating by FY2025</div>
+                <div style="font-size:9.5px;color:var(--t3);margin-top:2px">Q3 FY2023 Earnings Call · CFO statement · Medium confidence</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <div class="ca-btn confirm" onclick="this.classList.add('done');this.textContent='✓'">✓ Keep</div>
+                <div class="ca-btn edit" onclick="this.closest('div[style]').remove()">Remove</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add what CorpStage missed -->
+        <div style="font-size:9px;color:var(--t2);margin-bottom:8px;letter-spacing:.005em">Add commitments CorpStage did not find:</div>
+        <div class="tag-wrap-light" id="commitmentsWrap">
+          <input class="tag-input-l" placeholder="e.g. 'CEO committed to returning $2B to shareholders by FY2026 · Q4 earnings call'  · press Enter" onkeydown="addCommitment(event,'commitmentsWrap','purple')">
+        </div>
+        <div class="cr-hint" style="margin-top:8px">Include strategic commitments, operational targets, market guidance, regulatory undertakings, and any pledge made to investors or the board. CorpStage tracks every one against reality.</div>
+      </div>
+
+      <!-- Q4 — BIGGEST BUSINESS RISK NOT YET IN ANY DOCUMENT -->
+      <div class="m3q">
+        <div class="m3q-num">
+          <div class="m3q-n">4</div>
+          <div class="m3q-label">What is your biggest business risk that is not yet in any public document?</div>
+        </div>
+        <div class="m3q-why">This is the question no intelligence platform has ever asked. Executive anxiety signals — the risks leadership sees but has not yet disclosed — are among the most valuable intelligence CorpStage holds. They shape how the Threat Map (Q4) weights signals and which early warnings get elevated before they become formal disclosures. This seeds Living Memory with intelligence that documents will never contain.</div>
+        <div class="m3q-text">What keeps the CEO or CFO awake right now that has not yet appeared in any filing, report, or public statement?</div>
+        <textarea style="width:100%;border:1.5px solid var(--border);background:var(--bg);color:var(--t0);
+          font-size:13px;padding:14px 16px;font-family:var(--sans);outline:none;resize:none;
+          line-height:1.65;min-height:80px;transition:border-color .15s;letter-spacing:.005em"
+          placeholder="e.g. 'Our largest customer in Germany is reviewing its supplier base. No formal signal yet but the relationship has cooled significantly over the past two quarters. This represents approximately 18% of our EU revenue.'"
+          onfocus="this.style.borderColor='var(--purple)'"
+          onblur="this.style.borderColor='var(--border)'"></textarea>
+        <div class="cr-hint" style="margin-top:8px">One or two sentences is enough. Write as you would say it — not in formal language. This is confidential to CorpStage and does not appear in any output.</div>
+      </div>
+
+      <!-- Q5 — DATA MATURITY -->
+      <div class="m3q">
+        <div class="m3q-num">
+          <div class="m3q-n">5</div>
+          <div class="m3q-label">How does your organisation currently collect operational data?</div>
+        </div>
+        <div class="m3q-why">This calibrates the entire intelligence acquisition strategy. A company with manual spreadsheets needs CorpStage to rely on documents and external retrieval — and to ask more questions. A company with integrated systems allows aggressive automatic extraction. Getting this wrong means the platform either over-asks or under-extracts from Day One.</div>
+        <div class="m3q-text">How mature is your current data collection infrastructure?</div>
+        <div class="nz-options">
+          <div class="nz-opt" onclick="selectMaturity(this,'manual')">
+            <div class="nz-opt-title">Spreadsheets & email</div>
+            <div class="nz-opt-desc">Data collected manually. No dedicated system. Ad-hoc collection per reporting cycle.</div>
+          </div>
+          <div class="nz-opt" onclick="selectMaturity(this,'basic')">
+            <div class="nz-opt-title">Basic dedicated system</div>
+            <div class="nz-opt-desc">ESG or ERP tool in place. Structured data available but not fully integrated.</div>
+          </div>
+          <div class="nz-opt" onclick="selectMaturity(this,'advanced')">
+            <div class="nz-opt-title">Advanced — partial integration</div>
+            <div class="nz-opt-desc">Key systems connected. Automated data feeds for some domains. ERP partially integrated.</div>
+          </div>
+          <div class="nz-opt" onclick="selectMaturity(this,'integrated')">
+            <div class="nz-opt-title">Fully integrated</div>
+            <div class="nz-opt-desc">ERP, HRIS, energy, and operational systems fully connected. Real-time data available.</div>
+          </div>
+        </div>
+        <div class="nz-consequence" id="maturityConsequence"></div>
+      </div>
+
+    </div><!-- /m3-questions -->
+
+    <div class="m3-footer">
+      <div class="m3-note">After launch, CorpStage begins building your intelligence picture immediately from public sources and what you have confirmed here. Everything else surfaces progressively — as guided completion opportunities ranked by the financial value of closing each gap.</div>
+      <button class="m3-launch" onclick="launch()">Launch CorpStage →</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-card" id="successCard">
+    <div class="success-icon">✦</div>
+    <div class="success-title">CorpStage is live.</div>
+    <div class="success-sub">Your enterprise intelligence engine is calibrated and running. CorpStage is already retrieving external intelligence and beginning to understand your business.</div>
+    <div class="success-stats">
+      <div class="ss-cell"><div class="ss-l">Entities configured</div><div class="ss-v">4</div><div class="ss-s">Parent + 3 subsidiaries</div></div>
+      <div class="ss-cell"><div class="ss-l">Obligations tracked</div><div class="ss-v">3+</div><div class="ss-s">Financial + strategic commitments</div></div>
+      <div class="ss-cell"><div class="ss-l">Routing owners</div><div class="ss-v">6</div><div class="ss-s">Stage 5a active · nothing unattended</div></div>
+      <div class="ss-cell"><div class="ss-l">Intelligence starting at</div><div class="ss-v">61%</div><div class="ss-s">Grows as documents are added in G2</div></div>
+    </div>
+    <button class="success-btn" onclick="window.location.href='G2_Data_Sources.html'">Proceed to G2 — Connect Data Sources →</button>
+  </div>
+
+</div><!-- /page -->
+</div><!-- /canvas -->
+
+<script>
+// ── THEME TOGGLE
+let isDark = false;
+function toggleTheme(){
+  isDark = !isDark;
+  document.body.classList.toggle('dark', isDark);
+  document.getElementById('themeIcon').textContent = isDark ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = isDark ? 'Dark' : 'Light';
+}
+
+// ── MOMENT 1 — SEARCH
+const searchSteps = [
+  'Searching SEC EDGAR…','Searching Companies House UK…','Searching MCA India…',
+  'Searching Bundesanzeiger Germany…','Searching ACRA Singapore…',
+  'Searching BSE / NSE / SEBI…','Searching OpenCorporates (200M+ companies)…',
+  'Matching to public filings…','Retrieving entity structure…','Building company profile…'
+];
+
+function startSearch(){
+  const val = document.getElementById('searchInput').value.trim();
+  if(!val) return;
+  const state = document.getElementById('searchingState');
+  const statusEl = document.getElementById('searchStatus');
+  const sourcesEl = document.getElementById('searchSources');
+  state.classList.add('on');
+  let step = 0;
+  const iv = setInterval(()=>{
+    if(step < searchSteps.length){
+      statusEl.textContent = searchSteps[step];
+      sourcesEl.textContent = (step+1) + ' of ' + searchSteps.length + ' registries checked';
+      step++;
+    } else {
+      clearInterval(iv);
+      state.classList.remove('on');
+      showMoment2(val);
+    }
+  }, 280);
+}
+
+function showMoment2(query){
+  // Update company name based on query (demo)
+  const name = query.charAt(0).toUpperCase() + query.slice(1);
+  document.getElementById('m2companyName').textContent = name.includes('.') ? name.split('.')[0].charAt(0).toUpperCase()+name.split('.')[0].slice(1)+' Corporation Ltd' : name + ' Ltd';
+  document.getElementById('m2logo').textContent = (query.trim().charAt(0) + (query.trim().charAt(1)||'')).toUpperCase();
+
+  // Show moment 2
+  document.getElementById('m1card').style.opacity = '.4';
+  document.getElementById('m2card').classList.add('on');
+  document.getElementById('m2card').scrollIntoView({behavior:'smooth',block:'start'});
+
+  // Update moment indicators
+  document.getElementById('m1circle').className='mn-circle done';
+  document.getElementById('m1label').className='mn-label done';
+  document.getElementById('m2circle').className='mn-circle active';
+  document.getElementById('m2label').className='mn-label active';
+}
+
+// ── MOMENT 2 — CONFIRM FIELDS
+let confirmedFields = 1; // parent entity pre-confirmed
+const totalFields = 8;
+
+function confirmField(id, btn){
+  if(btn.classList.contains('done')) return;
+  btn.classList.add('done');
+  btn.textContent = '✓ Confirmed';
+  // Close edit if open
+  const edit = document.getElementById('ce-'+id);
+  const val = document.getElementById('ci-'+id);
+  if(edit && edit.classList.contains('on') && val){
+    const displayEl = document.getElementById('cv-'+id);
+    if(displayEl) displayEl.textContent = val.tagName==='SELECT' ? val.options[val.selectedIndex].text : val.value;
+    edit.classList.remove('on');
+  }
+  confirmedFields++;
+  updateM2Progress();
+}
+
+function editField(id){
+  const edit = document.getElementById('ce-'+id);
+  if(edit) edit.classList.toggle('on');
+}
+
+function confirmEntity(btn){
+  if(btn.classList.contains('done')) return;
+  btn.classList.add('done');
+  btn.textContent = '✓ Confirmed';
+  confirmedFields++;
+  updateM2Progress();
+}
+
+function updateM2Progress(){
+  const pct = Math.round((confirmedFields/totalFields)*100);
+  document.getElementById('m2fill').style.width = pct+'%';
+  document.getElementById('m2pct').textContent = confirmedFields + ' of ' + totalFields;
+  const remaining = totalFields - confirmedFields;
+  document.getElementById('m2missing').textContent = remaining > 0 ? '· ' + remaining + ' items to confirm' : '· All confirmed';
+  document.getElementById('m2proceedBtn').disabled = confirmedFields < totalFields;
+}
+
+function addEntityRow(){
+  const list = document.querySelector('.ec-list');
+  const addBtn = document.querySelector('.add-entity-small');
+  const row = document.createElement('div');
+  row.className = 'ec-item';
+  row.innerHTML = `
+    <div class="ec-dot lo"></div>
+    <div class="ec-main">
+      <input style="border:1.5px solid var(--border);background:var(--bg);color:var(--t0);font-size:12px;padding:5px 10px;font-family:var(--sans);outline:none;width:100%;margin-bottom:5px" placeholder="Entity legal name…">
+      <input style="border:1.5px solid var(--border);background:var(--bg);color:var(--t2);font-size:10px;padding:4px 10px;font-family:var(--sans);outline:none;width:100%" placeholder="Country · Registration number · Listing status">
+    </div>
+    <select style="border:1px solid var(--border);background:var(--bg);color:var(--t0);font-size:9px;padding:4px 8px;font-family:var(--sans)">
+      <option>Subsidiary</option><option>Joint Venture</option><option>Associate</option><option>Branch</option>
+    </select>
+    <div style="font-size:9px;color:var(--t3)">New</div>
+    <div class="ec-confirm-btn" onclick="confirmEntity(this)">Confirm</div>`;
+  list.insertBefore(row, addBtn);
+}
+
+// ── MOMENT 3
+function goToM3(){
+  document.getElementById('m2card').style.opacity = '.5';
+  document.getElementById('m3card').classList.add('on');
+  document.getElementById('m3card').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('m2circle').className='mn-circle done';
+  document.getElementById('m2label').className='mn-label done';
+  document.getElementById('m3circle').className='mn-circle active';
+  document.getElementById('m3label').className='mn-label active';
+}
+
+// Bond / commitment tags
+function addCommitment(e, wrapId, cls){
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const input = e.target;
+  const val = input.value.trim();
+  if(!val) return;
+  const tag = document.createElement('div');
+  tag.className = 'tag-l ' + cls;
+  tag.innerHTML = val + ' <span class="tag-rm" onclick="this.closest(\'.tag-l\').remove()">✕</span>';
+  input.parentNode.insertBefore(tag, input);
+  input.value = '';
+}
+
+// Maturity selection
+function selectMaturity(el, type){
+  document.querySelectorAll('.nz-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  const cons = document.getElementById('maturityConsequence');
+  const messages = {
+    manual:'↳ Manual maturity: CorpStage will rely primarily on uploaded documents and external retrieval. Guided completion questions will be more frequent. Confidence will build as documents are added.',
+    basic:'↳ Basic system: CorpStage will extract from your tool exports and uploaded documents. Medium auto-extraction. Confirmations needed for operational data. Good starting position.',
+    advanced:'↳ Advanced maturity: High auto-extraction from connected systems. CorpStage will ask significantly less. Confidence builds faster. Year 2 API connections recommended.',
+    integrated:'↳ Fully integrated: Maximum auto-extraction from Day One. CorpStage operates largely autonomously. Human confirmation needed only for strategic context and executive judgment.',
+  };
+  cons.textContent = messages[type] || '';
+  cons.classList.add('on');
+}
+
+// Launch
+function launch(){
+  document.getElementById('m3card').style.opacity = '.5';
+  document.getElementById('m3circle').className='mn-circle done';
+  document.getElementById('m3label').className='mn-label done';
+  document.getElementById('successCard').classList.add('on');
+  document.getElementById('successCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function calcM3Prog(){}
+
+  const hints = {
+    'Manufacturing — Industrial':'↳ All 70 business questions will use manufacturing language — "production lines", "raw materials", "TRIR"',
+    'Banking & Financial Services':'↳ Financial services phrasings — "loan portfolio", "financed emissions", "PCAF", "AUM"',
+    'Technology':'↳ Technology phrasings — "data centres", "energy PUE", "e-waste", "AI governance"',
+    'Oil & Gas':'↳ Oil & Gas phrasings — "upstream operations", "Scope 1 methane", "flaring", "reserves"',
+    'Food & Agriculture':'↳ Food phrasings — "agricultural commodities", "food waste", "animal welfare", "land use"',
+  };
+  const sel = document.getElementById('ci-industry');
+  const note = document.getElementById('industryNote');
+  note.textContent = hints[sel.value] || '↳ Industry-specific question phrasings will apply across all 70 business questions';
+}
+
+function updateCountryNote(){
+  const hints = {
+    'United States':'↳ SEC Climate Rule if listed. California SB-253/261 if CA operations + $1B revenue.',
+    'United Kingdom':'↳ Modern Slavery Act if £36M+ turnover. Companies House annual filing. ISSB S2 aligned 2026.',
+    'Germany':'↳ CSRD/ESRS mandatory if >250 employees + €40M revenue. Bundesanzeiger annual filing.',
+    'India':'↳ BRSR mandatory if NSE/BSE listed. MCA filing required. SEBI LODR applies.',
+    'Australia':'↳ ASRS mandatory climate disclosure from FY Jan 2025 for large entities.',
+    'Singapore':'↳ SGX climate disclosure required. ISSB S2 from FY2025.',
+    'France':'↳ CSRD/ESRS mandatory. DPEF for large entities.',
+    'Netherlands':'↳ CSRD/ESRS mandatory. EU taxonomy alignment required.',
+  };
+  const sel = document.getElementById('ci-country');
+  const note = document.getElementById('countryNote');
+  note.textContent = hints[sel.value] || '↳ Check local jurisdiction for applicable mandatory framework requirements.';
+}
+
+// Launch
+function launch(){
+  document.getElementById('m3card').style.opacity = '.5';
+  document.getElementById('m3circle').className='mn-circle done';
+  document.getElementById('m3label').className='mn-label done';
+  document.getElementById('successCard').classList.add('on');
+  document.getElementById('successCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function calcM3Prog(){}
+</script>
+</body>
+</html>

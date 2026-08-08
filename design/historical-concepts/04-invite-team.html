@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Invite Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:20px;}
+.card{display:flex;width:1000px;min-height:680px;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.L{width:30%;background:#0f3d25;padding:36px 30px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:32px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.step{display:flex;gap:11px;padding-bottom:20px;position:relative;}
+.step:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;width:1px;height:calc(100% - 10px);background:rgba(255,255,255,0.07);}
+.sn{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:500;flex-shrink:0;}
+.sn.done{background:#2A854F;color:#fff;}
+.sn.active{background:#fff;color:#0f3d25;}
+.sn.pending{background:rgba(255,255,255,0.07);color:#6ee7b7;}
+.stit{font-size:11.5px;font-weight:500;margin-top:2px;}
+.stit.done{color:#6ee7b7;}
+.stit.active{color:#d1fae5;}
+.stit.dim{color:#2d6645;}
+.ssub{font-size:10.5px;color:#2d6645;margin-top:1px;}
+.lfoot{color:#1e4d32;font-size:10.5px;}
+.R{flex:1;padding:36px 42px;background:#fff;display:flex;flex-direction:column;}
+.ptitle{font-size:19px;font-weight:600;color:#0f172a;letter-spacing:-0.4px;margin-bottom:4px;}
+.psub{font-size:13px;color:#64748b;margin-bottom:22px;line-height:1.5;}
+.lic-bar-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:14px 16px;margin-bottom:20px;}
+.lb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+.lb-label{font-size:12.5px;color:#64748b;}
+.lb-count{font-size:13px;font-weight:600;color:#0f172a;}
+.lb-count span{color:#2A854F;}
+.prog{height:5px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.prog-fill{height:100%;background:#1a5c37;border-radius:4px;transition:width .3s;}
+.lb-hint{font-size:11.5px;color:#64748b;}
+.add-row{display:flex;gap:8px;margin-bottom:18px;}
+.add-row input{flex:1;height:36px;padding:0 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.add-row input:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.add-row input::placeholder{color:#94a3b8;font-size:12.5px;}
+.add-row select{height:36px;padding:0 10px;font-size:12.5px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;min-width:130px;}
+.add-btn{height:36px;padding:0 16px;background:#1a5c37;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.add-btn:hover{background:#0f3d25;}
+.add-btn:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;}
+.user-table{width:100%;border-collapse:collapse;font-size:13px;flex:1;}
+.user-table th{text-align:left;font-size:10.5px;font-weight:600;color:#94a3b8;padding:8px 10px;border-bottom:1px solid #f1f5f9;letter-spacing:.04em;text-transform:uppercase;}
+.user-table td{padding:11px 10px;border-bottom:1px solid #f8fafc;color:#0f172a;vertical-align:middle;}
+.user-table tr:hover td{background:#fafafa;}
+.av{width:28px;height:28px;border-radius:50%;background:#dcfce7;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#166534;margin-right:8px;vertical-align:middle;flex-shrink:0;}
+.uname{font-weight:500;font-size:13px;}
+.uemail{color:#94a3b8;font-size:11.5px;margin-top:1px;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.bg-green{background:#dcfce7;color:#166534;}
+.bg-blue{background:#dbeafe;color:#1e40af;}
+.bg-amber{background:#fef9c3;color:#854d0e;}
+.bg-slate{background:#f1f5f9;color:#475569;}
+.role-sel{height:28px;padding:0 8px;font-size:12px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;}
+.act-btn{background:none;border:none;cursor:pointer;padding:4px 5px;border-radius:5px;color:#94a3b8;font-size:14px;}
+.act-btn:hover{background:#f1f5f9;color:#ef4444;}
+.footer-row{display:flex;gap:10px;margin-top:22px;}
+.btn-ghost{flex:1;height:38px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;}
+.btn-ghost:hover{background:#f8fafc;}
+.btn-primary{flex:2;height:38px;background:#1a5c37;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-primary:hover{background:#0f3d25;}
+.end-date{font-size:11.5px;color:#64748b;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="L">
+    <div>
+      <div class="logo"><div class="lm">CS</div><span class="ln">CorpStage 360</span></div>
+      <div class="step"><div class="sn done"><i class="ti ti-check" style="font-size:10px;"></i></div><div><div class="stit done">Profile submitted</div></div></div>
+      <div class="step"><div class="sn done"><i class="ti ti-check" style="font-size:10px;"></i></div><div><div class="stit done">Admin approved</div></div></div>
+      <div class="step"><div class="sn done"><i class="ti ti-check" style="font-size:10px;"></i></div><div><div class="stit done">Payment complete</div></div></div>
+      <div class="step"><div class="sn active">4</div><div><div class="stit active">Invite your team</div><div class="ssub">Add users to your workspace</div></div></div>
+      <div class="step"><div class="sn pending">5</div><div><div class="stit dim">Access workspace</div><div class="ssub">Begin your ESG journey</div></div></div>
+    </div>
+    <div class="lfoot">© 2025 CorpStage Pte. Ltd. · Singapore</div>
+  </div>
+  <div class="R">
+    <div class="ptitle">Invite your team</div>
+    <div class="psub">Add users to your workspace. Each invited user will receive an email to set up their profile. Licence end date applies to all users in this workspace.</div>
+    <div class="lic-bar-card">
+      <div class="lb-row"><span class="lb-label">Licences used</span><span class="lb-count"><span id="used">1</span> of 10</span></div>
+      <div class="prog"><div class="prog-fill" id="pbar" style="width:10%;"></div></div>
+      <div class="lb-hint" id="hint">9 licences remaining · Licence end date for all users: <strong>31 May 2026</strong></div>
+    </div>
+    <div class="add-row">
+      <input type="email" id="emailIn" placeholder="colleague@organisation.com"/>
+      <select id="roleIn">
+        <option>ESG Manager</option>
+        <option>Contributor</option>
+        <option>Reviewer</option>
+        <option>Approver</option>
+        <option>Auditor</option>
+        <option>Viewer</option>
+      </select>
+      <button class="add-btn" id="addBtn" onclick="addUser()"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
+    </div>
+    <div class="slabel">Team members</div>
+    <table class="user-table">
+      <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Licence end</th><th></th></tr></thead>
+      <tbody id="userList">
+        <tr>
+          <td><span class="av">AP</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Ashit Kumar Padhi</div><div class="uemail">ashit@corpstage.com</div></div></td>
+          <td><span class="badge bg-green">Workspace Owner</span></td>
+          <td><span class="badge bg-green"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Active</span></td>
+          <td><span class="end-date">31 May 2026</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="footer-row">
+      <button class="btn-ghost">Skip for now</button>
+      <button class="btn-primary"><i class="ti ti-arrow-right" style="font-size:13px;"></i> Go to my workspace</button>
+    </div>
+  </div>
+</div>
+<script>
+var users=[],used=1,max=10,endDate='31 May 2026';
+function addUser(){
+  var email=document.getElementById('emailIn').value.trim();
+  var role=document.getElementById('roleIn').value;
+  if(!email||!email.includes('@')||used>=max)return;
+  var initials=email.substring(0,2).toUpperCase();
+  users.push({email,role,initials});
+  used++;
+  document.getElementById('emailIn').value='';
+  render();
+}
+function removeUser(i){users.splice(i,1);used--;render();}
+function render(){
+  var pct=Math.round((used/max)*100);
+  document.getElementById('used').textContent=used;
+  document.getElementById('pbar').style.width=pct+'%';
+  var rem=max-used;
+  document.getElementById('hint').innerHTML=rem>0?rem+' licence'+(rem>1?'s':'')+' remaining · Licence end date for all users: <strong>'+endDate+'</strong>':'All licences assigned. <a href="#" style="color:#2A854F;">Request more licences</a> to add more users.';
+  document.getElementById('addBtn').disabled=used>=max;
+  var tb=document.getElementById('userList');
+  var html='<tr><td><span class="av">AP</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Ashit Kumar Padhi</div><div class="uemail">ashit@corpstage.com</div></div></td><td><span class="badge bg-green">Workspace Owner</span></td><td><span class="badge bg-green"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Active</span></td><td><span class="end-date">'+endDate+'</span></td><td></td></tr>';
+  users.forEach((u,i)=>{html+='<tr><td><span class="av">'+u.initials+'</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">'+u.email+'</div></div></td><td><span class="badge bg-slate">'+u.role+'</span></td><td><span class="badge bg-amber">Invite pending</span></td><td><span class="end-date">'+endDate+'</span></td><td><button class="act-btn" onclick="removeUser('+i+')" title="Remove"><i class="ti ti-x"></i></button></td></tr>';});
+  tb.innerHTML=html;
+}
+</script>
+</body>
+</html>

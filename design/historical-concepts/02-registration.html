@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Request Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:20px;}
+.card{display:flex;width:1000px;min-height:700px;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.L{width:30%;background:#0f3d25;padding:36px 30px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:32px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.step{display:flex;gap:11px;padding-bottom:20px;position:relative;}
+.step:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;width:1px;height:calc(100% - 10px);background:rgba(255,255,255,0.07);}
+.sn{width:21px;height:21px;border-radius:50%;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:#6ee7b7;font-weight:500;flex-shrink:0;}
+.sn.a{background:#fff;color:#0f3d25;}
+.sn.d{background:#2A854F;color:#fff;}
+.stit{font-size:11.5px;font-weight:500;color:#d1fae5;margin-top:2px;}
+.stit.dim{color:#2d6645;}
+.stit.done{color:#6ee7b7;}
+.ssub{font-size:10.5px;color:#2d6645;margin-top:1px;}
+.lfoot{color:#1e4d32;font-size:10.5px;}
+.R{flex:1;padding:32px 38px;background:#fff;overflow-y:auto;}
+.bk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:#64748b;cursor:pointer;margin-bottom:20px;}
+.bk:hover{color:#0f172a;}
+.ptitle{font-size:19px;font-weight:600;color:#0f172a;letter-spacing:-0.4px;margin-bottom:4px;}
+.psub{font-size:13px;color:#64748b;margin-bottom:22px;line-height:1.5;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;margin-bottom:9px;margin-top:6px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px;}
+.f{margin-bottom:11px;}
+.f label{display:flex;align-items:center;gap:3px;font-size:11.5px;font-weight:500;color:#0f172a;margin-bottom:4px;}
+.opt{font-size:10.5px;color:#94a3b8;font-weight:400;}
+.f input,.f select{width:100%;height:36px;padding:0 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.f input:focus,.f select:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.f input::placeholder{color:#94a3b8;font-size:12.5px;}
+.s2{grid-column:1/-1;}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:4px 0 12px;}
+.tc{border:1px solid #e2e8f0;border-radius:8px;padding:11px 12px;cursor:pointer;transition:border-color .15s,background .15s;}
+.tc:hover{border-color:#2A854F;}
+.tc.sel{border:1.5px solid #2A854F;background:rgba(42,133,79,0.04);}
+.th{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.th i{font-size:14px;color:#2A854F;}
+.tn{font-size:12.5px;font-weight:500;color:#0f172a;}
+.td{font-size:11px;color:#64748b;line-height:1.4;padding-left:21px;}
+.lb{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:13px 14px;margin-bottom:12px;}
+.lbt{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.lbl{font-size:12.5px;font-weight:500;color:#0f172a;}
+.lcr{display:flex;align-items:center;gap:9px;}
+.lcb{width:26px;height:26px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#0f172a;font-family:'Inter',sans-serif;}
+.lcb:hover{border-color:#2A854F;color:#2A854F;}
+.lcc{font-size:18px;font-weight:600;color:#0f172a;min-width:30px;text-align:center;}
+.lno{font-size:11.5px;color:#64748b;line-height:1.45;}
+.pnote{display:flex;gap:8px;background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;padding:10px 12px;margin-bottom:13px;font-size:12px;color:#78350f;line-height:1.5;}
+.pnote i{flex-shrink:0;font-size:14px;color:#d97706;margin-top:1px;}
+.btn{width:100%;height:38px;background:#1a5c37;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;}
+.btn:hover{background:#0f3d25;}
+.fnote{font-size:11.5px;color:#94a3b8;text-align:center;margin-top:9px;line-height:1.5;}
+.slink{text-align:center;margin-top:11px;font-size:12.5px;color:#64748b;}
+.slink a{color:#2A854F;font-weight:500;cursor:pointer;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="L">
+    <div>
+      <div class="logo"><div class="lm">CS</div><span class="ln">CorpStage 360</span></div>
+      <div class="step"><div class="sn a">1</div><div><div class="stit">Create your profile</div><div class="ssub">Details, type and licences</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="stit dim">Admin review</div><div class="ssub">CorpStage validates request</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="stit dim">Approval & payment link</div><div class="ssub">Email notification sent</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="stit dim">Payment & password setup</div><div class="ssub">Activate your workspace</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="stit dim">Invite team</div><div class="ssub">Add users up to licence count</div></div></div>
+      <div class="step"><div class="sn">6</div><div><div class="stit dim">Access workspace</div><div class="ssub">Begin your ESG journey</div></div></div>
+    </div>
+    <div class="lfoot">© 2025 CorpStage Pte. Ltd. · Singapore</div>
+  </div>
+  <div class="R">
+    <div class="bk"><i class="ti ti-arrow-left" style="font-size:13px;"></i> Back to sign in</div>
+    <div class="ptitle">Request access</div>
+    <div class="psub">Tell us about yourself and we'll get you set up on CorpStage 360</div>
+    <div class="slabel">Personal details</div>
+    <div class="g2">
+      <div class="f"><label>First name</label><input type="text" placeholder="First name"/></div>
+      <div class="f"><label>Last name</label><input type="text" placeholder="Last name"/></div>
+      <div class="f s2"><label>Work email address</label><input type="email" placeholder="you@organisation.com"/></div>
+      <div class="f s2" id="fOrg"><label>Organisation name <span class="opt" id="orgOpt"></span></label><input id="orgIn" type="text" placeholder="Your organisation name"/></div>
+      <div class="f" id="fCy"><label>Country of incorporation</label><select><option value="">Select…</option><option>Singapore</option><option>India</option><option>United Kingdom</option><option>Germany</option><option>UAE</option><option>United States</option></select></div>
+      <div class="f" id="fGst"><label>GST / VAT / Tax ID <span class="opt">(optional)</span></label><input type="text" placeholder="e.g. GST123456789"/></div>
+      <div class="f s2"><label>How did you hear about us? <span class="opt">(optional)</span></label><select><option value="">Select…</option><option>LinkedIn</option><option>Google search</option><option>Colleague referral</option><option>CorpStage partner</option><option>Conference or event</option><option>Press or media</option></select></div>
+    </div>
+    <div class="slabel" style="margin-top:4px;">I am registering as</div>
+    <div class="types">
+      <div class="tc sel" onclick="sel(this,'E')"><div class="th"><i class="ti ti-building-skyscraper"></i><span class="tn">Enterprise Entity</span></div><div class="td">Corporate organisation needing team access across departments</div></div>
+      <div class="tc" onclick="sel(this,'S')"><div class="th"><i class="ti ti-briefcase"></i><span class="tn">Service Provider</span></div><div class="td">Consulting firm managing ESG for multiple client organisations</div></div>
+      <div class="tc" onclick="sel(this,'A')"><div class="th"><i class="ti ti-user-check"></i><span class="tn">Advisor</span></div><div class="td">Independent ESG advisor serving other organisations — not your own</div></div>
+      <div class="tc" onclick="sel(this,'U')"><div class="th"><i class="ti ti-user"></i><span class="tn">Single User</span></div><div class="td">Managing ESG for your own organisation alone — one licence, just you</div></div>
+    </div>
+    <div id="lb" class="lb">
+      <div class="lbt"><span class="lbl">Licences required</span><div class="lcr"><button class="lcb" onclick="chg(-1)">−</button><span class="lcc" id="lcc">5</span><button class="lcb" onclick="chg(1)">+</button></div></div>
+      <div class="lno" id="lno">Each licence = one named user. Additional licences added mid-year are charged on a pro-rata basis for the remaining period.</div>
+    </div>
+    <div id="pn" class="pnote"><i class="ti ti-info-circle"></i><span>Payment required after admin approval. Amount set by CorpStage based on licences and plan. Mid-year additions are pro-rated.</span></div>
+    <button class="btn">Submit access request</button>
+    <div class="fnote">Reviewed within 1 business day. You'll receive an email confirmation once approved.</div>
+    <div class="slink">Already have an account? <a href="01-login.html">Sign in →</a></div>
+  </div>
+</div>
+<script>
+var lc=5,ct='E';
+var cf={E:{l:1,p:1,d:5,n:'Each licence = one named user. Additional licences added mid-year are charged on a pro-rata basis.',oo:'',op:'Your organisation name',cy:1,gs:1},S:{l:1,p:1,d:3,n:'Each licence = one named user. Select based on team size. Mid-year additions are pro-rated.',oo:'(optional)',op:'Firm or practice name (optional)',cy:1,gs:1},A:{l:0,p:0,d:1,n:'',oo:'(optional)',op:'Practice name (optional)',cy:0,gs:0},U:{l:0,p:0,d:1,n:'',oo:'(optional)',op:'Organisation name (optional)',cy:0,gs:0}};
+function sel(el,t){document.querySelectorAll('.tc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');ct=t;var c=cf[t];lc=c.d;document.getElementById('lb').classList.toggle('hidden',!c.l);document.getElementById('pn').classList.toggle('hidden',!c.p);if(c.l){document.getElementById('lcc').textContent=lc;document.getElementById('lno').textContent=c.n;}document.getElementById('orgOpt').textContent=c.oo;document.getElementById('orgIn').placeholder=c.op;document.getElementById('fCy').classList.toggle('hidden',!c.cy);document.getElementById('fGst').classList.toggle('hidden',!c.gs);}
+function chg(d){lc=Math.max(1,lc+d);document.getElementById('lcc').textContent=lc;}
+</script>
+</body>
+</html>

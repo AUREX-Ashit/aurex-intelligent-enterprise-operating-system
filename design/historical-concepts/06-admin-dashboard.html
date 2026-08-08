@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;}
+.topbar{background:#12402a;display:flex;align-items:center;padding:0 24px;height:52px;gap:12px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#12402a;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.admin-tag{background:rgba(255,255,255,0.12);color:#d1fae5;font-size:11px;padding:3px 9px;border-radius:20px;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.av-pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px 4px 4px;}
+.av{width:26px;height:26px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0f3d25;}
+.av-name{color:#d1fae5;font-size:12.5px;}
+.subnav{background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding:0 24px;height:44px;}
+.nav{display:flex;align-items:center;gap:5px;padding:0 12px;height:44px;font-size:12.5px;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.nav:hover{color:#0f172a;}
+.nav.active{color:#1a5c37;border-bottom-color:#1a5c37;font-weight:500;}
+.nav i{font-size:14px;}
+.nbadge{background:#ef4444;color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;}
+.body{padding:22px 24px;max-width:1100px;margin:0 auto;}
+.page-title{font-size:18px;font-weight:600;color:#0f172a;letter-spacing:-0.3px;margin-bottom:3px;}
+.page-sub{font-size:13px;color:#64748b;margin-bottom:20px;}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.metric{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 18px;}
+.m-label{font-size:11.5px;color:#64748b;margin-bottom:6px;}
+.m-val{font-size:26px;font-weight:600;color:#0f172a;letter-spacing:-0.5px;}
+.m-sub{font-size:11.5px;margin-top:3px;}
+.m-sub.up{color:#16a34a;}
+.m-sub.warn{color:#b45309;}
+.cols{display:grid;grid-template-columns:1fr 1.65fr;gap:14px;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.card-title{font-size:13.5px;font-weight:600;color:#0f172a;}
+.card-sub{font-size:12px;color:#64748b;margin-top:2px;}
+.view-all{font-size:12px;color:#2A854F;cursor:pointer;}
+.req-item{border:1px solid #f1f5f9;border-radius:9px;padding:13px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s;}
+.req-item:hover{border-color:#2A854F;background:#fafffe;}
+.req-item:last-child{margin-bottom:0;}
+.rr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.rname{font-size:13px;font-weight:500;color:#0f172a;}
+.rtype{font-size:10.5px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.rmeta{font-size:11.5px;color:#64748b;display:flex;gap:12px;flex-wrap:wrap;}
+.rmeta span{display:flex;align-items:center;gap:4px;}
+.r-actions{display:flex;gap:6px;margin-top:10px;}
+.btn{padding:6px 12px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px;}
+.btn-green{background:#1a5c37;color:#fff;border:none;}
+.btn-green:hover{background:#0f3d25;}
+.btn-ghost{background:#fff;color:#64748b;border:1px solid #e2e8f0;}
+.btn-ghost:hover{background:#f8fafc;}
+.btn-red{background:#fff;color:#dc2626;border:1px solid #fecaca;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 7px;border-radius:20px;font-weight:500;}
+.bg-green{background:#dcfce7;color:#166534;}
+.bg-blue{background:#dbeafe;color:#1e40af;}
+.bg-amber{background:#fef9c3;color:#854d0e;}
+.bg-red{background:#fee2e2;color:#991b1b;}
+.bg-slate{background:#f1f5f9;color:#475569;}
+.ct{width:100%;border-collapse:collapse;font-size:13px;}
+.ct th{text-align:left;font-size:10px;font-weight:600;color:#94a3b8;padding:7px 10px;border-bottom:1px solid #f1f5f9;letter-spacing:.05em;text-transform:uppercase;}
+.ct td{padding:11px 10px;border-bottom:1px solid #f8fafc;color:#0f172a;vertical-align:middle;}
+.ct tr:hover td{background:#fafafa;}
+.exp-bar{height:4px;background:#f1f5f9;border-radius:3px;overflow:hidden;margin-top:3px;width:80px;}
+.exp-fill{height:100%;background:#1a5c37;border-radius:3px;}
+.exp-fill.warn{background:#b45309;}
+/* Approval screen */
+.appr-body{display:none;}
+.appr-body.show{display:block;}
+.appr-cols{display:grid;grid-template-columns:1fr 1.1fr;gap:14px;align-items:start;}
+.info-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.info-icon{width:30px;height:30px;border-radius:7px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.info-icon i{font-size:14px;color:#16a34a;}
+.il{font-size:11px;color:#64748b;margin-bottom:2px;}
+.iv{font-size:13px;font-weight:500;color:#0f172a;}
+.tl-item{display:flex;gap:11px;padding-bottom:14px;position:relative;}
+.tl-item:not(:last-child)::after{content:'';position:absolute;left:12px;top:26px;width:1px;height:calc(100% - 13px);background:#f1f5f9;}
+.tl-dot{width:25px;height:25px;border-radius:50%;background:#dcfce7;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tl-dot i{font-size:12px;color:#16a34a;}
+.tl-dot.pend{background:#f8fafc;border-color:#e2e8f0;}
+.tl-dot.pend i{color:#94a3b8;}
+.tl-dot.curr{background:#fef9c3;border-color:#fde047;}
+.tl-dot.curr i{color:#854d0e;}
+.tl-t{font-size:12.5px;font-weight:500;color:#0f172a;margin-top:2px;}
+.tl-s{font-size:11px;color:#64748b;margin-top:1px;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;margin-bottom:9px;margin-top:4px;}
+.f{margin-bottom:12px;}
+.f label{font-size:11.5px;font-weight:500;color:#0f172a;display:block;margin-bottom:4px;}
+.f input,.f select,.f textarea{width:100%;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.f input{height:36px;padding:0 11px;}
+.f select{height:36px;padding:0 11px;}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.f textarea{resize:vertical;min-height:64px;font-size:12.5px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.price-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:13px 15px;margin-bottom:14px;}
+.pr-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;color:#64748b;}
+.pr-row:last-child{margin-bottom:0;font-weight:600;color:#0f172a;font-size:15px;border-top:1px solid #e2e8f0;padding-top:9px;margin-top:2px;}
+.pr-val{color:#0f172a;}
+.pr-total{color:#1a5c37;font-size:18px;font-weight:600;}
+.auto-note{display:flex;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 12px;margin-bottom:13px;font-size:12px;color:#14532d;line-height:1.5;}
+.auto-note i{flex-shrink:0;font-size:14px;color:#16a34a;margin-top:1px;}
+.bk{display:flex;align-items:center;gap:5px;font-size:12.5px;color:#64748b;cursor:pointer;margin-bottom:18px;}
+.bk:hover{color:#0f172a;}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 12px;border-radius:20px;}
+.ph-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.ph-title{font-size:18px;font-weight:600;color:#0f172a;letter-spacing:-0.3px;}
+.ph-sub{font-size:12.5px;color:#64748b;margin-top:2px;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="lm">CS</div><span class="ln">CorpStage 360</span>
+  <span class="admin-tag">Admin Console</span>
+  <div class="topbar-right"><div class="av-pill"><div class="av">CA</div><span class="av-name">CorpStage Admin</span></div></div>
+</div>
+<div class="subnav">
+  <div class="nav active"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+  <div class="nav"><i class="ti ti-users"></i> Customers</div>
+  <div class="nav"><i class="ti ti-bell"></i> Requests <span class="nbadge">5</span></div>
+  <div class="nav"><i class="ti ti-receipt"></i> Revenue</div>
+  <div class="nav"><i class="ti ti-settings"></i> Platform settings</div>
+</div>
+
+<!-- Dashboard view -->
+<div class="body" id="dashView">
+  <div class="page-title">Admin dashboard</div>
+  <div class="page-sub">Overview of all customer workspaces, pending requests and platform health</div>
+  <div class="metrics">
+    <div class="metric"><div class="m-label">Total customers</div><div class="m-val">38</div><div class="m-sub up">↑ 4 this month</div></div>
+    <div class="metric"><div class="m-label">Pending requests</div><div class="m-val">5</div><div class="m-sub warn">3 awaiting approval</div></div>
+    <div class="metric"><div class="m-label">Expiring in 30 days</div><div class="m-val">7</div><div class="m-sub warn">Action needed</div></div>
+    <div class="metric"><div class="m-label">ARR</div><div class="m-val">$184k</div><div class="m-sub up">↑ 12% vs last year</div></div>
+  </div>
+  <div class="cols">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Pending requests</div><div class="card-sub">New access and licence requests</div></div><span class="view-all">View all →</span></div>
+      <div class="req-item" onclick="showApproval()">
+        <div class="rr"><div class="rname">ABC Manufacturing Ltd</div><span class="rtype bg-blue">New access</span></div>
+        <div class="rmeta"><span><i class="ti ti-building-skyscraper" style="font-size:12px;"></i> Enterprise Entity</span><span><i class="ti ti-license" style="font-size:12px;"></i> 10 licences</span><span><i class="ti ti-clock" style="font-size:12px;"></i> 2h ago</span></div>
+        <div class="r-actions"><button class="btn btn-green" onclick="event.stopPropagation();showApproval()"><i class="ti ti-check" style="font-size:12px;"></i> Review & approve</button><button class="btn btn-red" onclick="event.stopPropagation()"><i class="ti ti-x" style="font-size:12px;"></i> Decline</button></div>
+      </div>
+      <div class="req-item">
+        <div class="rr"><div class="rname">Green Advisory Partners</div><span class="rtype bg-amber">More licences</span></div>
+        <div class="rmeta"><span><i class="ti ti-briefcase" style="font-size:12px;"></i> Service Provider</span><span><i class="ti ti-license" style="font-size:12px;"></i> +3 licences</span><span><i class="ti ti-clock" style="font-size:12px;"></i> 5h ago</span></div>
+        <div class="r-actions"><button class="btn btn-green"><i class="ti ti-check" style="font-size:12px;"></i> Review & approve</button><button class="btn btn-red"><i class="ti ti-x" style="font-size:12px;"></i> Decline</button></div>
+      </div>
+      <div class="req-item">
+        <div class="rr"><div class="rname">Nisha Kohli</div><span class="rtype bg-blue">New access</span></div>
+        <div class="rmeta"><span><i class="ti ti-user-check" style="font-size:12px;"></i> Advisor</span><span><i class="ti ti-license" style="font-size:12px;"></i> 1 licence</span><span><i class="ti ti-clock" style="font-size:12px;"></i> Yesterday</span></div>
+        <div class="r-actions"><button class="btn btn-green"><i class="ti ti-check" style="font-size:12px;"></i> Review & approve</button><button class="btn btn-red"><i class="ti ti-x" style="font-size:12px;"></i> Decline</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Customer workspaces</div><div class="card-sub">All active accounts with licence and payment status</div></div><span class="view-all">View all →</span></div>
+      <table class="ct">
+        <thead><tr><th>Organisation</th><th>Type</th><th>Licences</th><th>Expiry</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:500;">ABC Manufacturing Ltd</td><td><span class="badge bg-blue">Enterprise</span></td><td style="font-size:12px;">5 / 5</td><td><div style="font-size:12px;color:#b45309;">14 Jun 2026</div><div class="exp-bar"><div class="exp-fill warn" style="width:96%;"></div></div></td><td><span class="badge bg-amber">Expiring</span></td><td><span class="badge bg-green">Paid</span></td><td><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">Manage</button></td></tr>
+          <tr><td style="font-weight:500;">Tata Steel ESG Office</td><td><span class="badge bg-blue">Enterprise</span></td><td style="font-size:12px;">12 / 15</td><td><div style="font-size:12px;color:#64748b;">30 Mar 2027</div><div class="exp-bar"><div class="exp-fill" style="width:28%;"></div></div></td><td><span class="badge bg-green">Active</span></td><td><span class="badge bg-green">Paid</span></td><td><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">Manage</button></td></tr>
+          <tr><td style="font-weight:500;">Green Advisory Partners</td><td><span class="badge bg-green">Service Provider</span></td><td style="font-size:12px;">5 / 5</td><td><div style="font-size:12px;color:#64748b;">15 Dec 2026</div><div class="exp-bar"><div class="exp-fill" style="width:52%;"></div></div></td><td><span class="badge bg-green">Active</span></td><td><span class="badge bg-amber">Pending</span></td><td><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">Manage</button></td></tr>
+          <tr><td style="font-weight:500;">Rahul Sharma</td><td><span class="badge bg-amber">Advisor</span></td><td style="font-size:12px;">1 / 1</td><td><div style="font-size:12px;color:#b45309;">01 Feb 2026</div><div class="exp-bar"><div class="exp-fill warn" style="width:88%;"></div></div></td><td><span class="badge bg-amber">Expiring</span></td><td><span class="badge bg-green">Paid</span></td><td><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">Manage</button></td></tr>
+          <tr><td style="font-weight:500;">Priya Mehta</td><td><span class="badge bg-slate">Single User</span></td><td style="font-size:12px;">1 / 1</td><td><div style="font-size:12px;color:#64748b;">20 Sep 2026</div><div class="exp-bar"><div class="exp-fill" style="width:40%;"></div></div></td><td><span class="badge bg-green">Active</span></td><td><span class="badge bg-red">Overdue</span></td><td><button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">Manage</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Approval view -->
+<div class="body appr-body" id="apprView">
+  <div class="bk" onclick="showDash()"><i class="ti ti-arrow-left" style="font-size:13px;"></i> Back to dashboard</div>
+  <div class="ph-row">
+    <div><div class="ph-title">Access request — ABC Manufacturing Ltd</div><div class="ph-sub">REQ-2025-0084 · Submitted 2 hours ago by Ashit Kumar Padhi</div></div>
+    <span class="status-pill bg-amber"><i class="ti ti-clock" style="font-size:12px;"></i> Awaiting approval</span>
+  </div>
+  <div class="appr-cols">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Applicant details</div>
+        <div class="info-row"><div class="info-icon"><i class="ti ti-building-skyscraper"></i></div><div><div class="il">Organisation</div><div class="iv">ABC Manufacturing Ltd</div></div></div>
+        <div class="info-row"><div class="info-icon"><i class="ti ti-user"></i></div><div><div class="il">Primary contact</div><div class="iv">Ashit Kumar Padhi</div></div></div>
+        <div class="info-row"><div class="info-icon"><i class="ti ti-mail"></i></div><div><div class="il">Email</div><div class="iv">ashit@abcmanufacturing.com</div></div></div>
+        <div class="info-row"><div class="info-icon"><i class="ti ti-map-pin"></i></div><div><div class="il">Country of incorporation</div><div class="iv">India</div></div></div>
+        <div class="info-row"><div class="info-icon"><i class="ti ti-file-invoice"></i></div><div><div class="il">GST / Tax ID</div><div class="iv">GSTIN27AAACT2727Q1ZW</div></div></div>
+        <div class="info-row" style="margin-bottom:0;"><div class="info-icon"><i class="ti ti-license"></i></div><div><div class="il">Licences requested</div><div class="iv">10 user licences</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Approval workflow</div>
+        <div class="tl-item"><div class="tl-dot"><i class="ti ti-check"></i></div><div><div class="tl-t">Request received</div><div class="tl-s">30 May 2025 · 07:42 AM</div></div></div>
+        <div class="tl-item"><div class="tl-dot"><i class="ti ti-check"></i></div><div><div class="tl-t">Auto-verification passed</div><div class="tl-s">Email and domain verified</div></div></div>
+        <div class="tl-item"><div class="tl-dot curr"><i class="ti ti-edit"></i></div><div><div class="tl-t" style="color:#854d0e;">Set licences & pricing</div><div class="tl-s">Complete form on the right →</div></div></div>
+        <div class="tl-item"><div class="tl-dot pend"><i class="ti ti-send"></i></div><div><div class="tl-t" style="color:#94a3b8;">Approval email auto-sent</div><div class="tl-s">With credentials and payment link</div></div></div>
+        <div class="tl-item" style="padding-bottom:0;"><div class="tl-dot pend"><i class="ti ti-credit-card"></i></div><div><div class="tl-t" style="color:#94a3b8;">Customer pays & workspace activates</div><div class="tl-s">Fully automated</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px;">Set licences & pricing</div>
+      <div class="slabel">Licence configuration</div>
+      <div class="g2">
+        <div class="f"><label>Licences approved</label><input type="number" id="aLic" value="10" min="1" oninput="calc()"/><div style="font-size:11px;color:#94a3b8;margin-top:3px;">Customer requested 10</div></div>
+        <div class="f"><label>Duration</label><select><option>Annual (12 months)</option><option>Semi-annual (6 months)</option><option>Monthly</option></select></div>
+        <div class="f"><label>Start date</label><input type="text" value="01 Jun 2025"/></div>
+        <div class="f"><label>End date</label><input type="text" value="31 May 2026"/></div>
+      </div>
+      <div class="slabel">Pricing</div>
+      <div class="g2">
+        <div class="f"><label>Per licence (USD / year)</label><input type="number" id="aPrice" value="500" min="0" oninput="calc()"/></div>
+        <div class="f"><label>Discount (%)</label><input type="number" id="aDisc" value="0" min="0" max="100" oninput="calc()"/><div style="font-size:11px;color:#94a3b8;margin-top:3px;">Enterprise discount</div></div>
+      </div>
+      <div class="price-box">
+        <div class="pr-row"><span>Licences</span><span class="pr-val" id="pLic">10 × $500</span></div>
+        <div class="pr-row"><span>Subtotal</span><span class="pr-val" id="pSub">$5,000.00</span></div>
+        <div class="pr-row"><span>Discount</span><span class="pr-val" id="pDisc">— $0.00</span></div>
+        <div class="pr-row"><span>Total due</span><span class="pr-total" id="pTotal">$5,000.00</span></div>
+      </div>
+      <div class="slabel">Plan & notes</div>
+      <div class="f"><label>Plan</label><select><option>Professional</option><option>Starter</option><option>Enterprise</option><option>Custom</option></select></div>
+      <div class="f"><label>Internal notes (not visible to customer)</label><textarea placeholder="e.g. Large manufacturing group, referred by partner…"></textarea></div>
+      <div class="f"><label>Message to customer (included in approval email)</label><textarea placeholder="Welcome to CorpStage 360. Your workspace has been approved with 10 licences…" style="min-height:52px;"></textarea></div>
+      <div class="auto-note"><i class="ti ti-bolt"></i> On approval, the customer receives an email with credentials and payment link automatically. No manual steps required.</div>
+      <button class="btn btn-green" style="width:100%;justify-content:center;padding:10px;font-size:13px;margin-bottom:7px;"><i class="ti ti-check" style="font-size:13px;"></i> Approve & send payment link</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;padding:10px;font-size:13px;margin-bottom:7px;"><i class="ti ti-device-floppy" style="font-size:13px;"></i> Save as draft</button>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:10px;font-size:13px;"><i class="ti ti-x" style="font-size:13px;"></i> Decline request</button>
+    </div>
+  </div>
+</div>
+<script>
+function showApproval(){document.getElementById('dashView').classList.add('hidden');document.getElementById('apprView').classList.add('show');}
+function showDash(){document.getElementById('dashView').classList.remove('hidden');document.getElementById('apprView').classList.remove('show');}
+function calc(){
+  var l=parseInt(document.getElementById('aLic').value)||0;
+  var p=parseFloat(document.getElementById('aPrice').value)||0;
+  var d=parseFloat(document.getElementById('aDisc').value)||0;
+  var sub=l*p,da=sub*(d/100),tot=sub-da;
+  document.getElementById('pLic').textContent=l+' × $'+p.toFixed(0);
+  document.getElementById('pSub').textContent='$'+sub.toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('pDisc').textContent='— $'+da.toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('pTotal').textContent='$'+tot.toLocaleString('en-US',{minimumFractionDigits:2});
+}
+</script>
+</body>
+</html>

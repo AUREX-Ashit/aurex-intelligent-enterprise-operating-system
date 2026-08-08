@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CorpStage · Intelligence Center</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f7f6f3;--s1:#efeee8;--s2:#e5e3dc;--s3:#d4d2cb;
+  --b0:rgba(0,0,0,0.024);--b1:rgba(0,0,0,0.08);--b2:rgba(0,0,0,0.15);--b3:rgba(0,0,0,0.26);
+  --t0:rgba(14,14,16,0.94);--t1:rgba(14,14,16,0.60);--t2:rgba(14,14,16,0.38);--t3:rgba(14,14,16,0.20);
+  --gold:#b88e4e;--coral:#a04a3a;--teal:#2e6a5e;--blue:#3a6492;--purple:#5a4b92;
+  --purple-bg:rgba(90,75,146,.05);--teal-bg:rgba(46,106,94,.05);
+  --gold-bg:rgba(184,142,78,.05);--coral-bg:rgba(160,74,58,.05);--blue-bg:rgba(58,100,146,.05);
+  --serif:'Georgia','Times New Roman',serif;--sans:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+}
+body.dark{
+  --bg:#050608;--s1:#09090c;--s2:#0d0e11;--s3:#141418;
+  --b0:rgba(255,255,255,0.016);--b1:rgba(255,255,255,0.048);--b2:rgba(255,255,255,0.08);--b3:rgba(255,255,255,0.13);
+  --t0:rgba(242,238,228,0.97);--t1:rgba(242,238,228,0.52);--t2:rgba(242,238,228,0.24);--t3:rgba(242,238,228,0.10);
+  --purple-bg:rgba(90,75,146,.06);--teal-bg:rgba(46,106,94,.05);--gold-bg:rgba(184,142,78,.05);--coral-bg:rgba(160,74,58,.04);--blue-bg:rgba(58,100,146,.05);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t0);font-family:var(--sans)}
+body{display:grid;grid-template-rows:48px 1fr}
+
+/* NAV */
+nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 56px;
+  border-bottom:1px solid var(--b1);background:var(--bg);z-index:20;position:relative}
+.wm{font-size:9px;letter-spacing:.30em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.nav-c{font-size:11.5px;font-weight:500;color:var(--t1);text-align:center;letter-spacing:.015em}
+.nav-r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.fnav{display:flex}
+.fn{font-size:8px;letter-spacing:.08em;padding:3px 10px;color:var(--t3);border:1px solid var(--b1);
+  text-decoration:none;cursor:pointer;transition:color .15s;border-right:none}
+.fn:last-child{border-right:1px solid var(--b1)}
+.fn.active{color:var(--teal);border-color:rgba(46,106,94,.30);background:var(--teal-bg)}
+.fn:not(.active):hover{color:var(--t1)}
+.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;
+  border:1px solid var(--b1);background:transparent;color:var(--t3);font-size:8px;
+  letter-spacing:.14em;text-transform:uppercase;font-weight:600;font-family:var(--sans);transition:color .15s,border-color .15s}
+.theme-toggle:hover{color:var(--t1);border-color:var(--b2)}
+
+/* SHELL — narrow utility rail | divider | main */
+.shell{display:grid;grid-template-columns:208px 1px 1fr;height:calc(100vh - 48px);overflow:hidden}
+.vdiv{background:var(--b1)}
+
+/* UTILITY RAIL — left. No domain list here (fix #1) — confidence, setup links, unclassified chip, footer only */
+.domain-panel{display:flex;flex-direction:column;height:100%;overflow-y:auto;background:var(--s1)}
+.domain-panel::-webkit-scrollbar{width:0}
+.dp-header{padding:20px 18px 14px;border-bottom:1px solid var(--b1)}
+.dp-ew{font-size:7.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:10px}
+.dp-conf{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.dp-conf-v{font-size:26px;font-family:var(--serif);font-weight:400;color:var(--t0);line-height:1}
+.dp-conf-meta{display:flex;flex-direction:column;gap:2px}
+.dp-conf-label{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.dp-conf-sub{font-size:9px;color:var(--t2)}
+.dp-sort{display:flex;gap:0;margin-bottom:0}
+.dp-sort-opt{font-size:7.5px;letter-spacing:.06em;padding:3px 8px;color:var(--t3);cursor:pointer;
+  border:1px solid var(--b1);border-right:none;transition:all .13s}
+.dp-sort-opt:last-child{border-right:1px solid var(--b1)}
+.dp-sort-opt.on{color:var(--teal);border-color:rgba(46,106,94,.26);background:var(--teal-bg)}
+
+/* SETUP & CONFIGURATION — separate zone, fix #11: gives the rail a second real job */
+.dp-setup-block{padding:14px 18px;border-bottom:1px solid var(--b1)}
+.dp-setup-label{font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);
+  font-weight:600;margin-bottom:8px}
+.dp-setup-link{display:flex;align-items:center;gap:8px;padding:7px 9px;margin-bottom:3px;
+  text-decoration:none;border:1px solid var(--b1);background:var(--bg);transition:all .15s}
+.dp-setup-link:hover{border-color:rgba(90,75,146,.30);background:var(--purple-bg)}
+.dp-setup-link-icon{font-size:11px;color:var(--purple);flex-shrink:0}
+.dp-setup-link-text{font-size:10px;color:var(--t1);flex:1}
+.dp-setup-link:hover .dp-setup-link-text{color:var(--t0)}
+.dp-setup-link-badge{font-size:8px;color:var(--gold);font-weight:600;flex-shrink:0}
+/* fix #10: badge pulses softly so it reads as live, not static decoration */
+.dp-setup-link-badge.stale{color:var(--t3)}
+
+/* Unclassified chip — fix #6: lives in rail, not in the 20-domain grid */
+.dp-unclassified-block{padding:12px 18px;border-bottom:1px solid var(--b1)}
+.dp-unclassified-chip{display:flex;align-items:center;gap:7px;padding:8px 10px;
+  border:1px dashed var(--b2);cursor:pointer;transition:all .15s;background:var(--bg)}
+.dp-unclassified-chip:hover{border-color:rgba(184,142,78,.32);background:var(--gold-bg)}
+.dp-unclassified-icon{font-size:11px;color:var(--gold);flex-shrink:0}
+.dp-unclassified-text{font-size:9.5px;color:var(--t2);flex:1}
+.dp-unclassified-count{font-size:8.5px;color:var(--gold);font-weight:600}
+
+.dp-footer{padding:14px 18px;border-top:1px solid var(--b1);margin-top:auto}
+.dp-footer-l{font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.dp-footer-v{font-size:10px;color:var(--t2);line-height:1.55}
+
+/* SECTIONS */
+.sec{display:none}.sec.on{display:block}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+/* UPLOAD ZONE */
+.upload-zone{flex-shrink:0;border-bottom:1px solid var(--b1);transition:all .3s}
+.upload-zone.empty{padding:28px 48px}
+.upload-zone.active{padding:12px 48px}
+.uz-empty{display:flex;flex-direction:column;align-items:center;text-align:center}
+.uz-ew{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:12px}
+.uz-q{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--t0);letter-spacing:-.015em;line-height:1.35;margin-bottom:6px;max-width:520px}
+.uz-sub{font-size:10.5px;color:var(--t2);line-height:1.65;margin-bottom:20px;max-width:480px}
+.uz-inputs{display:flex;gap:8px;width:100%;max-width:600px;margin-bottom:10px}
+.uz-input-block{flex:1;border:1px dashed var(--b2);padding:14px 16px;cursor:pointer;
+  transition:all .18s;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.uz-input-block:hover{border-color:rgba(46,106,94,.32);background:var(--teal-bg)}
+.uz-input-block.primary{border-color:rgba(46,106,94,.24);background:var(--teal-bg)}
+.uz-ib-icon{font-size:16px;color:var(--t3)}
+.uz-input-block.primary .uz-ib-icon{color:var(--teal)}
+.uz-ib-label{font-size:10px;font-weight:500;color:var(--t1)}
+.uz-input-block.primary .uz-ib-label{color:var(--teal)}
+.uz-ib-sub{font-size:8.5px;color:var(--t3);line-height:1.4}
+.uz-min-note{font-size:9px;color:var(--t3);margin-top:4px}
+.uz-active{display:none;align-items:center;gap:16px}
+.uz-active.show{display:flex}
+.uz-active-label{font-size:9px;color:var(--t2);white-space:nowrap}
+.uz-doc-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.uz-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;
+  border:1px solid var(--b1);background:var(--bg);font-size:9.5px;color:var(--t1)}
+.uz-chip.processing{border-color:rgba(46,106,94,.24);color:var(--teal)}
+.uz-chip-remove{font-size:10px;color:var(--t3);cursor:pointer;margin-left:2px}
+.uz-chip-remove:hover{color:var(--coral)}
+.uz-add-btn{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:5px 12px;border:1px solid var(--b1);color:var(--t2);background:transparent;
+  cursor:pointer;font-family:var(--sans);white-space:nowrap;transition:all .15s}
+.uz-add-btn:hover{color:var(--t1);border-color:var(--b2)}
+
+/* History — fix #2/#12: ONE surface only. Inline expand under upload zone, no slide-in panel */
+.history-inline{display:none;border-bottom:1px solid var(--b1);padding:0 48px;background:var(--s1)}
+.history-inline.open{display:block}
+.hi-inline-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px}
+.hi-inline-title{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--t2);font-weight:600}
+.hi-inline-note{font-size:9px;color:var(--t3);max-width:460px;text-align:right;line-height:1.5}
+.hi-inline-body{padding-bottom:16px;max-height:340px;overflow-y:auto}
+.hi-inline-body::-webkit-scrollbar{width:2px}
+.hi-inline-body::-webkit-scrollbar-thumb{background:var(--b2)}
+.hi-item{border:1px solid var(--b1);background:var(--bg);margin-bottom:6px}
+.hi-hdr{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;cursor:pointer;transition:background .12s}
+.hi-hdr:hover{background:var(--b0)}
+.hi-icon{font-size:13px;color:var(--t3);flex-shrink:0;margin-top:1px}
+.hi-info{flex:1;min-width:0}
+.hi-name{font-size:10.5px;color:var(--t0);font-weight:500;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hi-meta{font-size:8.5px;color:var(--t3);margin-bottom:4px}
+.hi-domains{display:flex;flex-wrap:wrap;gap:3px}
+.hi-domain-tag{font-size:7.5px;padding:1px 6px;border:1px solid var(--b0);color:var(--t3)}
+.hi-delta{font-size:10px;color:var(--teal);font-weight:600;flex-shrink:0;white-space:nowrap}
+.hi-expand{font-size:9px;color:var(--t3);flex-shrink:0;transition:transform .2s}
+.hi-expand.open{transform:rotate(90deg)}
+.hi-detail{display:none;padding:0 13px 11px;border-top:1px solid var(--b0)}
+.hi-detail.open{display:block}
+.hi-detail-row{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid var(--b0);font-size:9.5px;color:var(--t1)}
+.hi-detail-row:last-child{border-bottom:none}
+.hi-dr-field{color:var(--t0)}
+.hi-dr-val{color:var(--t2);text-align:right;margin-left:8px}
+.hi-dr-conf{font-size:7px;padding:1px 5px;border:1px solid;font-weight:600;margin-left:5px;flex-shrink:0}
+
+/* CONFLICT STRIP — fix #4: ONLY place conflicts appear. Action strip excludes conflict-type items */
+.conflict-strip{flex-shrink:0;display:none;flex-direction:column;gap:0;
+  border-bottom:1px solid rgba(184,142,78,.22);background:var(--gold-bg)}
+.conflict-strip.show{display:flex}
+.cs-summary{display:flex;align-items:center;gap:12px;padding:9px 48px}
+.cs-icon{font-size:12px;color:var(--gold);flex-shrink:0}
+.cs-text{font-size:10px;color:var(--t0);flex:1}
+.cs-text strong{color:var(--gold)}
+.cs-jump{font-size:8px;letter-spacing:.08em;color:var(--gold);cursor:pointer;
+  padding:3px 9px;border:1px solid rgba(184,142,78,.28);white-space:nowrap}
+.cs-jump:hover{background:rgba(184,142,78,.09)}
+/* Conflict resolution cards render directly in the strip — fix #9: single resolution surface */
+.cs-cards{padding:0 48px 12px;display:none}
+.cs-cards.open{display:block}
+.cs-card{border:1px solid rgba(184,142,78,.26);background:var(--bg);margin-top:8px}
+.cs-card-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(184,142,78,.16)}
+.cs-card-title{font-size:10.5px;font-weight:500;color:var(--t0);flex:1}
+.cs-card-domains{display:flex;gap:4px;flex-wrap:wrap}
+.cs-card-domain-tag{font-size:7px;padding:1px 6px;border:1px solid rgba(184,142,78,.22);color:var(--gold)}
+.cs-card-body{padding:10px 12px}
+.cs-opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.cs-opt{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1px solid var(--b1);
+  background:var(--bg);cursor:pointer;transition:all .13s}
+.cs-opt:hover{border-color:var(--b2);background:var(--b0)}
+.cs-opt.selected{border-color:rgba(46,106,94,.30);background:var(--teal-bg)}
+.cs-radio{width:11px;height:11px;border:1.5px solid var(--b2);border-radius:50%;flex-shrink:0;margin-top:1px}
+.cs-opt.selected .cs-radio{border-color:var(--teal);background:var(--teal)}
+.cs-opt-body{flex:1}
+.cs-opt-name{font-size:11px;color:var(--t0);font-weight:500;margin-bottom:1px}
+.cs-opt-source{font-size:8.5px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.cs-opt-evidence{font-size:8px;color:var(--blue);cursor:pointer;text-decoration:underline;
+  text-decoration-color:rgba(58,100,146,.3)}
+.cs-opt-conf{font-size:7.5px;padding:1px 5px;border:1px solid;font-weight:600;margin-left:auto;flex-shrink:0}
+.cs-actions{display:flex;gap:7px;align-items:center}
+.cs-resolved-note{font-size:9.5px;color:var(--teal);padding:6px 0}
+
+/* ACTION STRIP — L38, max 7, NO conflicts (fix #4) */
+.action-strip{flex-shrink:0;border-bottom:1px solid var(--b1);padding:0 48px;background:var(--s1)}
+.as-hdr{display:flex;align-items:center;gap:10px;padding:10px 0 8px}
+.as-label{font-size:7.5px;letter-spacing:.20em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.as-count{font-size:8px;color:var(--t3)}
+.as-items{display:flex;gap:6px;padding-bottom:10px;overflow-x:auto}
+.as-items::-webkit-scrollbar{height:0}
+.as-item{display:flex;flex-direction:column;gap:3px;padding:8px 12px;
+  border:1px solid var(--b1);background:var(--bg);cursor:pointer;min-width:180px;max-width:220px;
+  transition:border-color .15s;flex-shrink:0}
+.as-item:hover{border-color:var(--b2)}
+.as-item.warn{border-left:2px solid var(--gold)}
+.as-item.nudge{border-left:2px solid var(--blue)}
+.as-item-domain{font-size:7.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.as-item-action{font-size:10px;color:var(--t0);line-height:1.35}
+.as-item-consequence{font-size:8.5px;color:var(--gold)}
+.as-item-q{font-size:8px;color:var(--blue);margin-top:2px}
+
+/* DOMAIN GRID */
+.domain-scroll{flex:1;overflow-y:auto;padding:0 48px 80px}
+.domain-scroll::-webkit-scrollbar{width:2px}
+.domain-scroll::-webkit-scrollbar-thumb{background:var(--b2)}
+.grid-label{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 0 10px;position:sticky;top:0;background:var(--bg);z-index:5}
+.grid-label-l{font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.grid-label-r{font-size:9px;color:var(--t3)}
+.domain-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:24px}
+/* fix #5: cards carry ONLY arc colour + conflict badge. Gap count moved to detail view only */
+.dcard{border:1px solid var(--b1);background:var(--bg);padding:13px 14px;cursor:pointer;
+  transition:all .15s;position:relative;min-height:96px;display:flex;flex-direction:column}
+.dcard:hover{border-color:var(--b2)}
+.dcard.selected{border-color:rgba(46,106,94,.40);background:var(--teal-bg)}
+.dcard.complete{opacity:.6}
+.dcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.dcard-name{font-size:10px;font-weight:500;color:var(--t1);line-height:1.3;flex:1;padding-right:6px}
+.dcard.selected .dcard-name{color:var(--t0)}
+.dcard-arc{width:30px;height:30px;flex-shrink:0;position:relative}
+.dcard-arc svg{width:30px;height:30px;transform:rotate(-90deg)}
+.dcard-arc-bg{fill:none;stroke:var(--b1);stroke-width:3}
+.dcard-arc-fg{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dasharray .4s}
+.dcard-arc-fg.complete{stroke:var(--teal)}
+.dcard-arc-fg.partial{stroke:var(--gold)}
+.dcard-arc-fg.gap{stroke:var(--coral)}
+.dcard-arc-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:600;color:var(--t1)}
+.dcard-meta{display:flex;align-items:center;gap:5px;margin-top:auto;flex-wrap:wrap}
+.dcard-badge{font-size:6.5px;letter-spacing:.04em;padding:1px 5px;font-weight:600;border:1px solid}
+.dcard-badge.conflict{border-color:rgba(160,74,58,.24);color:var(--coral);background:var(--coral-bg)}
+.dcard-badge.q{border-color:rgba(46,106,94,.22);color:var(--teal);background:var(--teal-bg)}
+.dcard-fresh{font-size:6.5px;color:var(--t3);margin-left:auto}
+
+/* Detail panel below grid */
+.domain-detail{display:none;border:1px solid var(--b1);background:var(--s1);margin-bottom:24px}
+.domain-detail.open{display:block}
+.dd-header{display:flex;align-items:flex-start;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid var(--b1);background:var(--bg)}
+.dd-title-wrap{}
+.dd-title{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--t0);letter-spacing:-.012em;margin-bottom:3px}
+.dd-sub{font-size:9.5px;color:var(--t2)}
+/* fix #14: freshness indicator, once per domain */
+.dd-fresh{font-size:8.5px;color:var(--t3);margin-top:4px;display:flex;align-items:center;gap:5px}
+.dd-fresh.stale{color:var(--gold)}
+.dd-fresh::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.dd-fresh.stale::before{background:var(--gold)}
+.dd-close{font-size:14px;color:var(--t3);cursor:pointer;padding:2px 6px;transition:color .13s}
+.dd-close:hover{color:var(--t0)}
+.dd-body{padding:16px 20px}
+
+.ds-group-label{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--t3);font-weight:600;margin:12px 0 6px;padding-bottom:5px;border-bottom:1px solid var(--b0)}
+.ii-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;
+  gap:10px;padding:7px 0;border-bottom:1px solid var(--b0);transition:background .1s}
+.ii-row:last-child{border-bottom:none}
+.ii-row:hover{background:var(--b0);margin:0 -8px;padding:7px 8px}
+.ii-row.missing{background:rgba(184,142,78,.02)}
+.ii-row.crossref{background:rgba(184,142,78,.03)}
+.ii-name{font-size:10.5px;color:var(--t0);font-weight:500}
+.ii-row.missing .ii-name{color:var(--t2)}
+.ii-value{font-size:10px;color:var(--t1)}
+/* fix #13: source becomes a link-styled element, evidence target honest-placeholder */
+.ii-source{font-size:8.5px;color:var(--blue);cursor:help;text-decoration:underline;
+  text-decoration-color:rgba(58,100,146,.28);text-decoration-style:dotted}
+.ii-conf{font-size:7px;padding:1px 5px;border:1px solid;font-weight:600;flex-shrink:0}
+.ii-conf.v{border-color:rgba(46,106,94,.22);color:var(--teal);background:var(--teal-bg)}
+.ii-conf.r{border-color:rgba(58,100,146,.20);color:var(--blue);background:var(--blue-bg)}
+.ii-conf.i{border-color:rgba(184,142,78,.22);color:var(--gold);background:var(--gold-bg)}
+.ii-conf.m{border-color:rgba(160,74,58,.20);color:var(--coral);background:var(--coral-bg)}
+.ii-consequence{font-size:8.5px;color:var(--gold);grid-column:1/-1;margin-top:-4px;
+  display:flex;align-items:center;gap:4px}
+.ii-consequence::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0}
+/* fix #9: cross-domain conflict reference — read-only inside non-owning domains */
+.ii-crossref-note{grid-column:1/-1;font-size:8.5px;color:var(--gold);margin-top:-4px;
+  display:flex;align-items:center;gap:6px}
+.ii-crossref-link{color:var(--gold);text-decoration:underline;cursor:pointer}
+.ds-show-more{font-size:8.5px;color:var(--blue);cursor:pointer;padding:6px 0;
+  display:flex;align-items:center;gap:6px;letter-spacing:.04em}
+.ds-show-more::before,.ds-show-more::after{content:"";flex:1;height:1px;background:var(--b0)}
+.ds-show-more:hover{color:var(--t1)}
+.ds-nudge{display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border:1px dashed var(--b1);margin-top:8px;cursor:pointer;transition:all .15s}
+.ds-nudge:hover{border-color:rgba(58,100,146,.24);background:var(--blue-bg)}
+.ds-nudge-text{font-size:9.5px;color:var(--t2);flex:1;line-height:1.4}
+.ds-nudge-action{font-size:8px;color:var(--blue);letter-spacing:.06em;white-space:nowrap}
+
+/* BUTTONS */
+.btn{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:6px 14px;border:1px solid var(--b1);color:var(--t2);background:transparent;
+  cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn:hover{color:var(--t1);border-color:var(--b2)}
+.btn.teal{border-color:rgba(46,106,94,.32);color:var(--teal);background:var(--teal-bg)}
+.btn.teal:hover{background:rgba(46,106,94,.10)}
+.btn.sm{font-size:7.5px;padding:4px 10px}
+
+/* MODALS */
+.modal-ov{position:fixed;inset:0;background:rgba(5,6,8,.5);z-index:60;display:none;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--bg);border:1px solid var(--b2);padding:26px;width:480px;max-width:92vw;max-height:86vh;overflow-y:auto}
+.modal-t{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--t0);margin-bottom:4px}
+.modal-s{font-size:10px;color:var(--t2);line-height:1.6;margin-bottom:16px}
+.mfl label{font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);font-weight:600;display:block;margin-bottom:4px;margin-top:11px}
+.mfl input{width:100%;font-size:12px;color:var(--t0);background:var(--s1);border:1px solid var(--b1);padding:7px 10px;outline:none;font-family:var(--sans)}
+.mfl input:focus{border-color:rgba(46,106,94,.36)}
+.modal-btns{display:flex;justify-content:flex-end;gap:7px;margin-top:16px;padding-top:13px;border-top:1px solid var(--b1)}
+.audit-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:8px 0;
+  border-bottom:1px solid var(--b0);align-items:start;font-size:10px}
+.audit-row:last-child{border-bottom:none}
+.audit-ts{font-size:8px;color:var(--t3);white-space:nowrap}
+.audit-action{color:var(--t0);line-height:1.45}
+.audit-actor{font-size:8.5px;color:var(--blue);text-align:right;white-space:nowrap}
+
+/* Evidence tooltip — fix #13: honest placeholder, F3 doesn't exist yet */
+.evidence-tip{position:fixed;background:var(--t0);color:var(--bg);font-size:9px;padding:6px 10px;
+  border-radius:2px;z-index:90;pointer-events:none;max-width:220px;line-height:1.4;display:none}
+.evidence-tip.show{display:block}
+
+.url-input-wrap{display:flex;gap:8px;margin-top:8px}
+.url-input{flex:1;font-size:12px;color:var(--t0);background:var(--s1);border:1px solid var(--b1);
+  padding:7px 10px;outline:none;font-family:var(--sans);transition:border-color .15s}
+.url-input:focus{border-color:rgba(46,106,94,.36)}
+
+.toast{position:fixed;bottom:20px;right:28px;padding:9px 15px;border:1px solid rgba(46,106,94,.26);
+  background:rgba(46,106,94,.08);color:var(--teal);font-size:9px;letter-spacing:.06em;font-weight:600;
+  opacity:0;transition:opacity .3s;pointer-events:none;z-index:80}
+.toast.on{opacity:1}
+
+.nav-upload{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:5px 13px;border:1px solid rgba(46,106,94,.30);color:var(--teal);background:var(--teal-bg);
+  cursor:pointer;font-family:var(--sans);transition:all .15s}
+.nav-upload:hover{background:rgba(46,106,94,.10)}
+</style>
+</head>
+<body id="bodyEl" class="light">
+<nav>
+  <div class="wm">CorpStage</div>
+  <div class="nav-c" id="navOrg">Tata Consultancy Services Limited</div>
+  <div class="nav-r">
+    <div class="fnav">
+      <a class="fn active">Intelligence Center</a>
+      <a class="fn" href="G1_Organisation_Setup.html">G1 · Setup</a>
+      <a class="fn" href="G3_Lens_Configuration.html">G3 · Lenses</a>
+      <a class="fn" href="G4_Users_Roles_Permissions.html">G4 · Users</a>
+      <a class="fn" href="G5_Intelligence_Work_Queue.html">G5 · Workflow</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="themeIcon">●</span><span id="themeLabel">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- UTILITY RAIL — fix #1: no domain list, that lives only in the grid now -->
+  <div class="domain-panel">
+    <div class="dp-header">
+      <div class="dp-ew">Intelligence Status</div>
+      <div class="dp-conf">
+        <div class="dp-conf-v" id="overallConf">61%</div>
+        <div class="dp-conf-meta">
+          <div class="dp-conf-label">Overall confidence</div>
+          <div class="dp-conf-sub" id="overallSub">Above sector median (48%)</div>
+        </div>
+      </div>
+      <div class="dp-sort">
+        <div class="dp-sort-opt on" onclick="sortDomains('urgency',this)">Urgency</div>
+        <div class="dp-sort-opt" onclick="sortDomains('confidence',this)">Confidence</div>
+        <div class="dp-sort-opt" onclick="sortDomains('name',this)">A–Z</div>
+      </div>
+    </div>
+
+    <!-- SETUP & CONFIGURATION — fix #7: configuration-flavoured language, not confidence% -->
+    <div class="dp-setup-block">
+      <div class="dp-setup-label">Setup & Configuration</div>
+      <a class="dp-setup-link" href="G1_Organisation_Setup.html">
+        <span class="dp-setup-link-icon">⚙</span>
+        <span class="dp-setup-link-text">Organisation Setup</span>
+        <span class="dp-setup-link-badge" id="g1GapBadge">4 nodes unconfirmed</span>
+      </a>
+      <a class="dp-setup-link" href="G4_Users_Roles_Permissions.html">
+        <span class="dp-setup-link-icon">◎</span>
+        <span class="dp-setup-link-text">Users & Governance Managers</span>
+        <span class="dp-setup-link-badge" id="g4GapBadge">6 roles unassigned</span>
+      </a>
+    </div>
+
+    <!-- UNCLASSIFIED — fix #6: chip in rail, removed from the 20-domain grid -->
+    <div class="dp-unclassified-block">
+      <div class="dp-unclassified-chip" onclick="openUnclassified()">
+        <div class="dp-unclassified-icon">◇</div>
+        <div class="dp-unclassified-text">Unclassified items</div>
+        <div class="dp-unclassified-count" id="unclassifiedCount">2 to assign</div>
+      </div>
+    </div>
+
+    <div class="dp-footer">
+      <div class="dp-footer-l">Intelligence stage</div>
+      <div class="dp-footer-v" id="dpStage">Extract → Retrieve → Infer · Confirm required in 3 domains</div>
+    </div>
+  </div>
+
+  <div class="vdiv"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- UPLOAD ZONE -->
+    <div class="upload-zone empty" id="uploadZone">
+      <div class="uz-empty" id="uzEmpty">
+        <div class="uz-ew">I1 · Intelligence Center</div>
+        <div class="uz-q">What does CorpStage know about your organisation?</div>
+        <div class="uz-sub">Give CorpStage what you have. It extracts intelligence across all 20 domains simultaneously — financial performance, risk, governance, operations, and more.</div>
+        <div class="uz-inputs">
+          <div class="uz-input-block primary" onclick="triggerFileUpload()">
+            <input type="file" id="fileInput" multiple style="display:none" onchange="handleFiles(this)">
+            <div class="uz-ib-icon">↓</div>
+            <div class="uz-ib-label">Upload documents</div>
+            <div class="uz-ib-sub">Annual reports, BRSR, board minutes, org charts, contracts — any format</div>
+          </div>
+          <div class="uz-input-block" onclick="showUrlInput()">
+            <div class="uz-ib-icon">⌁</div>
+            <div class="uz-ib-label">Website or URL</div>
+            <div class="uz-ib-sub">Company website, investor relations page, regulatory filing URL</div>
+          </div>
+          <div class="uz-input-block" onclick="showConnectModal()">
+            <div class="uz-ib-icon">⟳</div>
+            <div class="uz-ib-label">Connect a system</div>
+            <div class="uz-ib-sub">SharePoint, ERP, HRMS, energy management, or any data source</div>
+          </div>
+        </div>
+        <div id="urlInputWrap" style="display:none;width:100%;max-width:600px">
+          <div class="url-input-wrap">
+            <input class="url-input" id="urlInput" placeholder="https://www.tcs.com/investor-relations">
+            <button class="btn teal" onclick="processUrl()">Extract →</button>
+            <button class="btn" onclick="hideUrlInput()">Cancel</button>
+          </div>
+        </div>
+        <div class="uz-min-note">Provide at least one document, URL, or connection to begin. The platform will do the rest.</div>
+      </div>
+      <div class="uz-active" id="uzActive">
+        <div class="uz-active-label">Uploaded documents</div>
+        <div class="uz-doc-chips" id="docChips"></div>
+        <button class="uz-add-btn" onclick="triggerFileUpload()">+ Add more</button>
+        <button class="btn sm" onclick="toggleHistoryInline()" id="viewAllBtn">View all →</button>
+      </div>
+    </div>
+
+    <!-- HISTORY — fix #2/#12: single inline surface, no slide-in duplicate -->
+    <div class="history-inline" id="historyInline">
+      <div class="hi-inline-hdr">
+        <div class="hi-inline-title">Document history — every session, every user</div>
+        <div class="hi-inline-note">New uploads augment existing intelligence. Nothing is ever erased unless explicitly removed. Conflicts are flagged for review.</div>
+      </div>
+      <div class="hi-inline-body" id="historyItems"></div>
+    </div>
+
+    <!-- CONFLICT STRIP — fix #4/#9: the ONLY conflict surface, resolution happens right here -->
+    <div class="conflict-strip" id="conflictStrip">
+      <div class="cs-summary">
+        <div class="cs-icon">⚠</div>
+        <div class="cs-text"><strong id="conflictCount">2 conflicts</strong> require your decision — each may affect more than one domain.</div>
+        <div class="cs-jump" onclick="toggleConflictCards()" id="conflictJumpBtn">Resolve now →</div>
+      </div>
+      <div class="cs-cards" id="conflictCards"></div>
+    </div>
+
+    <!-- ACTION STRIP — fix #4: gap-filling and nudges only, conflicts excluded -->
+    <div class="action-strip">
+      <div class="as-hdr">
+        <div class="as-label">Recommended next actions</div>
+        <div class="as-count" id="actionCount">5 actions · sorted by financial consequence</div>
+      </div>
+      <div class="as-items" id="actionItems"></div>
+    </div>
+
+    <!-- DOMAIN GRID — fix #1: the only place the 20 domains are listed -->
+    <div class="domain-scroll" id="domainScroll">
+      <div class="grid-label">
+        <div class="grid-label-l">Intelligence by domain — click any card to expand</div>
+        <div class="grid-label-r" id="gridLabelR">20 domains</div>
+      </div>
+      <div class="domain-grid" id="domainGrid"></div>
+      <div class="domain-detail" id="domainDetail">
+        <div class="dd-header">
+          <div class="dd-title-wrap">
+            <div class="dd-title" id="ddTitle"></div>
+            <div class="dd-sub" id="ddSub"></div>
+            <div class="dd-fresh" id="ddFresh"></div>
+          </div>
+          <div class="dd-close" onclick="closeDomainDetail()">&times;</div>
+        </div>
+        <div class="dd-body" id="ddBody"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Connect Modal -->
+<div class="modal-ov" id="connectModal">
+  <div class="modal">
+    <div class="modal-t">Connect a system</div>
+    <div class="modal-s">Connect any live data source. CorpStage monitors it continuously and updates intelligence as new data arrives.</div>
+    <div class="mfl">
+      <label>System type</label>
+      <input id="connectType" placeholder="e.g. SharePoint, SAP ERP, Workday HRMS, Energy Management System">
+      <label>Connection details</label>
+      <input id="connectUrl" placeholder="URL, API endpoint, or describe the system">
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeConnectModal()">Cancel</button>
+      <button class="btn teal" onclick="processConnect()">Connect →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Audit Modal -->
+<div class="modal-ov" id="auditModal">
+  <div class="modal">
+    <div class="modal-t">Audit trail</div>
+    <div class="modal-s" id="auditSubject"></div>
+    <div id="auditRows"></div>
+    <div class="modal-btns"><button class="btn" onclick="closeAudit()">Close</button></div>
+  </div>
+</div>
+
+<!-- Unclassified Modal -->
+<div class="modal-ov" id="unclassifiedModal">
+  <div class="modal">
+    <div class="modal-t">Unclassified Intelligence</div>
+    <div class="modal-s" id="unclassifiedSub"></div>
+    <div id="unclassifiedItems"></div>
+    <div class="modal-btns"><button class="btn" onclick="closeUnclassified()">Close</button></div>
+  </div>
+</div>
+
+<div class="evidence-tip" id="evidenceTip"></div>
+<div class="toast" id="toast"></div>
+<script>
+// VOCAB SHIM
+(function(){
+  const D={'platform.name':'CorpStage','confidence.verified':'Verified','confidence.retrieved':'Retrieved','confidence.inferred':'Inferred'};
+  const O=window.CORPSTAGE_ORG_OVERRIDES||{};
+  window.t=k=>O[k]!=null?O[k]:(D[k]||k);
+  window.CORPSTAGE_APPLY_VOCAB=()=>document.querySelectorAll('[data-v]').forEach(el=>el.textContent=window.t(el.dataset.v));
+  document.addEventListener('DOMContentLoaded',window.CORPSTAGE_APPLY_VOCAB);
+})();
+
+// THEME
+(function(){applyTheme(sessionStorage.getItem('cs_theme')||'light')})();
+function applyTheme(m){
+  document.getElementById('bodyEl').className=m;
+  document.getElementById('themeIcon').textContent=m==='light'?'●':'○';
+  document.getElementById('themeLabel').textContent=m==='light'?'Dark':'Light';
+  sessionStorage.setItem('cs_theme',m);
+}
+function toggleTheme(){applyTheme(sessionStorage.getItem('cs_theme')==='light'?'dark':'light')}
+
+// ── DOMAINS (20 only — Unclassified moved out, fix #6) ─────────────────
+const DOMAINS=[
+  {id:'d01',name:'Financial Intelligence',conf:87,status:'partial',gaps:1,conflicts:1,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'fi01',name:'Revenue FY26',value:'₹2,55,324 Cr',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.42'},
+       {id:'fi02',name:'EBITDA margin',value:'24.7%',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.44'},
+       {id:'fi03',name:'Debt-to-equity ratio',value:'0.12',source:'BSE Filing',conf:'r',evidence:'BSE Filing · Q4 disclosure'},
+       {id:'fi04',name:'Working capital',value:'₹42,810 Cr',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.51'},
+       {id:'fi05',name:'Free cash flow',value:'₹38,240 Cr',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.52'},
+     ],
+     added:[
+       {id:'fi06',name:'Covenant obligations',value:'₹420 Cr facility — 3 covenants',source:'Risk Register',conf:'r',evidence:'Risk Register Q2 FY26.xlsx · row 14'},
+     ],
+     missing:[
+       {name:'Off-balance-sheet liabilities',value:'',source:'',conf:'m',
+        consequence:'Covenant Exposure — breach trigger unconfirmed',action:'Upload loan agreement'}
+     ]
+   },
+   qUnlock:'Q3 — The Money Question now answerable'},
+  {id:'d02',name:'Enterprise Risk & Resilience',conf:74,status:'partial',gaps:2,conflicts:0,lastVerified:'2026-06-10T16:30:00',
+   groups:{
+     found:[
+       {id:'r01',name:'Strategic risks identified',value:'8 material risks',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.61'},
+       {id:'r02',name:'Operational risks',value:'47 risks — 8 high severity',source:'Risk Register Q2',conf:'v',evidence:'Risk Register Q2 FY26.xlsx'},
+       {id:'r03',name:'Financial risk exposure',value:'₹84–142 Cr range',source:'Risk Register Q2',conf:'i',evidence:'Risk Register Q2 FY26.xlsx · summary tab'},
+       {id:'r04',name:'Cyber incident history',value:'0 material incidents FY26',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.67'},
+     ],
+     added:[
+       {id:'r05',name:'Risk register Q2 FY26',value:'Complete — 47 risks mapped',source:'Risk Register.xlsx',conf:'v',evidence:'Risk Register Q2 FY26.xlsx'},
+     ],
+     missing:[
+       {name:'Physical asset risk — facility level',value:'',source:'',conf:'m',
+        consequence:'Physical Asset Risk — ₹28–64 Cr unquantified without facility coordinates',
+        action:'Upload facility register or connect energy management system'},
+       {name:'Third-party concentration risk',value:'',source:'',conf:'m',
+        consequence:'Supplier & Ecosystem Intelligence gap — Value Chain Cost undefined',
+        action:'Upload supplier list or connect procurement system'}
+     ]
+   }},
+  {id:'d03',name:'Governance Intelligence',conf:91,status:'complete',gaps:0,conflicts:1,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'g01',name:'Board composition',value:'11 directors — 6 independent',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.18'},
+       {id:'g02',name:'Audit committee',value:'4 members — all independent',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.21'},
+       {id:'g03',name:'Group CFO',value:'cross-domain conflict',source:'',conf:'v',crossConflictId:'cfo01'},
+       {id:'g04',name:'Board tenure average',value:'6.2 years',source:'Annual Report FY26',conf:'r',evidence:'Annual Report FY26.pdf · p.19'},
+     ],
+     added:[],
+     missing:[]
+   },
+   qUnlock:'Q1 — Enterprise Pulse powered'},
+  {id:'d04',name:'Regulatory & Compliance Intelligence',conf:78,status:'partial',gaps:1,conflicts:1,lastVerified:'2026-06-17T14:20:00',
+   groups:{
+     found:[
+       {id:'rc01',name:'BRSR filing status FY25',value:'Filed — Sections A, B, C complete',source:'SEBI · BSE',conf:'v',evidence:'SEBI portal · filing receipt'},
+       {id:'rc02',name:'Annual Report filing FY26',value:'Filed — 30 Sep 2026 deadline',source:'BSE Filing',conf:'v',evidence:'BSE Filing · disclosure log'},
+       {id:'rc03',name:'SEBI LODR compliance',value:'All disclosures current',source:'BSE',conf:'v',evidence:'BSE · compliance tracker'},
+       {id:'rc04',name:'Revenue FY26 (regulatory basis)',value:'cross-domain conflict',source:'',conf:'r',crossConflictId:'rev01'},
+       {id:'rc05',name:'CBAM exposure',value:'₹18–42 Cr estimated',source:'CBAM Database',conf:'i',evidence:'CBAM Database · rate schedule 2026'},
+     ],
+     added:[
+       {id:'rc06',name:'BRSR FY26 draft',value:'89% complete — 3 sections pending',source:'BRSR Draft.pdf',conf:'r',evidence:'BRSR FY26 Draft.pdf'},
+     ],
+     missing:[
+       {name:'Transfer pricing documentation',value:'',source:'',conf:'m',
+        consequence:'Regulatory Cost Exposure — ₹4–12 Cr penalty risk if undocumented',
+        action:'Upload TP documentation or confirm with CFO'}
+     ]
+   }},
+  {id:'d05',name:'Operational Intelligence',conf:43,status:'gap',gaps:3,conflicts:0,lastVerified:'2026-04-28T11:00:00',
+   groups:{
+     found:[
+       {id:'op01',name:'Total energy consumption FY26',value:'847,000 GJ (aggregate)',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.73'},
+       {id:'op02',name:'Facility count',value:'6 facilities — India + international',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.8'},
+       {id:'op03',name:'Operational continuity incidents',value:'0 material incidents FY26',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.74'},
+     ],
+     added:[],
+     missing:[
+       {name:'Energy consumption by facility',value:'',source:'',conf:'m',
+        consequence:'Operational Continuity Risk — ₹12–28 Cr exposure range undefined',
+        action:'Upload energy management data or connect energy system'},
+       {name:'Production output by unit',value:'',source:'',conf:'m',
+        consequence:'Operational Intelligence confidence capped at 43% without facility data',
+        action:'Upload operational reports per facility'},
+       {name:'Asset maintenance schedule',value:'',source:'',conf:'m',
+        consequence:'Physical Asset Risk — maintenance gaps undetectable',
+        action:'Upload asset register or connect ERP'}
+     ]
+   }},
+  {id:'d06',name:'Supplier & Ecosystem Intelligence',conf:34,status:'gap',gaps:2,conflicts:0,lastVerified:'2026-05-02T09:00:00',
+   groups:{
+     found:[
+       {id:'se01',name:'Supplier count (disclosed)',value:'847 suppliers — top 20 undisclosed',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.78'},
+       {id:'se02',name:'Geographic supplier distribution',value:'India 62% · International 38%',source:'Annual Report',conf:'i',evidence:'Annual Report FY26.pdf · p.79'},
+     ],
+     added:[],
+     missing:[
+       {name:'Top 20 supplier names and spend',value:'',source:'',conf:'m',
+        consequence:'Value Chain Cost — ₹8–19 Cr concentration risk undefined',
+        action:'Upload supplier list or connect procurement system'},
+       {name:'Supplier risk assessments',value:'',source:'',conf:'m',
+        consequence:'Third-party risk unquantifiable — Value Chain Intelligence at 34%',
+        action:'Upload supplier assessments or connect supplier portal'}
+     ]
+   }},
+  {id:'d07',name:'Financial Obligation Intelligence',conf:62,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'fo01',name:'Total debt FY26',value:'₹3,240 Cr',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.55'},
+       {id:'fo02',name:'Credit rating',value:'AAA (CRISIL) · Stable outlook',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.56'},
+       {id:'fo03',name:'Financial obligations disclosed',value:'2 obligations — ₹840 Cr',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.57'},
+     ],
+     added:[],
+     missing:[
+       {name:'Covenant terms — ₹420 Cr facility',value:'',source:'',conf:'m',
+        consequence:'Covenant Exposure — breach trigger and conditions unconfirmed',
+        action:'Upload loan agreement (marked confidential — stays internal)'}
+     ]
+   }},
+  {id:'d08',name:'Workforce & Human Capital Intelligence',conf:55,status:'partial',gaps:2,conflicts:0,lastVerified:'2026-06-17T14:20:00',
+   groups:{
+     found:[
+       {id:'wf01',name:'Total headcount FY26',value:'6,14,795 employees',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.83'},
+       {id:'wf02',name:'Attrition rate FY26',value:'12.5%',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.84'},
+       {id:'wf03',name:'Training hours per employee',value:'56 hours average',source:'BRSR FY26',conf:'r',evidence:'BRSR FY26 Draft.pdf · Section C'},
+     ],
+     added:[],
+     missing:[
+       {name:'Headcount by grade and location',value:'',source:'',conf:'m',
+        consequence:'Talent Competitiveness — BRSR Section C incomplete · grade-level data required',
+        action:'Upload HR data or connect HR system'},
+       {name:'Compensation benchmarking data',value:'',source:'',conf:'m',
+        consequence:'Talent Competitiveness intelligence capped without peer comparison data',
+        action:'Upload compensation survey or connect HRMS'}
+     ]
+   }},
+  {id:'d09',name:'Strategy Intelligence',conf:71,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'st01',name:'Strategic priorities FY26',value:'4 priorities identified',source:'Annual Report FY26',conf:'i',evidence:'Annual Report FY26.pdf · p.6'},
+       {id:'st02',name:'Market position',value:'Global IT services — #3 by revenue',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.5'},
+       {id:'st03',name:'Revenue growth target',value:'8–10% organic',source:'Investor Presentation',conf:'r',evidence:'Q4 Investor Deck.pptx · slide 4'},
+     ],
+     added:[],
+     missing:[
+       {name:'3-year strategic roadmap',value:'',source:'',conf:'m',
+        consequence:'Strategic Progress — Q10 partially answerable without roadmap',
+        action:'Upload board-approved strategic plan'}
+     ]
+   }},
+  {id:'d10',name:'Market & Competitive Intelligence',conf:48,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-06-19T07:00:00',
+   groups:{
+     found:[
+       {id:'mc01',name:'Market share — India IT',value:'Largest by revenue',source:'NewsAPI · Public reports',conf:'i',evidence:'NewsAPI aggregation · 19 Jun 2026'},
+       {id:'mc02',name:'Competitor signals today',value:'3 news signals — no material events',source:'NewsAPI · GDELT',conf:'r',evidence:'NewsAPI · GDELT feed'},
+       {id:'mc03',name:'Peer Business Resilience Index',value:'34% of sector peers registered strategic commitments',source:'Strategic Commitment Registry',conf:'r',evidence:'Strategic Commitment Registry · sector view'},
+     ],
+     added:[],
+     missing:[
+       {name:'Competitive benchmarking data',value:'',source:'',conf:'m',
+        consequence:'Q8 — Competitive Intelligence Question partially answerable',
+        action:'Connect Bloomberg or upload peer analysis'}
+     ]
+   }},
+  {id:'d11',name:'Reputation & External Perception',conf:66,status:'partial',gaps:0,conflicts:0,lastVerified:'2026-06-19T07:00:00',
+   groups:{
+     found:[
+       {id:'rp01',name:'Media sentiment score',value:'Positive — 87% neutral/positive',source:'NewsAPI · GDELT',conf:'r',evidence:'NewsAPI · GDELT feed'},
+       {id:'rp02',name:'Regulatory actions',value:'0 adverse regulatory actions FY26',source:'SEBI · MCA',conf:'v',evidence:'MCA portal · entity record'},
+       {id:'rp03',name:'Public disclosures current',value:'All SEBI disclosures filed',source:'BSE',conf:'v',evidence:'BSE · compliance tracker'},
+     ],
+     added:[],missing:[]
+   }},
+  {id:'d12',name:'Stakeholder Intelligence',conf:52,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-06-15T10:00:00',
+   groups:{
+     found:[
+       {id:'sh01',name:'Major shareholders',value:'Tata Sons 72.3% · FIIs 12.4%',source:'BSE Filing',conf:'v',evidence:'BSE Filing · shareholding pattern'},
+       {id:'sh02',name:'Analyst coverage',value:'34 analysts — 28 Buy / 4 Hold / 2 Sell',source:'Bloomberg',conf:'r',evidence:'Bloomberg Terminal · consensus view'},
+     ],
+     added:[],
+     missing:[
+       {name:'Stakeholder engagement log',value:'',source:'',conf:'m',
+        consequence:'Q11 — Stakeholder Landscape partially answerable',
+        action:'Upload stakeholder engagement records'}
+     ]
+   }},
+  {id:'d13',name:'Business Continuity & Resilience',conf:61,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-04-28T11:00:00',
+   groups:{
+     found:[
+       {id:'bc01',name:'BCP documented',value:'Yes — last updated FY25',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.69'},
+     ],
+     added:[],
+     missing:[
+       {name:'BCP test results FY26',value:'',source:'',conf:'m',
+        consequence:'Operational Continuity Risk — resilience posture unverified',
+        action:'Upload BCP test report or board approval'}
+     ]
+   }},
+  {id:'d14',name:'Legal Intelligence',conf:44,status:'partial',gaps:2,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'lg01',name:'Pending litigation — material',value:'2 cases — ₹240 Cr aggregate',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.91'},
+       {id:'lg02',name:'Regulatory proceedings',value:'0 material proceedings',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.92'},
+     ],
+     added:[],
+     missing:[
+       {name:'Contract concentration risk',value:'',source:'',conf:'m',
+        consequence:'Legal Intelligence at 44% — major contract terms unknown',
+        action:'Upload key contracts (confidential — stays internal)'},
+       {name:'IP portfolio valuation',value:'',source:'',conf:'m',
+        consequence:'Asset Intelligence incomplete without IP register',
+        action:'Upload IP register or patent list'}
+     ]
+   }},
+  {id:'d15',name:'Technology & Digital Intelligence',conf:38,status:'gap',gaps:2,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'tech01',name:'Technology investment FY26',value:'₹8,240 Cr — 3.2% of revenue',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.36'},
+       {id:'tech02',name:'Digital transformation initiatives',value:'4 disclosed programs',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.37'},
+     ],
+     added:[],
+     missing:[
+       {name:'Technology stack architecture',value:'',source:'',conf:'m',
+        consequence:'Technology Intelligence capped — dependency risk unknown',
+        action:'Upload IT architecture document or system inventory'},
+       {name:'Cloud adoption metrics',value:'',source:'',conf:'m',
+        consequence:'Digital Intelligence incomplete without cloud spend data',
+        action:'Upload cloud spend report or connect billing system'}
+     ]
+   }},
+  {id:'d16',name:'Cyber & Information Security Intelligence',conf:29,status:'gap',gaps:3,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'cy01',name:'Cyber incidents FY26',value:'0 material incidents disclosed',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.67'},
+       {id:'cy02',name:'ISO 27001 certification',value:'Not confirmed in public filings',source:'',conf:'i',evidence:''},
+     ],
+     added:[],
+     missing:[
+       {name:'Cybersecurity framework compliance',value:'',source:'',conf:'m',
+        consequence:'Cyber Intelligence at 29% — attack surface unknown',
+        action:'Upload cybersecurity assessment or CISO report'},
+       {name:'Data breach response plan',value:'',source:'',conf:'m',
+        consequence:'Regulatory Cost Exposure — DPDP Act readiness unconfirmed',
+        action:'Upload data protection policy'},
+       {name:'Third-party security assessments',value:'',source:'',conf:'m',
+        consequence:'Supply chain cyber risk unquantifiable',
+        action:'Upload vendor security assessments'}
+     ]
+   }},
+  {id:'d17',name:'Customer Intelligence',conf:41,status:'partial',gaps:2,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'cu01',name:'Client concentration — top 10',value:'Top 10 = 38% of revenue',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.31'},
+       {id:'cu02',name:'Geographic revenue split',value:'North America 54% · Europe 31% · India 8%',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.32'},
+       {id:'cu03',name:'Client tenure — top 25',value:'Average 12 years',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.33'},
+     ],
+     added:[],
+     missing:[
+       {name:'Customer satisfaction scores',value:'',source:'',conf:'m',
+        consequence:'Customer Intelligence incomplete — churn risk unquantifiable',
+        action:'Upload NPS or CSAT data'},
+       {name:'Pipeline and backlog FY27',value:'',source:'',conf:'m',
+        consequence:'Revenue predictability — forward visibility limited',
+        action:'Upload sales pipeline data (confidential — stays internal)'}
+     ]
+   }},
+  {id:'d18',name:'Innovation Intelligence',conf:33,status:'gap',gaps:2,conflicts:0,lastVerified:'2026-06-18T09:42:00',
+   groups:{
+     found:[
+       {id:'in01',name:'R&D investment FY26',value:'₹1,840 Cr — 0.72% of revenue',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.40'},
+       {id:'in02',name:'Patents filed FY26',value:'Not separately disclosed',source:'Annual Report',conf:'i',evidence:''},
+     ],
+     added:[],
+     missing:[
+       {name:'Innovation pipeline',value:'',source:'',conf:'m',
+        consequence:'Innovation Intelligence at 33% — future capability unknown',
+        action:'Upload innovation portfolio or R&D roadmap'},
+       {name:'Patent and IP register',value:'',source:'',conf:'m',
+        consequence:'IP value unquantifiable without register',
+        action:'Upload IP register'}
+     ]
+   }},
+  {id:'d19',name:'Project & Transformation Intelligence',conf:56,status:'partial',gaps:1,conflicts:0,lastVerified:'2026-06-14T11:05:00',
+   groups:{
+     found:[
+       {id:'pt01',name:'Major transformation programs',value:'4 active programs disclosed',source:'Annual Report',conf:'r',evidence:'Annual Report FY26.pdf · p.39'},
+       {id:'pt02',name:'Capital expenditure FY26',value:'₹3,840 Cr — 1.5% of revenue',source:'Annual Report',conf:'v',evidence:'Annual Report FY26.pdf · p.53'},
+     ],
+     added:[],
+     missing:[
+       {name:'Program status and milestones',value:'',source:'',conf:'m',
+        consequence:'Transformation Progress — Q10 partially answerable',
+        action:'Upload program status reports or connect PMO system'}
+     ]
+   }},
+  {id:'d20',name:'Enterprise & Ecosystem Intelligence',conf:68,status:'partial',gaps:0,conflicts:0,lastVerified:'2026-06-15T11:05:00',
+   groups:{
+     found:[
+       {id:'en01',name:'Group structure',value:'4 Indian entities · 23 international subsidiaries',source:'MCA · OpenCorporates',conf:'v',evidence:'MCA portal · group filing'},
+       {id:'en02',name:'Organisation nodes configured',value:'8 of 12 configured in G1',source:'G1 · Organisation Setup',conf:'v',evidence:'G1 Organisation Setup'},
+       {id:'en03',name:'Key persons identified',value:'22 of 31 assigned',source:'Annual Report · MCA',conf:'r',evidence:'Annual Report FY26.pdf · p.18'},
+       {id:'en04',name:'Disclosure obligations mapped',value:'14 of 18 defined',source:'G1 · Organisation Setup',conf:'v',evidence:'G1 Organisation Setup'},
+     ],
+     added:[
+       {id:'en05',name:'Organisation structure FY26',value:'12 nodes suggested — 8 confirmed',source:'Org Structure.pptx',conf:'r',evidence:'Organisation Structure FY26.pptx'},
+     ],
+     missing:[]
+   },
+   g1Nudge:true}
+];
+
+// ── UNCLASSIFIED — fix #6: separate object, not a 21st domain card ─────
+const UNCLASSIFIED={
+  items:[
+    {name:'"Vendor Code of Conduct v3" — section on supplier ethics training',value:'Extracted — domain unclear',source:'Vendor Handbook.pdf',conf:'i',evidence:'Vendor Handbook.pdf · Section 4'},
+    {name:'Reference to "Project Meridian" internal initiative',value:'Extracted — context insufficient',source:'Board Minutes Mar 2026',conf:'i',evidence:'Board Minutes Mar 2026.pdf · p.3'},
+  ],
+  why:'These items were extracted successfully but CorpStage could not confidently assign them to one of the 20 domains. A Governance Manager should review and assign each item, or confirm it is not relevant.'
+};
+
+// ── CONFLICTS — fix #9: first-class objects with affectedDomains, resolved ONCE ─
+const CONFLICTS=[
+  {id:'rev01',name:'Revenue FY26',
+   affectedDomains:['d01','d04'],
+   options:[
+     {value:'₹2,55,324 Cr',source:'Annual Report FY26',conf:'v',evidence:'Annual Report FY26.pdf · p.42'},
+     {value:'₹2,51,890 Cr',source:'Q4 Investor Deck · SharePoint',conf:'r',evidence:'Q4 Investor Deck.pptx · slide 2'},
+     {value:'Both correct — different periods',source:'Annual = full year · Deck = preliminary estimate',conf:null,evidence:''}
+   ],
+   resolved:false,resolution:null},
+  {id:'cfo01',name:'Group CFO',
+   affectedDomains:['d03'],
+   options:[
+     {value:'Samir Seksaria',source:'Annual Report FY26 · Board composition',conf:'v',evidence:'Annual Report FY26.pdf · p.18'},
+     {value:'Ramakrishnan V',source:'MCA Filing · Director registration 2023',conf:'r',evidence:'MCA portal · director filing 2023'}
+   ],
+   resolved:false,resolution:null}
+];
+
+// ── UPLOAD HISTORY ────────────────────────────────────────────────────
+const UPLOAD_HISTORY=[
+  {id:'doc1',name:'TCS Annual Report FY26.pdf',type:'pdf',size:'11.2 MB',
+   date:'2026-06-18',time:'09:41',uploader:'Priya Sharma (CFO)',
+   domainsContributed:['Financial Intelligence','Governance Intelligence','Strategy Intelligence','Regulatory & Compliance Intelligence'],
+   itemsExtracted:247,confDelta:'+18%',
+   items:[
+     {field:'Revenue FY26',value:'₹2,55,324 Cr',conf:'v'},
+     {field:'EBITDA margin',value:'24.7%',conf:'v'},
+     {field:'Board composition',value:'11 directors extracted',conf:'v'},
+     {field:'Strategic priorities',value:'4 identified',conf:'i'},
+     {field:'Debt-to-equity',value:'0.12',conf:'v'},
+   ]},
+  {id:'doc2',name:'BRSR FY26 Draft.pdf',type:'pdf',size:'4.8 MB',
+   date:'2026-06-17',time:'14:20',uploader:'Arun Mehta (CSO)',
+   domainsContributed:['Regulatory & Compliance Intelligence','Operational Intelligence','Workforce & Human Capital Intelligence'],
+   itemsExtracted:89,confDelta:'+12%',
+   items:[
+     {field:'BRSR sections',value:'A, B, C complete',conf:'v'},
+     {field:'Material topics',value:'12 identified',conf:'r'},
+     {field:'Key persons confirmed',value:'CEO, CFO, CSO',conf:'v'},
+   ]},
+  {id:'doc3',name:'Organisation Structure FY26.pptx',type:'pptx',size:'2.1 MB',
+   date:'2026-06-15',time:'11:05',uploader:'Priya Sharma (CFO)',
+   domainsContributed:['Enterprise & Ecosystem Intelligence','Governance Intelligence'],
+   itemsExtracted:34,confDelta:'+9%',
+   items:[
+     {field:'Org nodes',value:'12 identified',conf:'i'},
+     {field:'Reporting lines',value:'Hierarchy mapped',conf:'i'},
+   ]},
+  {id:'doc4',name:'Risk Register Q2 FY26.xlsx',type:'xlsx',size:'890 KB',
+   date:'2026-06-10',time:'16:30',uploader:'Vikram Nair (CRO)',
+   domainsContributed:['Enterprise Risk & Resilience','Financial Intelligence'],
+   itemsExtracted:47,confDelta:'+22%',
+   items:[
+     {field:'Risks identified',value:'47 risks',conf:'v'},
+     {field:'High severity risks',value:'8 flagged',conf:'v'},
+     {field:'Financial exposure',value:'₹84–142 Cr',conf:'i'},
+   ]},
+];
+
+// AUDIT LOG
+const AUDIT_LOG=[
+  {ts:'2026-06-18 09:41',action:'Annual Report FY26 uploaded — 247 data points extracted across 4 domains',actor:'Priya Sharma (CFO)'},
+  {ts:'2026-06-18 09:42',action:'Conflict detected — Revenue FY26: affects Financial Intelligence and Regulatory & Compliance Intelligence',actor:'Platform · Auto-detected'},
+  {ts:'2026-06-18 09:43',action:'G1 Organisation Setup updated — 8 key persons pre-populated from Annual Report',actor:'Platform · Auto-routed'},
+  {ts:'2026-06-17 14:20',action:'BRSR FY26 Draft uploaded — 89 data points extracted',actor:'Arun Mehta (CSO)'},
+  {ts:'2026-06-15 11:05',action:'Organisation Structure FY26.pptx uploaded — 12 org nodes suggested to G1',actor:'Priya Sharma (CFO)'},
+  {ts:'2026-06-10 16:30',action:'Risk Register Q2 FY26.xlsx uploaded — 47 risks extracted',actor:'Vikram Nair (CRO)'},
+];
+function logAudit(action,actor){
+  AUDIT_LOG.unshift({ts:new Date().toISOString().replace('T',' ').substring(0,16),action,actor});
+}
+
+// ACTIONS — L38: max 7, NO conflicts here (fix #4 — conflicts live only in conflict strip)
+const ACTIONS=[
+  {domain:'Operational Intelligence',type:'warn',
+   action:'Upload energy management data for 6 facilities',
+   consequence:'₹12–28 Cr Operational Continuity Risk unquantified',
+   q:'Unlocks Q7 — Operational Resilience'},
+  {domain:'Supplier & Ecosystem Intelligence',type:'warn',
+   action:'Upload supplier list — top 20 by spend',
+   consequence:'₹8–19 Cr Value Chain Cost undefined',
+   q:'Unlocks Q4 — The Threat Map'},
+  {domain:'Cyber & Information Security',type:'warn',
+   action:'Upload cybersecurity framework assessment',
+   consequence:'Cyber Intelligence at 29% — attack surface unknown',
+   q:'Required for Q4 — The Threat Map'},
+  {domain:'Enterprise & Ecosystem Intelligence',type:'nudge',
+   action:'Confirm 4 nodes in G1 Organisation Setup',
+   consequence:'Aggregation incomplete — 4 unconfirmed nodes',
+   q:'Required for accurate aggregation',target:'G1_Organisation_Setup.html'},
+  {domain:'Workforce Intelligence',type:'warn',
+   action:'Connect HR system or upload headcount by grade',
+   consequence:'BRSR Section C incomplete — grade data required',
+   q:'Affects Q9 — People & Culture'},
+  {domain:'Legal Intelligence',type:'nudge',
+   action:'Upload key contracts — ₹420 Cr facility agreement',
+   consequence:'Covenant Exposure — breach trigger unconfirmed',
+   q:'Affects Q3 — The Money Question'}
+];
+
+// ── STATE ────────────────────────────────────────────────────────────
+let activeDocuments=[];
+let domainSortMode='urgency';
+let selectedDomainId=null;
+let conflictSelections={};
+let conflictCardsOpen=false;
+let historyOpen=false;
+let sessionUploadCount=0;
+
+// ── ACTION STRIP ─────────────────────────────────────────────────────
+function buildActionStrip(){
+  document.getElementById('actionItems').innerHTML=ACTIONS.map((a,i)=>`
+    <div class="as-item ${a.type}" onclick="handleAction(${i})">
+      <div class="as-item-domain">${a.domain}</div>
+      <div class="as-item-action">${a.action}</div>
+      ${a.consequence?`<div class="as-item-consequence">${a.consequence}</div>`:''}
+      ${a.q?`<div class="as-item-q">${a.q}</div>`:''}
+    </div>`).join('');
+  document.getElementById('actionCount').textContent=
+    ACTIONS.length+' actions · sorted by financial consequence';
+}
+function handleAction(idx){
+  const a=ACTIONS[idx];
+  if(a.target){window.location.href=a.target;return;}
+  triggerFileUpload();
+}
+
+// ── FRESHNESS — fix #14 ───────────────────────────────────────────────
+function freshnessLabel(iso){
+  const then=new Date(iso),now=new Date('2026-06-19T09:00:00');
+  const hrs=(now-then)/36e5;
+  if(hrs<24) return {text:'Last refreshed '+Math.round(hrs)+' hour'+(Math.round(hrs)===1?'':'s')+' ago',stale:false};
+  const days=Math.round(hrs/24);
+  if(days<14) return {text:'Last refreshed '+days+' day'+(days===1?'':'s')+' ago',stale:false};
+  const weeks=Math.round(days/7);
+  return {text:'Last refreshed '+weeks+' week'+(weeks===1?'':'s')+' ago — consider re-verifying',stale:true};
+}
+
+// ── EVIDENCE TOOLTIP — fix #13: honest placeholder, F3 not built yet ────
+function showEvidenceTip(el,evidence){
+  const tip=document.getElementById('evidenceTip');
+  tip.textContent=evidence?('Source: '+evidence+' · Evidence Intelligence Center — coming next'):'Evidence Intelligence Center — coming next';
+  const r=el.getBoundingClientRect();
+  tip.style.left=r.left+'px';tip.style.top=(r.bottom+6)+'px';
+  tip.classList.add('show');
+}
+function hideEvidenceTip(){document.getElementById('evidenceTip').classList.remove('show')}
+
+// ── ITEM ROW ─────────────────────────────────────────────────────────
+function buildItemRow(item,domainId){
+  // fix #9: cross-domain conflict reference — read-only, points to single resolution surface
+  if(item.crossConflictId){
+    const c=CONFLICTS.find(x=>x.id===item.crossConflictId);
+    if(!c) return '';
+    if(c.resolved){
+      const r=c.resolution;
+      return `<div class="ii-row">
+        <div class="ii-name">${item.name}</div>
+        <div class="ii-value">${r.value}</div>
+        <div class="ii-source" onmouseenter="showEvidenceTip(this,'${(r.evidence||'').replace(/'/g,"\\'")}')" onmouseleave="hideEvidenceTip()">${r.source}</div>
+        <div class="ii-conf ${r.conf||'v'}">${r.conf==='v'?'Verified':r.conf==='r'?'Retrieved':'Resolved'}</div>
+        <div class="ii-crossref-note">✓ Resolved via cross-domain conflict — also affects ${c.affectedDomains.filter(d=>d!==domainId).map(d=>DOMAINS.find(x=>x.id===d)?.name).join(', ')}</div>
+      </div>`;
+    }
+    return `<div class="ii-row crossref">
+      <div class="ii-name">⚠ ${item.name}</div>
+      <div class="ii-value" style="color:var(--gold)">Pending — part of a cross-domain conflict</div>
+      <div></div><div></div>
+      <div class="ii-crossref-note">This value is contested and affects ${c.affectedDomains.length} domains. Resolve once — <span class="ii-crossref-link" onclick="toggleConflictCards();document.getElementById('conflictStrip').scrollIntoView({behavior:'smooth'})">go to resolution →</span></div>
+    </div>`;
+  }
+  if(item.conf==='m'){
+    return `<div class="ii-row missing">
+      <div class="ii-name">${item.name}</div>
+      <div class="ii-value" style="color:var(--t3)">Not found</div>
+      <div class="ii-source" style="color:var(--t3);cursor:default;text-decoration:none">${item.action||''}</div>
+      <div class="ii-conf m">Missing</div>
+      ${item.consequence?`<div class="ii-consequence">${item.consequence}</div>`:''}
+    </div>`;
+  }
+  const confLabel={'v':'Verified','r':'Retrieved','i':'Inferred'}[item.conf]||item.conf;
+  const evid=(item.evidence||'').replace(/'/g,"\\'");
+  return `<div class="ii-row">
+    <div class="ii-name">${item.name}</div>
+    <div class="ii-value">${item.value}</div>
+    <div class="ii-source" onmouseenter="showEvidenceTip(this,'${evid}')" onmouseleave="hideEvidenceTip()">${item.source}</div>
+    <div class="ii-conf ${item.conf}">${confLabel}</div>
+  </div>`;
+}
+
+// ── DOMAIN GRID — fix #1: only domain listing on the page, fix #5: arc + conflict badge only
+function sortedDomains(){
+  const arr=[...DOMAINS];
+  if(domainSortMode==='urgency'){
+    return arr.sort((a,b)=>{
+      const urgA=(a.conflicts>0?100:0)+(a.gaps*10)+(100-a.conf);
+      const urgB=(b.conflicts>0?100:0)+(b.gaps*10)+(100-b.conf);
+      return urgB-urgA;
+    });
+  } else if(domainSortMode==='confidence'){
+    return arr.sort((a,b)=>a.conf-b.conf);
+  } else {
+    return arr.sort((a,b)=>a.name.localeCompare(b.name));
+  }
+}
+function sortDomains(mode,el){
+  domainSortMode=mode;
+  document.querySelectorAll('.dp-sort-opt').forEach(o=>o.classList.remove('on'));
+  el.classList.add('on');
+  buildGrid();
+}
+
+function buildGrid(){
+  const sorted=sortedDomains();
+  document.getElementById('gridLabelR').textContent=sorted.length+' domains';
+  document.getElementById('domainGrid').innerHTML=sorted.map(d=>{
+    const arcCls=d.status==='complete'?'complete':d.gaps>0||d.conflicts>0?'gap':'partial';
+    const circumference=2*Math.PI*13;
+    const offset=circumference-(d.conf/100)*circumference;
+    const isSelected=selectedDomainId===d.id;
+    const completeCls=d.status==='complete'?' complete':'';
+    const fresh=freshnessLabel(d.lastVerified);
+    return `<div class="dcard${isSelected?' selected':''}${completeCls}" onclick="selectDomain('${d.id}')" id="dcard-${d.id}">
+      <div class="dcard-top">
+        <div class="dcard-name">${d.name}</div>
+        <div class="dcard-arc">
+          <svg viewBox="0 0 30 30">
+            <circle class="dcard-arc-bg" cx="15" cy="15" r="13"/>
+            <circle class="dcard-arc-fg ${arcCls}" cx="15" cy="15" r="13"
+              stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+          </svg>
+          <div class="dcard-arc-pct">${d.conf}%</div>
+        </div>
+      </div>
+      <div class="dcard-meta">
+        ${d.conflicts>0?`<div class="dcard-badge conflict">${d.conflicts} conflict</div>`:''}
+        ${d.qUnlock?`<div class="dcard-badge q">Q powered</div>`:''}
+        ${fresh.stale?`<div class="dcard-fresh">⏱ stale</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectDomain(id){
+  selectedDomainId=id;
+  buildGrid();
+  openDomainDetail(id);
+}
+
+function openDomainDetail(id){
+  const d=DOMAINS.find(x=>x.id===id);if(!d) return;
+  const panel=document.getElementById('domainDetail');
+  document.getElementById('ddTitle').textContent=d.name;
+  document.getElementById('ddSub').textContent=`${d.conf}% confidence${d.qUnlock?' · '+d.qUnlock:''}`;
+  const fresh=freshnessLabel(d.lastVerified);
+  const fEl=document.getElementById('ddFresh');
+  fEl.textContent=fresh.text;
+  fEl.className='dd-fresh'+(fresh.stale?' stale':'');
+  document.getElementById('ddBody').innerHTML=buildDomainBody(d);
+  panel.classList.add('open');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+function closeDomainDetail(){
+  selectedDomainId=null;
+  document.getElementById('domainDetail').classList.remove('open');
+  buildGrid();
+}
+
+function buildDomainBody(d){
+  let html='';
+  if(d.groups.found.length>0){
+    const shown=d.groups.found.slice(0,7);
+    const more=d.groups.found.length-7;
+    html+=`<div class="ds-group-label">Found by CorpStage</div>`;
+    html+=shown.map(item=>buildItemRow(item,d.id)).join('');
+    if(more>0) html+=`<div class="ds-show-more" onclick="showMore('${d.id}')">Show ${more} more items</div>`;
+  }
+  if(d.groups.added.length>0){
+    html+='<div class="ds-group-label">Added by you</div>';
+    html+=d.groups.added.map(item=>buildItemRow(item,d.id)).join('');
+  }
+  if(d.groups.missing.length>0){
+    html+='<div class="ds-group-label" style="color:var(--coral)">Missing — intelligence gaps</div>';
+    html+=d.groups.missing.map(item=>buildItemRow(item,d.id)).join('');
+  }
+  if(d.g1Nudge) html+=`
+    <div class="ds-nudge" onclick="window.location.href='G1_Organisation_Setup.html'">
+      <div class="ds-nudge-text">Configuration data from this domain pre-populates G1 · Organisation Setup. Review and confirm your organisation structure there.</div>
+      <div class="ds-nudge-action">Go to G1 →</div>
+    </div>`;
+  if(d.gaps>0&&d.groups.missing.length>0) html+=`
+    <div class="ds-nudge" onclick="triggerFileUpload()">
+      <div class="ds-nudge-text">Upload documents related to ${d.name} to fill these gaps.</div>
+      <div class="ds-nudge-action">Upload document →</div>
+    </div>`;
+  if(!html) html='<div style="font-size:10px;color:var(--t3);padding:8px 0">No intelligence extracted yet for this domain. Upload relevant documents or connect a data source.</div>';
+  return html;
+}
+
+function showMore(domainId){
+  const d=DOMAINS.find(x=>x.id===domainId);
+  document.getElementById('ddBody').innerHTML=
+    `<div class="ds-group-label">Found by CorpStage</div>`+
+    d.groups.found.map(item=>buildItemRow(item,d.id)).join('')+
+    (d.groups.added.length>0?'<div class="ds-group-label">Added by you</div>'+d.groups.added.map(item=>buildItemRow(item,d.id)).join(''):'')+
+    (d.groups.missing.length>0?'<div class="ds-group-label" style="color:var(--coral)">Missing — intelligence gaps</div>'+d.groups.missing.map(item=>buildItemRow(item,d.id)).join(''):'');
+}
+
+// ── UNCLASSIFIED MODAL — fix #6 ───────────────────────────────────────
+function openUnclassified(){
+  document.getElementById('unclassifiedSub').textContent=UNCLASSIFIED.why;
+  document.getElementById('unclassifiedItems').innerHTML=UNCLASSIFIED.items.map(item=>buildItemRow(item,null)).join('');
+  document.getElementById('unclassifiedModal').classList.add('open');
+}
+function closeUnclassified(){document.getElementById('unclassifiedModal').classList.remove('open')}
+
+// ── CONFLICT RESOLUTION — fix #9: single object, single surface, fix #4: separate from actions ─
+function buildConflictStrip(){
+  const pending=CONFLICTS.filter(c=>!c.resolved);
+  const strip=document.getElementById('conflictStrip');
+  if(pending.length===0){strip.classList.remove('show');return;}
+  strip.classList.add('show');
+  document.getElementById('conflictCount').textContent=pending.length+' conflict'+(pending.length>1?'s':'');
+  buildConflictCards();
+}
+
+function buildConflictCards(){
+  const pending=CONFLICTS.filter(c=>!c.resolved);
+  document.getElementById('conflictCards').innerHTML=pending.map(c=>{
+    const domainNames=c.affectedDomains.map(d=>DOMAINS.find(x=>x.id===d)?.name).filter(Boolean);
+    const sel=conflictSelections[c.id];
+    const opts=c.options.map((opt,i)=>`
+      <div class="cs-opt${sel===i?' selected':''}" onclick="selectConflictOpt('${c.id}',${i},this)">
+        <div class="cs-radio"></div>
+        <div class="cs-opt-body">
+          <div class="cs-opt-name">${opt.value}</div>
+          <div class="cs-opt-source">${opt.source}${opt.evidence?` · <span class="cs-opt-evidence" onmouseenter="showEvidenceTip(this,'${opt.evidence.replace(/'/g,"\\'")}')" onmouseleave="hideEvidenceTip()">view evidence</span>`:''}</div>
+        </div>
+        ${opt.conf?`<div class="cs-opt-conf ${opt.conf==='v'?'v':opt.conf==='r'?'r':'i'}" style="border-color:${opt.conf==='v'?'rgba(46,106,94,.22)':opt.conf==='r'?'rgba(58,100,146,.20)':'rgba(184,142,78,.22)'};color:${opt.conf==='v'?'var(--teal)':opt.conf==='r'?'var(--blue)':'var(--gold)'}">${opt.conf==='v'?'Verified':opt.conf==='r'?'Retrieved':'Inferred'}</div>`:''}
+      </div>`).join('');
+    return `<div class="cs-card" id="cscard-${c.id}">
+      <div class="cs-card-hdr">
+        <div class="cs-card-title">${c.name}</div>
+        <div class="cs-card-domains">${domainNames.map(n=>`<span class="cs-card-domain-tag">${n}</span>`).join('')}</div>
+      </div>
+      <div class="cs-card-body">
+        <div class="cs-opts">${opts}</div>
+        <div class="cs-actions">
+          <button class="btn teal sm" onclick="resolveConflict('${c.id}')">Confirm decision — applies to all ${domainNames.length} domains</button>
+          <button class="btn sm" onclick="deferConflict('${c.id}')">Defer to Governance Manager</button>
+          <div style="margin-left:auto;font-size:8px;color:var(--t3);cursor:pointer" onclick="openAudit('${c.name}')">Audit trail →</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleConflictCards(){
+  conflictCardsOpen=!conflictCardsOpen;
+  document.getElementById('conflictCards').classList.toggle('open',conflictCardsOpen);
+  document.getElementById('conflictJumpBtn').textContent=conflictCardsOpen?'Hide ↑':'Resolve now →';
+}
+function jumpToFirstConflict(){
+  if(!conflictCardsOpen) toggleConflictCards();
+  document.getElementById('conflictStrip').scrollIntoView({behavior:'smooth'});
+}
+
+function selectConflictOpt(conflictId,optIdx,el){
+  conflictSelections[conflictId]=optIdx;
+  const card=document.getElementById('cscard-'+conflictId);
+  card.querySelectorAll('.cs-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function resolveConflict(conflictId){
+  const sel=conflictSelections[conflictId];
+  if(sel===undefined){showToast('⚠ Select an option before confirming');return;}
+  const c=CONFLICTS.find(x=>x.id===conflictId);
+  const chosen=c.options[sel];
+  c.resolved=true;c.resolution=chosen;
+  const domainNames=c.affectedDomains.map(d=>DOMAINS.find(x=>x.id===d)?.name).filter(Boolean);
+  logAudit(`Conflict resolved: "${c.name}" → "${chosen.value}" (${chosen.source}). Applied across ${domainNames.join(', ')}. Superseded values retained in evidence chain.`,'Priya Sharma (CFO)');
+  // Update affected domains' conflict counts and rerender everything that referenced this conflict
+  c.affectedDomains.forEach(did=>{
+    const dom=DOMAINS.find(x=>x.id===did);
+    if(dom) dom.conflicts=Math.max(0,(dom.conflicts||0)-1);
+  });
+  delete conflictSelections[conflictId];
+  buildGrid();buildConflictStrip();
+  if(selectedDomainId&&c.affectedDomains.includes(selectedDomainId)) openDomainDetail(selectedDomainId);
+  showToast('✓ Resolved once — applied across '+domainNames.length+' domain'+(domainNames.length>1?'s':''));
+}
+
+function deferConflict(conflictId){
+  const c=CONFLICTS.find(x=>x.id===conflictId);
+  logAudit(`Conflict deferred: "${c.name}" — sent to Governance Manager for resolution`,'Priya Sharma (CFO)');
+  showToast('Deferred — Governance Manager notified via G5');
+}
+
+// ── UPLOAD — 8-category guardrails (Blueprint §7.9) ──────────────────
+const SUPPORTED_EXT=['pdf','docx','doc','xlsx','xls','pptx','ppt','csv','txt','png','jpg','jpeg','msg','eml'];
+const BLOCKED_EXT=['exe','dll','sh','bat','zip','rar','7z','mp3','mp4','mov','avi'];
+const MAX_FILE_MB=200,MIN_FILE_KB=1,MAX_BATCH_MB=1024,MAX_FILES_PER_SESSION=20;
+
+function triggerFileUpload(){document.getElementById('fileInput').click()}
+
+function handleFiles(input){
+  if(!input.files.length) return;
+  const files=Array.from(input.files);
+  if(files.length+sessionUploadCount>MAX_FILES_PER_SESSION){
+    if(!confirm(`You are uploading ${files.length} files (${sessionUploadCount} already this session). CorpStage recommends a maximum of ${MAX_FILES_PER_SESSION} per session. Continue anyway?`)) return;
+  }
+  let batchSizeMB=0;
+  const accepted=[];
+  files.forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    const sizeMB=f.size/1024/1024,sizeKB=f.size/1024;
+    if(BLOCKED_EXT.includes(ext)){
+      logAudit(`Upload rejected — "${f.name}": unsupported file type (.${ext}).`,'Current user · Rejected');
+      showToast('✕ "'+f.name+'" rejected — file type .'+ext+' is not supported');return;
+    }
+    if(!SUPPORTED_EXT.includes(ext)){
+      logAudit(`Upload rejected — "${f.name}": unrecognised file type (.${ext}).`,'Current user · Rejected');
+      showToast('✕ "'+f.name+'" rejected — unrecognised file type');return;
+    }
+    if(f.size===0){
+      logAudit(`Upload rejected — "${f.name}": zero-byte file.`,'Current user · Rejected');
+      showToast('✕ "'+f.name+'" rejected — file appears to be empty');return;
+    }
+    if(sizeMB>MAX_FILE_MB){
+      logAudit(`Upload rejected — "${f.name}": ${sizeMB.toFixed(1)}MB exceeds ${MAX_FILE_MB}MB limit.`,'Current user · Rejected');
+      showToast('✕ "'+f.name+'" rejected — exceeds '+MAX_FILE_MB+'MB limit');return;
+    }
+    if(sizeKB<MIN_FILE_KB){
+      showToast('⚠ "'+f.name+'" is unusually small — verify it is not empty');
+      logAudit(`Upload warning — "${f.name}": file under ${MIN_FILE_KB}KB.`,'Current user · Warned');
+    }
+    batchSizeMB+=sizeMB;
+    const exactMatch=UPLOAD_HISTORY.find(h=>h.name===f.name);
+    if(exactMatch){
+      if(!confirm(`"${f.name}" was previously uploaded on ${exactMatch.date}. Upload again to check for an updated version?`)){
+        logAudit(`Upload skipped — "${f.name}": user declined re-upload.`,'Current user');return;
+      }
+      logAudit(`Upload proceeding — "${f.name}": re-uploaded as potential version update.`,'Current user');
+    }
+    accepted.push(f);
+  });
+  if(batchSizeMB>MAX_BATCH_MB){
+    showToast('⚠ Batch exceeds 1GB — files queued for sequential processing');
+    logAudit(`Batch upload (${batchSizeMB.toFixed(0)}MB) exceeds 1GB — queued.`,'Platform · Auto');
+  }
+  if(accepted.length===0){input.value='';return;}
+  sessionUploadCount+=accepted.length;
+  accepted.forEach(f=>{
+    activeDocuments.push({name:f.name,status:'processing'});
+    UPLOAD_HISTORY.unshift({
+      id:'doc'+Date.now()+Math.random().toString(36).substring(2,6),name:f.name,type:f.name.split('.').pop(),
+      size:Math.round(f.size/1024/1024*10)/10+' MB',
+      date:new Date().toISOString().split('T')[0],time:new Date().toTimeString().substring(0,5),
+      uploader:'Current user',domainsContributed:[],itemsExtracted:0,confDelta:'Extracting…',items:[]
+    });
+    logAudit(f.name+' uploaded — extracting intelligence…','Current user');
+  });
+  switchToActiveState();
+  showToast('⟳ Extracting intelligence from '+accepted.length+' document'+(accepted.length>1?'s':'')+'…');
+  setTimeout(()=>{
+    accepted.forEach(()=>{
+      const gain=Math.floor(Math.random()*12)+6;
+      const cur=parseInt(document.getElementById('overallConf').textContent)||61;
+      document.getElementById('overallConf').textContent=Math.min(cur+gain,99)+'%';
+      if(UPLOAD_HISTORY.length>0){
+        UPLOAD_HISTORY[0].confDelta='+'+gain+'%';
+        const itemCount=Math.floor(Math.random()*80)+20;
+        UPLOAD_HISTORY[0].itemsExtracted=itemCount;
+        UPLOAD_HISTORY[0].domainsContributed=['Financial Intelligence','Governance Intelligence'];
+        if(itemCount<3){
+          showToast('⚠ Low yield — "'+UPLOAD_HISTORY[0].name+'" produced very few items');
+          logAudit(`Low yield flagged — "${UPLOAD_HISTORY[0].name}": only ${itemCount} items extracted.`,'Platform · Auto');
+        }
+      }
+    });
+    activeDocuments=activeDocuments.map(d=>({...d,status:'done'}));
+    buildDocChips();
+    if(historyOpen) buildHistoryItems();
+    buildGrid();
+    if(selectedDomainId) openDomainDetail(selectedDomainId);
+    showToast('✓ Extraction complete — intelligence routed across domains');
+    logAudit('Extraction complete for '+accepted.length+' document(s). Intelligence routed to domains and G1.','Platform · Auto');
+  },2800);
+  input.value='';
+}
+
+function switchToActiveState(){
+  const zone=document.getElementById('uploadZone');
+  zone.classList.remove('empty');zone.classList.add('active');
+  document.getElementById('uzEmpty').style.display='none';
+  document.getElementById('uzActive').classList.add('show');
+  buildDocChips();
+}
+function buildDocChips(){
+  document.getElementById('docChips').innerHTML=activeDocuments.slice(0,4).map((d,i)=>`
+    <div class="uz-chip${d.status==='processing'?' processing':''}">
+      ${d.status==='processing'?'⟳':'✓'} ${d.name}
+      <span class="uz-chip-remove" onclick="removeDoc(${i})">×</span>
+    </div>`).join('')+(activeDocuments.length>4?`<div class="uz-chip">+${activeDocuments.length-4} more</div>`:'');
+}
+function removeDoc(idx){
+  activeDocuments.splice(idx,1);
+  if(activeDocuments.length===0){
+    document.getElementById('uploadZone').classList.remove('active');
+    document.getElementById('uploadZone').classList.add('empty');
+    document.getElementById('uzEmpty').style.display='';
+    document.getElementById('uzActive').classList.remove('show');
+  } else buildDocChips();
+}
+
+// URL / CONNECT
+function showUrlInput(){document.getElementById('urlInputWrap').style.display='block'}
+function hideUrlInput(){document.getElementById('urlInputWrap').style.display='none'}
+function processUrl(){
+  const url=document.getElementById('urlInput').value.trim();if(!url) return;
+  showToast('⟳ Retrieving intelligence from: '+url);
+  logAudit('URL submitted for extraction: '+url,'Current user');
+  hideUrlInput();
+  setTimeout(()=>showToast('✓ URL processed — intelligence extracted from public content'),2000);
+}
+function showConnectModal(){document.getElementById('connectModal').classList.add('open')}
+function closeConnectModal(){document.getElementById('connectModal').classList.remove('open')}
+function processConnect(){
+  const type=document.getElementById('connectType').value.trim();if(!type) return;
+  logAudit('System connection initiated: '+type,'Current user');
+  closeConnectModal();
+  document.getElementById('connectType').value='';document.getElementById('connectUrl').value='';
+  showToast('✓ Connection initiated — '+type+' · Intelligence will update as data arrives');
+}
+
+// ── HISTORY — fix #2/#12: ONE inline surface, toggled, not a separate slide-in ──
+function toggleHistoryInline(){
+  historyOpen=!historyOpen;
+  document.getElementById('historyInline').classList.toggle('open',historyOpen);
+  document.getElementById('viewAllBtn').textContent=historyOpen?'Hide ↑':'View all →';
+  if(historyOpen) buildHistoryItems();
+}
+function buildHistoryItems(){
+  document.getElementById('historyItems').innerHTML=UPLOAD_HISTORY.map(doc=>`
+    <div class="hi-item">
+      <div class="hi-hdr" onclick="toggleHistoryItem(this)">
+        <div class="hi-icon">${{pdf:'📄',xlsx:'📊',pptx:'📊',docx:'📝'}[doc.type]||'📄'}</div>
+        <div class="hi-info">
+          <div class="hi-name">${doc.name}</div>
+          <div class="hi-meta">${doc.date} ${doc.time} · ${doc.size} · ${doc.uploader}</div>
+          <div class="hi-domains">${doc.domainsContributed.map(d=>`<span class="hi-domain-tag">${d}</span>`).join('')}</div>
+        </div>
+        <div class="hi-delta">${doc.confDelta}</div>
+        <div class="hi-expand">▶</div>
+      </div>
+      <div class="hi-detail">
+        ${doc.items.map(item=>`
+          <div class="hi-detail-row">
+            <div class="hi-dr-field">${item.field}</div>
+            <div class="hi-dr-val">${item.value}</div>
+            <div class="hi-dr-conf ${item.conf}">${item.conf==='v'?'Verified':item.conf==='r'?'Retrieved':'Inferred'}</div>
+          </div>`).join('')}
+        ${doc.items.length===0?'<div style="font-size:9px;color:var(--t3);padding:8px 0">Extracting…</div>':''}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--b0)">
+          <div style="font-size:8.5px;color:var(--t3)">${doc.itemsExtracted} items extracted</div>
+          <div style="font-size:8px;color:var(--blue);cursor:pointer" onclick="openAudit('${doc.name}')">Audit trail →</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function toggleHistoryItem(hdr){
+  const detail=hdr.nextElementSibling;const exp=hdr.querySelector('.hi-expand');
+  const isOpen=detail.classList.contains('open');
+  detail.classList.toggle('open',!isOpen);
+  if(exp) exp.classList.toggle('open',!isOpen);
+}
+
+// AUDIT MODAL
+function openAudit(subject){
+  document.getElementById('auditSubject').textContent='All recorded actions for: '+subject;
+  const relevant=AUDIT_LOG.filter(l=>l.action.toLowerCase().includes(subject.toLowerCase().substring(0,8)));
+  const rows=relevant.length>0?relevant:AUDIT_LOG.slice(0,8);
+  document.getElementById('auditRows').innerHTML=rows.map(r=>`
+    <div class="audit-row"><div class="audit-ts">${r.ts}</div><div class="audit-action">${r.action}</div><div class="audit-actor">${r.actor}</div></div>`).join('');
+  document.getElementById('auditModal').classList.add('open');
+}
+function closeAudit(){document.getElementById('auditModal').classList.remove('open')}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),4000);
+}
+
+// INIT
+(function init(){
+  const scope=sessionStorage.getItem('CORPSTAGE_NODE_SCOPE');
+  if(scope){try{const s=JSON.parse(scope);document.getElementById('navOrg').textContent=s.name;}catch(e){}}
+  if(UPLOAD_HISTORY.length>0){
+    activeDocuments=UPLOAD_HISTORY.slice(0,3).map(h=>({name:h.name,status:'done'}));
+    switchToActiveState();
+  }
+  document.getElementById('unclassifiedCount').textContent=UNCLASSIFIED.items.length+' to assign';
+  buildActionStrip();
+  buildGrid();
+  buildConflictStrip();
+})();
+</script>
+</body>
+</html>

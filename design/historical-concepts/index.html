@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Screen Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;padding:40px 24px;}
+.header{max-width:820px;margin:0 auto 32px;}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.lm{width:32px;height:32px;background:#0f3d25;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;}
+.ln{font-size:16px;font-weight:600;color:#0f172a;}
+.title{font-size:24px;font-weight:600;color:#0f172a;letter-spacing:-0.5px;margin-bottom:6px;}
+.sub{font-size:14px;color:#64748b;line-height:1.6;}
+.grid{max-width:820px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.screen-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px 22px;text-decoration:none;display:block;transition:border-color .15s,box-shadow .15s;}
+.screen-card:hover{border-color:#1a5c37;box-shadow:0 2px 12px rgba(26,92,55,0.1);}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.sc-icon{width:36px;height:36px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;}
+.sc-icon i{font-size:18px;color:#1a5c37;}
+.sc-num{font-size:10.5px;font-weight:600;color:#94a3b8;letter-spacing:.06em;}
+.sc-title{font-size:14.5px;font-weight:600;color:#0f172a;margin-bottom:4px;letter-spacing:-0.2px;}
+.sc-desc{font-size:12.5px;color:#64748b;line-height:1.5;}
+.sc-tags{display:flex;gap:5px;margin-top:12px;flex-wrap:wrap;}
+.tag{font-size:10.5px;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:20px;}
+.section-label{max-width:820px;margin:24px auto 10px;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo"><div class="lm">CS</div><span class="ln">CorpStage 360</span></div>
+  <div class="title">Screen index</div>
+  <div class="sub">All screens designed so far for the CorpStage 360 platform. Click any card to open the screen. Built with Inter, enterprise-grade design system inspired by Stripe, Linear and Mercury.</div>
+</div>
+
+<div class="section-label">Onboarding & authentication flow</div>
+<div class="grid">
+  <a class="screen-card" href="01-login.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-lock"></i></div><span class="sc-num">SCREEN 01</span></div>
+    <div class="sc-title">Login</div>
+    <div class="sc-desc">Corporate-grade messaging: "Turn sustainability into capital, compliance and competitive edge." Four business pillars, Google SSO, trust badges.</div>
+    <div class="sc-tags"><span class="tag">Auth</span><span class="tag">All user types</span><span class="tag">Google SSO</span></div>
+  </a>
+  <a class="screen-card" href="02-registration.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-user-plus"></i></div><span class="sc-num">SCREEN 02</span></div>
+    <div class="sc-title">Registration — Request access</div>
+    <div class="sc-desc">4 user types: Enterprise Entity, Service Provider, Advisor, Single User. Pro-rata note, GST/Tax ID, country of incorporation, licence selector with smart defaults.</div>
+    <div class="sc-tags"><span class="tag">Registration</span><span class="tag">Interactive</span><span class="tag">Pro-rata</span></div>
+  </a>
+  <a class="screen-card" href="03-payment-setup.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-credit-card"></i></div><span class="sc-num">SCREEN 03</span></div>
+    <div class="sc-title">Payment & setup</div>
+    <div class="sc-desc">Admin-set pricing displayed, password setup, billing address, GST field, 3 payment methods (card / bank transfer / invoice), T&C checkbox.</div>
+    <div class="sc-tags"><span class="tag">Payment</span><span class="tag">Password setup</span><span class="tag">Enterprise & Service Provider</span></div>
+  </a>
+  <a class="screen-card" href="04-invite-team.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-users"></i></div><span class="sc-num">SCREEN 04</span></div>
+    <div class="sc-title">Invite team</div>
+    <div class="sc-desc">Live licence counter, add users by email + role, licence end date shown for all users, resend invite, remove user. Progress bar updates in real time.</div>
+    <div class="sc-tags"><span class="tag">Team management</span><span class="tag">Interactive</span><span class="tag">Licence tracking</span></div>
+  </a>
+</div>
+
+<div class="section-label">User profile & account management</div>
+<div class="grid">
+  <a class="screen-card" href="05-my-profile.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-user-circle"></i></div><span class="sc-num">SCREEN 05</span></div>
+    <div class="sc-title">My profile — 6 tabs</div>
+    <div class="sc-desc">Personal details (email locked for corporate), Team & users (add/suspend/delete/role change), Licence & plan (pro-rata note), Payment history, Security, Preferences.</div>
+    <div class="sc-tags"><span class="tag">Multi-tab</span><span class="tag">Admin only billing</span><span class="tag">Pro-rata</span><span class="tag">Interactive</span></div>
+  </a>
+</div>
+
+<div class="section-label">CorpStage admin console</div>
+<div class="grid">
+  <a class="screen-card" href="06-admin-dashboard.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-layout-dashboard"></i></div><span class="sc-num">SCREEN 06</span></div>
+    <div class="sc-title">Admin dashboard + approval</div>
+    <div class="sc-desc">4 KPI metrics, pending request queue, customer workspace table with expiry bars and payment status. Click any request to open the approval workflow with live price calculator.</div>
+    <div class="sc-tags"><span class="tag">Admin console</span><span class="tag">Interactive</span><span class="tag">Price calculator</span><span class="tag">Approval workflow</span></div>
+  </a>
+</div>
+
+<div class="section-label">Roles & permissions</div>
+<div class="grid">
+  <a class="screen-card" href="07-roles-permissions.html">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-shield"></i></div><span class="sc-num">SCREEN 07</span></div>
+    <div class="sc-title">Roles & permissions</div>
+    <div class="sc-desc">3 tabs: Roles (7 system + custom roles), Permission matrix (full grid, custom column editable), User assignments (inline role change, audit trail). Create custom role modal with separation-of-duties enforcement.</div>
+    <div class="sc-tags"><span class="tag">RBAC</span><span class="tag">Multi-tab</span><span class="tag">Interactive</span><span class="tag">Audit trail</span></div>
+  </a>
+</div>
+
+<div class="section-label" style="margin-top:32px;">Next screens to build</div>
+<div class="grid">
+  <div class="screen-card" style="opacity:0.5;cursor:default;">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-mail"></i></div><span class="sc-num">COMING NEXT</span></div>
+    <div class="sc-title">Forgot password</div>
+    <div class="sc-desc">Reset flow: email entry → confirmation → set new password.</div>
+    <div class="sc-tags"><span class="tag">Auth</span></div>
+  </div>
+  <div class="screen-card" style="opacity:0.5;cursor:default;">
+    <div class="sc-top"><div class="sc-icon"><i class="ti ti-layout-dashboard"></i></div><span class="sc-num">COMING NEXT</span></div>
+    <div class="sc-title">Workspace home / Command center</div>
+    <div class="sc-desc">The main landing page after login. Left sidebar navigation, ESG intelligence overview, action center, KPI summary.</div>
+    <div class="sc-tags"><span class="tag">Dashboard</span><span class="tag">Sidebar nav</span></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — My Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f8fafc;min-height:100vh;}
+.topbar{background:#0f3d25;display:flex;align-items:center;padding:0 24px;height:52px;gap:14px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.av-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px 4px 4px;cursor:pointer;}
+.av-pill:hover{background:rgba(255,255,255,0.15);}
+.av{width:26px;height:26px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#0f3d25;}
+.av-name{color:#d1fae5;font-size:12.5px;}
+.exp-pill{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,0.18);border-radius:20px;padding:3px 10px;margin-right:4px;}
+.exp-pill span{color:#fca5a5;font-size:11px;}
+.body{max-width:880px;margin:0 auto;padding:24px 20px;}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#64748b;margin-bottom:18px;}
+.breadcrumb a{color:#2A854F;cursor:pointer;text-decoration:none;}
+.ph{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px 24px;margin-bottom:16px;display:flex;align-items:center;gap:18px;}
+.av-lg{width:64px;height:64px;border-radius:50%;background:#4ade80;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#0f3d25;flex-shrink:0;position:relative;cursor:pointer;}
+.av-lg:hover .av-ov{opacity:1;}
+.av-ov{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.42);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.av-ov i{color:#fff;font-size:16px;}
+.ph-info{flex:1;}
+.ph-name{font-size:18px;font-weight:600;color:#0f172a;letter-spacing:-0.3px;margin-bottom:2px;}
+.ph-email{font-size:13px;color:#64748b;margin-bottom:8px;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.bg-green{background:#dcfce7;color:#166534;}
+.bg-blue{background:#dbeafe;color:#1e40af;}
+.bg-amber{background:#fef9c3;color:#854d0e;}
+.bg-red{background:#fee2e2;color:#991b1b;}
+.bg-slate{background:#f1f5f9;color:#475569;}
+.btn-sm{padding:7px 14px;border-radius:7px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-family:'Inter',sans-serif;}
+.btn-green{background:#1a5c37;color:#fff;border:none;}
+.btn-green:hover{background:#0f3d25;}
+.btn-ghost{background:#fff;color:#64748b;border:1px solid #e2e8f0;}
+.btn-ghost:hover{background:#f8fafc;}
+.btn-danger{background:#fff;color:#dc2626;border:1px solid #fecaca;}
+.tabs{display:flex;background:#fff;border-radius:12px 12px 0 0;border:1px solid #e2e8f0;border-bottom:none;padding:0 16px;overflow-x:auto;}
+.tab{padding:12px 14px;font-size:12.5px;color:#64748b;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:'Inter',sans-serif;}
+.tab:hover{color:#0f172a;}
+.tab.active{color:#1a5c37;border-bottom-color:#1a5c37;font-weight:500;}
+.tab i{font-size:14px;}
+.panel{background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:24px;}
+.sec-title{font-size:13.5px;font-weight:600;color:#0f172a;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f1f5f9;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:16px;}
+.f{margin-bottom:0;}
+.f label{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;color:#0f172a;margin-bottom:4px;}
+.f input,.f select{width:100%;height:36px;padding:0 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.f input:focus,.f select:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.f input.locked{background:#f8fafc;color:#94a3b8;cursor:not-allowed;}
+.lock-note{font-size:11px;color:#94a3b8;margin-top:3px;display:flex;align-items:center;gap:3px;}
+.s2{grid-column:1/-1;}
+.lic-card{border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:14px;}
+.lic-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.lic-plan{font-size:15px;font-weight:600;color:#0f172a;letter-spacing:-0.2px;}
+.lic-sub{font-size:12px;color:#64748b;margin-top:2px;}
+.lic-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:14px;}
+.lic-lbl{font-size:11px;color:#64748b;margin-bottom:3px;}
+.lic-val{font-size:13px;font-weight:500;color:#0f172a;}
+.lic-val.warn{color:#b45309;}
+.bar-wrap{margin-top:2px;}
+.bar-top{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:5px;}
+.bar{height:5px;background:#f1f5f9;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:#1a5c37;border-radius:4px;}
+.btn-row{display:flex;gap:8px;}
+.inv-table{width:100%;border-collapse:collapse;font-size:13px;}
+.inv-table th{text-align:left;font-size:10.5px;font-weight:600;color:#94a3b8;padding:8px 10px;border-bottom:1px solid #f1f5f9;letter-spacing:.04em;text-transform:uppercase;}
+.inv-table td{padding:11px 10px;border-bottom:1px solid #f8fafc;color:#0f172a;}
+.inv-table tr:hover td{background:#fafafa;}
+.dl-btn{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:#2A854F;cursor:pointer;}
+.sec-item{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid #f8fafc;}
+.sec-item:last-child{border-bottom:none;}
+.sec-icon{width:32px;height:32px;border-radius:8px;background:#f8fafc;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sec-icon i{font-size:16px;color:#64748b;}
+.sec-info{flex:1;}
+.sec-title2{font-size:13px;font-weight:500;color:#0f172a;}
+.sec-sub{font-size:11.5px;color:#64748b;margin-top:2px;}
+.toggle{width:34px;height:18px;border-radius:9px;background:#1a5c37;position:relative;cursor:pointer;flex-shrink:0;}
+.toggle-k{position:absolute;top:3px;right:3px;width:12px;height:12px;border-radius:50%;background:#fff;}
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f8fafc;}
+.pref-row:last-child{border-bottom:none;}
+.pref-label{font-size:13px;font-weight:500;color:#0f172a;}
+.pref-sub{font-size:11.5px;color:#64748b;margin-top:2px;}
+.pref-sel{height:32px;padding:0 10px;font-size:12.5px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;}
+/* Team tab */
+.team-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.team-left{} .tl-title{font-size:13.5px;font-weight:600;color:#0f172a;margin-bottom:1px;}
+.tl-sub{font-size:12px;color:#64748b;}
+.tl-btns{display:flex;gap:7px;}
+.user-table{width:100%;border-collapse:collapse;font-size:13px;}
+.user-table th{text-align:left;font-size:10.5px;font-weight:600;color:#94a3b8;padding:8px 10px;border-bottom:1px solid #f1f5f9;letter-spacing:.04em;text-transform:uppercase;}
+.user-table td{padding:11px 10px;border-bottom:1px solid #f8fafc;color:#0f172a;vertical-align:middle;}
+.user-table tr:hover td{background:#fafafa;}
+.uav{width:28px;height:28px;border-radius:50%;background:#dcfce7;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;color:#166534;margin-right:8px;vertical-align:middle;}
+.uname{font-weight:500;}
+.uemail{color:#94a3b8;font-size:11.5px;margin-top:1px;}
+.role-sel{height:27px;padding:0 7px;font-size:12px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;}
+.act-btn{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:5px;color:#94a3b8;font-size:14px;}
+.act-btn:hover{background:#fee2e2;color:#ef4444;}
+.act-btn.send:hover{background:#dbeafe;color:#2563eb;}
+.lic-usage{margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;}
+.req-banner{display:flex;align-items:flex-start;gap:8px;background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 13px;margin-bottom:13px;font-size:12.5px;color:#713f12;line-height:1.5;}
+.hidden{display:none;}
+.add-user-row{display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:13px;margin-bottom:13px;gap:9px;flex-wrap:wrap;align-items:flex-end;}
+.add-user-row.show{display:flex;}
+.au-field{flex:1;min-width:160px;}
+.au-field label{font-size:11.5px;font-weight:500;color:#0f172a;display:block;margin-bottom:4px;}
+.au-field input,.au-field select{width:100%;height:34px;padding:0 10px;font-size:12.5px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:6px;background:#fff;color:#0f172a;outline:none;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="lm">CS</div>
+  <span class="ln">CorpStage 360</span>
+  <div class="topbar-right">
+    <div class="exp-pill"><i class="ti ti-clock" style="font-size:12px;color:#fca5a5;"></i><span>Licence expires in 14 days</span></div>
+    <div class="av-pill">
+      <div class="av">AP</div>
+      <span class="av-name">Ashit Padhi</span>
+      <i class="ti ti-chevron-down" style="font-size:12px;color:#6ee7b7;margin-left:2px;"></i>
+    </div>
+  </div>
+</div>
+<div class="body">
+  <div class="breadcrumb"><a href="#">Home</a><i class="ti ti-chevron-right" style="font-size:11px;"></i><span>My profile</span></div>
+  <div class="ph">
+    <div class="av-lg">AP<div class="av-ov"><i class="ti ti-camera"></i></div></div>
+    <div class="ph-info">
+      <div class="ph-name">Ashit Kumar Padhi</div>
+      <div class="ph-email">ashit@corpstage.com</div>
+      <div class="badges">
+        <span class="badge bg-green"><i class="ti ti-shield" style="font-size:10px;"></i> Workspace Admin</span>
+        <span class="badge bg-blue"><i class="ti ti-building-skyscraper" style="font-size:10px;"></i> Enterprise Entity</span>
+        <span class="badge bg-amber"><i class="ti ti-clock" style="font-size:10px;"></i> Licence expires 14 Jun 2026</span>
+      </div>
+    </div>
+    <button class="btn-sm btn-green"><i class="ti ti-edit" style="font-size:12px;"></i> Edit profile</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('personal',this)"><i class="ti ti-user"></i> Personal details</div>
+    <div class="tab" onclick="showTab('team',this)"><i class="ti ti-users"></i> Team & users</div>
+    <div class="tab" onclick="showTab('licence',this)"><i class="ti ti-license"></i> Licence & plan</div>
+    <div class="tab" onclick="showTab('payment',this)"><i class="ti ti-receipt"></i> Payment history</div>
+    <div class="tab" onclick="showTab('security',this)"><i class="ti ti-shield-check"></i> Security</div>
+    <div class="tab" onclick="showTab('prefs',this)"><i class="ti ti-settings"></i> Preferences</div>
+  </div>
+  <!-- Personal -->
+  <div class="panel" id="tabPersonal">
+    <div class="sec-title">Personal information</div>
+    <div class="fg">
+      <div class="f"><label>First name</label><input type="text" value="Ashit Kumar"/></div>
+      <div class="f"><label>Last name</label><input type="text" value="Padhi"/></div>
+      <div class="f s2">
+        <label><i class="ti ti-lock" style="font-size:11px;color:#94a3b8;"></i> Work email address</label>
+        <input type="email" value="ashit@corpstage.com" class="locked" readonly/>
+        <div class="lock-note"><i class="ti ti-info-circle" style="font-size:11px;"></i> Email is managed by your organisation and cannot be changed here.</div>
+      </div>
+      <div class="f"><label>Phone number</label><input type="text" value="+91 98862 67198"/></div>
+      <div class="f"><label>Job title</label><input type="text" value="Co-Founder & CSO"/></div>
+      <div class="f"><label>Country</label><select><option>Singapore</option><option>India</option><option>UAE</option></select></div>
+      <div class="f"><label>Timezone</label><select><option>Asia/Singapore (GMT+8)</option><option>Asia/Kolkata (GMT+5:30)</option></select></div>
+    </div>
+    <button class="btn-sm btn-green">Save changes</button>
+  </div>
+  <!-- Team -->
+  <div class="panel hidden" id="tabTeam">
+    <div class="team-toolbar">
+      <div class="team-left"><div class="tl-title">Team members</div><div class="tl-sub">4 of 10 licences assigned · Licence end date: 31 May 2026</div></div>
+      <div class="tl-btns">
+        <button class="btn-sm btn-ghost" onclick="document.getElementById('reqBanner').classList.remove('hidden')"><i class="ti ti-plus" style="font-size:12px;"></i> Request more licences</button>
+        <button class="btn-sm btn-green" onclick="document.getElementById('addRow').classList.toggle('show')"><i class="ti ti-user-plus" style="font-size:12px;"></i> Add user</button>
+      </div>
+    </div>
+    <div class="req-banner hidden" id="reqBanner">
+      <i class="ti ti-alert-triangle" style="font-size:15px;color:#a16207;flex-shrink:0;margin-top:1px;"></i>
+      <div style="flex:1;">To add more users beyond your current licence count, submit a request to CorpStage. Once approved and payment is complete, your licence count will increase and you can add more users.</div>
+      <button class="btn-sm btn-ghost" style="white-space:nowrap;font-size:12px;">Send request →</button>
+    </div>
+    <div class="add-user-row" id="addRow">
+      <div class="au-field"><label>Email address</label><input type="email" placeholder="colleague@organisation.com"/></div>
+      <div class="au-field" style="min-width:130px;flex:0.6;"><label>Role</label><select><option>ESG Manager</option><option>Contributor</option><option>Reviewer</option><option>Approver</option><option>Auditor</option></select></div>
+      <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;"><button class="btn-sm btn-green">Send invite</button><button class="btn-sm btn-ghost" onclick="document.getElementById('addRow').classList.remove('show')">Cancel</button></div>
+    </div>
+    <table class="user-table">
+      <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last active</th><th>Licence end</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><span class="uav">AP</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Ashit Kumar Padhi</div><div class="uemail">ashit@corpstage.com</div></div></td><td><span class="badge bg-green">Workspace Admin</span></td><td><span class="badge bg-green"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Active</span></td><td style="font-size:12px;color:#64748b;">Today 09:14 AM</td><td style="font-size:12px;color:#b45309;font-weight:500;">14 Jun 2026</td><td></td></tr>
+        <tr><td><span class="uav">NK</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Nisha Kohli</div><div class="uemail">nisha@corpstage.com</div></div></td><td><select class="role-sel"><option>ESG Manager</option><option>Contributor</option><option>Reviewer</option></select></td><td><span class="badge bg-green"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Active</span></td><td style="font-size:12px;color:#64748b;">Yesterday</td><td style="font-size:12px;color:#64748b;">14 Jun 2026</td><td style="display:flex;gap:3px;padding-top:10px;"><button class="act-btn" title="Suspend"><i class="ti ti-ban"></i></button><button class="act-btn" title="Remove"><i class="ti ti-trash"></i></button></td></tr>
+        <tr><td><span class="uav">RS</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Rahul Sharma</div><div class="uemail">rahul@corpstage.com</div></div></td><td><select class="role-sel"><option>Contributor</option><option>ESG Manager</option><option>Reviewer</option></select></td><td><span class="badge bg-blue">Invite pending</span></td><td style="font-size:12px;color:#64748b;">—</td><td style="font-size:12px;color:#64748b;">14 Jun 2026</td><td style="display:flex;gap:3px;padding-top:10px;"><button class="act-btn send" title="Resend invite"><i class="ti ti-send"></i></button><button class="act-btn" title="Remove"><i class="ti ti-trash"></i></button></td></tr>
+        <tr><td><span class="uav" style="background:#fef9c3;color:#854d0e;">PM</span><div style="display:inline-block;vertical-align:middle;"><div class="uname">Priya Mehta</div><div class="uemail">priya@corpstage.com</div></div></td><td><select class="role-sel"><option>Approver</option><option>ESG Manager</option></select></td><td><span class="badge bg-amber">Suspended</span></td><td style="font-size:12px;color:#64748b;">3 weeks ago</td><td style="font-size:12px;color:#64748b;">14 Jun 2026</td><td style="display:flex;gap:3px;padding-top:10px;"><button class="act-btn send" title="Reactivate"><i class="ti ti-player-play"></i></button><button class="act-btn" title="Remove"><i class="ti ti-trash"></i></button></td></tr>
+      </tbody>
+    </table>
+    <div class="lic-usage">
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#64748b;margin-bottom:5px;"><span>Licence usage</span><span>4 of 10 assigned · 6 available</span></div>
+      <div class="bar"><div class="bar-fill" style="width:40%;"></div></div>
+    </div>
+  </div>
+  <!-- Licence -->
+  <div class="panel hidden" id="tabLicence">
+    <div class="sec-title">Licence & plan</div>
+    <div class="lic-card">
+      <div class="lic-head"><div><div class="lic-plan">CorpStage 360 — Professional</div><div class="lic-sub">Enterprise Entity · Annual subscription</div></div><span class="badge bg-amber">Expiring soon</span></div>
+      <div class="lic-grid">
+        <div><div class="lic-lbl">Licence start date</div><div class="lic-val">01 Jun 2025</div></div>
+        <div><div class="lic-lbl">Licence end date</div><div class="lic-val warn">14 Jun 2026 · 14 days remaining</div></div>
+        <div><div class="lic-lbl">Total licences</div><div class="lic-val">10 user licences</div></div>
+        <div><div class="lic-lbl">Licences in use</div><div class="lic-val">4 of 10 assigned</div></div>
+        <div><div class="lic-lbl">Annual subscription value</div><div class="lic-val">$5,000 / year</div></div>
+        <div><div class="lic-lbl">Per licence cost</div><div class="lic-val">$500 / user / year</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-top"><span>Licence period used</span><span>351 of 365 days</span></div><div class="bar"><div class="bar-fill" style="width:96%;"></div></div></div>
+    </div>
+    <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:12.5px;color:#713f12;">
+      <strong>Pro-rata note:</strong> Any additional licences requested mid-year are charged only for the remaining days in your licence period, aligned to your renewal date of 14 Jun 2026.
+    </div>
+    <div class="btn-row">
+      <button class="btn-sm btn-green"><i class="ti ti-refresh" style="font-size:12px;"></i> Renew licence</button>
+      <button class="btn-sm btn-ghost"><i class="ti ti-plus" style="font-size:12px;"></i> Request more licences</button>
+      <button class="btn-sm btn-ghost"><i class="ti ti-mail" style="font-size:12px;"></i> Contact CorpStage</button>
+    </div>
+  </div>
+  <!-- Payment -->
+  <div class="panel hidden" id="tabPayment">
+    <div class="sec-title">Payment history</div>
+    <table class="inv-table">
+      <thead><tr><th>Invoice</th><th>Description</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:500;">INV-2025-0042</td><td style="color:#64748b;font-size:12px;">Professional · 10 licences · Annual</td><td style="color:#64748b;font-size:12px;">01 Jun 2025</td><td style="font-weight:600;">$5,000.00</td><td><span class="badge bg-green">Paid</span></td><td><span class="dl-btn"><i class="ti ti-download" style="font-size:12px;"></i> PDF</span></td></tr>
+        <tr><td style="font-weight:500;">INV-2025-0018</td><td style="color:#64748b;font-size:12px;">Additional 3 licences · Pro-rata 184 days</td><td style="color:#64748b;font-size:12px;">01 Dec 2025</td><td style="font-weight:600;">$756.16</td><td><span class="badge bg-green">Paid</span></td><td><span class="dl-btn"><i class="ti ti-download" style="font-size:12px;"></i> PDF</span></td></tr>
+        <tr><td style="font-weight:500;">INV-2024-0031</td><td style="color:#64748b;font-size:12px;">Starter · 5 licences · Annual</td><td style="color:#64748b;font-size:12px;">01 Jun 2024</td><td style="font-weight:600;">$2,500.00</td><td><span class="badge bg-green">Paid</span></td><td><span class="dl-btn"><i class="ti ti-download" style="font-size:12px;"></i> PDF</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <!-- Security -->
+  <div class="panel hidden" id="tabSecurity">
+    <div class="sec-title">Security settings</div>
+    <div class="sec-item"><div class="sec-icon"><i class="ti ti-lock"></i></div><div class="sec-info"><div class="sec-title2">Password</div><div class="sec-sub">Last changed 3 months ago</div></div><button class="btn-sm btn-ghost">Change password</button></div>
+    <div class="sec-item"><div class="sec-icon"><i class="ti ti-shield"></i></div><div class="sec-info"><div class="sec-title2">Two-factor authentication</div><div class="sec-sub">Authenticator app enabled</div></div><div class="toggle"><div class="toggle-k"></div></div></div>
+    <div class="sec-item"><div class="sec-icon"><i class="ti ti-devices"></i></div><div class="sec-info"><div class="sec-title2">Active sessions</div><div class="sec-sub">2 devices — Chrome on Mac, Safari on iPhone</div></div><button class="btn-sm btn-danger">Sign out all</button></div>
+    <div class="sec-item"><div class="sec-icon"><i class="ti ti-history"></i></div><div class="sec-info"><div class="sec-title2">Login activity</div><div class="sec-sub">Last login: Today 09:14 AM · Singapore</div></div><button class="btn-sm btn-ghost">View history</button></div>
+  </div>
+  <!-- Preferences -->
+  <div class="panel hidden" id="tabPrefs">
+    <div class="sec-title">Preferences</div>
+    <div class="pref-row"><div><div class="pref-label">Language</div><div class="pref-sub">Platform display language</div></div><select class="pref-sel"><option>English</option><option>French</option><option>German</option></select></div>
+    <div class="pref-row"><div><div class="pref-label">Date format</div><div class="pref-sub">How dates appear across the platform</div></div><select class="pref-sel"><option>DD/MM/YYYY</option><option>MM/DD/YYYY</option><option>YYYY-MM-DD</option></select></div>
+    <div class="pref-row"><div><div class="pref-label">Email notifications</div><div class="pref-sub">Task assignments, approvals, reminders</div></div><div class="toggle"><div class="toggle-k"></div></div></div>
+    <div class="pref-row"><div><div class="pref-label">In-app notifications</div><div class="pref-sub">Mentions, comments, escalations</div></div><div class="toggle"><div class="toggle-k"></div></div></div>
+    <div class="pref-row"><div><div class="pref-label">Licence expiry reminders</div><div class="pref-sub">Email me 30, 14, and 7 days before expiry</div></div><div class="toggle"><div class="toggle-k"></div></div></div>
+  </div>
+</div>
+<script>
+function showTab(name,el){
+  ['Personal','Team','Licence','Payment','Security','Prefs'].forEach(t=>document.getElementById('tab'+t).classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  var n=name.charAt(0).toUpperCase()+name.slice(1);
+  document.getElementById('tab'+n).classList.remove('hidden');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

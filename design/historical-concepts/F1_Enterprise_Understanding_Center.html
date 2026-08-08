@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CorpStage · Enterprise Understanding</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050608;--s1:#09090c;--s2:#0d0e11;
+  --b0:rgba(255,255,255,0.016);--b1:rgba(255,255,255,0.044);
+  --b2:rgba(255,255,255,0.074);--b3:rgba(255,255,255,0.11);
+  --t0:rgba(242,238,228,0.97);--t1:rgba(242,238,228,0.50);
+  --t2:rgba(242,238,228,0.22);--t3:rgba(242,238,228,0.08);
+  --gold:#b88e4e;--coral:#a04a3a;--teal:#2e6a5e;
+  --blue:#3a6492;--purple:#5a4b92;--green:#3b6044;
+  --serif:'Georgia','Times New Roman',serif;
+  --sans:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t0);font-family:var(--sans)}
+body{display:grid;grid-template-rows:48px 1fr}
+.canvas{overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.canvas::-webkit-scrollbar{width:2px}
+.canvas::-webkit-scrollbar-thumb{background:var(--b2)}
+
+/* NAV */
+nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 64px;border-bottom:1px solid var(--b1);
+  background:linear-gradient(180deg,rgba(255,255,255,0.008),transparent)}
+.wm{font-size:9px;letter-spacing:.30em;text-transform:uppercase;color:rgba(242,238,228,0.20);font-weight:600}
+.nav-c{font-size:11.5px;font-weight:500;color:var(--t1);text-align:center;letter-spacing:.015em}
+.nav-r{display:flex;align-items:center;justify-content:flex-end;gap:9px}
+.fnav{display:flex;gap:0;margin-left:10px}
+.fn{font-size:8.5px;letter-spacing:.08em;padding:3px 11px;color:var(--t3);border:1px solid var(--b1);text-decoration:none;cursor:pointer}
+.fn.active{color:var(--teal);border-color:rgba(46,106,94,.28);background:rgba(46,106,94,.05)}
+.fn:not(.active):hover{color:var(--t1)}
+
+/* ══ HERO — UPLOAD FIRST ══════════════════════════════════════════ */
+.hero{
+  min-height:calc(100vh - 48px);
+  display:grid;grid-template-columns:1fr 1px 380px;
+  position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 55% 72% at 28% 50%,rgba(242,238,228,0.013) 0%,transparent 55%),
+    radial-gradient(ellipse 22% 30% at 28% 50%,rgba(46,106,94,0.024) 0%,transparent 42%),
+    radial-gradient(ellipse 80% 60% at 0% 100%,rgba(46,106,94,0.014) 0%,transparent 54%)}
+.hero-l{padding:100px 72px 80px 92px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2}
+.eyebrow{display:flex;align-items:center;gap:18px;margin-bottom:32px}
+.ey-rule{width:28px;height:1px;background:var(--b2)}
+.ey-text{font-size:8px;letter-spacing:.30em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.hero-dec{font-family:var(--serif);font-size:28px;font-weight:400;color:var(--t0);line-height:1.36;letter-spacing:-.02em;max-width:480px;margin-bottom:8px}
+.hero-sub{font-family:var(--serif);font-size:16px;font-weight:400;font-style:italic;color:rgba(242,238,228,0.34);line-height:1.6;max-width:460px;margin-bottom:36px}
+
+/* UPLOAD ZONE — the primary action */
+.upload-zone{
+  border:1px solid var(--b2);background:rgba(255,255,255,0.014);
+  padding:0;overflow:hidden;
+}
+.uz-tabs{display:flex;border-bottom:1px solid var(--b1)}
+.uz-tab{flex:1;padding:11px 16px;font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  color:var(--t3);cursor:pointer;text-align:center;border-right:1px solid var(--b1);transition:all .15s}
+.uz-tab:last-child{border-right:none}
+.uz-tab.active{color:var(--teal);background:rgba(46,106,94,.06)}
+.uz-tab:not(.active):hover{color:var(--t1);background:rgba(255,255,255,0.016)}
+/* drop area */
+.uz-drop{padding:32px 28px;cursor:pointer;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:background .15s}
+.uz-drop:hover,.uz-drop.over{background:rgba(46,106,94,.04)}
+.uz-drop-icon{font-size:22px;color:var(--t3);margin-bottom:4px}
+.uz-drop-title{font-size:13.5px;font-weight:500;color:var(--t1);letter-spacing:.005em}
+.uz-drop-sub{font-size:10.5px;color:var(--t3);letter-spacing:.005em}
+.uz-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:4px}
+.uz-tag{font-size:8px;letter-spacing:.06em;color:var(--t3);border:1px solid var(--b1);padding:2px 7px}
+.uz-actions{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.uz-btn{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:8px 18px;border:1px solid rgba(46,106,94,.28);color:var(--teal);background:rgba(46,106,94,.06);cursor:pointer}
+/* paste area */
+.uz-paste{padding:20px 24px;display:none}
+.uz-paste.on{display:block}
+.uz-textarea{width:100%;background:var(--b0);border:1px solid var(--b1);color:var(--t0);font-size:11.5px;padding:11px 14px;font-family:var(--sans);outline:none;resize:none;line-height:1.55;min-height:110px}
+.uz-textarea::placeholder{color:var(--t3)}
+.uz-textarea:focus{border-color:var(--b2)}
+.uz-paste-hint{font-size:9px;color:var(--t3);margin-top:7px;margin-bottom:12px}
+/* url area */
+.uz-url{padding:20px 24px;display:none}
+.uz-url.on{display:flex;flex-direction:column;gap:10px}
+.uz-url-row{display:flex;gap:0}
+.uz-url-in{flex:1;background:var(--b0);border:1px solid var(--b1);border-right:none;color:var(--t1);font-size:11.5px;padding:9px 13px;font-family:var(--sans);outline:none}
+.uz-url-in::placeholder{color:var(--t3)}
+.uz-url-go{font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:9px 16px;border:1px solid var(--b1);color:var(--t2);background:var(--b0);cursor:pointer}
+.uz-url-go:hover{color:var(--t0)}
+.uz-url-hint{font-size:9px;color:var(--t3)}
+/* connect area */
+.uz-connect{padding:16px 24px;display:none}
+.uz-connect.on{display:flex;flex-direction:column;gap:0}
+.cn-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.010)}
+.cn-row:first-child{border-top:1px solid rgba(255,255,255,0.010)}
+.cn-name{font-size:12px;color:var(--t1)}
+.cn-type{font-size:9px;color:var(--t3);margin-top:2px}
+.cn-btn{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:5px 12px;border-radius:1px;cursor:pointer}
+.cn-btn.on{color:var(--teal);border:1px solid rgba(46,106,94,.24);background:rgba(46,106,94,.05)}
+.cn-btn.off{color:var(--t2);border:1px solid var(--b1);background:transparent}
+.cn-yr{font-size:8px;color:var(--t3);padding:4px 9px;border:1px solid var(--b0)}
+#fileInput{display:none}
+
+/* upload status */
+.uz-status{display:none;padding:14px 24px;border-top:1px solid var(--b1);background:rgba(46,106,94,.04)}
+.uz-status.on{display:flex;align-items:center;gap:12px}
+.uz-spin{width:14px;height:14px;border:1.5px solid rgba(46,106,94,.20);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.uz-status-txt{font-size:11px;color:var(--teal);letter-spacing:.005em}
+
+/* hero right — idal + quick stats */
+.hero-div{background:var(--b1);position:relative;z-index:2}
+.hero-r{padding:100px 40px 80px 40px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;background:linear-gradient(to right,transparent,rgba(255,255,255,0.005))}
+.hr-hed{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:24px}
+/* idal steps */
+.idal-steps{display:flex;flex-direction:column;margin-bottom:32px}
+.is{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.010)}
+.is:first-child{border-top:1px solid rgba(255,255,255,0.010)}
+.is-n{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600;flex-shrink:0;margin-top:1px}
+.is-n.done{background:rgba(46,106,94,.20);color:var(--teal);border:1px solid rgba(46,106,94,.30)}
+.is-n.act{background:rgba(184,142,78,.12);color:var(--gold);border:1px solid rgba(184,142,78,.28)}
+.is-n.pend{background:var(--b0);color:var(--t3);border:1px solid var(--b1)}
+.is-b{flex:1}
+.is-nm{font-size:10.5px;font-weight:500;margin-bottom:2px}
+.is-nm.done{color:var(--teal)}.is-nm.act{color:var(--gold)}.is-nm.pend{color:var(--t3)}
+.is-d{font-size:9px;color:var(--t2);line-height:1.4}
+.is-c{font-size:8.5px;font-weight:600;margin-top:2px}
+.is-c.done{color:rgba(46,106,94,.65)}.is-c.act{color:rgba(184,142,78,.65)}.is-c.pend{color:var(--t3)}
+/* quick stats */
+.qstats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.qs{background:var(--bg);padding:14px 14px;display:flex;flex-direction:column;gap:4px}
+.qs-l{font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3)}
+.qs-v{font-size:18px;font-family:var(--serif);font-weight:400;line-height:1}
+.qs-v.hi{color:var(--teal)}.qs-v.warn{color:var(--gold)}.qs-v.neg{color:var(--coral)}.qs-v.neu{color:var(--t1)}
+.qs-s{font-size:9px;color:var(--t2)}
+
+/* ══ SECTION WRAPPER ══ */
+.sw{padding:64px 92px;border-top:1px solid var(--b0)}
+.sh{display:flex;align-items:center;gap:18px;margin-bottom:8px}
+.sr{width:24px;height:1px;background:var(--b2)}
+.st{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.ss{font-size:12.5px;color:var(--t1);line-height:1.68;max-width:640px;margin-bottom:32px;margin-top:8px}
+
+/* ══ EXTRACTION RESULTS — what the AI found ══ */
+/* tab switcher for results views */
+.rv-tabs{display:flex;gap:1px;background:var(--b1);border:1px solid var(--b1);margin-bottom:1px}
+.rv-tab{flex:1;padding:10px 16px;font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;color:var(--t3);cursor:pointer;text-align:center;background:var(--bg);transition:all .15s}
+.rv-tab.active{color:var(--teal);background:rgba(46,106,94,.05)}
+.rv-tab:not(.active):hover{color:var(--t1)}
+
+/* VIEW 1 — Q1-Q12 mapping */
+.qmap{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.qmap-row{background:var(--bg);display:grid;grid-template-columns:180px 1fr 200px;align-items:stretch}
+.qm-q{padding:18px 20px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:4px;justify-content:center}
+.qm-num{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.qm-name{font-size:11.5px;font-weight:500}
+.qm-name.fed{color:var(--t0)}.qm-name.part{color:var(--gold)}.qm-name.none{color:var(--t3)}
+.qm-intel{padding:18px 20px;border-right:1px solid var(--b1)}
+.qi-items{display:flex;flex-direction:column;gap:5px}
+.qi-item{display:flex;align-items:baseline;gap:10px}
+.qi-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.qi-dot.det{background:var(--teal)}.qi-dot.decl{background:var(--blue)}.qi-dot.inf{background:rgba(90,75,146,.80)}.qi-dot.none{background:var(--b2)}
+.qi-txt{font-size:11px;color:var(--t1);line-height:1.4}
+.qi-src{font-size:9px;color:var(--t2);margin-left:14px}
+.qm-fin{padding:18px 18px;display:flex;flex-direction:column;gap:4px;justify-content:center}
+.qf-l{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3)}
+.qf-v{font-size:12.5px;font-weight:500}
+.qf-v.hi{color:var(--coral)}.qf-v.med{color:var(--gold)}.qf-v.low{color:var(--teal)}.qf-v.neu{color:var(--t2)}
+.qf-d{font-size:9.5px;color:var(--t2);line-height:1.4;margin-top:2px}
+.qmap-row.none-row{opacity:.35}
+
+/* VIEW 2 — Commitment registry */
+.creg{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.cr-header{background:rgba(255,255,255,0.012);display:grid;grid-template-columns:2fr 120px 110px 120px 130px;padding:10px 0}
+.crh{padding:0 18px;font-size:7px;letter-spacing:.22em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.cr-row{background:var(--bg);display:grid;grid-template-columns:2fr 120px 110px 120px 130px;align-items:start}
+.cr-row:hover{background:rgba(255,255,255,0.010)}
+.cr-main{padding:16px 18px;border-right:1px solid var(--b1)}
+.cr-type{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:5px}
+.cr-text{font-size:12px;color:var(--t0);line-height:1.42;margin-bottom:4px}
+.cr-src{font-size:9.5px;color:var(--t2)}
+.cr-cell{padding:16px 18px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:3px}
+.cr-cell:last-child{border-right:none}
+.cc-v{font-size:11.5px;font-weight:500}
+.cc-v.ok{color:var(--teal)}.cc-v.risk{color:var(--coral)}.cc-v.watch{color:var(--gold)}.cc-v.neu{color:var(--t1)}
+.cc-s{font-size:9.5px;color:var(--t2);line-height:1.4}
+/* trajectory bar */
+.traj-bar{height:3px;background:var(--b1);border-radius:1px;position:relative;overflow:hidden;margin-top:4px}
+.traj-fill{position:absolute;top:0;left:0;height:100%;border-radius:1px}
+.traj-fill.ok{background:var(--teal)}.traj-fill.risk{background:var(--coral)}.traj-fill.watch{background:var(--gold)}
+
+/* VIEW 3 — Contradictions */
+.cont-list{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.cont-row{background:var(--bg);display:grid;grid-template-columns:1fr 1fr 180px;align-items:stretch}
+.cont-side{padding:20px 22px;display:flex;flex-direction:column;gap:6px}
+.cont-side.l{border-right:1px solid var(--b1)}
+.cont-side.r{border-right:1px solid var(--b1)}
+.cs-l{font-size:7px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+.cs-l.said{color:rgba(46,106,94,.75)}.cs-l.obs{color:rgba(160,74,58,.75)}
+.cs-t{font-size:12px;color:var(--t1);line-height:1.5}
+.cs-src{font-size:9.5px;color:var(--t2)}
+.cont-action{padding:20px 18px;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.ca-l{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3)}
+.ca-v{font-size:12px;font-weight:500;color:var(--coral)}
+.ca-d{font-size:9.5px;color:var(--t2);line-height:1.4;margin-top:2px}
+.ca-btn{margin-top:8px;font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:6px 12px;border:1px solid rgba(160,74,58,.24);color:var(--coral);background:rgba(160,74,58,.05);cursor:pointer}
+
+/* VIEW 4 — 6 Dimensions */
+.dims{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.dim-cell{background:var(--bg);padding:26px 24px;display:flex;flex-direction:column;gap:8px}
+.dim-num{font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.dim-name{font-size:14px;font-family:var(--serif);font-weight:400;color:var(--t0);line-height:1.2}
+.dim-what{font-size:10px;color:var(--t2);font-style:italic;margin-bottom:4px}
+.dim-bar{height:3px;background:var(--b1);border-radius:1px;position:relative;overflow:hidden}
+.dim-fill{position:absolute;top:0;left:0;height:100%;border-radius:1px}
+.dim-fill.hi{background:var(--teal)}.dim-fill.med{background:var(--gold)}.dim-fill.low{background:rgba(160,74,58,.65)}.dim-fill.vlow{background:var(--b2)}
+.dim-meta{display:flex;justify-content:space-between;align-items:center}
+.dim-pct{font-size:11px;font-weight:500}
+.dim-pct.hi{color:var(--teal)}.dim-pct.med{color:var(--gold)}.dim-pct.low{color:var(--coral)}.dim-pct.vlow{color:var(--t3)}
+.dim-pts{font-size:9.5px;color:var(--t2)}
+.dim-items{display:flex;flex-direction:column;gap:4px}
+.di-item{font-size:10px;color:var(--t2);display:flex;align-items:baseline;gap:6px}
+.di-dot{width:3px;height:3px;border-radius:50%;flex-shrink:0;margin-top:4px;background:var(--b2)}
+.di-dot.hi{background:var(--teal)}.di-dot.med{background:var(--gold)}.di-dot.low{background:rgba(160,74,58,.60)}
+
+/* VIEW 5 — Document library */
+.lib{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.lib-hdr{background:rgba(255,255,255,0.012);display:grid;grid-template-columns:2fr 110px 90px 90px 90px 130px;padding:10px 0}
+.lh{padding:0 16px;font-size:7px;letter-spacing:.20em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.lib-row{background:var(--bg);display:grid;grid-template-columns:2fr 110px 90px 90px 90px 130px;align-items:start;position:relative}
+.lib-row:hover .lra{opacity:1}
+.lr-d{padding:14px 16px;border-right:1px solid var(--b1)}
+.lr-nm{font-size:12px;color:var(--t0);margin-bottom:3px;line-height:1.3}
+.lr-mt{font-size:9.5px;color:var(--t2)}
+.lra{position:absolute;top:8px;right:8px;display:flex;gap:5px;opacity:0;transition:opacity .15s;background:var(--bg);padding:3px 8px;border:1px solid var(--b1)}
+.lra-b{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);cursor:pointer;padding:2px 5px}
+.lra-b:hover{color:var(--t1)}.lra-b.del:hover{color:var(--coral)}
+.lf{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:7.5px;letter-spacing:.06em;font-weight:600;padding:2px 7px;border-radius:1px}
+.lf.warn{color:var(--gold);background:rgba(184,142,78,.08);border:1px solid rgba(184,142,78,.16)}
+.lf.err{color:var(--coral);background:rgba(160,74,58,.08);border:1px solid rgba(160,74,58,.16)}
+.lf.info{color:var(--blue);background:rgba(58,100,146,.08);border:1px solid rgba(58,100,146,.16)}
+.lf.lock{color:var(--purple);background:rgba(90,75,146,.08);border:1px solid rgba(90,75,146,.16)}
+.lr-dec{margin-top:8px;padding:10px 12px;background:rgba(255,255,255,0.014);border:1px solid var(--b1)}
+.ld-q{font-size:10.5px;color:var(--t1);line-height:1.5;margin-bottom:8px}
+.ld-acts{display:flex;gap:6px;flex-wrap:wrap}
+.ld-b{font-size:7.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:5px 10px;border-radius:1px;cursor:pointer}
+.ld-b.yes{color:var(--teal);border:1px solid rgba(46,106,94,.24);background:rgba(46,106,94,.05)}
+.ld-b.no{color:var(--t2);border:1px solid var(--b1);background:transparent}
+.ld-b.more{color:var(--gold);border:1px solid rgba(184,142,78,.20)}
+.ld-b.lk{color:var(--purple);border:1px solid rgba(90,75,146,.22);background:rgba(90,75,146,.05)}
+.lr-cell{padding:14px 16px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:3px}
+.lr-cell:last-child{border-right:none}
+.lc{font-size:11px;font-weight:500}
+.lc.hi{color:var(--teal)}.lc.med{color:var(--gold)}.lc.low{color:var(--coral)}.lc.neu{color:var(--t1)}.lc.dim{color:var(--t3)}.lc.purp{color:var(--purple)}
+.lcs{font-size:9px;color:var(--t2);line-height:1.4}
+
+/* ══ CONFIRM INFERENCES ══ */
+.ic-cards{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.ic{background:var(--bg);overflow:hidden}
+.ic-head{display:grid;grid-template-columns:1fr 160px 84px;cursor:pointer;transition:background .15s}
+.ic-head:hover{background:rgba(255,255,255,0.010)}
+.ic-m{padding:16px 20px;border-right:1px solid var(--b1)}
+.ic-dm{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.ic-bl{font-size:12.5px;color:var(--t0);line-height:1.42}
+.ic-sr{font-size:9.5px;color:var(--t2);margin-top:3px}
+.ic-cn{padding:16px 16px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:3px;justify-content:center}
+.ic-cl{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3)}
+.ic-cv{font-size:12px;font-weight:500}
+.ic-cv.hi{color:var(--teal)}.ic-cv.med{color:var(--gold)}.ic-cv.low{color:var(--coral)}
+.ic-tg{padding:16px 14px;display:flex;align-items:center;justify-content:center}
+.ic-ar{font-size:9px;color:var(--t3);transition:transform .2s;user-select:none}
+.ic-body{display:none;border-top:1px solid var(--b1);background:rgba(255,255,255,0.010)}
+.ic.open .ic-body{display:block}
+.ic.open .ic-ar{transform:rotate(180deg)}
+.ic-in{padding:18px 20px 16px}
+.icb-pre{font-size:11px;color:var(--t2);margin-bottom:11px;line-height:1.55}
+.icb-cur{padding:10px 13px;border:1px solid var(--b1);background:var(--bg);margin-bottom:11px;font-size:11.5px;color:var(--t1);line-height:1.5}
+.icb-ed{display:none;margin-bottom:11px}
+.icb-ed.on{display:block}
+.icb-ta{width:100%;background:var(--b0);border:1px solid var(--b1);color:var(--t0);font-size:11px;padding:9px 12px;font-family:var(--sans);outline:none;resize:none;line-height:1.55;min-height:52px}
+.icb-ta:focus{border-color:var(--b2)}.icb-ta::placeholder{color:var(--t3)}
+.icb-hint{font-size:9px;color:var(--t3);margin-bottom:11px}
+.icb-acts{display:flex;gap:8px}
+.icb-btn{font-size:8px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:7px 14px;border-radius:1px;cursor:pointer}
+.icb-btn.ok{color:var(--teal);border:1px solid rgba(46,106,94,.28);background:rgba(46,106,94,.06)}
+.icb-btn.adj{color:var(--t2);border:1px solid var(--b1);background:transparent}
+.icb-btn.sv{color:var(--gold);border:1px solid rgba(184,142,78,.24);background:rgba(184,142,78,.05)}
+.pp-list{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.pp-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--b1);background:var(--bg)}
+.pp-t{font-size:11px;color:var(--t1)}
+.pp-c{font-size:9px;font-weight:500}
+.pp-c.hi{color:var(--teal)}.pp-c.med{color:var(--gold)}.pp-c.low{color:var(--coral)}
+.pp-r{font-size:8px;color:var(--t3);cursor:pointer;padding:2px 5px;border:1px solid transparent}
+.pp-r:hover{color:var(--coral);border-color:rgba(160,74,58,.20)}
+.pp-add{display:flex;margin-bottom:11px}
+.pp-ai{flex:1;background:var(--b0);border:1px solid var(--b1);border-right:none;color:var(--t1);font-size:11px;padding:7px 11px;font-family:var(--sans);outline:none}
+.pp-ai::placeholder{color:var(--t3)}
+.pp-ab{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;padding:7px 12px;border:1px solid var(--b1);color:var(--t2);background:transparent;cursor:pointer}
+
+/* ══ GUIDED COMPLETION ══ */
+.gc-wrap{display:grid;grid-template-columns:170px 1fr;gap:0}
+.gc-lbl{font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:var(--t3);font-weight:600;line-height:2.1;padding-right:40px;padding-top:6px;border-right:1px solid var(--b1)}
+.gc-body{padding-left:44px}
+.gc-note{font-family:var(--serif);font-size:14.5px;font-weight:400;color:rgba(242,238,228,0.27);line-height:1.84;letter-spacing:-.005em;font-style:italic;max-width:560px;margin-bottom:24px}
+.gc-note strong{color:rgba(242,238,228,.58);font-style:normal;font-weight:400}
+.go-cards{display:flex;flex-direction:column;gap:1px;background:var(--b1);border:1px solid var(--b1)}
+.go{background:var(--bg);overflow:hidden}
+.go-h{display:grid;grid-template-columns:1fr 96px 76px 68px;cursor:pointer;transition:background .15s}
+.go-h:hover{background:rgba(255,255,255,0.010)}
+.go-m{padding:15px 20px;border-right:1px solid var(--b1)}
+.go-type{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.go-q{font-size:12px;color:var(--t0);line-height:1.42}
+.go-gn{padding:15px 12px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center}
+.gg-v{font-size:13px;font-weight:600;color:var(--gold)}.gg-l{font-size:7.5px;color:var(--t3)}
+.go-tm{padding:15px 10px;border-right:1px solid var(--b1);display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center}
+.gt-v{font-size:11.5px;font-weight:500;color:var(--t1)}.gt-l{font-size:7.5px;color:var(--t3)}
+.go-tg{padding:15px 12px;display:flex;align-items:center;justify-content:center}
+.go-ar{font-size:9px;color:var(--t3);transition:transform .2s;user-select:none}
+.go-body{display:none;border-top:1px solid var(--b1);background:rgba(255,255,255,0.010)}
+.go.open .go-body{display:block}
+.go.open .go-ar{transform:rotate(180deg)}
+.go-in{padding:18px 20px 15px}
+.gob-why{font-size:11px;color:var(--t2);line-height:1.65;margin-bottom:12px;max-width:560px}
+.gob-ta{width:100%;background:var(--b0);border:1px solid var(--b1);color:var(--t0);font-size:11.5px;padding:9px 13px;font-family:var(--sans);outline:none;resize:none;line-height:1.55;min-height:66px}
+.gob-ta::placeholder{color:var(--t3)}.gob-ta:focus{border-color:var(--b2)}
+.gob-hint{font-size:9px;color:var(--t3);margin:6px 0 12px}
+.gob-acts{display:flex;gap:8px}
+.gob-btn{font-size:8px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:7px 14px;border-radius:1px;cursor:pointer}
+.gob-btn.sv{color:var(--teal);border:1px solid rgba(46,106,94,.28);background:rgba(46,106,94,.06)}
+.gob-btn.sk{color:var(--t3);border:1px solid var(--b1);background:transparent}
+
+/* hide/show result views */
+.rv{display:none}.rv.on{display:block}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wm">CorpStage</div>
+  <div class="nav-c">Meridian Industrial Group</div>
+  <div class="nav-r">
+    <div class="fnav">
+      <a class="fn active">F1 · Understand</a>
+      <a class="fn" href="F2_Intelligence_Completion_Center.html">F2 · Complete</a>
+      <a class="fn" href="F3_Evidence_Intelligence_Center.html">F3 · Evidence</a>
+    </div>
+  </div>
+</nav>
+
+<div class="canvas">
+
+<!-- ══ HERO — UPLOAD IS THE HERO ══ -->
+<section class="hero">
+  <div class="hero-l">
+    <div class="eyebrow"><div class="ey-rule"></div><div class="ey-text">F1 · Enterprise Understanding</div></div>
+    <div class="hero-dec">Give CorpStage something to read.</div>
+    <div class="hero-sub">Drop any document, paste a URL, or connect a source.<br>Everything else — reading, thinking, mapping — happens automatically.</div>
+
+    <!-- UPLOAD ZONE -->
+    <div class="upload-zone">
+      <div class="uz-tabs">
+        <div class="uz-tab active" onclick="uzTab('drop',0)">Upload file</div>
+        <div class="uz-tab" onclick="uzTab('paste',1)">Paste text</div>
+        <div class="uz-tab" onclick="uzTab('url',2)">URL</div>
+        <div class="uz-tab" onclick="uzTab('connect',3)">Connect source</div>
+      </div>
+
+      <!-- DROP -->
+      <div class="uz-drop" id="uzDrop" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="handleDrop(event)">
+        <input type="file" id="fileInput" multiple>
+        <div class="uz-drop-icon">↓</div>
+        <div class="uz-drop-title">Drag files here or click to browse</div>
+        <div class="uz-drop-sub">Any format · Any language · No categorisation needed</div>
+        <div class="uz-tags">
+          <span class="uz-tag">PDF</span><span class="uz-tag">Excel</span><span class="uz-tag">Word</span>
+          <span class="uz-tag">CSV</span><span class="uz-tag">Scans</span><span class="uz-tag">Transcripts</span>
+        </div>
+        <div class="uz-actions"><div class="uz-btn">Browse files</div></div>
+      </div>
+
+      <!-- PASTE -->
+      <div class="uz-paste" id="uzPaste">
+        <textarea class="uz-textarea" placeholder="Paste any text — CEO statement, press release, board resolution, earnings transcript, regulatory notice, news article. CorpStage will read and classify it automatically."></textarea>
+        <div class="uz-paste-hint">CorpStage classifies, extracts, and maps to intelligence domains automatically.</div>
+        <div class="uz-actions"><div class="uz-btn" onclick="simulateUpload()">Process text</div></div>
+      </div>
+
+      <!-- URL -->
+      <div class="uz-url" id="uzUrl">
+        <div class="uz-url-row">
+          <input class="uz-url-in" type="text" placeholder="Paste a URL — public filing, annual report, regulatory document, news article, competitor disclosure…">
+          <button class="uz-url-go" onclick="simulateUpload()">Fetch & Read</button>
+        </div>
+        <div class="uz-url-hint">CorpStage fetches the content, reads it, and extracts intelligence automatically.</div>
+      </div>
+
+      <!-- CONNECT -->
+      <div class="uz-connect" id="uzConnect">
+        <div class="cn-row"><div class=""><div class="cn-name">SharePoint</div><div class="cn-type">Document library · Auto-sync · Active</div></div><div class="cn-btn on">Connected</div></div>
+        <div class="cn-row"><div class=""><div class="cn-name">Google Drive</div><div class="cn-type">Shared folders · Auto-sync</div></div><div class="cn-btn off">Connect</div></div>
+        <div class="cn-row"><div class=""><div class="cn-name">Email Inbox</div><div class="cn-type">Forward to CorpStage address</div></div><div class="cn-btn off">Connect</div></div>
+        <div class="cn-row"><div class=""><div class="cn-name">Supplier Portal</div><div class="cn-type">Third-party direct submission</div></div><div class="cn-btn off">Connect</div></div>
+        <div class="cn-row"><div class=""><div class="cn-name">HR System · HRIS</div><div class="cn-type">Year 2 · API connector</div></div><div class="cn-yr">Year 2</div></div>
+        <div class="cn-row"><div class=""><div class="cn-name">ERP · SAP / Oracle / Workday</div><div class="cn-type">Year 3 · Full integration</div></div><div class="cn-yr">Year 3</div></div>
+      </div>
+
+      <!-- STATUS -->
+      <div class="uz-status" id="uzStatus">
+        <div class="uz-spin"></div>
+        <div class="uz-status-txt" id="uzStatusTxt">Reading Annual Report FY24.pdf — extracting intelligence…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-div"></div>
+
+  <!-- RIGHT — IDAL + QUICK STATS -->
+  <div class="hero-r">
+    <div class="hr-hed">What happened after you uploaded</div>
+    <div class="idal-steps">
+      <div class="is"><div class="is-n done">1</div><div class="is-b"><div class="is-nm done">Extract</div><div class="is-d">AI read all 4 documents · 112 techniques applied</div><div class="is-c done">847 data points extracted</div></div></div>
+      <div class="is"><div class="is-n done">2</div><div class="is-b"><div class="is-nm done">Retrieve</div><div class="is-d">CorpStage fetched 12 external sources autonomously</div><div class="is-c done">234 signals retrieved · No action from you</div></div></div>
+      <div class="is"><div class="is-n done">3</div><div class="is-b"><div class="is-nm done">Infer</div><div class="is-d">AI derived understanding from patterns and benchmarks</div><div class="is-c done">143 inferences · Aggressive but conservative in assertion</div></div></div>
+      <div class="is"><div class="is-n act">4</div><div class="is-b"><div class="is-nm act">Confirm</div><div class="is-d">3 material inferences need your validation</div><div class="is-c act">3 shown below · 3 routed to domain owners</div></div></div>
+      <div class="is"><div class="is-n pend">5a</div><div class="is-b"><div class="is-nm pend">Route</div><div class="is-d">Gaps auto-allocated to domain owners</div><div class="is-c pend">4 queued · Resolution windows running</div></div></div>
+      <div class="is"><div class="is-n pend">6</div><div class="is-b"><div class="is-nm pend">Ask</div><div class="is-d">Only what AI genuinely cannot know</div><div class="is-c pend">3 questions · Scroll to bottom</div></div></div>
+    </div>
+    <div class="qstats">
+      <div class="qs"><div class="qs-l">Overall confidence</div><div class="qs-v warn">61%</div><div class="qs-s">Directional · 13% gap to Sacred 12</div></div>
+      <div class="qs"><div class="qs-l">Commitments found</div><div class="qs-v hi">14</div><div class="qs-s">Extracted from 3 documents</div></div>
+      <div class="qs"><div class="qs-l">Contradictions</div><div class="qs-v neg">2</div><div class="qs-s">Saying vs doing gaps detected</div></div>
+      <div class="qs"><div class="qs-l">Human effort used</div><div class="qs-v hi">0 min</div><div class="qs-s">AI did everything so far</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SECTION 2 — WHAT THE AI FOUND ══ -->
+<section class="sw">
+  <div class="sh"><div class="sr"></div><div class="st">What CorpStage found — mapped to executive questions</div></div>
+  <div class="ss">Everything the AI extracted from your documents — shown five ways. Switch views to see what strengthens each canonical executive question, what commitments were found, what contradictions were detected, how the 6 enterprise dimensions were populated, and what documents are in the library.</div>
+
+  <div class="rv-tabs">
+    <div class="rv-tab active" onclick="rvTab(0)">Q1–Q12 Mapping</div>
+    <div class="rv-tab" onclick="rvTab(1)">Commitment Registry</div>
+    <div class="rv-tab" onclick="rvTab(2)">Contradictions</div>
+    <div class="rv-tab" onclick="rvTab(3)">6 Dimensions</div>
+    <div class="rv-tab" onclick="rvTab(4)">Document Library</div>
+  </div>
+
+  <!-- VIEW 1: Q1–Q12 MAPPING -->
+  <div class="rv on" id="rv0">
+    <div class="qmap">
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q1</div><div class="qm-name fed">The Enterprise Pulse</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">6 manufacturing facilities · 3 India, 2 EU, 1 SE Asia</div><div class="qi-src">Annual Report FY24 · Deterministic</div></div></div>
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">14 markets · Revenue ₹340Cr · Industrial manufacturing</div><div class="qi-src">Annual Report FY24 · Deterministic</div></div></div>
+          <div class="qi-item"><div class="qi-dot decl"></div><div><div class="qi-txt">EU CBAM exposure from Q3 2025 — primary export category</div><div class="qi-src">EU Regulation DB · Retrieved · Declared</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Financial consequence</div><div class="qf-v hi">₹18–42Cr</div><div class="qf-d">CBAM cost on EU export revenue</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q2</div><div class="qm-name fed">The Action Imperative</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">3 items requiring executive attention now — ranked by financial exposure</div><div class="qi-src">Cross-domain synthesis · Inferred</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">Energy hedging window closes in 6 weeks · Guidance at risk</div><div class="qi-src">Inferred from investor communication + energy data</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Cost of inaction</div><div class="qf-v hi">€52M combined</div><div class="qf-d">Across top 3 priority items</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q3</div><div class="qm-name fed">The Money Question</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">Revenue ₹340Cr · EBITDA margin direction: declining</div><div class="qi-src">Annual Report FY24 · Deterministic</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">Profitability most sensitive to procurement cost (est. 38% COGS) and energy</div><div class="qi-src">Annual Report FY24 · Inferred · Confirm needed</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Confidence</div><div class="qf-v med">Directional · 58%</div><div class="qf-d">CFO confirmation would raise to 84%</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q4</div><div class="qm-name fed">The Threat Map</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">Supplier concentration 61% single corridor — 4-year high</div><div class="qi-src">Sustainability Report FY24 · Inferred</div></div></div>
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">CBAM Phase 2 — regulatory enforcement from Q3 2025</div><div class="qi-src">EU CBAM DB · Retrieved · Deterministic</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Financial exposure</div><div class="qf-v hi">€14–22M</div><div class="qf-d">Supplier concentration EBITDA risk</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q5</div><div class="qm-name fed">The Promise Tracker</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">14 commitments extracted · 3 at risk of delivery gap</div><div class="qi-src">Annual Report FY22–FY24, Bond Prospectus FY23</div></div></div>
+          <div class="qi-item"><div class="qi-dot none"></div><div><div class="qi-txt">2 contradictions: commitment vs observed reality — gap widening</div><div class="qi-src">Cross-document contradiction detected</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Covenant exposure</div><div class="qf-v hi">₹12.5Cr/yr</div><div class="qf-d">Bond step-up if FY25 milestone missed</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q6</div><div class="qm-name part">The Regulatory Cost Question</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">CBAM obligation: EU exports from Q3 2025 · Rate confirmed</div><div class="qi-src">EU CBAM DB · Retrieved · Deterministic</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">BIS quality regulation tightening — 90 days · 3 product lines affected</div><div class="qi-src">India BIS DB · Retrieved · Directional</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Total regulatory cost</div><div class="qf-v med">₹28–60Cr</div><div class="qf-d">CBAM + BIS recertification combined</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q7</div><div class="qm-name part">The Operational Resilience Question</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">3 suppliers inferred as operationally critical · Single-source risk</div><div class="qi-src">Sustainability Report FY24 · Inferred · Confirm needed</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">Facility criticality unknown — 6 facilities treated equally by system</div><div class="qi-src">Cannot infer from documents · Ask needed</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Confidence gap</div><div class="qf-v med">Directional only</div><div class="qf-d">COO input would resolve</div></div>
+      </div>
+      <div class="qmap-row none-row">
+        <div class="qm-q"><div class="qm-num">Q8</div><div class="qm-name none">Competitive Position Intelligence</div></div>
+        <div class="qm-intel"><div class="qi-items"><div class="qi-item"><div class="qi-dot none"></div><div class="qi-txt" style="color:var(--t3)">No competitive intelligence found in uploaded documents. Peer data retrieved externally — weak signal only.</div></div></div></div>
+        <div class="qm-fin"><div class="qf-l">Status</div><div class="qf-v neu">Not yet populated</div><div class="qf-d">Upload competitor filings or connect market feed</div></div>
+      </div>
+      <div class="qmap-row none-row">
+        <div class="qm-q"><div class="qm-num">Q9</div><div class="qm-name none">People & Culture</div></div>
+        <div class="qm-intel"><div class="qi-items"><div class="qi-item"><div class="qi-dot none"></div><div class="qi-txt" style="color:var(--t3)">Workforce count extracted (12,000). Deep capability and culture intelligence not available from current documents.</div></div></div></div>
+        <div class="qm-fin"><div class="qf-l">Status</div><div class="qf-v neu">Weak · 29%</div><div class="qf-d">HRIS connection (Year 2) will resolve</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q10</div><div class="qm-name part">The Strategic Progress Question</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot decl"></div><div><div class="qi-txt">European expansion: Q3 2025 board commitment · Supply chain prerequisite 60% complete</div><div class="qi-src">Annual Report FY24 · Declared</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">Renewable energy trajectory: 18% actual vs 40% committed by FY25 — delivery gap widening</div><div class="qi-src">Cross-document analysis · Inferred contradiction</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Trajectory signal</div><div class="qf-v hi">At risk</div><div class="qf-d">2 of 5 strategic goals on track</div></div>
+      </div>
+      <div class="qmap-row none-row">
+        <div class="qm-q"><div class="qm-num">Q11</div><div class="qm-name none">Stakeholder Tension</div></div>
+        <div class="qm-intel"><div class="qi-items"><div class="qi-item"><div class="qi-dot none"></div><div class="qi-txt" style="color:var(--t3)">Investor sentiment signals retrieved externally — directional only. Analyst commentary from last 2 earnings calls flagged.</div></div></div></div>
+        <div class="qm-fin"><div class="qf-l">Status</div><div class="qf-v neu">Weak signal</div><div class="qf-d">IR team input would strengthen</div></div>
+      </div>
+      <div class="qmap-row">
+        <div class="qm-q"><div class="qm-num">Q12</div><div class="qm-name part">The Governance Question</div></div>
+        <div class="qm-intel"><div class="qi-items">
+          <div class="qi-item"><div class="qi-dot det"></div><div><div class="qi-txt">Board composition and committee structure extracted from Annual Report</div><div class="qi-src">Annual Report FY24 · Deterministic</div></div></div>
+          <div class="qi-item"><div class="qi-dot inf"></div><div><div class="qi-txt">3 board commitments past original milestone dates — governance accountability signal</div><div class="qi-src">Cross-document analysis · Inferred</div></div></div>
+        </div></div>
+        <div class="qm-fin"><div class="qf-l">Governance confidence</div><div class="qf-v med">Directional · 52%</div><div class="qf-d">Company Secretary input would strengthen</div></div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border:1px solid var(--b1);border-top:none;background:rgba(255,255,255,0.010)">
+      <span style="font-size:9px;color:var(--t3)">● Deterministic — from legal documents, signed contracts, regulatory filings &nbsp;·&nbsp; ● Declared — what the enterprise stated publicly &nbsp;·&nbsp; ● Inferred — AI-derived from patterns and cross-signal reasoning &nbsp;·&nbsp; ○ Not yet populated</span>
+    </div>
+  </div>
+
+  <!-- VIEW 2: COMMITMENT REGISTRY -->
+  <div class="rv" id="rv1">
+    <div class="creg">
+      <div class="cr-header"><div class="crh">Commitment</div><div class="crh">Deadline</div><div class="crh">Source</div><div class="crh">Trajectory</div><div class="crh">Financial Risk</div></div>
+      <div class="cr-row">
+        <div class="cr-main"><div class="cr-type">Investor · Bond Covenant</div><div class="cr-text">40% renewable energy by FY25. Coupon step-up of 25bps if missed.</div><div class="cr-src">Bond Prospectus FY23 · Section 8.2 · Deterministic</div></div>
+        <div class="cr-cell"><div class="cc-v risk">FY25 Q4</div><div class="cc-s">9 months remaining</div></div>
+        <div class="cr-cell"><div class="cc-v neu">Bond Prospectus</div><div class="cc-s">FY23 · Legal document</div></div>
+        <div class="cr-cell"><div class="cc-v risk">18% actual → 24% projected</div><div class="traj-bar"><div class="traj-fill risk" style="width:45%"></div></div><div class="cc-s">Will miss by 16pp at current rate</div></div>
+        <div class="cr-cell"><div class="cc-v risk">₹12.5Cr/yr</div><div class="cc-s">Step-up triggered if missed</div></div>
+      </div>
+      <div class="cr-row">
+        <div class="cr-main"><div class="cr-type">Board · Strategic</div><div class="cr-text">European expansion evaluation — Q3 2025. Supply chain resilience as prerequisite.</div><div class="cr-src">Annual Report FY24 · Board Minutes reference · Declared</div></div>
+        <div class="cr-cell"><div class="cc-v watch">Q3 2025</div><div class="cc-s">5 months remaining</div></div>
+        <div class="cr-cell"><div class="cc-v neu">Annual Report</div><div class="cc-s">FY24 · Board commitment</div></div>
+        <div class="cr-cell"><div class="cc-v watch">60% prerequisite complete</div><div class="traj-bar"><div class="traj-fill watch" style="width:60%"></div></div><div class="cc-s">Will not be ready without acceleration</div></div>
+        <div class="cr-cell"><div class="cc-v watch">Strategic</div><div class="cc-s">Board credibility at risk</div></div>
+      </div>
+      <div class="cr-row">
+        <div class="cr-main"><div class="cr-type">CEO · Public Statement</div><div class="cr-text">Net-zero by 2040 across all operations. "Funded, time-bound plan."</div><div class="cr-src">Q2 FY22 Earnings Call · Declared verbatim</div></div>
+        <div class="cr-cell"><div class="cc-v neu">FY2040</div><div class="cc-s">15 years</div></div>
+        <div class="cr-cell"><div class="cc-v neu">Earnings Call</div><div class="cc-s">Q2 FY22 · Verbal</div></div>
+        <div class="cr-cell"><div class="cc-v risk">₹0 decarbonisation capex since</div><div class="traj-bar"><div class="traj-fill risk" style="width:12%"></div></div><div class="cc-s">Trajectory implies 2067 not 2040</div></div>
+        <div class="cr-cell"><div class="cc-v risk">Contested</div><div class="cc-s">No funding found in documents</div></div>
+      </div>
+      <div class="cr-row">
+        <div class="cr-main"><div class="cr-type">Board · Operational</div><div class="cr-text">Supplier diversification — reduce single-source dependency below 50% by FY24.</div><div class="cr-src">Annual Report FY23 · Declared</div></div>
+        <div class="cr-cell"><div class="cc-v risk">FY24 — Missed</div><div class="cc-s">Now overdue</div></div>
+        <div class="cr-cell"><div class="cc-v neu">Annual Report</div><div class="cc-s">FY23 · Board commitment</div></div>
+        <div class="cr-cell"><div class="cc-v risk">61% concentration — worse than target</div><div class="traj-bar"><div class="traj-fill risk" style="width:28%"></div></div><div class="cc-s">Missed and deteriorating</div></div>
+        <div class="cr-cell"><div class="cc-v risk">€14–22M</div><div class="cc-s">Ongoing EBITDA exposure</div></div>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border:1px solid var(--b1);border-top:none;background:rgba(255,255,255,0.010)">
+      <span style="font-size:9px;color:var(--t3)">14 commitments total extracted · 4 shown above (highest financial consequence) · 3 at risk of delivery gap · 2 contradictions flagged · All commitments tracked continuously against operational trajectory</span>
+    </div>
+  </div>
+
+  <!-- VIEW 3: CONTRADICTIONS -->
+  <div class="rv" id="rv2">
+    <div class="cont-list">
+      <div class="cont-row">
+        <div class="cont-side l"><div class="cs-l said">What was said</div><div class="cs-t">FY23 Annual Report: "Supplier diversification programme initiated — reduce single-source dependency to below 50% by FY24."</div><div class="cs-src">Annual Report FY23 · Declared · Board commitment</div></div>
+        <div class="cont-side r"><div class="cs-l obs">What the evidence shows</div><div class="cs-t">FY24 Sustainability Report: Supplier concentration at 61% — highest in 4 years. Programme described as "partially implemented."</div><div class="cs-src">Sustainability Report FY24 · Observed · Cross-document analysis</div></div>
+        <div class="cont-action"><div class="ca-l">Financial consequence</div><div class="ca-v">€14–22M EBITDA risk</div><div class="ca-d">Ongoing exposure from concentration exceeding committed target by 11pp</div><div class="ca-btn">Resolve this</div></div>
+      </div>
+      <div class="cont-row">
+        <div class="cont-side l"><div class="cs-l said">What was said</div><div class="cs-t">Q2 FY22 Earnings Call: "Net-zero by 2040 — this is a funded, time-bound plan, not an aspiration."</div><div class="cs-src">CEO Earnings Call Q2 FY22 · Declared verbatim</div></div>
+        <div class="cont-side r"><div class="cs-l obs">What the evidence shows</div><div class="cs-t">FY24 Annual Report: Zero capex earmarked for decarbonisation across FY22–FY24. Energy intensity increased 8%. Renewable share declined from 22% to 18%.</div><div class="cs-src">Annual Report FY22–FY24 · Observed · Cross-year analysis</div></div>
+        <div class="cont-action"><div class="ca-l">Financial consequence</div><div class="ca-v">₹12.5Cr/yr covenant</div><div class="ca-d">Bond step-up triggered if FY25 renewable milestone missed. Trajectory implies miss.</div><div class="ca-btn">Resolve this</div></div>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border:1px solid var(--b1);border-top:none;background:rgba(255,255,255,0.010)">
+      <span style="font-size:9px;color:var(--t3)">2 contradictions detected · Both surfaced automatically without human instruction · These are the gaps between what was said and what the evidence shows · Combined financial consequence: ₹26.5Cr+/year if unresolved</span>
+    </div>
+  </div>
+
+  <!-- VIEW 4: 6 DIMENSIONS -->
+  <div class="rv" id="rv3">
+    <div class="dims">
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 1</div>
+        <div class="dim-name">Identity</div>
+        <div class="dim-what">What this enterprise fundamentally is</div>
+        <div class="dim-bar"><div class="dim-fill hi" style="width:84%"></div></div>
+        <div class="dim-meta"><div class="dim-pct hi">84%</div><div class="dim-pts">614 data points</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot hi"></div>Legal entities · 6 subsidiaries confirmed</div>
+          <div class="di-item"><div class="di-dot hi"></div>Industrial manufacturing · 14 markets</div>
+          <div class="di-item"><div class="di-dot hi"></div>Listed · NSE · India domicile</div>
+          <div class="di-item"><div class="di-dot med"></div>Board composition · Partially extracted</div>
+        </div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 2</div>
+        <div class="dim-name">Operations</div>
+        <div class="dim-what">How the enterprise actually runs</div>
+        <div class="dim-bar"><div class="dim-fill med" style="width:58%"></div></div>
+        <div class="dim-meta"><div class="dim-pct med">58%</div><div class="dim-pts">233 data points</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot hi"></div>6 facilities identified · Locations confirmed</div>
+          <div class="di-item"><div class="di-dot med"></div>Supply chain · Tier 1 suppliers inferred</div>
+          <div class="di-item"><div class="di-dot low"></div>Technology infrastructure · Not yet known</div>
+          <div class="di-item"><div class="di-dot low"></div>Facility criticality · Cannot infer from docs</div>
+        </div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 3</div>
+        <div class="dim-name">Commitments</div>
+        <div class="dim-what">What the enterprise has promised</div>
+        <div class="dim-bar"><div class="dim-fill hi" style="width:91%"></div></div>
+        <div class="dim-meta"><div class="dim-pct hi">91%</div><div class="dim-pts">89 commitments mapped</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot hi"></div>14 commitments extracted · 3 financial</div>
+          <div class="di-item"><div class="di-dot hi"></div>Bond covenants · Verbatim terms captured</div>
+          <div class="di-item"><div class="di-dot hi"></div>CEO public statements · Q2 FY22 verbatim</div>
+          <div class="di-item"><div class="di-dot med"></div>Customer commitments · Partially known</div>
+        </div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 4</div>
+        <div class="dim-name">Exposures</div>
+        <div class="dim-what">What can hurt the enterprise</div>
+        <div class="dim-bar"><div class="dim-fill med" style="width:67%"></div></div>
+        <div class="dim-meta"><div class="dim-pct med">67%</div><div class="dim-pts">156 signals</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot hi"></div>Regulatory: CBAM, BIS · Quantified</div>
+          <div class="di-item"><div class="di-dot hi"></div>Supplier concentration · €14–22M range</div>
+          <div class="di-item"><div class="di-dot med"></div>Financial exposure · Energy hedge gap</div>
+          <div class="di-item"><div class="di-dot low"></div>Cyber & tech exposure · Not yet known</div>
+        </div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 5</div>
+        <div class="dim-name">Relationships</div>
+        <div class="dim-what">Who the enterprise depends on</div>
+        <div class="dim-bar"><div class="dim-fill low" style="width:42%"></div></div>
+        <div class="dim-meta"><div class="dim-pct low">42%</div><div class="dim-pts">98 signals</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot med"></div>Key suppliers · 3 inferred critical</div>
+          <div class="di-item"><div class="di-dot low"></div>Customer concentration · Partially known</div>
+          <div class="di-item"><div class="di-dot low"></div>Investor relationships · Directional only</div>
+          <div class="di-item"><div class="di-dot low"></div>Regulator relationships · Not yet mapped</div>
+        </div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-num">Dimension 6</div>
+        <div class="dim-name">Trajectory</div>
+        <div class="dim-what">Where the enterprise is actually heading</div>
+        <div class="dim-bar"><div class="dim-fill low" style="width:48%"></div></div>
+        <div class="dim-meta"><div class="dim-pct low">48%</div><div class="dim-pts">67 signals</div></div>
+        <div class="dim-items">
+          <div class="di-item"><div class="di-dot hi"></div>Commitment delivery: 3 of 14 at risk</div>
+          <div class="di-item"><div class="di-dot low"></div>Strategic progress: 2 of 5 goals on track</div>
+          <div class="di-item"><div class="di-dot low"></div>Competitive trajectory: not yet known</div>
+          <div class="di-item"><div class="di-dot low"></div>Financial trajectory: directional only</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 5: DOCUMENT LIBRARY -->
+  <div class="rv" id="rv4">
+    <div class="lib">
+      <div class="lib-hdr"><div class="lh">Document</div><div class="lh">Category</div><div class="lh">Quality</div><div class="lh">Freshness</div><div class="lh">Data Points</div><div class="lh">Status</div></div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">Annual Report FY24.pdf</div><div class="lr-mt">Uploaded · 4.2 MB · 112 pages</div>
+        <div class="lra"><div class="lra-b">View extracted</div><div class="lra-b lock">Restrict</div><div class="lra-b del">Delete</div></div></div>
+        <div class="lr-cell"><div class="lc neu">Annual Report</div><div class="lcs">Auto-detected</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Text-native PDF</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">FY2024</div></div>
+        <div class="lr-cell"><div class="lc neu">614</div><div class="lcs">extracted</div></div>
+        <div class="lr-cell"><div class="lc hi">✓ Complete</div><div class="lcs">All domains updated</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">Sustainability Report FY24.pdf</div><div class="lr-mt">Uploaded · 2.6 MB · 68 pages</div>
+        <div class="lra"><div class="lra-b">View extracted</div><div class="lra-b lock">Restrict</div><div class="lra-b del">Delete</div></div></div>
+        <div class="lr-cell"><div class="lc neu">Sustainability Report</div><div class="lcs">Auto-detected</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Text-native PDF</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">FY2024</div></div>
+        <div class="lr-cell"><div class="lc neu">233</div><div class="lcs">extracted</div></div>
+        <div class="lr-cell"><div class="lc hi">✓ Complete</div><div class="lcs">Supplier & commitment updated</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">MIG_Purchase_Orders_Q1.xlsx</div><div class="lr-mt">Uploaded · 0.4 MB · 847 rows</div>
+        <div class="lf warn">⚑ Category mismatch</div>
+        <div class="lr-dec"><div class="ld-q">This appears to be a purchase order register, not a Supplier List. CorpStage can extract valuable procurement intelligence from it regardless.</div>
+        <div class="ld-acts"><div class="ld-b yes">Extract as Procurement Data</div><div class="ld-b no">Remove</div><div class="ld-b more">Show what was found</div></div></div></div>
+        <div class="lr-cell"><div class="lc med">Unclear</div><div class="lcs">Awaiting decision</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Structured data</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">Q1 FY25</div></div>
+        <div class="lr-cell"><div class="lc dim">Pending</div><div class="lcs">—</div></div>
+        <div class="lr-cell"><div class="lc med">⚑ Decide</div><div class="lcs">Category mismatch</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">AnnualReport2024_FINAL_v2.pdf</div><div class="lr-mt">Uploaded · 4.1 MB · 112 pages</div>
+        <div class="lf info">◈ Duplicate detected</div>
+        <div class="lr-dec"><div class="ld-q">Same content as Annual Report FY24.pdf already ingested. Is this a newer version that should replace it?</div>
+        <div class="ld-acts"><div class="ld-b yes">Replace existing</div><div class="ld-b no">Keep both</div><div class="ld-b more">Show differences</div></div></div></div>
+        <div class="lr-cell"><div class="lc neu">Annual Report</div><div class="lcs">Auto-detected</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Text-native PDF</div></div>
+        <div class="lr-cell"><div class="lc hi">FY2024</div><div class="lcs">Same period</div></div>
+        <div class="lr-cell"><div class="lc dim">Pending</div><div class="lcs">—</div></div>
+        <div class="lr-cell"><div class="lc med">◈ Duplicate</div><div class="lcs">Decision needed</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">Q4_FY24_Management_Accounts.xlsx</div><div class="lr-mt">Uploaded · 1.2 MB · Structured data</div>
+        <div class="lf err">⚠ Data conflict — differs from Annual Report</div>
+        <div class="lr-dec"><div class="ld-q">Revenue in this file (₹338Cr) differs from Annual Report FY24 (₹340Cr). Which is authoritative for financial intelligence?</div>
+        <div class="ld-acts"><div class="ld-b yes">Use this (₹338Cr)</div><div class="ld-b no">Keep Annual Report (₹340Cr)</div><div class="ld-b more">Flag as contested</div></div></div></div>
+        <div class="lr-cell"><div class="lc neu">Management Accounts</div><div class="lcs">Auto-detected</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Structured data</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">Q4 FY24</div></div>
+        <div class="lr-cell"><div class="lc dim">Pending</div><div class="lcs">—</div></div>
+        <div class="lr-cell"><div class="lc low">⚠ Conflict</div><div class="lcs">Data mismatch</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">Board_Merger_Discussion_Nov24.pdf</div><div class="lr-mt">Uploaded · 0.6 MB · 8 pages</div>
+        <div class="lf lock">🔒 Sensitive content detected</div>
+        <div class="lr-dec"><div class="ld-q">This appears to contain commercially sensitive M&A content. Should access be restricted to specific roles?</div>
+        <div class="ld-acts"><div class="ld-b lk">Board & CEO only</div><div class="ld-b yes">All users</div><div class="ld-b no">Remove</div></div></div></div>
+        <div class="lr-cell"><div class="lc neu">Board Document</div><div class="lcs">Auto-detected</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Text-native PDF</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">Nov 2024</div></div>
+        <div class="lr-cell"><div class="lc dim">Pending</div><div class="lcs">—</div></div>
+        <div class="lr-cell"><div class="lc purp">🔒 Sensitive</div><div class="lcs">Access decision needed</div></div>
+      </div>
+
+      <div class="lib-row">
+        <div class="lr-d"><div class="lr-nm">MCA Annual Return FY24 — Auto-retrieved</div><div class="lr-mt">Found by CorpStage · Government portal · No upload needed</div>
+        <div class="lra"><div class="lra-b">View extracted</div><div class="lra-b del">Remove</div></div></div>
+        <div class="lr-cell"><div class="lc neu">Public Filing</div><div class="lcs">Auto-retrieved</div></div>
+        <div class="lr-cell"><div class="lc hi">High</div><div class="lcs">Government source</div></div>
+        <div class="lr-cell"><div class="lc hi">Current</div><div class="lcs">FY2024</div></div>
+        <div class="lr-cell"><div class="lc neu">134</div><div class="lcs">extracted</div></div>
+        <div class="lr-cell"><div class="lc hi">✓ Complete</div><div class="lcs">Entity structure updated</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SECTION 3 — CONFIRM INFERENCES ══ -->
+<section class="sw">
+  <div class="sh"><div class="sr"></div><div class="st">Confirm what the AI inferred</div></div>
+  <div class="ss">The AI made 143 inferences from your documents. Three are material enough to confirm before they reach executive screens. The other 3 have been routed to domain owners automatically. Click any card to expand — you are confirming or adjusting what the AI already believes, not entering new data.</div>
+  <div class="ic-cards">
+
+    <div class="ic" id="ic1">
+      <div class="ic-head" onclick="tog('ic1')">
+        <div class="ic-m"><div class="ic-dm">Supplier & Ecosystem · Inferred · Powers Q4 + Q7</div><div class="ic-bl">3 suppliers appear operationally difficult to replace within 90 days.</div><div class="ic-sr">Sustainability Report FY24 — procurement narrative language</div></div>
+        <div class="ic-cn"><div class="ic-cl">Confidence</div><div class="ic-cv med">Reliable · 67%</div></div>
+        <div class="ic-tg"><div class="ic-ar">▾</div></div>
+      </div>
+      <div class="ic-body"><div class="ic-in">
+        <div class="icb-pre">CorpStage identified these 3 as likely critical. Confirm the list, remove any that are not critical, or add any it missed. This directly strengthens Q4 (Threat Map) and Q7 (Operational Resilience) on your executive screens.</div>
+        <div class="pp-list">
+          <div class="pp-item"><div class="pp-t">Rhenium Alloys GmbH — Primary raw material · Single source</div><div class="pp-c med">67%</div><div class="pp-r">Remove</div></div>
+          <div class="pp-item"><div class="pp-t">Precision Components Ltd — Critical tooling · 14-week lead time</div><div class="pp-c med">61%</div><div class="pp-r">Remove</div></div>
+          <div class="pp-item"><div class="pp-t">Eastern Logistics Co — Primary freight corridor · India-EU</div><div class="pp-c low">48%</div><div class="pp-r">Remove</div></div>
+        </div>
+        <div class="pp-add"><input class="pp-ai" type="text" placeholder="Add a critical supplier the AI missed…"><button class="pp-ab">Add</button></div>
+        <div class="icb-acts"><div class="icb-btn ok">✓ Confirm this list</div><div class="icb-btn adj">Skip for now</div></div>
+      </div></div>
+    </div>
+
+    <div class="ic" id="ic2">
+      <div class="ic-head" onclick="tog('ic2')">
+        <div class="ic-m"><div class="ic-dm">Financial Context · Inferred · Powers Q3</div><div class="ic-bl">Profitability is most sensitive to procurement cost and energy price volatility.</div><div class="ic-sr">Inferred from cost narrative in Annual Report FY24 · Cross-referenced with peer benchmarks</div></div>
+        <div class="ic-cn"><div class="ic-cl">Confidence</div><div class="ic-cv med">Directional · 58%</div></div>
+        <div class="ic-tg"><div class="ic-ar">▾</div></div>
+      </div>
+      <div class="ic-body"><div class="ic-in">
+        <div class="icb-pre">Inferred from cost language in the annual report. Confirming this strengthens The Money Question (Q3) on your CFO's screen — specifically the financial materiality ranking of risks.</div>
+        <div class="icb-cur">Profitability most sensitive to: (1) Procurement cost — estimated 38% of COGS, (2) Energy price — estimated 14% of COGS</div>
+        <div class="icb-ed" id="ed2"><textarea class="icb-ta" placeholder="Correct if needed — e.g. 'Procurement is 42% of COGS. Labour is a bigger factor than energy in our business.'"></textarea><div class="icb-hint">One or two sentences. AI will update the financial intelligence model.</div></div>
+        <div class="icb-acts"><div class="icb-btn ok">✓ This is correct</div><div class="icb-btn adj" onclick="show('ed2')">Adjust</div></div>
+      </div></div>
+    </div>
+
+    <div class="ic" id="ic3">
+      <div class="ic-head" onclick="tog('ic3')">
+        <div class="ic-m"><div class="ic-dm">Strategic Context · Extracted · Powers Q5 + Q10</div><div class="ic-bl">European expansion is a board-level priority with a Q3 2025 evaluation commitment.</div><div class="ic-sr">Annual Report FY24 Board Minutes reference · Corroborated by investor communication</div></div>
+        <div class="ic-cn"><div class="ic-cl">Confidence</div><div class="ic-cv hi">High · 81%</div></div>
+        <div class="ic-tg"><div class="ic-ar">▾</div></div>
+      </div>
+      <div class="ic-body"><div class="ic-in">
+        <div class="icb-pre">Well-evidenced. One click confirms and the commitment registry updates — powering The Promise Tracker (Q5) and The Strategic Progress Question (Q10).</div>
+        <div class="icb-cur">European expansion evaluation committed for Q3 2025. Supply chain resilience programme identified as prerequisite in same board session.</div>
+        <div class="icb-ed" id="ed3"><textarea class="icb-ta" placeholder="Adjust if the commitment or timeline has changed since this report…"></textarea><div class="icb-hint">One or two sentences. AI will update the commitment registry.</div></div>
+        <div class="icb-acts"><div class="icb-btn ok">✓ This is correct</div><div class="icb-btn adj" onclick="show('ed3')">Adjust</div></div>
+      </div></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ SECTION 4 — WHAT ONLY YOU KNOW ══ -->
+<section class="sw" style="padding-bottom:96px">
+  <div class="gc-wrap">
+    <div class="gc-lbl">What only you can tell us</div>
+    <div class="gc-body">
+      <div class="gc-note"><strong>3 questions the AI genuinely cannot answer from documents.</strong><br>Not because it did not try — it did. But this knowledge exists only in your experience and judgment.<br>Each answer directly strengthens one or more of the 12 executive question screens.</div>
+      <div class="go-cards">
+
+        <div class="go" id="go1">
+          <div class="go-h" onclick="togO('go1')">
+            <div class="go-m"><div class="go-type">Strategic Context · Powers Q5 + Q10 · Executive only</div><div class="go-q">Which priorities remain funded and protected even under severe cost pressure?</div></div>
+            <div class="go-gn"><div class="gg-v">+14%</div><div class="gg-l">Q5 + Q10 confidence</div></div>
+            <div class="go-tm"><div class="gt-v">3 min</div><div class="gt-l">Estimated</div></div>
+            <div class="go-tg"><div class="go-ar">▾</div></div>
+          </div>
+          <div class="go-body"><div class="go-in">
+            <div class="gob-why">This cannot be inferred from documents. Only leadership knows which commitments are structural versus aspirational. This single answer shapes how the Promise Tracker (Q5) and Strategic Progress screen (Q10) frame every commitment gap and capital trade-off recommendation for the CEO and Board.</div>
+            <textarea class="gob-ta" placeholder="e.g. 'The European expansion programme remains protected regardless of margin pressure. The renewable energy capex is under review and should not be treated as a fixed commitment by CorpStage yet.'"></textarea>
+            <div class="gob-hint">One or two sentences. Write as you would say it — not in formal language.</div>
+            <div class="gob-acts"><div class="gob-btn sv">Save — improve Q5 + Q10</div><div class="gob-btn sk">Skip for now</div></div>
+          </div></div>
+        </div>
+
+        <div class="go" id="go2">
+          <div class="go-h" onclick="togO('go2')">
+            <div class="go-m"><div class="go-type">Operational Intelligence · Powers Q7 · COO / CEO only</div><div class="go-q">Which facilities are most critical to business continuity if temporarily unavailable?</div></div>
+            <div class="go-gn"><div class="gg-v">+12%</div><div class="gg-l">Q7 confidence</div></div>
+            <div class="go-tm"><div class="gt-v">2 min</div><div class="gt-l">Estimated</div></div>
+            <div class="go-tg"><div class="go-ar">▾</div></div>
+          </div>
+          <div class="go-body"><div class="go-in">
+            <div class="gob-why">The AI knows all 6 facilities from documents but cannot infer which is operationally irreplaceable. Without this, the Operational Resilience screen (Q7) treats all 6 facilities equally — which is almost certainly wrong. This answer changes the entire risk and resilience assessment.</div>
+            <textarea class="gob-ta" placeholder="e.g. 'The Pune facility is the most critical — it houses our only precision tooling line. A 30-day disruption there would halt EU production. The other facilities could absorb disruption more easily.'"></textarea>
+            <div class="gob-hint">One or two sentences is enough.</div>
+            <div class="gob-acts"><div class="gob-btn sv">Save — improve Q7</div><div class="gob-btn sk">Skip — route to Operations</div></div>
+          </div></div>
+        </div>
+
+        <div class="go" id="go3">
+          <div class="go-h" onclick="togO('go3')">
+            <div class="go-m"><div class="go-type">Risk Intelligence · Powers Q4 · CEO only</div><div class="go-q">What concerns about FY26 performance are not yet visible in any document?</div></div>
+            <div class="go-gn"><div class="gg-v">+9%</div><div class="gg-l">Q4 confidence</div></div>
+            <div class="go-tm"><div class="gt-v">3 min</div><div class="gt-l">Estimated</div></div>
+            <div class="go-tg"><div class="go-ar">▾</div></div>
+          </div>
+          <div class="go-body"><div class="go-in">
+            <div class="gob-why">Executive anxiety signals — concerns visible to leadership but not yet in any report — are among the most valuable intelligence CorpStage can hold. They shape how risks are weighted in The Threat Map (Q4) and which signals get elevated for executive attention before they become formal disclosures.</div>
+            <textarea class="gob-ta" placeholder="e.g. 'I am concerned our key German account is reviewing its supplier base. No formal signal yet but the relationship has cooled over the past two quarters. This is not in any document.'"></textarea>
+            <div class="gob-hint">One or two sentences. No formal language required.</div>
+            <div class="gob-acts"><div class="gob-btn sv">Save — improve Q4</div><div class="gob-btn sk">Skip for now</div></div>
+          </div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /canvas -->
+<script>
+function tog(id){document.getElementById(id).classList.toggle('open')}
+function togO(id){document.getElementById(id).classList.toggle('open')}
+function show(id){document.getElementById(id).classList.add('on')}
+
+// Upload tab switcher
+function uzTab(type,idx){
+  document.getElementById('uzDrop').style.display  = type==='drop'?'flex':'none';
+  document.getElementById('uzPaste').classList.toggle('on', type==='paste');
+  document.getElementById('uzUrl').classList.toggle('on', type==='url');
+  document.getElementById('uzConnect').classList.toggle('on', type==='connect');
+  document.querySelectorAll('.uz-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+
+// Results view switcher
+function rvTab(idx){
+  document.querySelectorAll('.rv').forEach((v,i)=>{v.classList.toggle('on',i===idx)});
+  document.querySelectorAll('.rv-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+}
+
+// Simulate upload processing
+function simulateUpload(){
+  const s=document.getElementById('uzStatus');
+  const t=document.getElementById('uzStatusTxt');
+  s.classList.add('on');
+  const steps=['Reading document — detecting type and language…','Extracting data points — 847 found…','Retrieving external intelligence — 12 sources…','Making inferences — 143 derived…','Mapping to Q1–Q12 canonical questions…','Detecting contradictions — 2 found…','Intelligence ready — scroll to see results'];
+  let i=0;
+  const iv=setInterval(()=>{t.textContent=steps[i++];if(i>=steps.length)clearInterval(iv)},900);
+}
+
+// Drag and drop
+const dz=document.getElementById('uzDrop');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('over');
+  const files=[...e.dataTransfer.files];
+  if(files.length){simulateUpload()}
+});
+document.getElementById('fileInput').addEventListener('change',e=>{
+  if(e.target.files.length)simulateUpload();
+});
+</script>
+</body>
+</html>

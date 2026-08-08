@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CorpStage · G3 · Lens Configuration</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f7f6f3;--s1:#efeee8;--s2:#e5e3dc;--s3:#d4d2cb;
+  --b0:rgba(0,0,0,0.024);--b1:rgba(0,0,0,0.08);
+  --b2:rgba(0,0,0,0.15);--b3:rgba(0,0,0,0.26);
+  --t0:rgba(14,14,16,0.94);--t1:rgba(14,14,16,0.60);
+  --t2:rgba(14,14,16,0.38);--t3:rgba(14,14,16,0.20);
+  --gold:#b88e4e;--coral:#a04a3a;--teal:#2e6a5e;--blue:#3a6492;--purple:#5a4b92;
+  --gold-bg:rgba(184,142,78,.06);--teal-bg:rgba(46,106,94,.05);
+  --blue-bg:rgba(58,100,146,.05);--purple-bg:rgba(90,75,146,.05);
+  --serif:'Georgia','Times New Roman',serif;
+  --sans:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;
+}
+body.dark{
+  --bg:#050608;--s1:#09090c;--s2:#0d0e11;--s3:#141418;
+  --b0:rgba(255,255,255,0.016);--b1:rgba(255,255,255,0.048);
+  --b2:rgba(255,255,255,0.080);--b3:rgba(255,255,255,0.13);
+  --t0:rgba(242,238,228,0.97);--t1:rgba(242,238,228,0.52);
+  --t2:rgba(242,238,228,0.24);--t3:rgba(242,238,228,0.10);
+  --gold-bg:rgba(184,142,78,.05);--teal-bg:rgba(46,106,94,.04);
+  --blue-bg:rgba(58,100,146,.04);--purple-bg:rgba(90,75,146,.04);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t0);font-family:var(--sans)}
+body{display:grid;grid-template-rows:48px 1fr}
+
+/* NAV */
+nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:0 56px;border-bottom:1px solid var(--b1);background:var(--bg);z-index:20;position:relative}
+.wm{font-size:9px;letter-spacing:.30em;text-transform:uppercase;color:var(--t3);font-weight:600}
+.nav-c{font-size:11.5px;font-weight:500;color:var(--t1);text-align:center;letter-spacing:.015em}
+.nav-r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.fnav{display:flex}
+.fn{font-size:8px;letter-spacing:.08em;padding:3px 10px;color:var(--t3);
+    border:1px solid var(--b1);text-decoration:none;cursor:pointer;
+    transition:color .15s;border-right:none}
+.fn:last-child{border-right:1px solid var(--b1)}
+.fn.active{color:var(--purple);border-color:rgba(90,75,146,.30);background:var(--purple-bg)}
+.fn:not(.active):hover{color:var(--t1)}
+.theme-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 10px;
+  border:1px solid var(--b1);background:transparent;color:var(--t3);font-size:8px;
+  letter-spacing:.14em;text-transform:uppercase;font-weight:600;font-family:var(--sans);
+  transition:color .15s,border-color .15s}
+.theme-toggle:hover{color:var(--t1);border-color:var(--b2)}
+
+/* LAYOUT */
+.shell{display:grid;grid-template-columns:240px 1px 1fr;height:calc(100vh - 48px);overflow:hidden}
+.rail{padding:40px 0 40px 56px;display:flex;flex-direction:column;height:100%;overflow-y:auto}
+.rail::-webkit-scrollbar{width:0}
+.v-div{background:var(--b1)}
+.main{overflow-y:auto;height:100%;padding:40px 64px 100px 48px;position:relative}
+.main::-webkit-scrollbar{width:2px}
+.main::-webkit-scrollbar-thumb{background:var(--b2)}
+
+/* RAIL */
+.rail-ew{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:18px}
+.rail-q{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--t0);
+  line-height:1.48;letter-spacing:-.012em;margin-bottom:7px}
+.rail-sub{font-size:10px;color:var(--t2);line-height:1.65;margin-bottom:28px}
+.snav{display:flex;flex-direction:column;gap:1px;margin-bottom:28px}
+.sni{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;
+  cursor:pointer;border-left:2px solid transparent;transition:all .15s}
+.sni:hover{background:var(--b0)}
+.sni.on{border-left-color:var(--purple);background:var(--purple-bg)}
+.sni-n{font-size:8px;letter-spacing:.10em;color:var(--t3);font-weight:600;width:14px;flex-shrink:0}
+.sni.on .sni-n{color:var(--purple)}
+.sni-l{font-size:11px;color:var(--t1)}
+.sni.on .sni-l{color:var(--t0);font-weight:500}
+.sni-b{font-size:7px;letter-spacing:.06em;padding:2px 5px;
+  border:1px solid rgba(90,75,146,.22);color:var(--purple);
+  background:var(--purple-bg);margin-left:auto;flex-shrink:0}
+.rail-card{margin-top:auto;padding:12px 14px;border:1px solid var(--b1);background:var(--s1)}
+.rc-l{font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.rc-r{font-size:11.5px;font-weight:500;color:var(--purple);margin-bottom:3px}
+.rc-d{font-size:9px;color:var(--t2);line-height:1.55}
+
+/* SECTION */
+.sec{display:none}.sec.on{display:block}
+.sec-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;
+  padding-bottom:18px;border-bottom:1px solid var(--b1);margin-bottom:24px}
+.sh-ew{font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:6px}
+.sh-t{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--t0);
+  letter-spacing:-.014em;line-height:1.3;margin-bottom:5px}
+.sh-s{font-size:10.5px;color:var(--t2);line-height:1.65;max-width:520px}
+.sh-a{display:flex;gap:7px;flex-shrink:0;padding-top:3px}
+
+/* BUTTONS */
+.btn{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:6px 14px;border:1px solid var(--b1);color:var(--t2);background:transparent;
+  cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn:hover{color:var(--t1);border-color:var(--b2)}
+.btn.p{border-color:rgba(90,75,146,.32);color:var(--purple);background:var(--purple-bg)}
+.btn.p:hover{background:rgba(90,75,146,.12);border-color:rgba(90,75,146,.5)}
+.btn.sm{font-size:7.5px;padding:4px 10px}
+.btn.danger{border-color:rgba(160,74,58,.24);color:var(--coral);background:rgba(160,74,58,.04)}
+
+/* ══ S01 YOUR LENSES ══════════════════════════════════════════════════ */
+.org-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;
+  border:1px solid var(--b1);background:var(--s1);margin-bottom:20px}
+.ob-l{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);font-weight:600;white-space:nowrap}
+.ob-h{font-size:9px;color:var(--t3);margin-left:auto;white-space:nowrap}
+.ob-wrap{position:relative;display:flex;align-items:center}
+.ob-val{font-size:11.5px;color:var(--t0);cursor:pointer;padding:2px 20px 2px 0;
+  border-bottom:1px solid var(--b2);min-width:160px}
+.ob-arrow{position:absolute;right:0;font-size:10px;color:var(--t2);pointer-events:none}
+.ob-drop{position:absolute;top:calc(100% + 4px);left:0;min-width:200px;
+  background:var(--bg);border:1px solid var(--b2);z-index:100;display:none}
+.ob-drop.open{display:block}
+.ob-opt{padding:9px 14px;font-size:11px;color:var(--t1);cursor:pointer;transition:background .1s}
+.ob-opt:hover{background:var(--b0);color:var(--t0)}
+.ob-opt.sel{color:var(--purple);background:var(--purple-bg)}
+.grid-lbl{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--t3);font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--b0)}
+.lens-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.lc{padding:18px 16px 14px;border:1px solid var(--b1);background:var(--bg);
+  position:relative;transition:border-color .18s,background .18s}
+.lc-bar{height:2px;margin-bottom:14px}
+.lc-bar.exec{background:var(--gold)}.lc-bar.sust{background:var(--teal)}
+.lc-bar.risk{background:var(--blue)}.lc-bar.custom{background:var(--purple)}
+.lc-name{font-size:12.5px;font-weight:500;color:var(--t0);margin-bottom:2px}
+.lc-aud{font-size:8.5px;color:var(--t2);letter-spacing:.03em;margin-bottom:10px;line-height:1.4}
+.lc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;
+  padding:8px 0;border-top:1px solid var(--b0);border-bottom:1px solid var(--b0)}
+.lcs{display:flex;flex-direction:column;gap:2px}
+.lcs-v{font-size:13px;font-family:var(--serif);font-weight:400;color:var(--t0);line-height:1}
+.lcs-l{font-size:7.5px;color:var(--t3);letter-spacing:.07em;margin-top:2px}
+.lc-roles{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px;min-height:18px}
+.lct{font-size:7.5px;letter-spacing:.05em;padding:2px 6px;border:1px solid var(--b1);color:var(--t2)}
+.lc-foot{display:flex;justify-content:space-between;align-items:center;
+  padding-top:8px;border-top:1px solid var(--b0)}
+.lc-def-badge{font-size:7px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:2px 6px;border:1px solid rgba(90,75,146,.22);color:var(--purple);background:var(--purple-bg)}
+.lc-btns{display:flex;gap:5px}
+.lc-add{border:1px dashed var(--b2);padding:18px 16px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;transition:all .18s;min-height:100px;margin-top:12px}
+.lc-add:hover{border-color:rgba(90,75,146,.36);background:var(--purple-bg)}
+.lc-add-icon{font-size:18px;color:var(--t3)}
+.lc-add-l{font-size:10.5px;color:var(--t2);font-weight:500}
+.lc-add-s{font-size:9px;color:var(--t3);text-align:center;line-height:1.5;max-width:200px}
+
+/* ══ S02 VOCABULARY MASTER ════════════════════════════════════════════ */
+.vm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--b1);border:1px solid var(--b1);margin-bottom:20px}
+.vms{background:var(--bg);padding:14px 16px}
+.vms-l{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:4px}
+.vms-v{font-size:20px;font-family:var(--serif);font-weight:400;line-height:1;margin-bottom:2px}
+.vms-v.p{color:var(--purple)}.vms-v.n{color:var(--t1)}
+.vms-s{font-size:9px;color:var(--t2)}
+
+/* Shared vocab shell — used by both Vocabulary Master and Lens Preview */
+.v-shell{display:grid;grid-template-columns:156px 1px 1fr;border:1px solid var(--b1)}
+.v-ns-rail{display:flex;flex-direction:column;padding:6px 0;background:var(--s1);overflow-y:auto;max-height:520px}
+.v-ns-rail::-webkit-scrollbar{width:0}
+.v-ns-item{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;cursor:pointer;transition:background .12s;gap:6px}
+.v-ns-item:hover{background:var(--b0)}
+.v-ns-item.on{background:var(--purple-bg)}
+.v-ns-l{font-size:9.5px;color:var(--t1);line-height:1}
+.v-ns-item.on .v-ns-l{color:var(--t0);font-weight:500}
+.v-ns-dot{width:6px;height:6px;border-radius:50%;background:var(--b2);flex-shrink:0}
+.v-ns-dot.has{background:var(--purple)}
+.v-ns-ct{font-size:7.5px;color:var(--t3)}
+.v-vdiv{background:var(--b1)}
+.v-content{padding:16px 20px;overflow-y:auto;max-height:520px}
+.v-content::-webkit-scrollbar{width:2px}
+.v-content::-webkit-scrollbar-thumb{background:var(--b2)}
+
+/* Vocab table — two or three columns */
+.vt{width:100%;border-collapse:collapse}
+.vt-h th{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--t3);font-weight:600;padding:0 0 10px;border-bottom:1px solid var(--b1);text-align:left}
+.vt-h th.c-platform{width:36%;padding-right:16px}
+.vt-h th.c-master{width:28%;padding-right:16px}
+.vt-h th.c-org{color:var(--purple)}
+.vt-h th.c-resolved{color:var(--teal)}
+.vtr{border-bottom:1px solid var(--b0);transition:background .1s}
+.vtr:hover{background:var(--b0)}
+.vtr.ov{background:rgba(90,75,146,.026)}
+.vtd{font-size:11px;color:var(--t1);padding:10px 16px 10px 0;vertical-align:middle}
+.vtd.resolved{color:var(--t0);font-weight:500}
+.vtd.resolved.changed{color:var(--purple)}
+.vtd.resolved.lens-changed{color:var(--teal)}
+.vtc{padding:5px 0;vertical-align:middle}
+.vti{width:100%;font-size:11px;color:var(--t0);font-family:var(--sans);
+  background:transparent;border:1px solid transparent;padding:5px 8px;
+  outline:none;transition:all .15s}
+.vti::placeholder{color:var(--t3);font-size:10px;font-style:italic}
+.vti:hover{border-color:var(--b1)}
+.vti:focus{border-color:rgba(90,75,146,.32);background:rgba(90,75,146,.025)}
+.vti.ov{border-color:rgba(90,75,146,.20);color:var(--purple)}
+.vt-warn{display:none;font-size:8.5px;color:#9a7a30;margin-top:3px;
+  padding:3px 8px;border:1px solid rgba(184,142,78,.20);background:rgba(184,142,78,.04);line-height:1.5}
+.vt-warn.on{display:block}
+.v-show-more{padding:8px 0;font-size:8px;color:var(--t3);cursor:pointer;
+  letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  display:flex;align-items:center;gap:8px;margin-top:4px}
+.v-show-more:hover{color:var(--t1)}
+.v-show-more::before,.v-show-more::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ══ LENS EDITOR OVERLAY ══════════════════════════════════════════════ */
+.ed-overlay{display:none;position:absolute;inset:0;background:var(--bg);
+  overflow-y:auto;padding:40px 64px 100px 48px;z-index:10}
+.ed-overlay.open{display:block}
+.ed-back{display:flex;align-items:center;gap:7px;margin-bottom:20px;cursor:pointer;
+  font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  color:var(--t3);width:fit-content}
+.ed-back:hover{color:var(--t1)}
+.ed-hdr{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.ed-bar{height:3px;width:22px;flex-shrink:0}
+.ed-name{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--t0);letter-spacing:-.015em}
+.ed-aud{font-size:10px;color:var(--t2);margin-bottom:20px}
+.ed-tabs{display:flex;gap:0;border-bottom:1px solid var(--b1);margin-bottom:20px}
+.edt{font-size:8.5px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:8px 16px;color:var(--t3);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.edt:hover{color:var(--t1)}
+.edt.on{color:var(--purple);border-bottom-color:var(--purple)}
+.edp{display:none}.edp.on{display:block}
+
+/* Role assignment */
+.ra-row{display:grid;grid-template-columns:1fr auto 34px;align-items:center;
+  gap:14px;padding:11px 0;border-bottom:1px solid var(--b0)}
+.ra-row:last-child{border-bottom:none}
+.ra-n{font-size:11.5px;color:var(--t0);font-weight:500;margin-bottom:2px}
+.ra-d{font-size:9px;color:var(--t2)}
+.ra-st{font-size:8px;color:var(--t3);text-align:right}
+.ra-tgl{width:30px;height:17px;border-radius:9px;position:relative;cursor:pointer;
+  transition:background .2s;border:1px solid var(--b2);background:var(--s2);flex-shrink:0}
+.ra-tgl.on{background:rgba(90,75,146,.16);border-color:rgba(90,75,146,.38)}
+.ra-tgl::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;
+  border-radius:50%;background:var(--t3);transition:all .2s}
+.ra-tgl.on::after{left:15px;background:var(--purple)}
+.ra-tgl.locked{opacity:.4;cursor:not-allowed}
+.ra-note{font-size:9px;color:var(--t3);margin-top:14px;line-height:1.6;
+  padding-top:12px;border-top:1px solid var(--b0)}
+
+/* Lens preview tab — three columns, read only + optional override */
+.lp-legend{display:flex;align-items:center;gap:16px;margin-bottom:14px;
+  padding:10px 14px;border:1px solid var(--b1);background:var(--s1)}
+.lpl{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--t2)}
+.lpl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.lpl-dot.platform{background:var(--b2)}
+.lpl-dot.master{background:var(--purple)}
+.lpl-dot.lens{background:var(--teal)}
+.lp-override-note{font-size:9.5px;color:var(--t2);line-height:1.6;margin-bottom:14px;
+  padding:10px 12px;border:1px solid rgba(90,75,146,.16);background:var(--purple-bg)}
+
+/* SAVE BAR */
+.save-bar{position:fixed;bottom:0;left:240px;right:0;padding:12px 64px 12px 48px;
+  border-top:1px solid var(--b1);background:var(--bg);
+  display:flex;align-items:center;justify-content:space-between;
+  transform:translateY(100%);transition:transform .22s ease;z-index:40}
+.save-bar.on{transform:translateY(0)}
+.sb-m{font-size:10px;color:var(--t2)}.sb-m strong{color:var(--purple)}
+.sb-a{display:flex;gap:8px}
+.sb-d{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:7px 13px;border:1px solid var(--b1);color:var(--t2);background:transparent;
+  cursor:pointer;font-family:var(--sans)}
+.sb-s{font-size:8px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:7px 18px;border:1px solid rgba(90,75,146,.34);color:var(--purple);
+  background:var(--purple-bg);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.sb-s:hover{background:rgba(90,75,146,.14)}
+
+/* TOAST */
+.toast{position:fixed;bottom:68px;right:32px;padding:10px 16px;
+  border:1px solid rgba(46,106,94,.26);background:rgba(46,106,94,.08);
+  color:var(--teal);font-size:9px;letter-spacing:.06em;font-weight:600;
+  opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(5,6,8,.5);z-index:60;
+  display:none;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--bg);border:1px solid var(--b2);padding:32px;width:460px;max-width:92vw}
+.modal-t{font-family:var(--serif);font-size:19px;font-weight:400;color:var(--t0);margin-bottom:5px}
+.modal-s{font-size:10.5px;color:var(--t2);line-height:1.6;margin-bottom:16px}
+.mf-l{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);font-weight:600;margin-bottom:6px;margin-top:14px}
+.mf-i{width:100%;font-size:12.5px;color:var(--t0);background:var(--s1);
+  border:1px solid var(--b1);padding:8px 11px;outline:none;font-family:var(--sans);transition:border-color .15s}
+.mf-i:focus{border-color:rgba(90,75,146,.36)}
+.mf-h{font-size:8.5px;color:var(--t3);margin-top:4px}
+.msrc{display:flex;flex-direction:column;gap:5px}
+.mso{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--b1);cursor:pointer;transition:all .13s}
+.mso:hover{border-color:var(--b2);background:var(--b0)}
+.mso.sel{border-color:rgba(90,75,146,.30);background:var(--purple-bg)}
+.msr{width:11px;height:11px;border:1.5px solid var(--b2);border-radius:50%;flex-shrink:0;transition:all .15s}
+.mso.sel .msr{border-color:var(--purple);background:var(--purple)}
+.mst{font-size:10.5px;color:var(--t1)}
+.mso.sel .mst{color:var(--t0)}
+.modal-btns{display:flex;justify-content:flex-end;gap:7px;margin-top:20px;
+  padding-top:14px;border-top:1px solid var(--b1)}
+</style>
+</head>
+<body id="bodyEl" class="light">
+
+<nav>
+  <div class="wm">CorpStage</div>
+  <div class="nav-c">Meridian Industrial Group</div>
+  <div class="nav-r">
+    <div class="fnav">
+      <a class="fn" href="G1_Organisation_Setup.html">G1 · Setup</a>
+      <a class="fn" href="G2_Data_Sources.html">G2 · Data Sources</a>
+      <a class="fn active">G3 · Lenses</a>
+      <a class="fn">G4 · Users</a>
+      <a class="fn">G5 · Workflow</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="themeIcon">●</span>
+      <span id="themeLabel">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="shell">
+  <!-- RAIL -->
+  <div class="rail">
+    <div class="rail-ew">G3 · Lens Configuration</div>
+    <div class="rail-q">How does CorpStage speak to each role?</div>
+    <div class="rail-sub">Define lenses, set vocabulary, assign roles. Applies to all users instantly.</div>
+    <div class="snav">
+      <div class="sni on" onclick="showSec('lenses',0)">
+        <span class="sni-n">01</span><span class="sni-l">Your Lenses</span>
+      </div>
+      <div class="sni" onclick="showSec('master',1)">
+        <span class="sni-n">02</span><span class="sni-l">Vocabulary Master</span>
+        <span class="sni-b">Admin</span>
+      </div>
+    </div>
+    <div class="rail-card">
+      <div class="rc-l">Access level</div>
+      <div class="rc-r">Corporate Buyer Admin</div>
+      <div class="rc-d">Vocabulary changes apply org-wide to all 39 screens instantly. Screen access per role is in G4.</div>
+    </div>
+  </div>
+
+  <div class="v-div"></div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainWrap">
+
+    <!-- ══ 01 YOUR LENSES ══════════════════════════════════════════════ -->
+    <div class="sec on" id="sec-lenses">
+      <div class="sec-hdr">
+        <div>
+          <div class="sh-ew">01 · Your Lenses</div>
+          <div class="sh-t">All configured lenses for your organisation.</div>
+          <div class="sh-s">Each lens defines a vocabulary and role assignment. Roles with multiple lenses see a switcher in their navigation. Screen access per role is managed in G4 · Users.</div>
+        </div>
+        <div class="sh-a"><button class="btn p" onclick="openModal()">+ Add Lens</button></div>
+      </div>
+
+      <!-- Org default -->
+      <div class="org-bar">
+        <div class="ob-l">Organisation default</div>
+        <div class="ob-wrap">
+          <div class="ob-val" id="obVal" onclick="toggleObDrop()">Executive · Financial</div>
+          <div class="ob-arrow">▾</div>
+          <div class="ob-drop" id="obDrop">
+            <div class="ob-opt sel" onclick="selectDefault(this,'exec','Executive · Financial')">Executive · Financial</div>
+            <div class="ob-opt" onclick="selectDefault(this,'sust','Sustainability')">Sustainability</div>
+            <div class="ob-opt" onclick="selectDefault(this,'risk','Risk')">Risk</div>
+          </div>
+        </div>
+        <div class="ob-h">Applied to users with no role-assigned lens</div>
+      </div>
+
+      <!-- Platform lenses -->
+      <div class="grid-lbl">Platform lenses</div>
+      <div class="lens-grid" id="builtinGrid">
+        <div class="lc" id="lc-exec">
+          <div class="lc-bar exec"></div>
+          <div class="lc-name">Executive · Financial</div>
+          <div class="lc-aud">CEO · CFO · COO · Board</div>
+          <div class="lc-stats">
+            <div class="lcs"><div class="lcs-v" id="stat-exec-roles">4</div><div class="lcs-l">Roles assigned</div></div>
+            <div class="lcs"><div class="lcs-v" id="stat-exec-ov">0</div><div class="lcs-l">Lens overrides</div></div>
+          </div>
+          <div class="lc-roles" id="tags-exec">
+            <span class="lct">CEO</span><span class="lct">CFO</span><span class="lct">COO</span><span class="lct">Board</span>
+          </div>
+          <div class="lc-foot">
+            <div class="lc-def-badge">Org default</div>
+            <div class="lc-btns">
+              <button class="btn sm p" onclick="openEditor('exec')">Edit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lc" id="lc-sust">
+          <div class="lc-bar sust"></div>
+          <div class="lc-name">Sustainability</div>
+          <div class="lc-aud">CSO · Sustainability Team · IR</div>
+          <div class="lc-stats">
+            <div class="lcs"><div class="lcs-v" id="stat-sust-roles">2</div><div class="lcs-l">Roles assigned</div></div>
+            <div class="lcs"><div class="lcs-v" id="stat-sust-ov">0</div><div class="lcs-l">Lens overrides</div></div>
+          </div>
+          <div class="lc-roles" id="tags-sust">
+            <span class="lct">CSO</span><span class="lct">Sustainability Analyst</span>
+          </div>
+          <div class="lc-foot">
+            <div></div>
+            <div class="lc-btns"><button class="btn sm p" onclick="openEditor('sust')">Edit</button></div>
+          </div>
+        </div>
+
+        <div class="lc" id="lc-risk">
+          <div class="lc-bar risk"></div>
+          <div class="lc-name">Risk</div>
+          <div class="lc-aud">CRO · Risk Team · Audit Committee</div>
+          <div class="lc-stats">
+            <div class="lcs"><div class="lcs-v" id="stat-risk-roles">2</div><div class="lcs-l">Roles assigned</div></div>
+            <div class="lcs"><div class="lcs-v" id="stat-risk-ov">0</div><div class="lcs-l">Lens overrides</div></div>
+          </div>
+          <div class="lc-roles" id="tags-risk">
+            <span class="lct">CRO</span><span class="lct">Risk Analyst</span>
+          </div>
+          <div class="lc-foot">
+            <div></div>
+            <div class="lc-btns"><button class="btn sm p" onclick="openEditor('risk')">Edit</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom lenses — hidden until created -->
+      <div id="customSection" style="display:none">
+        <div class="grid-lbl" style="margin-top:16px">Your custom lenses</div>
+        <div class="lens-grid" id="customGrid"></div>
+      </div>
+
+      <!-- Add lens -->
+      <div class="lc-add" onclick="openModal()">
+        <div class="lc-add-icon">+</div>
+        <div class="lc-add-l">Add a custom lens</div>
+        <div class="lc-add-s">Create a named view with its own vocabulary and role assignment.</div>
+      </div>
+    </div><!-- /01 -->
+
+
+    <!-- ══ 02 VOCABULARY MASTER ════════════════════════════════════════ -->
+    <div class="sec" id="sec-master">
+      <div class="sec-hdr">
+        <div>
+          <div class="sh-ew">02 · Vocabulary Master</div>
+          <div class="sh-t">Your organisation's language across all lenses.</div>
+          <div class="sh-s">Set a term here and it propagates to every lens and every screen instantly. Platform defaults are always visible and never editable. Individual lenses can set their own exceptions — configured in each lens's editor.</div>
+        </div>
+        <div class="sh-a"><button class="btn" onclick="resetMaster()">Reset all</button></div>
+      </div>
+
+      <div class="vm-stats">
+        <div class="vms">
+          <div class="vms-l">Master overrides</div>
+          <div class="vms-v p" id="vmCount">0</div>
+          <div class="vms-s">Terms your org has changed</div>
+        </div>
+        <div class="vms">
+          <div class="vms-l">Platform defaults</div>
+          <div class="vms-v n" id="vmDefault">0</div>
+          <div class="vms-s">Using CorpStage language</div>
+        </div>
+        <div class="vms">
+          <div class="vms-l">Lenses inheriting</div>
+          <div class="vms-v n" id="vmLenses">3</div>
+          <div class="vms-s">All lenses receive master</div>
+        </div>
+        <div class="vms">
+          <div class="vms-l">Last saved</div>
+          <div class="vms-v n" style="font-size:14px" id="vmSaved">—</div>
+          <div class="vms-s">Applied immediately on save</div>
+        </div>
+      </div>
+
+      <div class="v-shell">
+        <div class="v-ns-rail" id="vmNsRail"><!-- JS --></div>
+        <div class="v-vdiv"></div>
+        <div class="v-content" id="vmContent"><!-- JS --></div>
+      </div>
+    </div><!-- /02 -->
+
+
+    <!-- LENS EDITOR OVERLAY -->
+    <div class="ed-overlay" id="edOverlay">
+      <div class="ed-back" onclick="closeEditor()">← Back to Your Lenses</div>
+      <div class="ed-hdr">
+        <div class="ed-bar" id="edBar"></div>
+        <div class="ed-name" id="edName"></div>
+      </div>
+      <div class="ed-aud" id="edAud"></div>
+
+      <div class="ed-tabs">
+        <div class="edt on" onclick="showEdTab('roles',this)">Role Assignment</div>
+        <div class="edt" onclick="showEdTab('preview',this)">Lens Preview</div>
+      </div>
+
+      <!-- Tab: Role Assignment -->
+      <div class="edp on" id="edp-roles">
+        <div style="font-size:10.5px;color:var(--t2);line-height:1.65;margin-bottom:18px;max-width:560px">
+          Toggle which roles have access to this lens. Roles with access to multiple lenses see a switcher in their navigation. Lens controls language only — screen access is set in G4.
+        </div>
+        <div id="raGrid"></div>
+        <div class="ra-note">Locked roles are set by platform policy and cannot be changed. Screen access per role is in G4 · Users, Roles & Permissions.</div>
+      </div>
+
+      <!-- Tab: Lens Preview — three columns, full vocab, optional lens-specific override -->
+      <div class="edp" id="edp-preview">
+        <div class="lp-legend">
+          <div class="lpl"><div class="lpl-dot platform"></div>Platform default</div>
+          <div class="lpl"><div class="lpl-dot master"></div>Your organisation (Master override)</div>
+          <div class="lpl"><div class="lpl-dot lens"></div>This lens resolves to</div>
+        </div>
+        <div class="lp-override-note">
+          The third column shows exactly what this lens displays after all overrides are applied.
+          To set a lens-specific exception — different from the Master — edit directly in the third column.
+          Leave blank to inherit from Master. Most organisations never need this.
+        </div>
+        <div class="v-shell" id="lpShell">
+          <div class="v-ns-rail" id="lpNsRail"><!-- JS --></div>
+          <div class="v-vdiv"></div>
+          <div class="v-content" id="lpContent"><!-- JS --></div>
+        </div>
+      </div>
+
+    </div><!-- /editor overlay -->
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<div class="save-bar" id="saveBar">
+  <div class="sb-m"><strong id="sbMsg">0 changes</strong> pending — not yet saved to your organisation</div>
+  <div class="sb-a">
+    <button class="sb-d" onclick="discardAll()">Discard</button>
+    <button class="sb-s" onclick="saveAll()">Save & apply to all users</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Configuration saved and applied to all users</div>
+
+<div class="modal-ov" id="addModal">
+  <div class="modal">
+    <div class="modal-t">Add a custom lens</div>
+    <div class="modal-s">Name it, choose a vocabulary source, then assign roles. A name and at least one role are required before the lens is active.</div>
+    <div class="mf-l">Lens name</div>
+    <input class="mf-i" id="newName" placeholder="e.g. Operations, Treasury, Board" maxlength="40">
+    <div class="mf-h">This name appears in navigation across all screens.</div>
+    <div class="mf-l">Vocabulary source</div>
+    <div class="msrc">
+      <div class="mso sel" onclick="selSrc(this,'defaults')"><div class="msr"></div><div class="mst">Start from platform defaults — business language throughout</div></div>
+      <div class="mso" onclick="selSrc(this,'exec')"><div class="msr"></div><div class="mst">Inherit from Executive · Financial</div></div>
+      <div class="mso" onclick="selSrc(this,'sust')"><div class="msr"></div><div class="mst">Inherit from Sustainability</div></div>
+      <div class="mso" onclick="selSrc(this,'risk')"><div class="msr"></div><div class="mst">Inherit from Risk</div></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn p" onclick="createLens()">Create & open editor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── THEME ─────────────────────────────────────────────────────────────────
+(function(){applyTheme(sessionStorage.getItem('cs_theme')||'light')})();
+function applyTheme(m){
+  document.getElementById('bodyEl').className=m;
+  document.getElementById('themeIcon').textContent=m==='light'?'●':'○';
+  document.getElementById('themeLabel').textContent=m==='light'?'Dark':'Light';
+  sessionStorage.setItem('cs_theme',m);
+}
+function toggleTheme(){applyTheme(sessionStorage.getItem('cs_theme')==='light'?'dark':'light')}
+
+// ── SECTION NAV ───────────────────────────────────────────────────────────
+function showSec(id,idx){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.sni').forEach(i=>i.classList.remove('on'));
+  document.getElementById('sec-'+id).classList.add('on');
+  document.querySelectorAll('.sni')[idx].classList.add('on');
+}
+
+// ── ORG DEFAULT ───────────────────────────────────────────────────────────
+function toggleObDrop(){document.getElementById('obDrop').classList.toggle('open')}
+function selectDefault(el,id,name){
+  document.querySelectorAll('.ob-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('obVal').textContent=name;
+  document.getElementById('obDrop').classList.remove('open');
+  markChanged();
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ob-wrap')) document.getElementById('obDrop').classList.remove('open');
+});
+
+// ── VOCAB DATA ────────────────────────────────────────────────────────────
+// All namespaces from vocab.js v2.0 — mirrors VOCAB canonical layer
+const NS_GROUPS=[
+  {id:'metrics',   label:'Metrics',             keys:[
+    {k:'metric.business_resilience_index',   d:'Business Resilience Index',                      ls:{sust:'ESG Score',risk:'Enterprise Resilience Rating'}},
+    {k:'metric.energy_cost_and_transition',  d:'Energy Cost & Transition Exposure',               ls:{sust:'Carbon Emissions',risk:'Carbon & Energy Cost Risk'}},
+    {k:'metric.direct_cost',                 d:'Direct Cost',                                     ls:{sust:'Scope 1 Emissions',risk:'Direct Operational Cost Risk'}},
+    {k:'metric.procurement_cost',            d:'Procurement Cost',                                ls:{sust:'Scope 2 Emissions',risk:'Procurement & Energy Cost Risk'}},
+    {k:'metric.value_chain_cost',            d:'Value Chain Cost',                                ls:{sust:'Scope 3 Emissions',risk:'Value Chain Cost Risk'}},
+    {k:'metric.regulatory_cost_exposure',    d:'Regulatory Cost Exposure',                        ls:{sust:'CSRD Compliance',risk:'Regulatory Breach Risk'}},
+    {k:'metric.talent_competitiveness',      d:'Talent Competitiveness',                          ls:{sust:'Diversity Metrics',risk:'Workforce Concentration Risk'}},
+    {k:'metric.strategic_commitment',        d:'Strategic Commitment',                            ls:{sust:'Net Zero / Sustainability Target',risk:'Commitment Breach Exposure'}},
+    {k:'metric.financial_obligation',        d:'Financial Obligation with Performance Condition', ls:{sust:'Green Bond / Sustainability-Linked Finance',risk:'Covenant-Linked Financial Instrument'}},
+    {k:'metric.operational_continuity_risk', d:'Operational Continuity Risk',                     ls:{sust:'Water Stress',risk:'Operational Disruption Risk'}},
+    {k:'metric.commitment_integrity_risk',   d:'Commitment Integrity Risk',                       ls:{sust:'Greenwashing Risk',risk:'Material Misstatement Risk'}},
+    {k:'metric.reporting_obligation',        d:'Reporting Obligation',                            ls:{sust:'ESG Framework',risk:'Disclosure Obligation'}},
+    {k:'metric.workforce_and_community_risk',d:'Workforce & Community Risk',                      ls:{sust:'Social Performance',risk:'Human Capital Risk'}},
+    {k:'metric.physical_asset_risk',         d:'Physical Asset Risk',                             ls:{sust:'Physical Climate Risk',risk:'Asset Impairment Risk'}},
+    {k:'metric.supply_chain_concentration',  d:'Supply Chain Concentration Risk',                 ls:{sust:'Supply Chain Sustainability Risk',risk:'Third-Party Concentration Risk'}},
+  ]},
+  {id:'documents', label:'Documents',           keys:[
+    {k:'document.intelligence_foundation',   d:'Intelligence Foundation Document',  ls:{sust:'Sustainability Report',risk:'Risk Intelligence Baseline'}},
+    {k:'document.daily_brief',               d:'Executive Intelligence Brief',       ls:{sust:'Daily ESG Intelligence Brief',risk:'Daily Risk Intelligence Brief'}},
+    {k:'document.board_narrative',           d:'Board Intelligence Narrative',       ls:{sust:'Board Sustainability Report',risk:'Board Risk Report'}},
+    {k:'document.resilience_pl',             d:'Resilience P&L',                    ls:{sust:'Sustainability Value at Risk Statement',risk:'Risk-Adjusted P&L'}},
+    {k:'document.regulatory_disclosure',     d:'Regulatory Disclosure Package',      ls:{sust:'BRSR / CSRD Disclosure',risk:'Regulatory Filing Package'}},
+    {k:'document.action_register',           d:'Action Register',                   ls:{}},
+  ]},
+  {id:'questions', label:'Business Questions',  keys:[
+    {k:'question.q1', d:'The Enterprise Pulse',                    ls:{sust:'The ESG Pulse',risk:'The Risk Pulse'}},
+    {k:'question.q2', d:'The Action Imperative',                   ls:{sust:'The ESG Action Imperative',risk:'The Risk Action Imperative'}},
+    {k:'question.q3', d:'The Money Question',                      ls:{sust:'The ESG Valuation Question',risk:'The Financial Risk Question'}},
+    {k:'question.q4', d:'The Threat Map',                          ls:{sust:'The ESG Threat Map',risk:'The Risk Register'}},
+    {k:'question.q5', d:'The Promise Tracker',                     ls:{sust:'The Commitment Tracker',risk:'The Breach Risk Tracker'}},
+    {k:'question.q6', d:'The Regulatory Cost Question',            ls:{sust:'The CSRD / Regulatory Readiness Question',risk:'The Regulatory Exposure Question'}},
+    {k:'question.q7', d:'The Operational Resilience Question',     ls:{sust:'The Operational Sustainability Question',risk:'The Business Continuity Question'}},
+    {k:'question.q8', d:'The Competitive Intelligence Question',   ls:{sust:'The ESG Competitive Position Question',risk:'The Competitive Risk Question'}},
+    {k:'question.q9', d:'The People & Culture Question',           ls:{sust:'The Social Capital Question',risk:'The Workforce Risk Question'}},
+    {k:'question.q10',d:'The Strategic Progress Question',         ls:{sust:'The Net Zero Progress Question',risk:'The Strategy Execution Risk Question'}},
+    {k:'question.q11',d:'The Stakeholder Landscape Question',      ls:{sust:'The Stakeholder Engagement Question',risk:'The Relationship Risk Question'}},
+    {k:'question.q12',d:'The Intelligence Integrity Question',     ls:{sust:'The Data Quality & Assurance Question',risk:'The Audit Readiness Question'}},
+  ]},
+  {id:'domains',   label:'Domains',             keys:[
+    {k:'domain.d1',d:'Financial Intelligence',                   ls:{sust:'Financial & ESG Intelligence',risk:'Financial Risk Intelligence'}},
+    {k:'domain.d2',d:'Enterprise Risk & Resilience',             ls:{sust:'ESG Risk & Resilience',risk:'Enterprise Risk Register'}},
+    {k:'domain.d3',d:'Operational Intelligence',                 ls:{sust:'Operational & Environmental Intelligence',risk:'Operational Risk Intelligence'}},
+    {k:'domain.d4',d:'Supplier & Ecosystem Intelligence',        ls:{sust:'Supply Chain Sustainability Intelligence',risk:'Third-Party Risk Intelligence'}},
+    {k:'domain.d5',d:'Value Chain Intelligence',                 ls:{sust:'Value Chain & Scope 3 Intelligence',risk:'Value Chain Risk Intelligence'}},
+    {k:'domain.d6',d:'Regulatory & Compliance Intelligence',     ls:{sust:'Regulatory & ESG Compliance Intelligence',risk:'Regulatory Breach Risk Intelligence'}},
+    {k:'domain.d7',d:'Competitive & Market Intelligence',        ls:{sust:'ESG Competitive Intelligence',risk:'Competitive Risk Intelligence'}},
+    {k:'domain.d8',d:'Workforce & Human Capital Intelligence',   ls:{sust:'Social & Workforce Intelligence',risk:'Human Capital Risk Intelligence'}},
+  ]},
+  {id:'screens',   label:'Screen Names',        keys:[
+    {k:'screen.s1', d:'Executive Home',                  ls:{sust:'ESG Executive Home',risk:'Risk Executive Home'}},
+    {k:'screen.s2', d:'Enterprise Health Map',           ls:{sust:'ESG Health Map',risk:'Risk Heat Map'}},
+    {k:'screen.s3', d:'Decision Center',                 ls:{sust:'ESG Decision Center',risk:'Risk Decision Center'}},
+    {k:'screen.s4', d:'Risk & Opportunity Center',       ls:{sust:'ESG Risk & Opportunity Center',risk:'Enterprise Risk Register'}},
+    {k:'screen.s5o',d:'The Priority',                    ls:{sust:'Priority ESG Actions',risk:'Priority Risk Actions'}},
+    {k:'screen.s6o',d:'The Execution',                   ls:{sust:'ESG Execution Status',risk:'Risk Mitigation Execution'}},
+    {k:'screen.s7o',d:'The Alignment',                   ls:{}},
+    {k:'screen.s8o',d:'The Pattern',                     ls:{}},
+    {k:'screen.s9o',d:'The Scenario',                    ls:{}},
+    {k:'screen.s10o',d:'The Governance',                 ls:{}},
+    {k:'screen.f1', d:'Enterprise Understanding Center', ls:{}},
+    {k:'screen.f2', d:'Intelligence Completion Center',  ls:{}},
+    {k:'screen.f3', d:'Evidence Intelligence Center',    ls:{}},
+  ]},
+  {id:'confidence',label:'Confidence Levels',   keys:[
+    {k:'confidence.verified',   d:'Verified',                         ls:{sust:'Assured',risk:'Confirmed'}},
+    {k:'confidence.retrieved',  d:'Retrieved',                        ls:{}},
+    {k:'confidence.inferred',   d:'Inferred',                         ls:{sust:'Estimated',risk:'Modelled'}},
+    {k:'confidence.unconfirmed',d:'Unconfirmed',                      ls:{sust:'Unverified',risk:'Unvalidated'}},
+    {k:'confidence.label',      d:'Confidence',                       ls:{}},
+    {k:'confidence.overall',    d:'Overall Intelligence Confidence',  ls:{}},
+  ]},
+  {id:'actions',   label:'Actions',             keys:[
+    {k:'action.category.immediate',    d:'Requires Executive Decision',    ls:{sust:'ESG Action Required',risk:'Escalated Risk — Decision Required'}},
+    {k:'action.category.monitor',      d:'Under Active Monitoring',         ls:{sust:'Sustainability Action In Progress',risk:'Risk Under Mitigation'}},
+    {k:'action.category.routed',       d:'Routed to Owner',                 ls:{sust:'Delegated — Sustainability Team',risk:'Delegated — Risk Owner'}},
+    {k:'action.category.resolved',     d:'Resolved',                        ls:{risk:'Risk Closed'}},
+    {k:'action.financial_consequence', d:'Financial Consequence',           ls:{sust:'Value at Risk',risk:'Financial Impact'}},
+    {k:'action.center.title',          d:'Action Center',                   ls:{sust:'ESG Action Center',risk:'Risk Action Center'}},
+    {k:'action.center.empty',          d:'No executive actions required.',  ls:{risk:'All risks within tolerance.'}},
+  ]},
+  {id:'financial', label:'Financial',           keys:[
+    {k:'financial.revenue_at_risk',        d:'Revenue at Risk',                ls:{}},
+    {k:'financial.capex_required',         d:'Capital Investment Required',    ls:{sust:'Transition CapEx Required',risk:'Risk Mitigation CapEx'}},
+    {k:'financial.penalty_exposure',       d:'Penalty Exposure',               ls:{sust:'Regulatory Penalty Exposure',risk:'Fine & Penalty Exposure'}},
+    {k:'financial.cost_of_capital_impact', d:'Cost of Capital Impact',         ls:{sust:'Green Finance Premium at Risk',risk:'Credit Rating Impact'}},
+    {k:'financial.ebitda_sensitivity',     d:'EBITDA Sensitivity',             ls:{sust:'EBITDA at Risk',risk:'EBITDA Impact Range'}},
+    {k:'financial.covenant_exposure',      d:'Covenant Exposure',              ls:{sust:'Performance Condition Risk',risk:'Covenant Breach Probability'}},
+    {k:'financial.total_exposure',         d:'Total Financial Exposure',       ls:{}},
+  ]},
+  {id:'idal',      label:'Intelligence Flow',  keys:[
+    {k:'idal.extract',  d:'Extract — Internal Documents',   ls:{}},
+    {k:'idal.retrieve', d:'Retrieve — External Sources',    ls:{}},
+    {k:'idal.infer',    d:'Infer — Combined Intelligence',  ls:{sust:'Estimate — Combined Data',risk:'Model — Risk Indicators'}},
+    {k:'idal.confirm',  d:'Confirm — Pending Review',       ls:{}},
+    {k:'idal.route',    d:'Routed to Named Owner',          ls:{risk:'Escalated to Risk Owner'}},
+    {k:'idal.ask',      d:'Requires Your Input',            ls:{}},
+  ]},
+  {id:'status',    label:'Status & States',    keys:[
+    {k:'status.intelligence_loading',d:'Retrieving intelligence…',            ls:{}},
+    {k:'status.no_data',             d:'No intelligence available.',          ls:{}},
+    {k:'status.gap_present',         d:'Intelligence gap — owner assigned',   ls:{risk:'Controlled risk — mitigation owner assigned'}},
+    {k:'status.gap_unowned',         d:'Intelligence gap — no owner',         ls:{risk:'Uncontrolled risk — assign owner'}},
+    {k:'status.all_clear',           d:'No gaps requiring attention.',        ls:{risk:'All risks within tolerance.'}},
+    {k:'status.new_intelligence',    d:'New intelligence available',          ls:{}},
+    {k:'status.escalated',           d:'Escalated',                           ls:{}},
+    {k:'status.resolved',            d:'Resolved',                            ls:{}},
+  ]},
+  {id:'ui',        label:'Interface Labels',   keys:[
+    {k:'ui.evidence',          d:'Evidence',                          ls:{}},
+    {k:'ui.financial_consequence',d:'Financial Consequence',         ls:{sust:'Value at Risk',risk:'Financial Impact'}},
+    {k:'ui.owner',             d:'Owner',                             ls:{risk:'Risk Owner'}},
+    {k:'ui.gap',               d:'Gap',                               ls:{sust:'Shortfall',risk:'Control Gap'}},
+    {k:'ui.trajectory',        d:'Trajectory',                        ls:{sust:'Trend',risk:'Direction of Travel'}},
+    {k:'ui.materiality',       d:'Materiality',                       ls:{sust:'Double Materiality',risk:'Financial Materiality'}},
+    {k:'ui.action_required',   d:'Action Required',                   ls:{risk:'Risk Escalation Required'}},
+    {k:'ui.no_action',         d:'No Executive Action Required',      ls:{sust:'No Action Required',risk:'Within Risk Tolerance'}},
+    {k:'ui.intelligence_gap',  d:'Intelligence Gap',                  ls:{sust:'Data Gap',risk:'Information Risk'}},
+    {k:'ui.last_updated',      d:'Intelligence current as of',        ls:{sust:'Data current as of',risk:'Last verified'}},
+    {k:'ui.high',              d:'High',                              ls:{risk:'High risk'}},
+    {k:'ui.medium',            d:'Medium',                            ls:{risk:'Medium risk'}},
+    {k:'ui.low',               d:'Low',                               ls:{risk:'Low risk'}},
+  ]},
+  {id:'roles',     label:'Role Names',         keys:[
+    {k:'role.ceo',     d:'CEO · MD',                ls:{}},
+    {k:'role.cfo',     d:'CFO · Finance',           ls:{}},
+    {k:'role.cso',     d:'CSO · Sustainability',    ls:{}},
+    {k:'role.cro',     d:'CRO · Risk',              ls:{}},
+    {k:'role.coo',     d:'COO · Operations',        ls:{}},
+    {k:'role.owner',   d:'Domain Owner',            ls:{}},
+    {k:'role.analyst', d:'Intelligence Analyst',    ls:{}},
+  ]},
+];
+
+const TOTAL_KEYS=NS_GROUPS.reduce((s,ns)=>s+ns.keys.length,0);
+const ESG_GUARD=['esg','carbon emission','net zero','scope 1','scope 2','scope 3',
+  'sustainability report','csrd','green bond','diversity metric','greenwashing'];
+
+// Override stores
+const masterOv={};
+const lensOv={exec:{},sust:{},risk:{}};
+
+// Role state per lens
+const ROLES=[
+  {id:'ceo',    n:'CEO · MD',              d:'Full platform access',              locked:true},
+  {id:'cfo',    n:'CFO · Finance',         d:'Financial intelligence primary'},
+  {id:'cso',    n:'CSO · Sustainability',  d:'Sustainability intelligence primary'},
+  {id:'cro',    n:'CRO · Risk',            d:'Risk intelligence primary'},
+  {id:'coo',    n:'COO · Operations',      d:'Operational intelligence'},
+  {id:'owner',  n:'Domain Owner',          d:'Assigned intelligence domains'},
+  {id:'analyst',n:'Intelligence Analyst',  d:'Evidence & data management'},
+];
+const roleState={
+  exec:{ceo:true,cfo:true,coo:true,owner:true},
+  sust:{ceo:true,cso:true,analyst:true},
+  risk:{ceo:true,cro:true,cfo:true},
+};
+const LENS_META={
+  exec:{n:'Executive · Financial', aud:'CEO · CFO · COO · Board',             accent:'var(--gold)', lensId:'exec'},
+  sust:{n:'Sustainability',         aud:'CSO · Sustainability Team · IR',       accent:'var(--teal)', lensId:'sust'},
+  risk:{n:'Risk',                   aud:'CRO · Risk Team · Audit Committee',    accent:'var(--blue)', lensId:'risk'},
+};
+
+let activeEdLens='exec';
+let activeVmNs=NS_GROUPS[0].id;
+let activeLpNs=NS_GROUPS[0].id;
+let changeCount=0;
+
+// ── THREE-LAYER RESOLUTION ────────────────────────────────────────────────
+// Resolves a term key for a given lens — mirrors vocab.js t() function
+function resolve(key, lensId){
+  // Layer 1: lens-specific override (from lensOv)
+  if(lensOv[lensId]&&lensOv[lensId][key]) return {val:lensOv[lensId][key], src:'lens'};
+  // Layer 2: master override (org-wide)
+  if(masterOv[key]) return {val:masterOv[key], src:'master'};
+  // Layer 3: platform default — check lens translation first, then default
+  const ns=NS_GROUPS.flatMap(n=>n.keys).find(k=>k.k===key);
+  if(!ns) return {val:key, src:'platform'};
+  if(ns.ls&&ns.ls[lensId]) return {val:ns.ls[lensId], src:'platform-lens'};
+  return {val:ns.d, src:'platform'};
+}
+
+// ── VOCABULARY MASTER ─────────────────────────────────────────────────────
+function buildVmNsRail(){
+  document.getElementById('vmNsRail').innerHTML=NS_GROUPS.map(ns=>{
+    const ct=ns.keys.filter(k=>masterOv[k.k]).length;
+    const on=ns.id===activeVmNs;
+    return `<div class="v-ns-item${on?' on':''}" onclick="selectVmNs('${ns.id}',this)">
+      <div class="v-ns-l">${ns.label}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        ${ct>0?`<span class="v-ns-ct">${ct}</span>`:''}
+        <div class="v-ns-dot${ct>0?' has':''}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectVmNs(id,el){
+  activeVmNs=id;
+  document.querySelectorAll('#vmNsRail .v-ns-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+  buildVmTable(id,false);
+}
+
+function buildVmTable(nsId,showAll){
+  const ns=NS_GROUPS.find(n=>n.id===nsId); if(!ns) return;
+  const LIMIT=7;
+  const items=showAll?ns.keys:ns.keys.slice(0,LIMIT);
+  let html=`<table class="vt"><thead class="vt-h"><tr>
+    <th class="c-platform">Platform default</th>
+    <th class="c-org">Your organisation — all lenses</th>
+  </tr></thead><tbody>`;
+  items.forEach(item=>{
+    const val=masterOv[item.k]||'';
+    const wid='mw-'+item.k.replace(/\./g,'-');
+    html+=`<tr class="vtr${val?' ov':''}">
+      <td class="vtd">${item.d}</td>
+      <td class="vtc">
+        <input class="vti${val?' ov':''}" placeholder="Using platform default" value="${val}"
+          oninput="handleMv(this,'${item.k}')" onblur="chkEsg(this,'${wid}')">
+        <div class="vt-warn" id="${wid}">⚠ This label appears on executive screens. Ensure it serves your CEO and CFO view.</div>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  if(!showAll&&ns.keys.length>LIMIT)
+    html+=`<div class="v-show-more" onclick="buildVmTable('${nsId}',true)">Show ${ns.keys.length-LIMIT} more</div>`;
+  document.getElementById('vmContent').innerHTML=html;
+}
+
+function handleMv(input,key){
+  const val=input.value.trim();
+  if(val){masterOv[key]=val;input.classList.add('ov');input.closest('tr').classList.add('ov')}
+  else{delete masterOv[key];input.classList.remove('ov');input.closest('tr').classList.remove('ov')}
+  updateVmStats();buildVmNsRail();markChanged();
+  // Refresh Lens Preview if it is currently open — so resolved values update live
+  refreshLpIfOpen();
+}
+
+function refreshLpIfOpen(){
+  const overlay=document.getElementById('edOverlay');
+  const previewPanel=document.getElementById('edp-preview');
+  if(overlay&&overlay.classList.contains('open')&&
+     previewPanel&&previewPanel.classList.contains('on')){
+    buildLpTable(activeLpNs,activeEdLens,false);
+    buildLpNsRail(activeEdLens);
+  }
+}
+
+function chkEsg(input,wid){
+  const v=input.value.trim().toLowerCase();
+  const isEsg=ESG_GUARD.some(t=>v.includes(t));
+  const el=document.getElementById(wid);
+  if(el) el.classList.toggle('on',isEsg&&v.length>0);
+}
+
+function updateVmStats(){
+  const count=Object.keys(masterOv).length;
+  const mc=document.getElementById('vmCount');
+  const md=document.getElementById('vmDefault');
+  if(mc) mc.textContent=count;
+  if(md) md.textContent=TOTAL_KEYS-count;
+}
+
+function resetMaster(){
+  if(!confirm('Reset all Vocabulary Master overrides to platform defaults?')) return;
+  Object.keys(masterOv).forEach(k=>delete masterOv[k]);
+  buildVmTable(activeVmNs,false);buildVmNsRail();updateVmStats();markChanged();
+}
+
+// ── LENS EDITOR ───────────────────────────────────────────────────────────
+function openEditor(lensId){
+  activeEdLens=lensId;
+  const m=LENS_META[lensId];
+  document.getElementById('edBar').style.background=m.accent;
+  document.getElementById('edName').textContent=m.n;
+  document.getElementById('edAud').textContent=m.aud;
+  buildRoleGrid(lensId);
+  // Reset to Role Assignment tab
+  document.querySelectorAll('.edt').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.edp').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.edt')[0].classList.add('on');
+  document.getElementById('edp-roles').classList.add('on');
+  // Lock main scroll so only the overlay scrolls
+  document.getElementById('mainWrap').style.overflow='hidden';
+  document.getElementById('edOverlay').classList.add('open');
+}
+
+function closeEditor(){
+  document.getElementById('edOverlay').classList.remove('open');
+  // Restore main scroll
+  document.getElementById('mainWrap').style.overflow='';
+}
+
+function showEdTab(tab,el){
+  document.querySelectorAll('.edt').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.edp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('edp-'+tab).classList.add('on');
+  if(tab==='preview'){
+    activeLpNs=NS_GROUPS[0].id;
+    buildLpNsRail(activeEdLens);
+    buildLpTable(NS_GROUPS[0].id,activeEdLens,false);
+  }
+}
+
+// ── ROLE GRID ─────────────────────────────────────────────────────────────
+function buildRoleGrid(lensId){
+  const state=roleState[lensId]||{};
+  const grid=document.getElementById('raGrid');
+  grid.innerHTML=ROLES.map(r=>{
+    const on=!!state[r.id];
+    return `<div class="ra-row">
+      <div><div class="ra-n">${r.n}</div><div class="ra-d">${r.d}</div></div>
+      <div class="ra-st">${on?'Has access':''}</div>
+      <div class="ra-tgl${on?' on':''}${r.locked?' locked':''}" id="rtgl-${lensId}-${r.id}"></div>
+    </div>`;
+  }).join('');
+  ROLES.forEach(r=>{
+    if(r.locked) return;
+    const el=document.getElementById('rtgl-'+lensId+'-'+r.id);
+    if(el) el.addEventListener('click',()=>toggleRole(lensId,r.id));
+  });
+}
+
+function toggleRole(lensId,roleId){
+  if(!roleState[lensId]) roleState[lensId]={};
+  roleState[lensId][roleId]=!roleState[lensId][roleId];
+  const tgl=document.getElementById('rtgl-'+lensId+'-'+roleId);
+  if(tgl) tgl.classList.toggle('on');
+  const row=tgl?tgl.closest('.ra-row'):null;
+  const st=row?row.querySelector('.ra-st'):null;
+  if(st) st.textContent=roleState[lensId][roleId]?'Has access':'';
+  const count=Object.values(roleState[lensId]).filter(Boolean).length;
+  const el=document.getElementById('stat-'+lensId+'-roles');
+  if(el) el.textContent=count;
+  markChanged();
+}
+
+// ── LENS PREVIEW (three-column) ───────────────────────────────────────────
+function buildLpNsRail(lensId){
+  document.getElementById('lpNsRail').innerHTML=NS_GROUPS.map(ns=>{
+    const hasLensOv=ns.keys.some(k=>lensOv[lensId]&&lensOv[lensId][k.k]);
+    const hasMasterOv=ns.keys.some(k=>masterOv[k.k]);
+    const hasAny=hasLensOv||hasMasterOv;
+    const on=ns.id===activeLpNs;
+    return `<div class="v-ns-item${on?' on':''}" onclick="selectLpNs('${ns.id}','${lensId}',this)">
+      <div class="v-ns-l">${ns.label}</div>
+      <div class="v-ns-dot${hasAny?' has':''}"></div>
+    </div>`;
+  }).join('');
+}
+
+function selectLpNs(nsId,lensId,el){
+  activeLpNs=nsId;
+  document.querySelectorAll('#lpNsRail .v-ns-item').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+  buildLpTable(nsId,lensId,false);
+}
+
+function buildLpTable(nsId,lensId,showAll){
+  const ns=NS_GROUPS.find(n=>n.id===nsId); if(!ns) return;
+  const LIMIT=7;
+  const items=showAll?ns.keys:ns.keys.slice(0,LIMIT);
+  let html=`<table class="vt"><thead class="vt-h"><tr>
+    <th class="c-platform">Platform default</th>
+    <th class="c-master">Master override</th>
+    <th class="c-resolved">This lens resolves to <span style="font-weight:400;opacity:.6;text-transform:none;letter-spacing:0">— editable for lens-specific exceptions</span></th>
+  </tr></thead><tbody>`;
+  items.forEach(item=>{
+    const masterVal=masterOv[item.k]||'';
+    const r=resolve(item.k,lensId);
+    const isMasterChanged=!!masterVal;
+    const lensSpecific=(lensOv[lensId]&&lensOv[lensId][item.k])||'';
+    // Resolved display: what this lens actually shows right now
+    const resolvedDisplay=r.val;
+    const resolvedSrc=r.src; // 'lens'|'master'|'platform-lens'|'platform'
+    const resolvedColour=
+      resolvedSrc==='lens'    ? 'color:var(--purple);font-weight:500' :
+      resolvedSrc==='master'  ? 'color:var(--purple);font-weight:500' :
+      resolvedSrc==='platform-lens' ? 'color:var(--teal);font-weight:500' :
+      'color:var(--t1)';
+    const wid='lpw-'+item.k.replace(/\./g,'-');
+    html+=`<tr class="vtr${(isMasterChanged||lensSpecific)?' ov':''}">
+      <td class="vtd">${item.d}</td>
+      <td class="vtd${isMasterChanged?' changed':''}">${masterVal||'<span style="color:var(--t3);font-style:italic">—</span>'}</td>
+      <td class="vtc">
+        <div style="${resolvedColour};font-size:11px;padding:4px 0 2px 0;line-height:1.3"
+             id="lp-resolved-${item.k.replace(/\./g,'-')}">${resolvedDisplay}</div>
+        <input class="vti${lensSpecific?' ov':''}"
+          style="margin-top:4px;font-size:10px"
+          placeholder="Override for this lens only…"
+          value="${lensSpecific}"
+          oninput="handleLv(this,'${item.k}','${lensId}')"
+          onblur="chkEsg(this,'${wid}')">
+        <div class="vt-warn" id="${wid}">⚠ This label appears on executive screens.</div>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  if(!showAll&&ns.keys.length>LIMIT)
+    html+=`<div class="v-show-more" onclick="buildLpTable('${nsId}','${lensId}',true)">Show ${ns.keys.length-LIMIT} more</div>`;
+  document.getElementById('lpContent').innerHTML=html;
+}
+
+function handleLv(input,key,lensId){
+  const val=input.value.trim();
+  if(!lensOv[lensId]) lensOv[lensId]={};
+  if(val){lensOv[lensId][key]=val;input.classList.add('ov');input.closest('tr').classList.add('ov')}
+  else{delete lensOv[lensId][key];input.classList.remove('ov');input.closest('tr').classList.remove('ov')}
+  // Update the resolved display cell immediately — no rebuild needed
+  const resolvedId='lp-resolved-'+key.replace(/\./g,'-');
+  const resolvedEl=document.getElementById(resolvedId);
+  if(resolvedEl){
+    const r=resolve(key,lensId);
+    resolvedEl.textContent=r.val;
+    const isLensOv=r.src==='lens';
+    const isMasterOv=r.src==='master';
+    const isLensTrans=r.src==='platform-lens';
+    resolvedEl.style.color=isLensOv||isMasterOv?'var(--purple)':isLensTrans?'var(--teal)':'var(--t1)';
+    resolvedEl.style.fontWeight=(isLensOv||isMasterOv||isLensTrans)?'500':'400';
+  }
+  const count=Object.keys(lensOv[lensId]).length;
+  const el=document.getElementById('stat-'+lensId+'-ov');
+  if(el) el.textContent=count;
+  markChanged();
+}
+
+// ── ADD LENS MODAL ────────────────────────────────────────────────────────
+let selSrcId='defaults';
+function openModal(){document.getElementById('addModal').classList.add('open')}
+function closeModal(){document.getElementById('addModal').classList.remove('open')}
+function selSrc(el,id){
+  document.querySelectorAll('.mso').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');selSrcId=id;
+}
+function createLens(){
+  const name=document.getElementById('newName').value.trim();
+  if(!name){document.getElementById('newName').focus();return}
+  const id='custom_'+Date.now();
+  LENS_META[id]={n:name,aud:'No roles assigned yet',accent:'var(--purple)',lensId:id};
+  roleState[id]={};lensOv[id]={};
+  const grid=document.getElementById('customGrid');
+  const card=document.createElement('div');
+  card.className='lc';card.id='lc-'+id;
+  card.innerHTML=`
+    <div class="lc-bar custom"></div>
+    <div class="lc-name">${name}</div>
+    <div class="lc-aud">No roles assigned yet</div>
+    <div class="lc-stats">
+      <div class="lcs"><div class="lcs-v" id="stat-${id}-roles">0</div><div class="lcs-l">Roles</div></div>
+      <div class="lcs"><div class="lcs-v" id="stat-${id}-ov">0</div><div class="lcs-l">Lens overrides</div></div>
+    </div>
+    <div class="lc-roles"><span class="lct" style="color:var(--t3)">No roles yet</span></div>
+    <div class="lc-foot">
+      <div></div>
+      <div class="lc-btns">
+        <button class="btn sm p" onclick="openEditor('${id}')">Edit</button>
+        <button class="btn sm danger" onclick="deleteLens('${id}')">Delete</button>
+      </div>
+    </div>`;
+  grid.appendChild(card);
+  document.getElementById('customSection').style.display='block';
+  closeModal();document.getElementById('newName').value='';
+  openEditor(id);markChanged();
+}
+
+function deleteLens(id){
+  if(!confirm('Delete this lens? Role assignments and overrides will be removed.')) return;
+  const card=document.getElementById('lc-'+id);if(card) card.remove();
+  delete LENS_META[id];delete roleState[id];delete lensOv[id];
+  if(!document.getElementById('customGrid').children.length)
+    document.getElementById('customSection').style.display='none';
+  markChanged();
+}
+
+// ── CHANGE TRACKING ───────────────────────────────────────────────────────
+// Snapshot taken before first change — restored on Discard
+let _snapshot = null;
+
+function takeSnapshot(){
+  _snapshot = {
+    masterOv: JSON.parse(JSON.stringify(masterOv)),
+    lensOv:   JSON.parse(JSON.stringify(lensOv)),
+    roleState: JSON.parse(JSON.stringify(roleState)),
+    orgDefault: document.getElementById('obVal').textContent,
+  };
+}
+
+function markChanged(){
+  if(changeCount === 0) takeSnapshot(); // Snapshot state before first change
+  changeCount++;
+  document.getElementById('saveBar').classList.add('on');
+  document.getElementById('sbMsg').textContent=changeCount+(changeCount===1?' change':' changes');
+}
+
+function discardAll(){
+  if(!_snapshot) { changeCount=0; document.getElementById('saveBar').classList.remove('on'); return; }
+  // Restore master overrides
+  Object.keys(masterOv).forEach(k=>delete masterOv[k]);
+  Object.assign(masterOv, _snapshot.masterOv);
+  // Restore lens overrides
+  Object.keys(lensOv).forEach(k=>delete lensOv[k]);
+  Object.keys(_snapshot.lensOv).forEach(k=>{ lensOv[k]=JSON.parse(JSON.stringify(_snapshot.lensOv[k])); });
+  // Restore role state
+  Object.keys(roleState).forEach(k=>delete roleState[k]);
+  Object.keys(_snapshot.roleState).forEach(k=>{ roleState[k]=JSON.parse(JSON.stringify(_snapshot.roleState[k])); });
+  // Restore org default display
+  document.getElementById('obVal').textContent=_snapshot.orgDefault;
+  document.querySelectorAll('.ob-opt').forEach(o=>{
+    o.classList.toggle('sel', o.textContent===_snapshot.orgDefault);
+  });
+  // Rebuild visible surfaces
+  buildVmNsRail();
+  buildVmTable(activeVmNs, false);
+  updateVmStats();
+  // Reset
+  _snapshot=null;
+  changeCount=0;
+  document.getElementById('saveBar').classList.remove('on');
+}
+
+function saveAll(){
+  document.getElementById('vmSaved').textContent='Just now';
+  _snapshot=null; // Committed — clear snapshot
+  changeCount=0;
+  document.getElementById('saveBar').classList.remove('on');
+  showToast();
+}
+function showToast(){
+  const t=document.getElementById('toast');
+  t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(function init(){
+  buildVmNsRail();
+  buildVmTable(NS_GROUPS[0].id,false);
+  updateVmStats();
+})();
+</script>
+</body>
+</html>

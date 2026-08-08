@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CorpStage 360 — Payment & Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:20px;}
+.card{display:flex;width:1000px;min-height:700px;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 24px rgba(0,0,0,0.07);}
+.L{width:30%;background:#0f3d25;padding:36px 30px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:8px;margin-bottom:32px;}
+.lm{width:28px;height:28px;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0f3d25;}
+.ln{color:#fff;font-size:14px;font-weight:500;}
+.step{display:flex;gap:11px;padding-bottom:20px;position:relative;}
+.step:not(:last-child)::after{content:'';position:absolute;left:10px;top:22px;width:1px;height:calc(100% - 10px);background:rgba(255,255,255,0.07);}
+.sn{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:500;flex-shrink:0;}
+.sn.done{background:#2A854F;color:#fff;}
+.sn.active{background:#fff;color:#0f3d25;}
+.sn.pending{background:rgba(255,255,255,0.07);color:#6ee7b7;}
+.stit{font-size:11.5px;font-weight:500;margin-top:2px;}
+.stit.done{color:#6ee7b7;}
+.stit.active{color:#d1fae5;}
+.stit.dim{color:#2d6645;}
+.ssub{font-size:10.5px;color:#2d6645;margin-top:1px;}
+.lfoot{color:#1e4d32;font-size:10.5px;}
+.R{flex:1;padding:36px 42px;background:#fff;overflow-y:auto;}
+.ptitle{font-size:19px;font-weight:600;color:#0f172a;letter-spacing:-0.4px;margin-bottom:4px;}
+.psub{font-size:13px;color:#64748b;margin-bottom:24px;line-height:1.5;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;margin-top:6px;}
+.plan-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;margin-bottom:16px;}
+.plan-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;font-size:13px;}
+.plan-row:last-child{margin-bottom:0;}
+.pl{color:#64748b;}
+.pv{color:#0f172a;font-weight:500;text-align:right;}
+.plan-divider{height:1px;background:#e2e8f0;margin:12px 0;}
+.plan-total{display:flex;justify-content:space-between;align-items:center;}
+.pt-label{font-size:14px;font-weight:600;color:#0f172a;}
+.pt-sub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.pt-amount{font-size:26px;font-weight:600;color:#1a5c37;letter-spacing:-0.5px;}
+.admin-note{display:flex;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 13px;margin-bottom:18px;font-size:12px;color:#14532d;line-height:1.5;}
+.admin-note i{flex-shrink:0;font-size:14px;color:#16a34a;margin-top:1px;}
+.pwd-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:15px 16px;margin-bottom:16px;}
+.pwd-title{font-size:12.5px;font-weight:500;color:#0f172a;margin-bottom:12px;}
+.f{margin-bottom:12px;}
+.f:last-child{margin-bottom:0;}
+.f label{font-size:11.5px;font-weight:500;color:#0f172a;display:block;margin-bottom:4px;}
+.f input{width:100%;height:36px;padding:0 11px;font-size:13px;font-family:'Inter',sans-serif;border:1px solid #e2e8f0;border-radius:7px;background:#fff;color:#0f172a;outline:none;}
+.f input:focus{border-color:#2A854F;box-shadow:0 0 0 3px rgba(42,133,79,0.08);}
+.f input::placeholder{color:#94a3b8;font-size:12.5px;}
+.pay-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.ptab{flex:1;padding:9px;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;color:#64748b;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Inter',sans-serif;background:#fff;transition:all .15s;}
+.ptab:hover{border-color:#2A854F;}
+.ptab.active{border:1.5px solid #2A854F;background:rgba(42,133,79,0.04);color:#1a5c37;font-weight:500;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.s2{grid-column:1/-1;}
+.tc-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:#64748b;}
+.tc-row input[type=checkbox]{width:15px;height:15px;accent-color:#2A854F;cursor:pointer;}
+.tc-row a{color:#2A854F;cursor:pointer;}
+.btn{width:100%;height:40px;background:#1a5c37;color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s;}
+.btn:hover{background:#0f3d25;}
+.sec-row{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:14px;}
+.si{display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="L">
+    <div>
+      <div class="logo"><div class="lm">CS</div><span class="ln">CorpStage 360</span></div>
+      <div class="step"><div class="sn done"><i class="ti ti-check" style="font-size:10px;"></i></div><div><div class="stit done">Profile submitted</div><div class="ssub">Request sent</div></div></div>
+      <div class="step"><div class="sn done"><i class="ti ti-check" style="font-size:10px;"></i></div><div><div class="stit done">Admin approved</div><div class="ssub">Request approved</div></div></div>
+      <div class="step"><div class="sn active">3</div><div><div class="stit active">Payment & password</div><div class="ssub">Complete setup to continue</div></div></div>
+      <div class="step"><div class="sn pending">4</div><div><div class="stit dim">Invite your team</div><div class="ssub">Add users to workspace</div></div></div>
+      <div class="step"><div class="sn pending">5</div><div><div class="stit dim">Access workspace</div><div class="ssub">Begin your ESG journey</div></div></div>
+    </div>
+    <div class="lfoot">© 2025 CorpStage Pte. Ltd. · Singapore</div>
+  </div>
+  <div class="R">
+    <div class="ptitle">Complete your setup</div>
+    <div class="psub">Set your password and complete payment to activate your CorpStage 360 workspace</div>
+    <div class="slabel">Your plan summary</div>
+    <div class="plan-card">
+      <div class="plan-row"><span class="pl">Account type</span><span class="pv">Enterprise Entity</span></div>
+      <div class="plan-row"><span class="pl">Plan</span><span class="pv">CorpStage 360 — Professional</span></div>
+      <div class="plan-row"><span class="pl">Licences approved</span><span class="pv">10 user licences</span></div>
+      <div class="plan-row"><span class="pl">Per licence</span><span class="pv">$500 / user / year</span></div>
+      <div class="plan-row"><span class="pl">Licence period</span><span class="pv">01 Jun 2025 → 31 May 2026</span></div>
+      <div class="plan-divider"></div>
+      <div class="plan-total">
+        <div><div class="pt-label">Total due today</div><div class="pt-sub">Annual subscription · set by CorpStage admin</div></div>
+        <div class="pt-amount">$5,000</div>
+      </div>
+    </div>
+    <div class="admin-note"><i class="ti ti-info-circle"></i>This amount has been set by the CorpStage admin based on your approved licences and plan. Contact support if you have any questions.</div>
+    <div class="slabel">Set your password</div>
+    <div class="pwd-box">
+      <div class="f"><label>New password</label><input type="password" placeholder="Create a strong password (min 8 characters)"/></div>
+      <div class="f"><label>Confirm password</label><input type="password" placeholder="Re-enter your password"/></div>
+    </div>
+    <div class="slabel">Billing details</div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="f s2"><label>Billing address</label><input type="text" placeholder="Street address"/></div>
+      <div class="f"><label>City</label><input type="text" placeholder="City"/></div>
+      <div class="f"><label>Postal code</label><input type="text" placeholder="Postal code"/></div>
+      <div class="f s2"><label>GST / VAT number (for invoice)</label><input type="text" placeholder="GST123456789 (optional)"/></div>
+    </div>
+    <div class="slabel">Payment method</div>
+    <div class="pay-tabs">
+      <button class="ptab active" onclick="setTab(this)"><i class="ti ti-credit-card" style="font-size:14px;"></i> Card</button>
+      <button class="ptab" onclick="setTab(this)"><i class="ti ti-building-bank" style="font-size:14px;"></i> Bank transfer</button>
+      <button class="ptab" onclick="setTab(this)"><i class="ti ti-file-invoice" style="font-size:14px;"></i> Invoice</button>
+    </div>
+    <div class="g2" style="margin-bottom:12px;">
+      <div class="f s2"><label>Cardholder name</label><input type="text" placeholder="Name on card"/></div>
+      <div class="f s2"><label>Card number</label><input type="text" placeholder="1234 5678 9012 3456"/></div>
+      <div class="f"><label>Expiry date</label><input type="text" placeholder="MM / YY"/></div>
+      <div class="f"><label>CVV</label><input type="text" placeholder="123"/></div>
+    </div>
+    <div class="tc-row"><input type="checkbox"/> I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a></div>
+    <button class="btn"><i class="ti ti-lock" style="font-size:14px;"></i> Complete payment & activate workspace</button>
+    <div class="sec-row">
+      <span class="si"><i class="ti ti-shield-check" style="font-size:12px;"></i> 256-bit SSL</span>
+      <span class="si"><i class="ti ti-lock" style="font-size:12px;"></i> PCI compliant</span>
+      <span class="si"><i class="ti ti-refresh" style="font-size:12px;"></i> Secure gateway</span>
+    </div>
+  </div>
+</div>
+<script>
+function setTab(el){document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));el.classList.add('active');}
+</script>
+</body>
+</html>
