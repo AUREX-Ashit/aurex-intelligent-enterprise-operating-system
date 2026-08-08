@@ -4,8 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import require_platform_admin
+from dependencies import enforce_domain_permission, get_current_claims, require_platform_admin
 from models.database import db_manager
+from models.delegation_policy import DelegationScopeType
+from models.domain_permission import DomainPermissionLevel
 from repositories.delegation_policy_repository import DelegationPolicyRepository
 from repositories.domain_repository import DomainRepository
 from repositories.organization_repository import OrganizationRepository
@@ -66,22 +68,30 @@ async def get_authorization_policy_conflict_service(
     summary="Establish a new Delegation Policy",
     description=(
         "WP-02 Business Activity: Establish Delegation Policy (C-003), "
-        "realizing PE-001-C003's ERB-C003-01 / EX-C003-04. Requires the "
-        "PLATFORM_ADMIN role (interim gate, mirroring BA-01/BA-02/BA-03 — "
-        "confirmed Corporate Admin/Domain Owner authority is not yet "
-        "implementable, tracked as technical debt). Declares exactly one "
-        "delegation_type and exactly one scope_type (ORGANIZATION/DOMAIN/"
-        "OBJECT/EVENT, URA-001-89); an ambiguous, dual-stated, or "
-        "incomplete scope is rejected with 422. Governs future delegation "
-        "instances (out of this capability's own scope) — never "
-        "establishes a specific delegator/delegatee pairing itself. "
-        "Rejects an unknown Organization or Domain with 404."
+        "realizing PE-001-C003's ERB-C003-01 / EX-C003-04. For a DOMAIN-"
+        "scoped Delegation Policy, requires an active DomainPermission "
+        "grant of ADMIN on the target Domain (URA-001-45 Domain Owner "
+        "authority, realized via the Authorization Runtime Engine per "
+        "WP-13 — the same mechanism `establish_domain_permission`/"
+        "`establish_approval_authority` use; `TD-024`'s own interim "
+        "PLATFORM_ADMIN-only gate remains a bypass, never narrowed). For "
+        "ORGANIZATION, OBJECT, or EVENT scope, the interim "
+        "PLATFORM_ADMIN-only gate is unchanged — URA-001-32 Corporate "
+        "Admin authority remains unmodeled (`TD-024`, `TD-021`'s own "
+        "ADR-002 root cause), and no authority is named anywhere for "
+        "OBJECT or EVENT scope. Declares exactly one delegation_type and "
+        "exactly one scope_type (ORGANIZATION/DOMAIN/OBJECT/EVENT, "
+        "URA-001-89); an ambiguous, dual-stated, or incomplete scope is "
+        "rejected with 422. Governs future delegation instances (out of "
+        "this capability's own scope) — never establishes a specific "
+        "delegator/delegatee pairing itself. Rejects an unknown "
+        "Organization or Domain with 404."
     ),
     responses={
         201: {"description": "Delegation Policy established."},
         400: {"description": "Missing or malformed Authorization header."},
         401: {"description": "Access token invalid or expired."},
-        403: {"description": "Caller does not hold the PLATFORM_ADMIN role."},
+        403: {"description": "Caller does not hold PLATFORM_ADMIN; for DOMAIN scope, an active ADMIN-level DomainPermission grant on the target Domain also satisfies this."},
         404: {"description": "The target Organization or Domain does not exist."},
         422: {"description": "Invalid request (e.g., scope_type's required anchor missing, or an anchor supplied for the wrong scope_type)."},
     },
@@ -89,8 +99,16 @@ async def get_authorization_policy_conflict_service(
 async def establish_delegation_policy(
     request: EstablishDelegationPolicyRequest,
     delegation_policy_service: Annotated[DelegationPolicyService, Depends(get_delegation_policy_service)],
-    claims: Annotated[dict, Depends(require_platform_admin)],
+    claims: Annotated[dict, Depends(get_current_claims)],
+    session: Annotated[AsyncSession, Depends(db_manager.get_session)],
 ) -> DelegationPolicyResponse:
+    if request.scope_type == DelegationScopeType.DOMAIN:
+        await enforce_domain_permission(claims, session, request.domain_id, DomainPermissionLevel.ADMIN)
+    elif claims.get("role_code") != "PLATFORM_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Establishing an ORGANIZATION, OBJECT, or EVENT-scoped Delegation Policy requires the PLATFORM_ADMIN role.",
+        )
     delegation_policy = await delegation_policy_service.establish(request, actor_id=claims.get("person_id"))
     return DelegationPolicyResponse.model_validate(delegation_policy)
 
