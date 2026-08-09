@@ -1,4 +1,4 @@
-AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.2)
+AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.3)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -268,7 +268,7 @@ DOCUMENT VERSION HISTORY
     0 other tables altered.
     Final verified total: 150 distinct tables, 109 RLS policies — net
     +1/+1 from v7.0.
-  v7.2 (this version): AMD-015 applied — Prompt/Model Configuration
+  v7.2: AMD-015 applied — Prompt/Model Configuration
     Reconciliation. Closes the `llm_prompt_registry`/`reasoning_engine_
     registry` duplicate `ENTERPRISE-AI-ARCHITECTURE-AUDIT.md` §4/§6.6
     identified, per Release A2's own Repository Owner decision
@@ -283,6 +283,29 @@ DOCUMENT VERSION HISTORY
     PURPOSE comment only. See AMD-015 CHANGELOG (below) for full detail.
     Final verified total: 150 distinct tables, 109 RLS policies —
     unchanged from v7.1 (no structural change).
+  v7.3 (this version): AMD-016 applied — Enterprise Knowledge Graph
+    Relationship Tenant Boundary. Per `ADR-023` and WP-14/BA-05's own
+    Architectural Decision Assessment, `enterprise_knowledge_graph_
+    registry` (AMD-012, LOCKED) gains an explicit, nullable
+    `organization_id UUID REFERENCES organization_master(organization_id)`
+    column, an index, and an RLS policy reusing the existing nullable-
+    tenant-boundary pattern already established by `vector_index_
+    registry`/`ai_tool_registry`/`discovery_provider_registry`
+    (`organization_id IS NULL OR organization_id = current_setting(
+    'app.organization_id')::uuid`) — no new isolation mechanism
+    introduced. Governing business rules BR-1 through BR-4 (dual-entity
+    match required when both endpoints are Organization-scoped; inherit
+    when exactly one is; NULL when neither is; cross-organization
+    relationships rejected absent an explicit sharing mechanism) are
+    recorded as column documentation only — enforcement is a Technical
+    Design/implementation concern for BA-05, not decided by this
+    amendment. No Alembic migration is created by this amendment; the
+    column is a documented, not-yet-migrated architectural addition
+    until BA-05 implementation. `cross_domain_relationship_registry`'s
+    identical gap is explicitly out of scope, left open. Net addition:
+    0 new tables, 1 column added to an existing table, 1 new RLS policy.
+    Final verified total: 150 distinct tables, 110 RLS policies — net
+    +0/+1 from v7.2.
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -3160,6 +3183,40 @@ CREATE TABLE enterprise_knowledge_graph_registry (
     graph_engine_reference VARCHAR(255)  -- AMD-012 — Neo4j relationship identifier this row indexes; null until the Knowledge Graph Runtime (RTA-001 §12) synchronizes this row
 );
 
+-- AMD-016 (ADR-023): enterprise_knowledge_graph_registry's own tenant boundary.
+-- SD-002-108 requires every business object to carry an explicit, non-optional
+-- tenant identifier as part of its own Universal Identity — "an object with an
+-- ambiguous or inferred tenant boundary is an invalid object state, not an
+-- edge case to be resolved at query time." Deferred as a separate ALTER TABLE,
+-- consistent with this document's own precedent for amending a LOCKED table
+-- (see node_permission_assignment's deferred ALTER TABLE ADD CONSTRAINT, v6.0/
+-- v6.1) rather than editing AMD-012's own CREATE TABLE block in place.
+-- Nullable, not because tenant scope is optional, but because a relationship
+-- between two Global/platform-wide objects (e.g. two Global CDEs) legitimately
+-- has no owning Organization — the same nullable-tenant-boundary pattern
+-- already governs vector_index_registry, ai_tool_registry, and
+-- discovery_provider_registry (AMD-012/AMD-013) immediately below.
+-- Governing business rules (enforcement is a BA-05 Technical Design concern,
+-- not decided by this amendment):
+--   BR-1: if both source and target endpoints are Organization-scoped, their
+--     organization_id values MUST match; a mismatch MUST reject the
+--     relationship — never silently reconciled.
+--   BR-2: if exactly one endpoint is Organization-scoped, the relationship
+--     inherits that endpoint's organization_id.
+--   BR-3: if neither endpoint is Organization-scoped, organization_id
+--     remains NULL.
+--   BR-4: cross-organization relationships (source and target Organization-
+--     scoped to two different organizations) are rejected unless and until
+--     an explicit, named, audited cross-tenant sharing mechanism exists
+--     (SD-002-111) — not built or authorized by this amendment.
+-- This amendment adds the column, FK, index, and RLS policy only. No
+-- Alembic migration is created — that belongs to BA-05 implementation.
+ALTER TABLE enterprise_knowledge_graph_registry
+    ADD COLUMN organization_id UUID REFERENCES organization_master(organization_id);  -- AMD-016 — nullable: NULL = platform/global relationship (BR-3), non-NULL = organization-scoped relationship (BR-1/BR-2), never independently asserted — see BR-1 through BR-4 above
+
+CREATE INDEX idx_enterprise_knowledge_graph_registry_organization_id
+    ON enterprise_knowledge_graph_registry(organization_id);  -- AMD-016
+
 -- =========================================================================
 -- knowledge_asset_registry
 -- PURPOSE: AMD-012. Physical realization of the Enterprise Knowledge Model's Knowledge Asset concept (EIA-001 Vol. I §7: "a curated, governed unit of knowledge produced from one or more Signals"; CMD-001 §24.4). A Knowledge Asset is what a Signal becomes once curated — this table is the curated side; the originating Signal is not separately tabled here (see ASSUMPTIONS note below).
@@ -4517,6 +4574,13 @@ CREATE POLICY org_isolation ON vector_index_registry
 
 ALTER TABLE ai_tool_registry ENABLE ROW LEVEL SECURITY;
 CREATE POLICY org_isolation ON ai_tool_registry
+    USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
+
+-- AMD-016 (ADR-023): enterprise_knowledge_graph_registry — same nullable-tenant-boundary
+-- mechanism as vector_index_registry/ai_tool_registry/discovery_provider_registry
+-- immediately above. No new isolation mechanism introduced.
+ALTER TABLE enterprise_knowledge_graph_registry ENABLE ROW LEVEL SECURITY;
+CREATE POLICY org_isolation ON enterprise_knowledge_graph_registry
     USING (organization_id IS NULL OR organization_id = current_setting('app.organization_id')::uuid);
 
 -- AMD-013: 7 new policies, reusing this same tenant_workspace-schema mechanism. No new isolation mechanism introduced.

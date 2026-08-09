@@ -2543,6 +2543,7 @@ Derived From
 Verified By 
 Governed By 
 Relationships shall remain versioned and auditable.
+Relationship Resolution shall validate the tenant boundary of both endpoints before persistence, per the Enterprise Knowledge Graph's own tenant-boundary representation (`Master_Technical_Architecture.md` AMD-016; `SD-002-108`) — never inferred after the fact. (Clarification added per `ADR-023`.)
 
 
 ### 12.10 Semantic Enrichment
