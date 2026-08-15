@@ -9,6 +9,7 @@ from models.search import (
     EvidenceRegistryModel,
     DocumentChunkRegistryModel,
 )
+from models.knowledge_asset import KnowledgeAssetRegistryModel
 
 __all__ = [
     "Base",
@@ -21,4 +22,5 @@ __all__ = [
     "VectorIndexRegistryModel",
     "EvidenceRegistryModel",
     "DocumentChunkRegistryModel",
+    "KnowledgeAssetRegistryModel",
 ]
