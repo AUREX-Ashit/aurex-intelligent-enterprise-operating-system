@@ -1,10 +1,12 @@
 import { DiscoveryProviderScreen } from "@/features/discovery-provider/components/DiscoveryProviderScreen";
+import { IntelligenceCandidateScreen } from "@/features/intelligence-candidate/components/IntelligenceCandidateScreen";
 import { KnowledgeAssetScreen } from "@/features/knowledge-asset/components/KnowledgeAssetScreen";
 import { EnterpriseSearchScreen } from "@/features/search/components/EnterpriseSearchScreen";
 
 /**
- * WP-14 BA-04 (Establish Knowledge Asset, C-091) and WP-14 BA-01 (Establish
- * Discovery Provider Configuration, C-090) are both added to this existing
+ * WP-14 BA-04 (Establish Knowledge Asset, C-091), BA-01 (Establish
+ * Discovery Provider Configuration, C-090), and BA-02 (Register Enterprise
+ * Intelligence Candidate, C-090) are all added to this existing
  * `enterprise-intelligence` route rather than a new nav entry — IRA-014
  * §9's own Plan B named this exact extension ("extension of the existing
  * enterprise-intelligence administration surface into a multi-tab/
@@ -12,8 +14,8 @@ import { EnterpriseSearchScreen } from "@/features/search/components/EnterpriseS
  * is the identical "reuse the existing slot, stack additional Business
  * Activity sections" precedent WP-11's own EnterpriseSearchScreen already
  * established for its own three BAs (see that component's own docstring).
- * WP-11's EnterpriseSearchScreen and WP-14 BA-04's own KnowledgeAssetScreen
- * are both unmodified — this page composes DiscoveryProviderScreen
+ * WP-11's EnterpriseSearchScreen and WP-14 BA-01/BA-04's own screens are
+ * all unmodified — this page composes IntelligenceCandidateScreen
  * alongside them; no other capability's already-certified screen is
  * touched.
  */
@@ -25,6 +27,8 @@ export default function EnterpriseIntelligencePage() {
       <KnowledgeAssetScreen />
       <hr className="border-border-muted" />
       <DiscoveryProviderScreen />
+      <hr className="border-border-muted" />
+      <IntelligenceCandidateScreen />
     </div>
   );
 }
