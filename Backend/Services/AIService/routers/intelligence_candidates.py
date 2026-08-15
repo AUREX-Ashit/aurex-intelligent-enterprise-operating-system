@@ -1,11 +1,12 @@
 # routers/intelligence_candidates.py
-"""WP-14 BA-02 — Register Enterprise Intelligence Candidate (C-090 Enterprise Discovery).
+"""WP-14 BA-02/BA-03 — Register + Resolve Enterprise Intelligence Candidate (C-090 Enterprise Discovery).
 
-Only `POST /intelligence-candidates` is built here — `IRA-014 §6` BA-02's
-own "APIs/services required" row names only the register path, unlike
-BA-01/BA-04 which each also name a `GET`. A resolution/listing surface
-(BA-03's own "resolution queue," `IRA-014 §9` Plan B) is deliberately not
-built by this router.
+No `GET`/list endpoint is built here — `IRA-014 §6` names only `POST
+/intelligence-candidates` (BA-02) and `POST .../{id}/resolve` (BA-03) for
+this resource, unlike BA-01/BA-04 which each also name a `GET`. BA-03's
+own "resolution queue" frontend (`IRA-014 §9` Plan B) reads the candidate
+directly from its own resolve response, mirroring BA-04's established
+precedent — no separate listing surface is built.
 """
 from typing import Annotated
 from uuid import UUID
@@ -15,8 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dependencies import require_platform_admin
 from models.database import get_db
+from repositories.customer_metric_repository import CustomerMetricRegistryRepository
+from repositories.search_repository import EvidenceRegistryRepository
 from repositories.unclassified_intelligence_repository import UnclassifiedIntelligenceRegistryRepository
-from schemas.unclassified_intelligence import IntelligenceCandidateResponse, RegisterIntelligenceCandidateRequest
+from schemas.unclassified_intelligence import (
+    IntelligenceCandidateResponse,
+    RegisterIntelligenceCandidateRequest,
+    ResolveIntelligenceCandidateRequest,
+    ResolvedIntelligenceCandidateResponse,
+)
+from services.intelligence_candidate_resolution_service import IntelligenceCandidateResolutionService
 from services.unclassified_intelligence_service import IntelligenceCandidateService
 
 router = APIRouter(prefix="/intelligence-candidates", tags=["Intelligence Candidates"])
@@ -36,6 +45,27 @@ async def get_intelligence_candidate_service(
     repo: Annotated[UnclassifiedIntelligenceRegistryRepository, Depends(get_intelligence_candidate_repo)],
 ) -> IntelligenceCandidateService:
     return IntelligenceCandidateService(repo)
+
+
+async def get_customer_metric_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> CustomerMetricRegistryRepository:
+    return CustomerMetricRegistryRepository(session)
+
+
+async def get_evidence_repo(
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> EvidenceRegistryRepository:
+    return EvidenceRegistryRepository(session)
+
+
+async def get_intelligence_candidate_resolution_service(
+    session: Annotated[AsyncSession, Depends(get_db)],
+    candidate_repo: Annotated[UnclassifiedIntelligenceRegistryRepository, Depends(get_intelligence_candidate_repo)],
+    customer_metric_repo: Annotated[CustomerMetricRegistryRepository, Depends(get_customer_metric_repo)],
+    evidence_repo: Annotated[EvidenceRegistryRepository, Depends(get_evidence_repo)],
+) -> IntelligenceCandidateResolutionService:
+    return IntelligenceCandidateResolutionService(session, candidate_repo, customer_metric_repo, evidence_repo)
 
 
 # ---------------------------------------------------------------------------
@@ -63,3 +93,33 @@ async def register_intelligence_candidate(
     organization_id = UUID(claims["organization_id"])
     actor_id = UUID(claims["person_id"])
     return await service.register(organization_id, actor_id, request)
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Resolve Enterprise Intelligence Candidate (Convergence Decision)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/{unclassified_id}/resolve",
+    response_model=ResolvedIntelligenceCandidateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Resolve Enterprise Intelligence Candidate (WP-14 BA-03)",
+    description=(
+        "Resolves a PENDING candidate to exactly one of MAPPED_TO_EXISTING/NEW_CDE_CREATED/"
+        "DISCARDED (Complete_Blueprint.md §5.0c Binding 5). Semantic Matching is always "
+        "attempted before NEW_CDE_CREATED (a disclosed, non-AI placeholder — no real "
+        "Reasoning Engine exists anywhere in this platform, TD-133). A net-new CDE writes "
+        "customer_metric_registry (cde_tier='TENANT') and carries an Evidence reference "
+        "(evidence_registry, SD-002-041). 409 if the candidate was already resolved. Gated "
+        "by PLATFORM_ADMIN, same basis as BA-02's own register path."
+    ),
+)
+async def resolve_intelligence_candidate(
+    unclassified_id: UUID,
+    request: ResolveIntelligenceCandidateRequest,
+    claims: Annotated[dict, Depends(require_platform_admin)],
+    service: Annotated[IntelligenceCandidateResolutionService, Depends(get_intelligence_candidate_resolution_service)],
+) -> ResolvedIntelligenceCandidateResponse:
+    organization_id = UUID(claims["organization_id"])
+    actor_id = UUID(claims["person_id"])
+    return await service.resolve(organization_id, actor_id, unclassified_id, request)

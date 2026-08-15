@@ -12,6 +12,7 @@ from models.search import (
 from models.knowledge_asset import KnowledgeAssetRegistryModel
 from models.discovery_provider import DiscoveryProviderRegistryModel
 from models.unclassified_intelligence import UnclassifiedIntelligenceRegistryModel
+from models.customer_metric import CustomerMetricRegistryModel
 
 __all__ = [
     "Base",
@@ -27,4 +28,5 @@ __all__ = [
     "KnowledgeAssetRegistryModel",
     "DiscoveryProviderRegistryModel",
     "UnclassifiedIntelligenceRegistryModel",
+    "CustomerMetricRegistryModel",
 ]

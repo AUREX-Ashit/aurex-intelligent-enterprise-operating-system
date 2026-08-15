@@ -1,10 +1,10 @@
 # schemas/unclassified_intelligence.py
-"""WP-14 BA-02 — Register Enterprise Intelligence Candidate (C-090). Request/response contracts (`IRA-014 §6` BA-02 row)."""
+"""WP-14 BA-02/BA-03 — Register + Resolve Enterprise Intelligence Candidate (C-090). Request/response contracts (`IRA-014 §6` BA-02/BA-03 rows)."""
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # `IRA-014 §5.2`'s own explicit scope restriction — the DB's own CHECK
 # constraint permits all seven `extraction_method` values (AMD-005); the
@@ -75,5 +75,100 @@ class IntelligenceCandidateResponse(BaseModel):
     active_flag: bool
     created_at: datetime
     updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ---------------------------------------------------------------------------
+# BA-03 — Resolve Enterprise Intelligence Candidate (Convergence Decision)
+# ---------------------------------------------------------------------------
+
+RESOLUTION_OUTCOMES = ("MAPPED_TO_EXISTING", "NEW_CDE_CREATED", "DISCARDED")
+
+
+class ResolveIntelligenceCandidateRequest(BaseModel):
+    """
+    Request body for BA-03's own resolve path (`Complete_Blueprint.md
+    §5.0c` Binding 5's three-way decision). Exactly one of the three
+    `outcome` values, each requiring its own supporting data:
+    `MAPPED_TO_EXISTING` requires `metric_id` (a logical-only reference —
+    `metric_registry`, the Global canonical CDE library, has zero
+    physical rows anywhere in this repository, so this cannot be
+    validated against a real row today, disclosed rather than silently
+    assumed); `NEW_CDE_CREATED` requires `metric_name`/`metric_code`;
+    `DISCARDED` requires no supporting data.
+    """
+
+    outcome: str = Field(...)
+    metric_id: UUID | None = Field(None, description="Required for MAPPED_TO_EXISTING — logical reference only, not physically validated.")
+    metric_name: str | None = Field(None, max_length=255, description="Required for NEW_CDE_CREATED.")
+    metric_code: str | None = Field(None, max_length=100, description="Required for NEW_CDE_CREATED.")
+    metric_description: str | None = Field(None)
+    unit_of_measure: str | None = Field(None, max_length=50)
+    formula_logic: str | None = Field(None)
+    semantic_match_rejected_reason: str | None = Field(
+        None, description="Why a Semantic Matching result (if any) was rejected in favor of creating a new CDE."
+    )
+
+    @field_validator("outcome")
+    @classmethod
+    def _validate_outcome(cls, value: str) -> str:
+        if value not in RESOLUTION_OUTCOMES:
+            raise ValueError(f"outcome must be one of {RESOLUTION_OUTCOMES}")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_supporting_data(self) -> "ResolveIntelligenceCandidateRequest":
+        if self.outcome == "MAPPED_TO_EXISTING" and self.metric_id is None:
+            raise ValueError("metric_id is required when outcome is MAPPED_TO_EXISTING")
+        if self.outcome == "NEW_CDE_CREATED" and (not self.metric_name or not self.metric_code):
+            raise ValueError("metric_name and metric_code are required when outcome is NEW_CDE_CREATED")
+        return self
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "outcome": "NEW_CDE_CREATED",
+                "metric_name": "Board Independence Ratio",
+                "metric_code": "BOARD_INDEPENDENCE_RATIO",
+                "unit_of_measure": "%",
+            }
+        }
+    }
+
+
+class ResolvedIntelligenceCandidateResponse(BaseModel):
+    """
+    Result of BA-03's own resolve path. Surfaces the Semantic Matching
+    attempt record and, for a CDE-producing outcome, the Evidence
+    reference — both directly, without a second query, mirroring BA-04's
+    own "establish response is the status view" precedent.
+
+    `semantic_match_result_metric_id`/`semantic_match_score` mirror the
+    LOCKED `customer_metric_registry` columns of the same name exactly —
+    both always `None` in this implementation, since those columns are
+    contractually reserved for a **Global** `metric_registry` match
+    (`Master_Technical_Architecture.md`'s own `COMMENT ON COLUMN`) and
+    `metric_registry` has zero physical rows anywhere in this repository
+    (Gate 1 Finding 2 remediation — an earlier version of this response
+    incorrectly populated `semantic_match_result_metric_id` with a Tenant
+    `customer_metric_id`). `same_organization_duplicate_customer_metric_id`
+    is the corrected, honestly-separate surface for the real, functioning
+    same-organization Tenant-CDE duplicate heuristic `TD-145` discloses —
+    it corresponds to no LOCKED column, since the schema provides none
+    for a Tenant-to-Tenant match record.
+    """
+
+    unclassified_id: UUID
+    resolution_status: str
+    resolved_by_user_id: UUID | None
+    resolved_at: datetime | None
+    resolved_metric_id: UUID | None
+    resolved_customer_metric_id: UUID | None
+    semantic_match_attempted_flag: bool | None
+    semantic_match_result_metric_id: UUID | None
+    semantic_match_score: Decimal | None
+    same_organization_duplicate_customer_metric_id: UUID | None
+    evidence_id: UUID | None
 
     model_config = {"from_attributes": True}

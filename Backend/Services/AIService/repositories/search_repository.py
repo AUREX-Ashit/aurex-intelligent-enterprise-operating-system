@@ -155,6 +155,38 @@ class EvidenceRegistryRepository:
         await self.db.flush()
         return instance
 
+    async def create_linked(
+        self,
+        *,
+        organization_id: uuid.UUID,
+        linked_entity_type: str,
+        linked_entity_id: uuid.UUID,
+        evidence_source: str | None,
+        file_reference: str | None,
+        confidence_score: int | None = None,
+    ) -> EvidenceRegistryModel:
+        """
+        WP-14 BA-03 — Resolve Enterprise Intelligence Candidate. Additive
+        method (WP-11's own `create()` above is untouched) — binds an
+        Evidence row to a CDE-shaped entity via the table's own existing
+        generic polymorphic link (`linked_entity_type`/`linked_entity_id`),
+        satisfying `SD-002-041` ("No CDE Exists Without Evidence
+        Capability") using already-real infrastructure, no new schema.
+        """
+        instance = EvidenceRegistryModel(
+            organization_id=organization_id,
+            linked_entity_type=linked_entity_type,
+            linked_entity_id=linked_entity_id,
+            evidence_source=evidence_source,
+            file_reference=file_reference,
+            confidence_score=confidence_score,
+            ai_extracted_flag=False,
+            active_flag=True,
+        )
+        self.db.add(instance)
+        await self.db.flush()
+        return instance
+
 
 class DocumentChunkRegistryRepository:
     def __init__(self, db_session: AsyncSession) -> None:
