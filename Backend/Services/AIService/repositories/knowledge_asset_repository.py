@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.knowledge_asset import KnowledgeAssetRegistryModel
@@ -62,3 +62,52 @@ class KnowledgeAssetRegistryRepository:
             KnowledgeAssetRegistryModel.organization_id == organization_id,
         )
         return (await self.db.execute(query)).scalar_one_or_none()
+
+    async def claim_transition(
+        self,
+        organization_id: uuid.UUID,
+        knowledge_asset_id: uuid.UUID,
+        *,
+        target_status: str,
+    ) -> bool:
+        """
+        WP-14 BA-04 Increment (`TDS-014 §6`, `BA04-INC-DEC-004`). Atomically
+        transitions a `PROPOSED` Knowledge Asset to `target_status`, guarded
+        by a `WHERE curation_status = 'PROPOSED'` clause the database
+        re-evaluates at the moment this `UPDATE` actually executes — never a
+        `get_by_id_for_caller()`-then-attribute-assignment sequence, which
+        `TDS-014 §6` explicitly rejects (the same unsafe pattern
+        `OrganizationService.activate()`/`suspend()` uses, and the same
+        pattern class BA-03's own Gate 1 Finding 1 already found unsafe).
+        Mirrors `UnclassifiedIntelligenceRegistryRepository.claim_for_
+        resolution` exactly: an `UPDATE` statement takes a write lock on the
+        row(s) it matches, held until this call's own `commit()` below — a
+        second, genuinely concurrent call against the same row blocks on
+        that lock, then re-evaluates its own `WHERE` clause against the
+        now-committed row and finds zero matches, since `curation_status`
+        is no longer `'PROPOSED'`. Returns `True` only to the exactly-one
+        caller whose `UPDATE` actually matched a row.
+
+        Commits internally (mirroring `create()`'s own single-step
+        transaction shape, not `claim_for_resolution`'s own multi-step
+        deferred-commit shape) — this Increment's own transition is a
+        single atomic operation with no further write to sequence after
+        it, so the same commit-per-call shape `create()` already
+        establishes for this repository applies here too. This also
+        directly satisfies `TDS-014 §9`'s own `DATABASE COMMIT → DOMAIN
+        EVENT PUBLISH ATTEMPT` ordering invariant: by the time this
+        coroutine returns, the transition (if any) is already committed,
+        so the caller may safely proceed to a publish attempt only after
+        awaiting this call.
+        """
+        result = await self.db.execute(
+            update(KnowledgeAssetRegistryModel)
+            .where(
+                KnowledgeAssetRegistryModel.knowledge_asset_id == knowledge_asset_id,
+                KnowledgeAssetRegistryModel.organization_id == organization_id,
+                KnowledgeAssetRegistryModel.curation_status == "PROPOSED",
+            )
+            .values(curation_status=target_status)
+        )
+        await self.db.commit()
+        return result.rowcount == 1

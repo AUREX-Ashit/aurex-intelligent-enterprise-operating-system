@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import require_platform_admin
 from models.database import get_db
 from repositories.knowledge_asset_repository import KnowledgeAssetRegistryRepository
-from schemas.knowledge_asset import EstablishKnowledgeAssetRequest, KnowledgeAssetResponse
+from schemas.knowledge_asset import (
+    EstablishKnowledgeAssetRequest,
+    KnowledgeAssetResponse,
+    TransitionKnowledgeAssetRequest,
+)
 from services.knowledge_asset_service import KnowledgeAssetService
 
 router = APIRouter(prefix="/knowledge-assets", tags=["Knowledge Assets"])
@@ -78,3 +82,34 @@ async def get_knowledge_asset(
 ) -> KnowledgeAssetResponse:
     organization_id = UUID(claims["organization_id"])
     return await service.get_by_id(organization_id, knowledge_asset_id)
+
+
+# ---------------------------------------------------------------------------
+# BA-04 Increment — Knowledge Asset Lifecycle Transition + ACCEPTED Domain
+# Event (TDS-014, implementation authorized 2026-08-16)
+# ---------------------------------------------------------------------------
+
+@router.post(
+    "/{knowledge_asset_id}/transition",
+    response_model=KnowledgeAssetResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Transition Knowledge Asset lifecycle status (WP-14 BA-04 Increment)",
+    description=(
+        "Transitions a PROPOSED Knowledge Asset to VALIDATED/ACCEPTED/REJECTED "
+        "(TDS-014 §2) — no other transition edge is authorized. 409 if the asset "
+        "is not currently PROPOSED (already transitioned or invalid state). On a "
+        "successful transition to ACCEPTED, attempts a best-effort publication of "
+        "aurex.aiservice.knowledge_asset.accepted v1.0.0 (RO-DEC-BA04-INC-007) — "
+        "publication failure does not affect the already-committed ACCEPTED state. "
+        "Gated by PLATFORM_ADMIN, same basis as establish/get_by_id."
+    ),
+)
+async def transition_knowledge_asset(
+    knowledge_asset_id: UUID,
+    request: TransitionKnowledgeAssetRequest,
+    claims: Annotated[dict, Depends(require_platform_admin)],
+    service: Annotated[KnowledgeAssetService, Depends(get_knowledge_asset_service)],
+) -> KnowledgeAssetResponse:
+    organization_id = UUID(claims["organization_id"])
+    actor_id = UUID(claims["person_id"])
+    return await service.transition(organization_id, actor_id, knowledge_asset_id, request)

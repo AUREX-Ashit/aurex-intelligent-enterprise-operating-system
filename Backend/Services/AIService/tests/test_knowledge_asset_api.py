@@ -223,3 +223,346 @@ async def test_unrelated_tenant_foreign_identifier_probe(client: AsyncClient):
     )
     assert same_tenant_resp.status_code == 200
     assert same_tenant_resp.json()["provenance_reference"] == "org-b-only.pdf"
+
+
+# ---------------------------------------------------------------------------
+# WP-14 BA-04 Increment — Lifecycle Transition + ACCEPTED Domain Event
+# (TDS-014, implementation authorized 2026-08-16)
+# ---------------------------------------------------------------------------
+
+async def _transition(client: AsyncClient, org: str, knowledge_asset_id: str, target_status: str):
+    return await client.post(
+        f"/knowledge-assets/{knowledge_asset_id}/transition",
+        json={"target_status": target_status},
+        headers=_auth(org),
+    )
+
+
+def _patch_publisher(monkeypatch, *, raise_error: bool = False):
+    """
+    Patches KafkaEventPublisher.publish (the real, shared class the service
+    imports at call time) to capture every constructed event without
+    actually depending on the mock broker's own no-op behavior, and
+    optionally simulate a publish failure. Returns the list of captured
+    events (each the real KnowledgeAssetAcceptedEvent instance).
+    """
+    from aurex.backend.shared.events.event_publisher import KafkaEventPublisher
+
+    captured: list = []
+
+    def fake_publish(self, event, destination, partition_key=None):
+        captured.append(event)
+        if raise_error:
+            raise RuntimeError("simulated publisher failure")
+
+    monkeypatch.setattr(KafkaEventPublisher, "publish", fake_publish)
+    return captured
+
+
+# --- State transitions -------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_transition_proposed_to_validated_succeeds(client: AsyncClient):
+    asset = await _establish(client, ORG_A, provenance_reference="t-validated.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "VALIDATED")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["curation_status"] == "VALIDATED"
+
+
+@pytest.mark.asyncio
+async def test_transition_proposed_to_accepted_succeeds(client: AsyncClient, monkeypatch):
+    _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-accepted.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["curation_status"] == "ACCEPTED"
+
+
+@pytest.mark.asyncio
+async def test_transition_proposed_to_rejected_succeeds(client: AsyncClient):
+    asset = await _establish(client, ORG_A, provenance_reference="t-rejected.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "REJECTED")
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["curation_status"] == "REJECTED"
+
+
+@pytest.mark.asyncio
+async def test_transition_invalid_target_returns_422(client: AsyncClient):
+    asset = await _establish(client, ORG_A, provenance_reference="t-invalid.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "SUPERSEDED")
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_transition_already_transitioned_returns_409(client: AsyncClient, monkeypatch):
+    """TDS-014 §7A — a retry after the state has already changed returns 409, never a silent 200."""
+    _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-already.pdf")
+    first = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert first.status_code == 200
+
+    second = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert second.status_code == 409
+
+    third = await _transition(client, ORG_A, asset["knowledge_asset_id"], "VALIDATED")
+    assert third.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_transition_unknown_knowledge_asset_returns_404(client: AsyncClient):
+    resp = await _transition(client, ORG_A, str(uuid4()), "ACCEPTED")
+    assert resp.status_code == 404
+
+
+# --- Authorization -------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_transition_requires_platform_admin(client: AsyncClient):
+    asset = await _establish(client, ORG_A, provenance_reference="t-authz.pdf")
+    resp = await client.post(
+        f"/knowledge-assets/{asset['knowledge_asset_id']}/transition",
+        json={"target_status": "VALIDATED"},
+        headers=_auth(ORG_A, role_code="MEMBER"),
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_transition_requires_authentication(client: AsyncClient):
+    asset = await _establish(client, ORG_A, provenance_reference="t-unauth.pdf")
+    resp = await client.post(
+        f"/knowledge-assets/{asset['knowledge_asset_id']}/transition",
+        json={"target_status": "VALIDATED"},
+    )
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_transition_cross_tenant_returns_404(client: AsyncClient):
+    asset_b = await _establish(client, ORG_B, provenance_reference="t-crosstenant.pdf")
+    resp = await _transition(client, ORG_A, asset_b["knowledge_asset_id"], "VALIDATED")
+    assert resp.status_code == 404
+
+
+# --- Domain Event ----------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_transition_to_accepted_publishes_correct_event(client: AsyncClient, monkeypatch):
+    captured = _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-event.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert resp.status_code == 200
+
+    assert len(captured) == 1, "expected exactly one publish attempt"
+    event = captured[0]
+    assert event.event_name == "aurex.aiservice.knowledge_asset.accepted"
+    assert event.event_version == "1.0.0"
+    payload = event.to_dict()
+    assert payload["knowledge_asset_id"] == asset["knowledge_asset_id"]
+    assert payload["organization_id"] == ORG_A
+    assert payload["previous_status"] == "PROPOSED"
+    assert payload["new_status"] == "ACCEPTED"
+    assert event.tenant_id == ORG_A
+
+
+@pytest.mark.asyncio
+async def test_transition_to_validated_does_not_publish_event(client: AsyncClient, monkeypatch):
+    captured = _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-novalidatedevent.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "VALIDATED")
+    assert resp.status_code == 200
+    assert captured == []
+
+
+@pytest.mark.asyncio
+async def test_transition_to_rejected_does_not_publish_event(client: AsyncClient, monkeypatch):
+    captured = _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-norejectedevent.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "REJECTED")
+    assert resp.status_code == 200
+    assert captured == []
+
+
+@pytest.mark.asyncio
+async def test_losing_denied_transition_does_not_publish_event(client: AsyncClient, monkeypatch):
+    """A losing/already-transitioned request must never attempt a publish (TDS-014 §6)."""
+    captured = _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-loserevent.pdf")
+    first = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert first.status_code == 200
+    assert len(captured) == 1
+
+    second = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert second.status_code == 409
+    assert len(captured) == 1, "the losing/already-transitioned request must not publish a second event"
+
+
+# --- Event ordering / DB commit precedence ---------------------------------
+
+@pytest.mark.asyncio
+async def test_event_publish_attempted_only_after_db_commit(client: AsyncClient, monkeypatch, db_session):
+    """TDS-014 §9 — the DB transition is already committed by the time publish() is invoked."""
+    from uuid import UUID
+
+    from sqlalchemy import select
+
+    from aurex.backend.shared.events.event_publisher import KafkaEventPublisher
+    from models.knowledge_asset import KnowledgeAssetRegistryModel
+
+    publish_was_invoked = {"value": False}
+
+    def fake_publish(self, event, destination, partition_key=None):
+        publish_was_invoked["value"] = True
+
+    monkeypatch.setattr(KafkaEventPublisher, "publish", fake_publish)
+
+    asset = await _establish(client, ORG_A, provenance_reference="t-ordering.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert resp.status_code == 200
+    assert publish_was_invoked["value"] is True, "publish() was never invoked"
+
+    # Independently re-confirm the committed DB state reflects ACCEPTED —
+    # not merely the HTTP response's own claim — proving the UPDATE was
+    # already committed by the time the (now-invoked) publish attempt ran.
+    row = (
+        await db_session.execute(
+            select(KnowledgeAssetRegistryModel).where(
+                KnowledgeAssetRegistryModel.knowledge_asset_id == UUID(asset["knowledge_asset_id"])
+            )
+        )
+    ).scalar_one()
+    assert row.curation_status == "ACCEPTED"
+
+
+# --- Publication failure -----------------------------------------------
+
+@pytest.mark.asyncio
+async def test_publish_failure_does_not_roll_back_accepted_state(client: AsyncClient, monkeypatch, caplog):
+    """TDS-014 §9/§11, RO-DEC-BA04-INC-007 — ACCEPTED is authoritative once DB commit succeeds, independent of publish outcome."""
+    import logging as _logging
+
+    caplog.set_level(_logging.ERROR, logger="aiservice.events")
+    captured = _patch_publisher(monkeypatch, raise_error=True)
+
+    asset = await _establish(client, ORG_A, provenance_reference="t-publishfail.pdf")
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+
+    # The business transition genuinely succeeded — publish failure is not
+    # surfaced to the caller as a request failure.
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["curation_status"] == "ACCEPTED"
+    assert len(captured) == 1, "exactly one publish attempt, no automatic retry"
+
+    # The failure is observable through the existing structured-logging
+    # mechanism, attributed as an event-publication failure.
+    failure_logs = [r for r in caplog.records if r.name == "aiservice.events" and r.levelno >= _logging.ERROR]
+    assert len(failure_logs) == 1
+    assert str(asset["knowledge_asset_id"]) in failure_logs[0].getMessage() or str(
+        asset["knowledge_asset_id"]
+    ) in str(failure_logs[0].args)
+
+    # No automatic retry: re-fetch confirms state remains ACCEPTED, not
+    # reverted, and a further transition attempt correctly reports 409
+    # (already transitioned), not a fresh attempt.
+    get_resp = await client.get(f"/knowledge-assets/{asset['knowledge_asset_id']}", headers=_auth(ORG_A))
+    assert get_resp.status_code == 200
+    assert get_resp.json()["curation_status"] == "ACCEPTED"
+
+
+# --- Audit ---------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_transition_success_writes_success_audit(client: AsyncClient, caplog, monkeypatch):
+    """
+    Gate 1 F-01 remediation (TDS-014 §11): the ACCEPTED SUCCESS audit
+    record's own metadata must carry the SAME event_id as the actual
+    generated Domain Event — not merely any string, and not omitted.
+    """
+    captured = _patch_publisher(monkeypatch)
+    caplog.set_level(logging.INFO, logger="aiservice.audit")
+    asset = await _establish(client, ORG_A, provenance_reference="t-audit-success.pdf")
+    caplog.clear()
+
+    resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert resp.status_code == 200
+
+    audit_records = [
+        json.loads(record.getMessage()) for record in caplog.records if record.name == "aiservice.audit"
+    ]
+    assert len(audit_records) == 1
+    payload = audit_records[0]
+    assert payload["action"] == "TRANSITION_KNOWLEDGE_ASSET"
+    assert payload["resource"] == f"knowledge_asset:{asset['knowledge_asset_id']}"
+    assert payload["status"] == "SUCCESS"
+    assert payload["tenant_id"] == ORG_A
+    assert payload["metadata"]["from_status"] == "PROPOSED"
+    assert payload["metadata"]["to_status"] == "ACCEPTED"
+
+    assert len(captured) == 1, "expected exactly one ACCEPTED event to have been constructed/published"
+    assert payload["metadata"]["event_id"] == captured[0].event_id
+    assert payload["metadata"]["event_id"] is not None
+
+
+@pytest.mark.asyncio
+async def test_transition_non_accepted_success_audit_has_null_event_id(client: AsyncClient, caplog, monkeypatch):
+    """TDS-014 §11's own frozen shape: event_id is populated only for ACCEPTED; VALIDATED/REJECTED carry null, never an invented value."""
+    captured = _patch_publisher(monkeypatch)
+    caplog.set_level(logging.INFO, logger="aiservice.audit")
+
+    for target_status in ("VALIDATED", "REJECTED"):
+        asset = await _establish(client, ORG_A, provenance_reference=f"t-audit-{target_status}.pdf")
+        caplog.clear()
+
+        resp = await _transition(client, ORG_A, asset["knowledge_asset_id"], target_status)
+        assert resp.status_code == 200
+
+        audit_records = [
+            json.loads(record.getMessage()) for record in caplog.records if record.name == "aiservice.audit"
+        ]
+        assert len(audit_records) == 1
+        payload = audit_records[0]
+        assert payload["status"] == "SUCCESS"
+        assert payload["metadata"]["to_status"] == target_status
+        assert payload["metadata"]["event_id"] is None
+
+    assert captured == [], "VALIDATED/REJECTED must never construct or publish an event"
+
+
+@pytest.mark.asyncio
+async def test_transition_denied_writes_denied_audit(client: AsyncClient, caplog, monkeypatch):
+    _patch_publisher(monkeypatch)
+    asset = await _establish(client, ORG_A, provenance_reference="t-audit-denied.pdf")
+    first = await _transition(client, ORG_A, asset["knowledge_asset_id"], "ACCEPTED")
+    assert first.status_code == 200
+
+    caplog.set_level(logging.INFO, logger="aiservice.audit")
+    caplog.clear()
+    second = await _transition(client, ORG_A, asset["knowledge_asset_id"], "REJECTED")
+    assert second.status_code == 409
+
+    audit_records = [
+        json.loads(record.getMessage()) for record in caplog.records if record.name == "aiservice.audit"
+    ]
+    assert len(audit_records) == 1
+    payload = audit_records[0]
+    assert payload["action"] == "TRANSITION_KNOWLEDGE_ASSET"
+    assert payload["status"] == "DENIED"
+    assert payload["tenant_id"] == ORG_A
+
+
+@pytest.mark.asyncio
+async def test_transition_not_found_writes_denied_audit(client: AsyncClient, caplog):
+    caplog.set_level(logging.INFO, logger="aiservice.audit")
+    caplog.clear()
+    unknown_id = str(uuid4())
+    resp = await _transition(client, ORG_A, unknown_id, "ACCEPTED")
+    assert resp.status_code == 404
+
+    audit_records = [
+        json.loads(record.getMessage()) for record in caplog.records if record.name == "aiservice.audit"
+    ]
+    assert len(audit_records) == 1
+    payload = audit_records[0]
+    assert payload["action"] == "TRANSITION_KNOWLEDGE_ASSET"
+    assert payload["resource"] == f"knowledge_asset:{unknown_id}"
+    assert payload["status"] == "DENIED"

@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class EstablishKnowledgeAssetRequest(BaseModel):
@@ -34,6 +34,31 @@ class EstablishKnowledgeAssetRequest(BaseModel):
                 "knowledge_asset_type": "fact",
                 "provenance_reference": "governance-report-fy25.pdf#p12",
             }
+        }
+    }
+
+
+# WP-14 BA-04 Increment (`TDS-014 §2`) — the only three targets `IRA-014 §6`
+# BA-04's own row names, each requested directly from `PROPOSED`. No other
+# transition is authorized by this Increment (`TDS-014 §2`, `BA04-INC-DEC-001`).
+ALLOWED_TRANSITION_TARGETS = ("VALIDATED", "ACCEPTED", "REJECTED")
+
+
+class TransitionKnowledgeAssetRequest(BaseModel):
+    """Request body for the BA-04 Increment's own transition path (`TDS-014 §5`)."""
+
+    target_status: str = Field(...)
+
+    @field_validator("target_status")
+    @classmethod
+    def _validate_target_status(cls, value: str) -> str:
+        if value not in ALLOWED_TRANSITION_TARGETS:
+            raise ValueError(f"target_status must be one of {ALLOWED_TRANSITION_TARGETS}")
+        return value
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {"target_status": "ACCEPTED"},
         }
     }
 

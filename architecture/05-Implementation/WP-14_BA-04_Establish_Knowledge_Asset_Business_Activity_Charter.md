@@ -239,4 +239,70 @@ The frontend implementation reused existing AUREX frontend architecture and comp
 
 ---
 
-*End of this charter. Backend implementation (model, migration, repository, service, router, schemas, tests, and audit logging) exists under `Backend/Services/AIService/` per the authorization above and the Remediation Record. The minimum Enterprise Experience (Establish + status view) exists under `source/frontend/src/features/knowledge-asset/` per the Second Independent Certification & Enterprise Experience Remediation Record above. `ADR-023`, `AMD-016`, `RTA-001`, `IRA-014`, `TDS-013`, `CLAUDE.md`, and the Enterprise Search specification are unmodified.*
+## BA-04 Increment — Repository Owner Decision Recording (`RO-DEC-WP14-BA05-01`)
+
+**Recorded 2026-08-16, per direct Repository Owner instruction ("WP-14 — Repository Owner Decision Recording, BA-05 Knowledge Graph Synchronization").** This section records a governance **decision**, not an implementation. It authorizes no code change to BA-04's own already-certified behavior and does not itself constitute BA-04 Increment implementation authorization.
+
+**Context:** the independent WP-14 BA-05 Technical Design Authorization Review found BA-05's sole documented trigger — a Knowledge Asset reaching `ACCEPTED` and a corresponding Domain Event — does not exist in this Business Activity's own delivered, certified scope. This was not a newly-discovered defect: §9 ("Two distinct open items"), §12, and §183 items 2 and 4 of this charter (above) already, explicitly disclosed at this Business Activity's own original authorization (2026-08-10) that the `curation_status` transition graph and BA-04's own outcome-event name/version/schema were both genuinely open `[D]` items, "not invented" by that authorization. A subsequent Repository Owner Decision Package (`WP-14 BA-05 Repository Owner Decision Package`) analyzed the available trigger models and found exactly one — completion of this already-disclosed, already-deferred scope — consistent with `RTA-001 §12.14`'s own governing text ("Knowledge updates are triggered by Domain Events rather than direct Business Activity invocation," which forecloses a caller-invoked alternative).
+
+**Decision `RO-DEC-WP14-BA05-01` — APPROVED:** BA-05 shall be triggered by a Domain Event emitted when a Knowledge Asset completes its governed lifecycle transition to `ACCEPTED`. That trigger shall be produced by BA-04, via a formally authorized **BA-04 Increment** completing this charter's own already-disclosed, deferred transition/event scope (§183 items 2 and 4).
+
+**What this decision explicitly does NOT do:**
+- It does **not** characterize BA-04's existing certified `establish()`/`get_by_id()` behavior as defective. That behavior is unchanged, unaffected, and not reopened by this decision.
+- It does **not** authorize BA-04 Increment implementation. The Increment requires its own Technical Design, its own implementation authorization, and its own independent certification/V&V per `CLAUDE.md §19.7`/`§19.7b`, exactly as BA-04's own original scope did.
+- It does **not** decide any implementation detail of the Increment — endpoint naming, request/response schema, the transition graph (which of the five `curation_status` states may transition to which others), event class name, event version, event payload schema, transaction implementation, idempotency mechanism, or event delivery mechanism. All remain open, to be resolved during the BA-04 Increment's own Technical Design, per this charter's own established `[C]`/`[D]` discipline.
+- It does **not** authorize BA-05 implementation. `RO-DEC-WP14-BA05-02` (the concrete Knowledge Graph relationship/event-type mapping BA-05 itself needs) remains **OPEN** — see `TECH-DEBT.md`/`TDS-013` for its current status. BA-05 remains **DESIGNED / NOT AUTHORIZED / ZERO IMPLEMENTATION**.
+
+**Expected BA-04 Increment scope, named but not designed here:**
+1. A Knowledge Asset status-transition capability: `PROPOSED` → `VALIDATED`/`ACCEPTED`/`REJECTED` (the transition endpoint `IRA-014 §6` BA-04's own row already names; its own graph — which states may reach which others — remains undecided, `[D]`, per §183 item 2, unchanged by this decision).
+2. Domain Event publication when a Knowledge Asset reaches `ACCEPTED`, carrying sufficient tenant/context information for BA-05 to process it safely — the exact payload shape is not invented here and remains an Increment Technical Design item.
+
+**Next governed step for this Increment (as of this recording, 2026-08-16):** BA-04 Increment Technical Design and its own separate Repository Owner implementation authorization — not performed by this recording.
+
+### RO-DEC-BA04-INC-007 — Database / Domain Event Consistency Posture
+
+**Recorded 2026-08-16, per direct Repository Owner instruction ("WP-14 BA-04 Increment — Record RO-DEC-BA04-INC-007 in BA-04 Charter").** This entry independently records, in this charter, a decision already made and already fully recorded in `TDS-014_WP-14_BA-04_Increment_Knowledge_Asset_Lifecycle_Transition_Technical_Design.md` (its own §9/§19/§21) — mirroring the same pattern this section already established for `RO-DEC-WP14-BA05-01` above (recorded here as well as referenced by `TDS-013 §26a`), so that this decision is not evidenced solely by the one artifact whose own design depends on it. **This entry does not modify `TDS-014`, does not change the decision's own substance, and does not decide anything new.**
+
+**Sequence, preserved accurately, not backdated:** this charter's own §9/§12/§183 (above) disclosed the transition/event scope as deferred at BA-04's original authorization (2026-08-10) → `RO-DEC-WP14-BA05-01` approved the BA-04 Increment as BA-05's trigger mechanism (recorded above, this same section) → the BA-04 Increment Technical Design (`TDS-014`) was subsequently authored, and identified the DB/Domain-Event consistency posture as its own one remaining open Repository Owner decision (`BA04-INC-DEC-007`) → the Repository Owner approved best-effort event delivery → `TDS-014` was updated to record that approval → a fresh, independent Technical Design Authorization Review of the completed `TDS-014` returned **AUTHORIZED WITH CONDITIONS**, with exactly one condition: that this decision also be independently recorded here, in the charter, distinct from `TDS-014` itself → this entry satisfies that condition.
+
+**Status:** APPROVED.
+
+**Decision:** best-effort event delivery is accepted for the current BA-04 Increment.
+
+**Consistency invariant:** `DATABASE COMMIT → DOMAIN EVENT PUBLISH ATTEMPT`. The Knowledge Asset state transition commits before any event-publish attempt is made. A rollback means no publish attempt occurs at all. A successful commit results in exactly one publish attempt.
+
+**Accepted failure modes, explicitly accepted by the Repository Owner, not characterized as a defect in the BA-04 state transition itself:**
+1. The event publisher is unavailable, or the event is not actually delivered anywhere, under the current mock-only infrastructure (`Backend/Shared/Events/event_publisher.py::KafkaEventPublisher.publish()`'s own real broker dispatch call is commented out — independently verified, not assumed).
+2. The process crashes after the DB commit but before the publish attempt is reached.
+3. The publish attempt itself raises an exception.
+4. No automatic retry occurs in this Increment.
+5. If the `ACCEPTED` event is not delivered, BA-05 will not execute for that transition under the current architecture — an explicitly accepted limitation of this Increment, not a defect.
+
+**Explicitly excluded guarantees — not claimed, not weakened or reinterpreted by this entry:** guaranteed event delivery; exactly-once event delivery; automatic retry; replay; a transactional outbox; a durable event store; guaranteed recovery after process failure.
+
+**Future platform concern, not decided or scheduled here:** durable Domain Event delivery remains a future, platform-level design concern. Potential future mechanisms — a transactional outbox, a durable event store, retry, replay, dead-letter handling, guaranteed-delivery semantics — are named for awareness only; none is selected, authorized, or implemented by this entry or by `TDS-014`.
+
+**What this entry explicitly does NOT do:** it does not reopen `RO-DEC-BA04-INC-007`'s own substance; does not change best-effort delivery to an outbox or any other mechanism; does not add retry; does not change the commit-then-publish ordering, the event contract, the BA-05 trigger, the BA-05 relationship (`Governed By`), the state machine, authorization, or the concurrency mechanism (`TDS-014 §6`); does not authorize BA-04 Increment implementation; does not modify `TDS-014`, `RTA-001`, `ONT-001`, or `CLAUDE.md`.
+
+**Next governed step (as recorded at the time of the `RO-DEC-BA04-INC-007` entry above):** with that recording, the fresh independent Technical Design Authorization Review's own single condition was closed. Implementation authorization for the BA-04 Increment was, at that time, a distinct, separate, not-yet-granted Repository Owner action — granted by the entry immediately below.
+
+### BA-04 Increment — Implementation Authorization
+
+**Recorded 2026-08-16, per direct Repository Owner instruction ("WP-14 BA-04 Increment — Implementation Authorization").** This entry is the formal Implementation Authorization gate for the BA-04 Increment. **It authorizes implementation to begin; it does not itself constitute implementation, certification, V&V, or Release Readiness — each remains a distinct, future, independently-gated action per `CLAUDE.md §19.7`/`§19.7b`.** No source code, migration, API, or test is created by this entry.
+
+**Authorization basis:**
+1. `TDS-014_WP-14_BA-04_Increment_Knowledge_Asset_Lifecycle_Transition_Technical_Design.md` — complete Technical Design Specification.
+2. `RO-DEC-BA04-INC-007` (Database/Domain Event Consistency Posture) — approved by the Repository Owner and recorded in `TDS-014` (§9/§19/§21).
+3. A fresh, independent Technical Design Authorization Review of the completed `TDS-014` — **AUTHORIZED WITH CONDITIONS**, one condition (independent recording of `RO-DEC-BA04-INC-007` outside `TDS-014` itself).
+4. That condition closed by the `RO-DEC-BA04-INC-007` entry immediately above, in this same charter section.
+5. No technical-design rework was required by the independent review — sixteen of seventeen readiness dimensions were confirmed READY on first review; the seventeenth (event consistency) was confirmed READY once condition 3/4 above closed.
+
+**Decision: BA-04 Increment implementation is AUTHORIZED**, strictly bounded to `TDS-014`'s own frozen design — the implementing agent MUST NOT invent lifecycle transitions beyond `PROPOSED`→{`VALIDATED`,`ACCEPTED`,`REJECTED`}, `ACCEPTED` semantics, authorization rules, API semantics, the event name/version/payload, tenant rules, the concurrency mechanism, idempotency semantics, event ordering, or BA-05 relationship semantics — every one of these is already frozen by `TDS-014` (§2–§13, §18) and by this section's own prior `RO-DEC-WP14-BA05-01`/`RO-DEC-BA04-INC-007` entries. Where `TDS-014` does not provide enough information for a genuine implementation question, the implementing agent SHALL STOP and report the gap rather than invent a resolution, per `CLAUDE.md §17`/`§19.4`.
+
+**Explicit exclusions, unchanged and unaffected by this authorization:** no BA-05 implementation of any kind (no `enterprise_knowledge_graph_registry` code, no `Knowledge Asset —[Governed By]→ Organization` relationship creation — BA-04 produces only the `ACCEPTED` fact); no live Neo4j graph writes; no Knowledge Graph implementation; no additional lifecycle-transition edge beyond the three named above; no transactional outbox, retry infrastructure, replay mechanism, or durable event store (`RO-DEC-BA04-INC-007`'s own explicit exclusions, unchanged); no modification of BA-01, BA-02, or BA-03; no new Capability, Business Activity, SER, or relationship kind; no change to `RTA-001`, `ONT-001`, or any other canonical architecture document.
+
+**Governance state, as of this authorization:** `BA-04 Increment` moves from `DESIGNED / TECHNICAL DESIGN AUTHORIZATION CONDITION CLOSED` to **`IMPLEMENTATION AUTHORIZED`**. It is explicitly **not** `IMPLEMENTATION COMPLETE`, **not** `CERTIFIED`, and **not** `RELEASED` — each remains a distinct, future gate, per `CLAUDE.md §19.7`/`§19.7b`'s own five-gate closure sequence, applied to this Increment exactly as it was already applied to BA-03 and to BA-04's own original scope. The implementing session, once implementation is complete, SHALL NOT self-certify — a fresh, independent Gate 1 reviewer is required, per the same discipline already exercised at every gate this Work Package has passed through so far.
+
+---
+
+*End of this charter. Backend implementation (model, migration, repository, service, router, schemas, tests, and audit logging) exists under `Backend/Services/AIService/` per the authorization above and the Remediation Record. The minimum Enterprise Experience (Establish + status view) exists under `source/frontend/src/features/knowledge-asset/` per the Second Independent Certification & Enterprise Experience Remediation Record above. A BA-04 Increment (status-transition capability + Domain Event publication) is now fully designed (`TDS-014`), independently reviewed (AUTHORIZED WITH CONDITIONS, condition closed), and **IMPLEMENTATION AUTHORIZED** (above) — but has **zero implementation** as of this recording; BA-04's own existing certified behavior is unchanged throughout, and no BA-05 code exists anywhere in this repository. `ADR-023`, `AMD-016`, `RTA-001`, `IRA-014`, `TDS-013`, `TDS-014`, `CLAUDE.md`, and the Enterprise Search specification are unmodified by this recording.*
