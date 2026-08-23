@@ -13,6 +13,7 @@ from models.knowledge_asset import KnowledgeAssetRegistryModel
 from models.discovery_provider import DiscoveryProviderRegistryModel
 from models.unclassified_intelligence import UnclassifiedIntelligenceRegistryModel
 from models.customer_metric import CustomerMetricRegistryModel
+from models.knowledge_graph import EnterpriseKnowledgeGraphRegistryModel
 
 __all__ = [
     "Base",
@@ -29,4 +30,5 @@ __all__ = [
     "DiscoveryProviderRegistryModel",
     "UnclassifiedIntelligenceRegistryModel",
     "CustomerMetricRegistryModel",
+    "EnterpriseKnowledgeGraphRegistryModel",
 ]
