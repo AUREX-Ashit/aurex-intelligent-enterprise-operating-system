@@ -22,6 +22,7 @@ from routers.conversation import router as conversation_router
 from routers.knowledge_assets import router as knowledge_assets_router
 from routers.discovery_providers import router as discovery_providers_router
 from routers.intelligence_candidates import router as intelligence_candidates_router
+from routers.evidence import router as evidence_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -66,6 +67,7 @@ app.include_router(conversation_router)
 app.include_router(knowledge_assets_router)
 app.include_router(discovery_providers_router)
 app.include_router(intelligence_candidates_router)
+app.include_router(evidence_router)
 
 @app.get("/", tags=["Root"])
 async def root_welcome_portal():

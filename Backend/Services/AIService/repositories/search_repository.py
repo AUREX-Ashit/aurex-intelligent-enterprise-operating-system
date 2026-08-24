@@ -187,6 +187,53 @@ class EvidenceRegistryRepository:
         await self.db.flush()
         return instance
 
+    async def get_by_id(self, evidence_id: uuid.UUID) -> EvidenceRegistryModel | None:
+        """
+        WP-15 BA-01 — Understand Evidence Context (`TDS-015 §9`/§11). Looked
+        up by identity alone, with no `organization_id` filter — the
+        caller's own tenant-boundary check (own-Organization vs.
+        `PLATFORM_ADMIN` cross-Organization vs. neither) is a business
+        decision made by the caller (`EvidenceContextService.get_by_id`),
+        not a query-shape decision made here, since `PLATFORM_ADMIN`
+        legitimately needs to resolve a row this method alone cannot
+        distinguish from an ordinary caller's own row (`TDS-015 §9`/§13).
+        """
+        query = select(EvidenceRegistryModel).where(EvidenceRegistryModel.evidence_id == evidence_id)
+        return (await self.db.execute(query)).scalar_one_or_none()
+
+    async def list_visible(
+        self,
+        organization_id: uuid.UUID,
+        *,
+        linked_entity_type: str | None = None,
+        linked_entity_id: uuid.UUID | None = None,
+        evidence_source: str | None = None,
+        evidence_type: str | None = None,
+    ) -> list[EvidenceRegistryModel]:
+        """
+        WP-15 BA-01 (`TDS-015 §9`/§11). Exact-match `organization_id`
+        predicate only — never an `OR organization_id IS NULL` fallback,
+        unlike `VectorIndexRegistryRepository`'s own platform-wide-row
+        pattern — `evidence_registry.organization_id` is `NOT NULL`, so no
+        platform-wide row is structurally possible here. Every optional
+        filter is an additive `AND` predicate; a caller can never widen a
+        query beyond their own Organization by supplying or omitting any
+        of them (`RO-DEC-C066-BA01-05`).
+        """
+        conditions = [EvidenceRegistryModel.organization_id == organization_id]
+        if linked_entity_type is not None:
+            conditions.append(EvidenceRegistryModel.linked_entity_type == linked_entity_type)
+        if linked_entity_id is not None:
+            conditions.append(EvidenceRegistryModel.linked_entity_id == linked_entity_id)
+        if evidence_source is not None:
+            conditions.append(EvidenceRegistryModel.evidence_source == evidence_source)
+        if evidence_type is not None:
+            conditions.append(EvidenceRegistryModel.evidence_type == evidence_type)
+
+        query = select(EvidenceRegistryModel).where(*conditions)
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
+
 
 class DocumentChunkRegistryRepository:
     def __init__(self, db_session: AsyncSession) -> None:

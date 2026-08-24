@@ -9,15 +9,16 @@ class TenantHeaderMiddleware(BaseHTTPMiddleware):
         # Exclude documentation, swagger and health checks from tenant check.
         # "/search" (WP-11, IRA-011 §5), "/conversations" (WP-12, IRA-012 §5),
         # "/knowledge-assets" (WP-14 BA-04, charter §6),
-        # "/discovery-providers" (WP-14 BA-01, IRA-014 §6), and
-        # "/intelligence-candidates" (WP-14 BA-02, IRA-014 §6) are also
+        # "/discovery-providers" (WP-14 BA-01, IRA-014 §6),
+        # "/intelligence-candidates" (WP-14 BA-02, IRA-014 §6), and
+        # "/evidence" (WP-15 BA-01, TDS-015 §10, RO-DEC-C066-BA01-03) are also
         # excluded: their own endpoints derive organization_id from a real,
         # verified JWT claim (dependencies.get_current_claims) — the raw,
         # unverified X-Tenant-ID header this middleware enforces elsewhere is
         # superseded, not required in addition, for these routes specifically.
         # Pre-existing endpoints (/ai/extract, /ai/validate, /ai/scoring) are
         # unaffected.
-        bypass_paths = ["/docs", "/openapi.json", "/redoc", "/ai/health", "/search", "/conversations", "/knowledge-assets", "/discovery-providers", "/intelligence-candidates"]
+        bypass_paths = ["/docs", "/openapi.json", "/redoc", "/ai/health", "/search", "/conversations", "/knowledge-assets", "/discovery-providers", "/intelligence-candidates", "/evidence"]
         if any(request.url.path.startswith(p) for p in bypass_paths) or request.url.path == "/":
             return await call_next(request)
 
