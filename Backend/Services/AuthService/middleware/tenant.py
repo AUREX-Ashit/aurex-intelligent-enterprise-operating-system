@@ -194,11 +194,36 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # interim-gate precedent), orthogonal to this middleware's tenant
         # resolution, exactly as /workspaces' own BA-03 gate is orthogonal to
         # that prefix's own tenant-header exemption above.
+        # /auth/authority-login/{authority_identity} and
+        # /auth/authority-check/* (C-040 Authority Runtime Enforcement,
+        # TDS-017 §22/§24) are tenant-agnostic on the same basis as
+        # /auth/login: a platform-wide, pre-Organization accountability
+        # point (AI-001/AI-002) has no Organization and therefore no
+        # X-Tenant-ID to supply. This is a purely additive exemption-list
+        # entry, mirroring every other addition in this same list — it
+        # does not alter X-Tenant-ID's own meaning for any existing,
+        # already-exempted or already-tenant-scoped endpoint, and does
+        # not touch TD-158's own preserved disposition (X-Tenant-ID
+        # continues to mean organization_id everywhere it already did).
+        # /tenants (C-040 Tenant Establishment, TDS-016 Section 8,
+        # chartered minimum BA per the Repository Owner Decision
+        # 2026-08-26) is tenant-agnostic on the same basis as
+        # /auth/authority-login and /auth/authority-check: its sole caller
+        # is the currently-appointed AI-002 accountability point
+        # (require_ai002_holder), a platform-wide, pre-Organization
+        # authority with no Organization of its own and therefore no
+        # X-Tenant-ID to supply. The target Organization is named
+        # explicitly in the request body (organization_id), not implied by
+        # a caller tenant scope. Purely additive, mirroring every other
+        # entry in this list; does not alter X-Tenant-ID's own meaning
+        # anywhere else and does not touch TD-158's disposition.
         path = request.url.path
         if path in [
             "/health", "/ready", "/docs", "/redoc", "/openapi.json",
             "/auth/login", "/auth/refresh",
-        ] or path == "/person" or path.startswith("/person/") \
+        ] or path.startswith("/auth/authority-login/") or path.startswith("/auth/authority-check/") \
+          or path == "/tenants" or path.startswith("/tenants/") \
+          or path == "/person" or path.startswith("/person/") \
           or path == "/identity" or path.startswith("/identity/") \
           or path == "/workspaces" or path.startswith("/workspaces/") \
           or path == "/organizations" or path.startswith("/organizations/") \

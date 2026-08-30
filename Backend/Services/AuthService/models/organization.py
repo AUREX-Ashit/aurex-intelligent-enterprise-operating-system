@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, String, DateTime, Boolean
+from sqlalchemy import CheckConstraint, ForeignKey, String, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.database import Base
@@ -93,6 +93,24 @@ class Organization(Base):
         nullable=True,
         onupdate=lambda: datetime.now(timezone.utc)
     )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("tenant_registry.id"),
+        unique=True,
+        nullable=True,
+    )
+    """
+    C-040 (TDS-016 §5/§7). NULL means Tenant Establishment has not yet
+    completed for this Organization — never that the Organization is
+    itself the Tenant (Decision 1, 2026-08-26, restated TDS-016 §7).
+    Becomes non-NULL only at the moment the atomic Establishment
+    transaction (services/tenant_establishment_service.py, TDS-016 §8)
+    commits for it. UNIQUE enforces ADR-025's 1:1 Tenant<->Organization
+    cardinality (ADR-034 §7 item 1) — no `NOT NULL` is added, matching
+    TDS-016 §7's own explicit "not proposed" determination, since a
+    genuine pre-Establishment window is architecturally required by
+    ADR-026's own phased process.
+    """
 
     # Relationships
     memberships: Mapped[list["Membership"]] = relationship(

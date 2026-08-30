@@ -175,3 +175,133 @@ def require_domain_permission(domain_id: UUID, minimum_level: DomainPermissionLe
         return claims
 
     return _dependency
+
+
+def require_authority_holder(authority_identity: str) -> Callable:
+    """
+    C-040 Authority Runtime Enforcement (TDS-017 §22/§24) — dependency
+    factory, one instance per constitutional authority (`require_ai001_holder`/
+    `require_ai002_holder`, below), mirroring `require_domain_permission`'s
+    own factory shape.
+
+    Deliberately structured like `require_platform_admin` (a direct claims
+    comparison, Depends(get_current_claims), no `AuthorizationContext`, no
+    `Backend/Runtime/AuthorizationEngine` involvement, per TDS-017 §5/§11) —
+    but compares the caller's own `person_id` against a live database
+    lookup of the currently ACTIVE `authority_holders` row for
+    `authority_identity`, never a role, never `PLATFORM_ADMIN`, never
+    `AUREX_ADMIN`, never a Group, never Organization membership, and never
+    a self-asserted claim embedded in the token itself (TDS-017 §22's own
+    "the runtime authorization check remains a live lookup... rather than
+    trusting an authority claim embedded in the JWT").
+
+    If no ACTIVE row exists for `authority_identity` (e.g. AI-002, `TD-157`,
+    unpopulated), every caller is correctly and permanently denied — this
+    dependency never simulates, infers, or defaults a holder.
+    """
+
+    async def _dependency(
+        claims: Annotated[dict, Depends(get_current_claims)],
+        session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+    ) -> dict:
+        from repositories.authority_holder_repository import AuthorityHolderRepository
+
+        person_id_str = claims.get("person_id")
+        if not person_id_str:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"This operation requires the currently appointed {authority_identity} accountability point.",
+            )
+
+        repo = AuthorityHolderRepository(session)
+        active_holder = await repo.get_active_by_authority(authority_identity)
+        if not active_holder or str(active_holder.holder_person_id) != person_id_str:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"This operation requires the currently appointed {authority_identity} accountability point.",
+            )
+
+        return claims
+
+    return _dependency
+
+
+require_ai001_holder = require_authority_holder("AI-001")
+require_ai002_holder = require_authority_holder("AI-002")
+
+
+async def enforce_approval_authority(
+    claims: dict,
+    session: AsyncSession,
+    target_organization_id: UUID,
+    authority_name: str,
+) -> None:
+    """
+    WP-18 (C-003, TDS-018 §29.2) — the real check, evaluated through
+    `resolve_approval_authority()`'s own 8-step algorithm against a real,
+    database-backed `approval_authorities` row and
+    `membership_approval_authority` binding. Raises `HTTPException(403)`
+    on any DENY outcome; returns `None` on `AUTHORIZED` — call-site style
+    (a plain function, not a dependency) mirroring
+    `enforce_domain_permission`'s own established split.
+
+    Deliberately structured like `require_authority_holder`/
+    `require_platform_admin` (TDS-018 §12 Option B — a direct claims
+    comparison plus one live database lookup, no `AuthorizationContext`,
+    no `Backend/Runtime/AuthorizationEngine` involvement) — but resolves
+    an Organization-scoped `approval_authorities` row via a Membership
+    binding, never a role, never `PLATFORM_ADMIN`, never `AUREX_ADMIN`,
+    never a Group. **No admin bypass exists here, unlike
+    `enforce_domain_permission`'s own `PLATFORM_ADMIN` universal-bypass
+    precedent** — TDS-018 §11/§18 explicitly prohibit any such fallback
+    for this specific gate.
+
+    `target_organization_id` is deliberately a separate parameter from
+    the caller's own claimed `organization_id` — TDS-018 §29.2 step 4
+    requires comparing the two, which would be vacuous if both were
+    derived from the same claim.
+    """
+    from services.approval_authority_resolver import ApprovalAuthorityResolution, resolve_approval_authority
+
+    person_id_str = claims.get("person_id")
+    organization_id_str = claims.get("organization_id")
+    membership_id_str = claims.get("membership_id")
+
+    caller_organization_id = UUID(organization_id_str) if organization_id_str else None
+    caller_membership_id = UUID(membership_id_str) if membership_id_str else None
+
+    reason = await resolve_approval_authority(
+        session=session,
+        target_organization_id=target_organization_id,
+        authority_name=authority_name,
+        caller_organization_id=caller_organization_id,
+        caller_membership_id=caller_membership_id,
+        actor_id=person_id_str,
+    )
+    if reason != ApprovalAuthorityResolution.AUTHORIZED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"This operation requires the currently-satisfied '{authority_name}' Approval Authority ({reason.value}).",
+        )
+
+
+def require_approval_authority(authority_name: str) -> Callable:
+    """
+    Dependency-factory wrapper around `enforce_approval_authority()`, for
+    the common case where the required `authority_name` is fixed at
+    route-registration time and the target Organization is the request's
+    own `X-Tenant-ID` — mirrors `require_domain_permission`'s own factory
+    shape exactly (TDS-018 §12 Option B; `require_authority_holder` is
+    the nearest existing precedent this dependency's own shape is
+    modeled on).
+    """
+
+    async def _dependency(
+        claims: Annotated[dict, Depends(get_current_claims)],
+        tenant_id: Annotated[UUID, Depends(get_current_tenant)],
+        session: Annotated[AsyncSession, Depends(db_manager.get_session)],
+    ) -> dict:
+        await enforce_approval_authority(claims, session, tenant_id, authority_name)
+        return claims
+
+    return _dependency

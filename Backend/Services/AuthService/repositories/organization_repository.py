@@ -1,6 +1,7 @@
+import uuid
 from typing import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.organization import Organization
@@ -76,3 +77,22 @@ class OrganizationRepository(BaseRepository[Organization]):
         rows = await self.session.execute(stmt)
         total = await self.session.execute(count_stmt)
         return rows.scalars().all(), total.scalar_one()
+
+    async def establish_tenant_if_unset(self, organization_id: uuid.UUID, tenant_id: uuid.UUID) -> int:
+        """
+        TDS-016 §8 steps 5/6 — the transaction's own idempotency/race guard.
+        A conditional UPDATE, not a plain assignment: only affects a row
+        whose tenant_id is still NULL, so a second, concurrent attempt for
+        the same Organization (whose first transaction already committed)
+        affects zero rows here rather than silently overwriting an
+        already-established tenant_id. Returns the affected row count —
+        the caller (TenantEstablishmentService) treats 0 as "lost the
+        race, roll back the whole transaction including the tenant_registry
+        INSERT," exactly as TDS-016 §8 step 6 specifies.
+        """
+        result = await self.session.execute(
+            update(Organization)
+            .where(Organization.id == organization_id, Organization.tenant_id.is_(None))
+            .values(tenant_id=tenant_id)
+        )
+        return result.rowcount

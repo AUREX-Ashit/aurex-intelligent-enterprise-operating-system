@@ -14,10 +14,13 @@ from schemas.auth import (
     RefreshTokenResponse,
     OrganizationOption,
     OrganizationSelectionResponse,
+    AuthorityLoginRequest,
+    AuthorityTokenResponse,
 )
 from repositories.identity_repository import IdentityRepository
 from repositories.membership_repository import MembershipRepository
 from repositories.refresh_token_repository import RefreshTokenRepository
+from repositories.authority_holder_repository import AuthorityHolderRepository
 from config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -69,10 +72,20 @@ class AuthService:
         identity_repo: IdentityRepository,
         membership_repo: MembershipRepository,
         refresh_token_repo: RefreshTokenRepository,
+        authority_holder_repo: AuthorityHolderRepository | None = None,
     ) -> None:
-        self.identity_repo      = identity_repo
-        self.membership_repo    = membership_repo
-        self.refresh_token_repo = refresh_token_repo
+        self.identity_repo         = identity_repo
+        self.membership_repo       = membership_repo
+        self.refresh_token_repo    = refresh_token_repo
+        self.authority_holder_repo = authority_holder_repo
+        """
+        Optional (default None) so every existing caller/test that
+        constructs AuthService with the original three-argument signature
+        continues to work unchanged (Phase 3's own "ordinary
+        Organization-scoped authentication must remain unchanged"
+        requirement) — only authenticate_authority_holder() below
+        requires it, and raises explicitly if it was never supplied.
+        """
 
     # ------------------------------------------------------------------
     # Password helpers
@@ -106,8 +119,8 @@ class AuthService:
         claims = {
             "person_id":       str(payload.person_id),
             "identity_id":     str(payload.identity_id),
-            "organization_id": str(payload.organization_id),
-            "membership_id":   str(payload.membership_id),
+            "organization_id": str(payload.organization_id) if payload.organization_id else None,
+            "membership_id":   str(payload.membership_id) if payload.membership_id else None,
             "role_code":       payload.role_code,
             "exp":             expire,
             "type":            "access",
@@ -129,8 +142,8 @@ class AuthService:
         claims = {
             "person_id":       str(payload.person_id),
             "identity_id":     str(payload.identity_id),
-            "organization_id": str(payload.organization_id),
-            "membership_id":   str(payload.membership_id),
+            "organization_id": str(payload.organization_id) if payload.organization_id else None,
+            "membership_id":   str(payload.membership_id) if payload.membership_id else None,
             "role_code":       payload.role_code,
             "exp":             expire,
             "type":            "refresh",
@@ -342,6 +355,95 @@ class AuthService:
         new_access_token = self.create_access_token(token_payload)
         return RefreshTokenResponse(
             access_token=new_access_token,
+            token_type="bearer",
+            expires_in=settings.access_token_expiry_minutes * 60,
+        )
+
+    # ------------------------------------------------------------------
+    # C-040 Authority Runtime Enforcement — pre-Organization login
+    # (TDS-017 §22)
+    # ------------------------------------------------------------------
+
+    async def authenticate_authority_holder(
+        self,
+        login_data: AuthorityLoginRequest,
+        authority_identity: str,
+    ) -> AuthorityTokenResponse:
+        """
+        Narrowly-scoped parallel authentication path for a platform-wide,
+        pre-Organization constitutional authority (AI-001/AI-002).
+
+        Reuses Identity resolution and password verification exactly as
+        authenticate_user() does (Phase 3's own "reuse the existing
+        credential/password verification mechanism" requirement) — this
+        method does NOT bypass credential checking in any way. It never
+        resolves or requires a Membership.
+
+        Mandatory constraint (TDS-017 §22): this must not become a
+        generic zero-Membership login bypass. Before issuing a token, the
+        authenticated person's own person_id is compared — via a live
+        database lookup, never a self-asserted claim — against the
+        currently ACTIVE holder record for `authority_identity`
+        (AuthorityHolderRepository.get_active_by_authority). A caller who
+        authenticates correctly but does not match the active holder
+        receives 403, identically whether or not they hold any
+        Organization Membership elsewhere — no zero-Membership caller is
+        treated more permissively than any other non-holder.
+        """
+        if self.authority_holder_repo is None:
+            raise RuntimeError(
+                "authenticate_authority_holder() requires authority_holder_repo "
+                "to be supplied to AuthService.__init__."
+            )
+
+        if authority_identity not in ("AI-001", "AI-002"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="authority_identity must be 'AI-001' or 'AI-002'.",
+            )
+
+        # Step 1 — resolve Identity by email (identical to authenticate_user)
+        identity = await self.identity_repo.get_by_email(login_data.email)
+        if not identity:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=_INVALID_CREDENTIALS,
+            )
+
+        # Step 2 — verify LOCAL password (identical to authenticate_user)
+        if not identity.password_hash:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=_INVALID_CREDENTIALS,
+            )
+        if not self.verify_password(login_data.password, identity.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=_INVALID_CREDENTIALS,
+            )
+
+        # Step 3 — live lookup of the currently active authority holder;
+        # never trust a self-asserted claim, never infer from Membership.
+        active_holder = await self.authority_holder_repo.get_active_by_authority(authority_identity)
+        if not active_holder or active_holder.holder_person_id != identity.person_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"This operation requires the currently appointed {authority_identity} accountability point.",
+            )
+
+        # Step 4 — issue a sparse token: person_id/identity_id populated,
+        # organization_id/membership_id/role_code left None (TDS-017 §22).
+        token_payload = TokenPayload(
+            person_id=identity.person_id,
+            identity_id=identity.id,
+            organization_id=None,
+            membership_id=None,
+            role_code=None,
+        )
+        access_token = self.create_access_token(token_payload)
+
+        return AuthorityTokenResponse(
+            access_token=access_token,
             token_type="bearer",
             expires_in=settings.access_token_expiry_minutes * 60,
         )

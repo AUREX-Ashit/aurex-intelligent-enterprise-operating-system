@@ -25,12 +25,22 @@ class TokenPayload(BaseModel):
     Internal R-001 JWT claims structure.
     Used by AuthService to build and decode token payloads.
     Never serialized directly in API responses.
+
+    organization_id/membership_id/role_code are Optional (TDS-017 §22,
+    C-040 Authority Runtime Enforcement): the ordinary Organization-scoped
+    login path (authenticate_user) always populates all three, unchanged.
+    The narrowly-scoped authority-holder login path
+    (authenticate_authority_holder) leaves all three None — a platform-
+    wide, pre-Organization accountability point (AI-001/AI-002) has no
+    Membership and therefore no Organization or Role to carry. person_id
+    and identity_id remain mandatory for both paths — Person/Identity are
+    already Organization-independent (URA-001-15).
     """
     person_id: UUID
     identity_id: UUID
-    organization_id: UUID
-    membership_id: UUID
-    role_code: str
+    organization_id: UUID | None = None
+    membership_id: UUID | None = None
+    role_code: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -71,6 +81,49 @@ class RefreshTokenResponse(BaseModel):
             }
         }
     }
+
+
+class AuthorityLoginRequest(BaseModel):
+    """
+    Validation schema for the narrowly-scoped authority-holder login path
+    (TDS-017 §22). Deliberately identical shape to LoginRequest — the
+    credential-verification step is fully reused (Phase 3's own "reuse
+    the existing credential/password verification mechanism"
+    requirement) — kept as a distinct type so the two endpoints' own
+    request contracts can evolve independently without coupling.
+    """
+    email: EmailStr = Field(..., description="User's unique registered corporate email address")
+    password: str = Field(..., min_length=8, description="User's secure account password")
+
+
+class AuthorityTokenResponse(BaseModel):
+    """
+    Response for a successful authority-holder login. Deliberately carries
+    NO refresh_token — TDS-017 never specifies refresh/renewal semantics
+    for this token class, and reusing the ordinary refresh_session_token()
+    flow would silently require organization_id (it hard-requires and
+    re-validates Membership), which this path's own token never carries.
+    Not inventing that behavior here: an authority holder simply
+    re-authenticates (password + live holder-check) once this short-lived
+    access token expires.
+    """
+    access_token: str = Field(..., description="Cryptographically signed JSON Web Token")
+    token_type: str = Field("bearer", description="Token authentication scheme")
+    expires_in: int = Field(3600, description="Remaining validity window in seconds")
+
+
+class AuthorityCheckResponse(BaseModel):
+    """
+    Diagnostic response confirming the caller's own live-verified
+    authority-holder status (TDS-017 §22/§24 — a live lookup, never a
+    token-embedded claim). Not a C-040 business endpoint response — this
+    exists to exercise the Phase 4 runtime-authorization dependency in
+    isolation, ahead of any future Tenant Establishment endpoint that
+    would actually consume it.
+    """
+    authority_identity: str = Field(..., description="'AI-001' or 'AI-002'")
+    person_id: UUID = Field(..., description="The authenticated caller's own person_id")
+    authorized: bool = Field(True, description="Always True for a 200 response — a denial raises 403 instead")
 
 
 class OrganizationOption(BaseModel):

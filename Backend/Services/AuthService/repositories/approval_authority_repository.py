@@ -1,8 +1,9 @@
 import uuid
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.approval_authority import ApprovalAuthority
+from models.approval_authority import ApprovalAuthority, VersionStatus
 from repositories.base_repository import BaseRepository
 
 
@@ -13,6 +14,39 @@ class ApprovalAuthorityRepository(BaseRepository[ApprovalAuthority]):
 
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(ApprovalAuthority, session)
+
+    async def get_active_by_organization_and_name(
+        self, organization_id: uuid.UUID, authority_name: str
+    ) -> ApprovalAuthority | None:
+        """
+        WP-18 (C-003, TDS-018 §29.2 step 1): the currently-`ACTIVE` row for
+        this Organization/`authority_name`, if any. Additive — does not
+        change any existing method's behavior.
+        """
+        query = select(ApprovalAuthority).where(
+            ApprovalAuthority.organization_id == organization_id,
+            ApprovalAuthority.authority_name == authority_name,
+            ApprovalAuthority.status == VersionStatus.ACTIVE.value,
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
+
+    async def get_any_by_organization_and_name(
+        self, organization_id: uuid.UUID, authority_name: str
+    ) -> ApprovalAuthority | None:
+        """
+        WP-18 (C-003, TDS-018 §29.2 step 1): any row (any status) for this
+        Organization/`authority_name` — used only to distinguish
+        `NO_AUTHORITY_CONFIGURED` (no row at all) from `INACTIVE_AUTHORITY`
+        (a row exists but is `SUPERSEDED`/`DEPRECATED`/`RETIRED`). Additive
+        — does not change any existing method's behavior.
+        """
+        query = select(ApprovalAuthority).where(
+            ApprovalAuthority.organization_id == organization_id,
+            ApprovalAuthority.authority_name == authority_name,
+        )
+        result = await self.session.execute(query)
+        return result.scalars().first()
 
     async def get_active_dependents(self, approval_authority_id: uuid.UUID) -> list[dict]:
         """

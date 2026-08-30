@@ -14,6 +14,7 @@ from .refresh_token import RefreshToken
 from .domain import Domain
 from .domain_permission import DomainPermission
 from .approval_authority import ApprovalAuthority
+from .membership_approval_authority import MembershipApprovalAuthority
 from .delegation_policy import DelegationPolicy
 from .runtime_assignment_policy import RuntimeAssignmentPolicy
 from .organization_node import OrganizationNode
@@ -24,6 +25,7 @@ from .person_correction import PersonCorrection
 from .person_enrichment import PersonEnrichment
 from .identity_recovery_request import IdentityRecoveryRequest
 from .configuration_entry import ConfigurationEntry
+from .tenant_registry import TenantRegistry
 
 __all__ = [
     "Base",
@@ -39,6 +41,7 @@ __all__ = [
     "Domain",
     "DomainPermission",
     "ApprovalAuthority",
+    "MembershipApprovalAuthority",
     "DelegationPolicy",
     "RuntimeAssignmentPolicy",
     "OrganizationNode",
@@ -49,4 +52,5 @@ __all__ = [
     "PersonEnrichment",
     "IdentityRecoveryRequest",
     "ConfigurationEntry",
+    "TenantRegistry",
 ]
