@@ -26,6 +26,8 @@ from .person_enrichment import PersonEnrichment
 from .identity_recovery_request import IdentityRecoveryRequest
 from .configuration_entry import ConfigurationEntry
 from .tenant_registry import TenantRegistry
+from .c023_license_context import C023LicenseContext
+from .c023_entitlement_context import C023EntitlementContext
 
 __all__ = [
     "Base",
@@ -53,4 +55,6 @@ __all__ = [
     "IdentityRecoveryRequest",
     "ConfigurationEntry",
     "TenantRegistry",
+    "C023LicenseContext",
+    "C023EntitlementContext",
 ]
