@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from middleware.tenant import TenantMiddleware
 from middleware.logging import LoggingMiddleware
-from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent, structural_proposal, impact_assessment, structural_review, structural_validation, structural_completion, access_evaluation, identity, workspace, configuration, tenant_establishment, entitlement_license
+from routers import auth, health, organization, organization_establishment_attempt, person, role, domain, domain_permission, approval_authority, delegation_policy, runtime_assignment_policy, membership, organization_node, structural_change_intent, structural_proposal, impact_assessment, structural_review, structural_validation, structural_completion, access_evaluation, identity, workspace, configuration, tenant_establishment, entitlement_license, notification
 from models.database import db_manager
 from config import settings
 
@@ -107,3 +107,4 @@ app.include_router(workspace.router, prefix="/workspaces", tags=["Workspace"])
 app.include_router(configuration.router, prefix="/configuration", tags=["Configuration"])
 app.include_router(tenant_establishment.router, prefix="/tenants", tags=["Tenant Establishment"])
 app.include_router(entitlement_license.router, prefix="/entitlement-license-contexts", tags=["Entitlement & License"])
+app.include_router(notification.router, prefix="/notifications", tags=["Enterprise Notifications"])

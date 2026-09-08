@@ -28,6 +28,7 @@ from .configuration_entry import ConfigurationEntry
 from .tenant_registry import TenantRegistry
 from .c023_license_context import C023LicenseContext
 from .c023_entitlement_context import C023EntitlementContext
+from .c132_notification import C132Notification
 
 __all__ = [
     "Base",
@@ -57,4 +58,5 @@ __all__ = [
     "TenantRegistry",
     "C023LicenseContext",
     "C023EntitlementContext",
+    "C132Notification",
 ]
