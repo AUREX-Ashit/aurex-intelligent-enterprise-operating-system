@@ -2,7 +2,7 @@
 
 Implements the Authorization Engine Runtime Component specified by `RTA-001 §3.8`/`§11`. Owns no Business Object, performs no Business Activity — see `architecture/05-Implementation/IRA-RTA-001_...md` for the full constitutional charter and `architecture/05-Implementation/WP-RTA-001_...md` for the Work Package definition. This file documents the package's own public contracts (Milestone M6, "Document all public contracts") — it does not restate the governance record.
 
-**Status:** M1–M6 implemented (see `architecture/05-Implementation/IMP-REPORT-WP-RTA-001_...md`). Not committed. Not independently reviewed or certified. No Business Activity or WP-05 consumer wired.
+**Status:** M1–M6 implemented (see `architecture/05-Implementation/IMP-REPORT-WP-RTA-001_...md`). ~~Not committed. Not independently reviewed or certified. No Business Activity or WP-05 consumer wired.~~ *(Corrected 2026-09-24, per `RO-M1-12`, factual correction only — `architecture/06-Reviews/IRA-BAE-001-M1_Runtime_Contract_and_Gap_Analysis.md §14`, `X-06`.)* Committed (`7fac19c`). Independently certified **CERTIFIED WITH CONDITIONS** (`architecture/06-Reviews/CERT-WP-RTA-001_Authorization_Runtime_Engine.md`; `WPR-001 §2a`). Consumed from committed AuthService code by `WP-13` (`Backend/Services/AuthService/dependencies.py::enforce_domain_permission`, 7 call sites across 3 routers, binding one real resolver, `authz_integration/domain_permission_resolver.py`). `WP-13` itself is recorded in `WPR-001` as not yet certified. No Business Activity Engine consumer exists yet (`WP-BAE-001`).
 
 ## Package Structure
 
@@ -139,7 +139,7 @@ evaluation_count / completed_count / failure_count: int   # properties
 ## Known Limitations (see `architecture/06-Reviews/TECH-DEBT.md` for the full register)
 
 - Four of five precedence tiers (Named User, Group, Approval Authority, Business Role) have no real, bound resolver anywhere yet — their owning data models (`Group`, `runtime_assignment_registry`, an Approval-Authority holder linkage, Business-Role domain-scoping) do not exist in this repository (`TD-071`, `IRA-RTA-001 §6`).
-- No Business Activity or FastAPI endpoint consumes this runtime yet (`AuthorizationAdapter` has no real caller).
+- ~~No Business Activity or FastAPI endpoint consumes this runtime yet (`AuthorizationAdapter` has no real caller).~~ *(Corrected 2026-09-24, per `RO-M1-12` — see Status above.)* `AuthorizationAdapter` has one real caller, `WP-13`'s `enforce_domain_permission` (AuthService, 7 call sites across 3 routers). Only the Domain Permission tier is bound there. No caller reaches it through a Business Activity Engine yet.
 - Enterprise Scope Validation runs once, before evaluation, rather than at `RTA-001 §11.7`'s own literal mid-pipeline position (`TD-077`).
 - Observer-failure isolation has no visibility mechanism of its own (`TD-075`).
 - Caching is not implemented; the extension point requires a wrapper, not an observer (`TD-078`).
