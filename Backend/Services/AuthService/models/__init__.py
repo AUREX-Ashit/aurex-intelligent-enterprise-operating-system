@@ -30,6 +30,7 @@ from .c023_license_context import C023LicenseContext
 from .c023_entitlement_context import C023EntitlementContext
 from .c132_notification import C132Notification
 from .c021_offering_definition import C021OfferingDefinition
+from .c022_commercial_account import C022CommercialAccount
 
 __all__ = [
     "Base",
@@ -61,4 +62,5 @@ __all__ = [
     "C023EntitlementContext",
     "C132Notification",
     "C021OfferingDefinition",
+    "C022CommercialAccount",
 ]
