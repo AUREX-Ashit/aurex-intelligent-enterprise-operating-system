@@ -32,6 +32,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
         # on the same basis: the Role model has no organization_id column — Roles are
         # platform-global (URA-001 Section 3), not tenant-scoped, mirroring
         # /organizations' own rationale exactly (IRA-002 §2.4).
+        # /offerings (WP-20, C-021 Product & Service Catalog, BA-01 Establish /
+        # Manage Offering Definition) is tenant-agnostic on the identical basis as
+        # /roles: the c021_offering_definition model has no organization_id column —
+        # the C-021 catalog is one platform-global, enterprise-wide catalog
+        # (Repository Owner decision D8, ROD-C021 / TDS-C021 §9.1/§11), not
+        # tenant-scoped. Every /offerings route is require_platform_admin-gated at
+        # the router, so there is no single tenant to scope the request to, exactly
+        # as with /roles and /organizations.
         # /domains (AMD-014, Domain reference/master-data lookup) is tenant-agnostic
         # for the same reason as /roles: the read-only lookup is PLATFORM_ADMIN-gated
         # and Domain rows are platform-seeded/global by default (organization_id
@@ -228,6 +236,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
           or path == "/workspaces" or path.startswith("/workspaces/") \
           or path == "/organizations" or path.startswith("/organizations/") \
           or path == "/roles" or path.startswith("/roles/") \
+          or path == "/offerings" or path.startswith("/offerings/") \
           or path == "/domains" or path.startswith("/domains/") \
           or path == "/domain-permissions" or path.startswith("/domain-permissions/") \
           or path == "/approval-authorities" or path.startswith("/approval-authorities/") \

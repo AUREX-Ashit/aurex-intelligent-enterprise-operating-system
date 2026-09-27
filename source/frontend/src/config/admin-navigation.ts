@@ -93,6 +93,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: "/platform-admin/subscriptions/entitlement-license",
   },
   {
+    slug: "product-service-catalog",
+    label: "Product & Service Catalog",
+    description: "Establish and review the enterprise's authoritative Offering Definitions (C-021).",
+    href: "/platform-admin/subscriptions/offerings",
+  },
+  {
     slug: "workflows",
     label: "Workflow Administration",
     description: "Platform workflow configuration.",
