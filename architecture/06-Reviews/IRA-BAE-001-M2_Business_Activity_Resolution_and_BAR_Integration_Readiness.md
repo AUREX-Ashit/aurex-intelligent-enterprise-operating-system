@@ -354,114 +354,296 @@ The pipeline order, the sixteen stages, the result invariant and stage 4 are unc
 
 ---
 
-## 13. `CLAUDE.md §19` M2 Implementation-Start Checklist
+## 13. `CLAUDE.md §19` M2 Implementation-Start Checklist (B2)
 
-**Status: PREPARED — NOT APPROVED. M2 implementation is NOT AUTHORIZED.** No code may be written until every box in 13.1 is ticked by a Repository Owner act.
+**Status: REGENERATED FOR B2 (2026-09-29) — PREPARED, NOT APPROVED. M2 implementation is NOT AUTHORIZED and NOT STARTED.** No M2 code may be written until every box in 13.1 is ticked by a Repository Owner act.
 
-*(2026-09-29: RD-M2-07 and RD-M2-08 are decided (§0). Only the minimum decision-state references in §13.1 and §13.8 are updated here. **The full B2 regeneration of §13 is the next governance task.** It must follow RD-M2-07/08 and precede any M2 authorization. Until then, §16.K is the authoritative list of B2 prerequisites.)*
+*Regeneration note (2026-09-29).*
+- By Repository Owner instruction ("Proceed with the FULL §13 B2 REGENERATION"), this section **replaces** the M-B checklist of 2026-09-25 and its dated annotations of 2026-09-28/29.
+- That version is preserved in repository history (last committed in `5f43cec`). Historical decisions elsewhere in this document (§0, §7, §11, §14 to §16) are unchanged.
+- Basis:
+  - `ADR-043` (B2);
+  - FO-2 (§16, §16.L);
+  - FO-3 (`TDS-BAE-001-M2-FO3 …`, §15.A, §15.B);
+  - RD-M2-07 and RD-M2-08 (`ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md §11`).
+- Every test below is **planned and required**. None of the B2 tests exists yet.
 
-### 13.1 Preconditions (all required)
-- [x] **RD-M2-01** BAR A–C dependency state decided (§3.1). *(Decided 2026-09-25, §0.)*
-- [x] **RD-M2-01 prerequisite met:** WP-23 Workstreams A–C closed, committed and independently verified; stale statements reconciled (`IRA-WP-23-AC_…_Closure_Readiness.md`). *(Satisfied 2026-09-28; see §0. A–C were independently verified at Gates 1–5, ACCEPTED under `IRA-WP-23-AC §0.2` (the RD-23-02 tranche terminal state), committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`, and C-4-reconciled in `bae8350b89771c48ad0b9acd57c829cdb62be615`. WP-23 is NOT certified and NOT closed; it remains OPEN, with D–H not implemented. This does not authorize M2.)*
-- [x] **RD-M2-02** Binding form and location decided (§7). ~~**OPEN.**~~ *(Decided 2026-09-28: Option B2, `ADR-043`. The M2 detailed design must be redone for B2; see §0.)*
-- [x] **RD-M2-03** Per-datum verification scope and tenant placement decided (§6, §12). *(Decided 2026-09-25, §0; `TD-170`.)*
-- [x] **RD-M2-04** Workstream E relationship decided (§8). *(Decided 2026-09-25, §0.)*
-- [ ] **RD-M2-05** Host integration and packaging (TD-165) scope decided (§10). *(Decided in principle 2026-09-25, §0; detailed design pending.)*
-- [x] **RD-M2-06** Implementation-reference vs invocation-contract split decided (§7). *(Decided 2026-09-25, §0.)*
-- [x] **RD-M2-07** B2 binding infrastructure ownership decided. *(Decided 2026-09-29: Option B, M2-P; §0.)*
-- [x] **RD-M2-08** Infrastructure prerequisites decided. *(Decided 2026-09-29: Option (a); §0. The infrastructure itself remains OUTSTANDING.)*
-- [ ] **M2-P** complete through its own `§19.7` gate, and the other B2 prerequisites in §16.K. *(Added 2026-09-29; merged into this list by the §13 regeneration.)*
-- [ ] Explicit Repository Owner **M2 implementation authorization**, naming its scope (Charter §17).
+### 13.1 Authorization and prerequisites
 
-### 13.2 Authorized scope (proposed, if §14 recommendations are adopted)
+**Satisfied** (decisions and designs complete):
+- [x] **RD-M2-01:** BAR A–C prerequisite satisfied (§0; `b0f5a12`, `bae8350`). WP-23 remains OPEN (D–H not implemented).
+- [x] **RD-M2-02:** B2 selected; `ADR-043` Accepted (`1a36969`).
+- [x] **RD-M2-03:** only the identifier and registration status are verified; organization-independent resolution (§0, §12). *Its TD-170 recording is outstanding; see below.*
+- [x] **RD-M2-04:** the BAE consumes BAR registration state; Workstream E is unchanged (§0).
+- [x] **RD-M2-06:** M2 resolves an opaque reference; invocation belongs to M5 (§0).
+- [x] **FO-1:** Master Technical Architecture AMD-017, v7.4 PART K (`867af46`).
+- [x] **FO-2:** design approved, OQ-1 to OQ-4 decided (§16, §16.L; `accc127`).
+- [x] **FO-3:** design approved (`e7c713b`). **Not implemented.**
+- [x] **FQ-1 to FQ-8:** decided (FO-3 §15.A).
+- [x] **IP-3:** resolved; `approved_by_actor_id` withdrawn (FO-3 §15.B).
 
-*(FO-2 note, 2026-09-28: §13.2 and §13.4 describe the M-B form and no longer match B2. They must be regenerated from §16 once §16 is approved (§16.K, prerequisite 5). Preserved as written.)*
-The M2 subset of the Charter §10 M2 objective:
-- the typed read-only BAR registration consumption;
-- the five-way outcome discrimination (§5);
-- the explicit, content-free BAE resolver (M-B) and the minimum manifest identity;
-- the stage 2 → stage 3 hand-off of `ResolvedBusinessActivity`;
-- the AuthService host adapter over `get_by_identifier`;
-- the BAE import path for AuthService (TD-165);
-- tests and documentation.
+**Decided, not implemented:**
+- [x] **RD-M2-07:** Option B. The pre-M2 milestone **M2-P** owns C1 to C3; M2 owns C5 and C7 (§0).
+- [x] **RD-M2-08:** Option (a). Infrastructure is an external operational prerequisite (§0).
+- [x] **M2-P charter:** added to `WP-BAE-001` Charter §10 (`5f43cec`). **NOT AUTHORIZED / NOT STARTED.**
+
+**Outstanding / blocking (each must be resolved before M2 authorization):**
+- [ ] **M2-P:** implementation authorized, implemented and passed through its own `§19.7` gate (§13.10), so that M2 consumes a real, accepted binding store.
+- [ ] **RD-M2-05:** detailed host-integration design, including:
+  - the BAE import path or packaging choice (TD-165);
+  - the host start-up wiring point for start-up reconciliation (§13.4, §13.9).
+- [ ] **TD-171:** closed, or an explicit Repository Owner decision on how M2 may consume `bar_registration` while TD-171 is open (§16.H).
+- [ ] **TD-170:** the register entry committed. It is currently present only in the uncommitted working tree, and RD-M2-03 relies on it.
+- [ ] **TD-165:** packaging or path-module resolution, per RD-M2-05.
+- [ ] **TD-176:** a PostgreSQL/asyncpg verification method and environment available for M2 (§13.7, T-18).
+- [ ] **FQ-6:** target-store CI access (RD-M2-08). This does not block M2 code. It must exist before the first governed binding write to a deployed environment, and before any claim of target-store reconciliation.
+- [ ] **FQ-7:** evidence that the read-only adapter role and the write role are provisionable. This is required for T-17. If infeasible, the constraint is recorded and FQ-7 is not weakened.
+- [ ] **This regenerated §13** accepted by the Repository Owner.
+- [ ] Explicit Repository Owner **M2 implementation authorization**, naming its scope (Charter §17). It must be AuthService-only (§13.2).
+
+**M2 is NOT AUTHORIZED / NOT STARTED.** **M2-P is CHARTERED, NOT AUTHORIZED / NOT STARTED.**
+
+### 13.2 Exact M2 implementation scope
+
+M2 is a **read-only resolver and consumer**. It consumes the binding store **created by M2-P**. It does not own, create, change or write that store (RD-M2-07; FO-2 §16.A).
+
+| # | In scope | Governing basis |
+|---|---|---|
+| 1 | **Typed registration lookup:** extend the M1 `RegistrationSource.is_registered -> bool` port to a typed `lookup` returning a registration result | §5; FO-2 §16.E |
+| 2 | **BAR registration verification (stage 2b):** read-only, first, over `BarRegistrationRepository.get_by_identifier`. `NOT_REGISTERED` stops resolution | FO-2 §16.B; RD-M2-03, RD-M2-04 |
+| 3 | **`BindingSource` port:** a new BAE-owned port, consulted only after 2b (stage 2c) | FO-2 §16.B, §16.E |
+| 4 | **Read-only host binding adapter:** SELECT-only against M2-P's store, on the host's own session. It raises on failure and never converts a failure into "no binding". No caching (OQ-3) | FO-2 §16.E; FO-3 §12 |
+| 5 | **Reference-keyed realization:** an immutable, explicitly constructed, fail-fast mapping from implementation reference to implementation object, supplied by the host (stage 2e) | FO-2 §16.D |
+| 6 | **Reconciliation logic:** comparing binding references with realization keys, with the four states | FO-2 §16.F; FQ-6 |
+| 7 | **Host start-up reconciliation:** fails closed **per identifier**; the host is not aborted | FQ-6; RD-M2-07 (C5) |
+| 8 | **`REALIZATION_UNAVAILABLE`:** a binding without a realization gives `EXECUTION_FAILED` / `REALIZATION_UNAVAILABLE`, with no fallback | FO-2 §16.I |
+| 9 | **Organization-independent lookup:** no organization or claims input to either lookup | RD-M2-03; §12; K-9 |
+| 10 | **Opaque handle:** `ResolvedBusinessActivity(identifier, registration record, binding record, opaque handle)` returned to stage 3 | FO-2 §16.B (2f) |
+| 11 | **M5 boundary:** the handle is never invoked; there are no invocation, signature or transaction semantics | RD-M2-06; FO-2 §16.G |
+| 12 | **M1 integration preserved:** the sixteen stages, pipeline order, result invariant and stage 4 are unchanged; M2 never yields `COMPLETED` | `RO-M1-02`; §11 |
+
+**Scope limitation.** M2 is authorized, if at all, for **AuthService as the only hosting service**. A non-AuthService host needs a cross-service BAR read, which is deferred under `RO-M1-11` (FQ-5). M2 introduces no such read.
+
+**Outside M2:**
+- **M2-P:** C1 table/schema/migration, C2 governed deployment-time write, C3 CI act-citation verification.
+- **RD-M2-08 infrastructure:** C4 CI target-store access and reconciliation infrastructure; C6 role provisioning.
 
 ### 13.3 Governing documents
-The sources in §1 (Charter §10 M2; ADR-042 `RO-M1-01`–`03`; `IRA-BAE-001-M1` §0, §9, §15; `IMP-001 §6.16.5`, `§6.22.7`–`§6.22.8`, `§6.29.6`; `RTA-001 §6.6`–`§6.7`; D2, D5, D8), plus this document and the recorded §14 decisions.
 
-### 13.4 Files expected to change (under the §14 recommendations; any deviation is a STOP)
-
-| File | Change |
+| Source | Relied on for |
 |---|---|
-| `Backend/Runtime/BusinessActivityEngine/business_activity_engine/ports.py` | Typed `RegistrationLookup`; `RegistrationSource.lookup`; `ManifestResolutionStatus.UNRESOLVED`; `ResolvedBusinessActivity`; resolver content |
-| `…/business_activity_engine/binding.py` *(new)* | Content-free, explicitly constructed, immutable binding resolver (M-B); fail-fast construction |
-| `…/business_activity_engine/engine.py` | Stage 2 outcomes per §11; hand-off to stage 3; no stage-4+ change |
-| `…/business_activity_engine/results.py` | `ACTIVITY_NOT_RESOLVED`; stage discriminator field (interim, not `§6.28`) |
-| `…/business_activity_engine/__init__.py`, `README.md` | Exports; M2 contract |
-| `…/tests/test_engine.py`, `test_contracts.py`, `test_package_boundary.py`, `test_resolution.py` *(new)* | See 13.6 |
-| `Backend/Services/AuthService/bae_integration/__init__.py`, `bar_registration_source.py`, `runtime_path.py` *(new, host side)* | Read-only adapter over `get_by_identifier`; BAE import path (TD-165). `authz_integration/runtime_engine_path.py` is **not** modified |
-| `Backend/Services/AuthService/tests/test_bae_bar_registration_source.py` *(new)* | Adapter tests |
-| `IMP-REPORT-WP-BAE-001`, Charter status lines, `TECH-DEBT.md` (TD-165, TD-167, new source-gap item), `WPR-001` WP-BAE-001 row | Governance synchronization (WP-BAE-001 hunks only) |
+| `WP-BAE-001_Business_Activity_Engine_Charter.md` §10 (M1, **M2-P**, M2, M5), §13, §17 | Milestone scope, gates, authorization rule |
+| `WPR-001_Work_Package_Roadmap.md`, WP-BAE-001 row | Registered status |
+| `ADR-042` (`RO-M1-01` to `RO-M1-03`; §4.1, §4.3, §6 + 2026-09-29 addendum, §7) | In-process placement; BAE ownership of the mapping; prohibited discovery |
+| `ADR-043` (§4.1 to §4.4, K-2, K-7, K-10, §6, §7, §12 addendum) | B2 authority model |
+| `Master_Technical_Architecture.md` v7.4, AMD-017, PART K (K.1 to K.9) | The architectural concept of the binding, reconciliation and the write/read separation |
+| This document: §0 (RD-M2-01 to RD-M2-08), §5, §6, §12, §16 (FO-2) and §16.L | Decisions; outcome model; per-datum scope; tenant placement; the B2 design |
+| `TDS-BAE-001-M2-FO3_…_Governed_Write_Path.md` §4 to §14, §15.A, §15.B, §17 | Physical contract that M2 reads (fields, uniqueness, many-to-one), failure semantics, reconciliation |
+| `ROD-BAE-001-M2-Identifier-Implementation-Binding-Decision-Preparation.md` (K-1 to K-11, §0.5) | Constraints; TD-171 separation |
+| `ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11 | RD-M2-07 and RD-M2-08 |
+| `IMP-001` §6.15.4, §6.16.3, §6.16.5, §6.22.8; §6.17 to §6.19 as boundaries only | Activity Resolution; pipeline; termination before execution; registry-exclusive discovery |
+| `RTA-001 §6.6`, `§6.7` `[LOCKED]` | No implementation-specific discovery |
+| `TECH-DEBT.md`: TD-165, TD-167, TD-170, TD-171, TD-175, TD-176 | Packaging; the resolver-result test; unverified data; the BAR act-to-row gap; the identifier CHECK; PostgreSQL |
+| `RO-M1-11` (`IRA-BAE-001-M1 §0`) | Cross-service BAR access, deferred |
+| `CLAUDE.md` §8, §18, §19, §19.7, §19.7b, §21.4 | Service boundaries, change control, gates, tenant-isolation checklist |
 
-**Unchanged (verified at gate):** every BAR A–C file, migration and test; `BAR-INDEX.md`; the WP-23 Charter; `Backend/Runtime/AuthorizationEngine/**`; `authz_integration/**`; every router, capability service and model; `IMP-001`; `RTA-001`; ADR-042.
+### 13.4 Expected M2 file list
 
-### 13.5 Dependencies
-BAR A–C in a committed, verified state (per RD-M2-01); M1 (committed); AuthorizationEngine (unchanged).
+File roles are fixed here. **New filenames are fixed at implementation design** and recorded in the M2 authorization. Any deviation from these roles is a STOP.
 
-### 13.6 Tests required
-Each test must be purpose-built, with negative controls where §19.7b applies.
+**A. M2 files (the M2 commit boundary):**
 
-| ID | Test |
+| Location | Role | Change |
+|---|---|---|
+| `Backend/Runtime/BusinessActivityEngine/business_activity_engine/ports.py` | Typed registration lookup; `RegistrationSource.lookup`; the `BindingSource` port and binding result; `ResolvedBusinessActivity` | Modify |
+| `…/business_activity_engine/` *(new module; name at design)* | Realization type: immutable, reference-keyed, fail-fast construction | New |
+| `…/business_activity_engine/` *(new module, or within an existing module; decided at design)* | Reconciliation logic, persistence-free | New or modify |
+| `…/business_activity_engine/engine.py` | Stage 2 flow 2a to 2f (§16.B) and hand-off to stage 3. No change to stage 4 or later | Modify |
+| `…/business_activity_engine/results.py` | `ACTIVITY_NOT_RESOLVED` and the §16.I stage discriminators (interim, not `§6.28`) | Modify |
+| `…/business_activity_engine/__init__.py`, `README.md` | Exports; the M2 contract | Modify |
+| `Backend/Runtime/BusinessActivityEngine/tests/` (`test_engine.py`, `test_contracts.py`, `test_package_boundary.py`, plus new resolution, realization and reconciliation tests) | T-1 to T-5, T-7 to T-15, T-19 to T-21 (§13.6) | Modify / new |
+| `Backend/Services/AuthService/bae_integration/` *(new package, RD-M2-05)* | Host adapters: `RegistrationSource` over `get_by_identifier`; `BindingSource` over the M2-P store (read-only). Realization construction. The start-up reconciliation hook. The BAE import path (TD-165, interim) | New |
+| **Host start-up wiring point** *(existing AuthService module to be named by RD-M2-05)* | The minimal call that runs start-up reconciliation | Modify, **only if RD-M2-05 approves it** |
+| `Backend/Services/AuthService/tests/` *(new adapter and reconciliation tests)* | T-6, T-16 to T-18, T-20 | New |
+| `IMP-REPORT-WP-BAE-001`, Charter status lines, `WPR-001` WP-BAE-001 row, `TECH-DEBT.md` (WP-BAE-001 items only) | Governance synchronization at acceptance | WP-BAE-001 hunks only |
+
+**Unchanged (verified at the gate):**
+- every BAR A–C file, migration and test;
+- `BAR-INDEX.md`; the WP-23 Charter;
+- `Backend/Runtime/AuthorizationEngine/**`; `authz_integration/**`;
+- every router, capability service and model not named above;
+- every M2-P file;
+- `IMP-001`, `RTA-001`, `ADR-042`, `ADR-043`.
+
+`binding.py` (the M-B resolver) is **not** part of the B2 design.
+
+**B. M2-P files: outside this checklist and outside the M2 commit boundary.**
+- The binding table model, migration, write operation and CI act-citation check, in the AuthService migration chain.
+- These are governed by M2-P's own `§19` checklist.
+
+**C. Infrastructure provisioning: outside repository M2 scope.**
+- Target-environment access for CI reconciliation; database roles and credentials (RD-M2-08).
+
+### 13.5 Dependencies and external prerequisites
+
+| Class | Dependency | State | Needed for |
+|---|---|---|---|
+| **A. Governance** | RD-M2-05 detailed design, including TD-165 and the start-up wiring point | OUTSTANDING | M2 authorization |
+| | TD-171 closure or RO decision | OUTSTANDING (OPEN) | M2 authorization |
+| | TD-170 register entry committed | OUTSTANDING | M2 authorization |
+| | Acceptance of this §13 | OUTSTANDING | M2 authorization |
+| **B. M2-P** | M2-P authorized, implemented and passed through its own `§19.7` gate; its store readable by the M2 adapter | NOT AUTHORIZED / NOT STARTED | Before M2 consumes a real binding store (T-16 to T-18) |
+| **C. Infrastructure (RD-M2-08)** | FQ-7: read-only adapter role and write role provisionable | OUTSTANDING | T-17; first deployed write |
+| | FQ-6: CI access to the target binding store | OUTSTANDING | The first governed binding write to a deployed environment; any claim of target-store reconciliation. Not M2 code |
+| | TD-176: PostgreSQL/asyncpg verification environment | OUTSTANDING | T-18; M2 acceptance (TD-176: "before … the first execution-eligibility consumer") |
+| **D. Existing M1 runtime** | M1 (`94c99a1`); BAR A–C read surface (`b0f5a12`); AuthorizationEngine (unchanged) | Committed | All M2 work |
+| **E. Deferred** | `RO-M1-11` / FQ-5: cross-service BAR read | DEFERRED | Any non-AuthService host. Excluded from M2 |
+| | M5: invocation contract, realized-object validation, transactions (`§6.19`) | DEFERRED | Not M2 |
+| | M3, M4, M6: context, activity-scoped policy, error taxonomy | DEFERRED | Not M2 |
+| | TD-170: the four unverifiable `§6.16.5` data | OPEN | Reported as NOT VERIFIED by M2 |
+| | TD-175: BAR identifier CHECK | OPEN (non-blocking) | A BAR schema pass. Not M2 |
+
+A decision existing does not satisfy any row above. Only the stated evidence does.
+
+### 13.6 Verification / test matrix
+
+Each test is purpose-built, with negative controls where §19.7b applies. **Status: planned and required.** Existing M1 test files are named where a test extends them; no B2 test exists yet.
+
+| ID | Test | Basis | Status |
+|---|---|---|---|
+| T-1 | **M1 engine regression, extended:** M1 pipeline behaviour and stage order unchanged (`test_engine.py`). Each §16.I stage-2 case yields exactly its outcome and discriminator; later stages are `NOT_REACHED` | `RO-M1-02`; §16.I | Existing file; extension planned |
+| T-2 | **M1 contract and strict-typing regression, extended** (`test_contracts.py`, F-02): a truthy non-lookup, `REGISTERED` with no record, a mismatched identifier, or `registration_status` ≠ `REGISTERED` each give `MALFORMED_REGISTRATION_RESPONSE` | §5; F-02 | Existing file; extension planned |
+| T-3 | **Fail-fast realization:** construction rejects a duplicate reference, an empty reference or a missing object. The mapping is immutable and reference-keyed. There is no default, prefix or fallback entry. The same input gives the same output | §16.D | Planned |
+| T-4 | **No invocation:** a spy implementation records zero calls on every path, including resolution success and reconciliation | RD-M2-06; §16.G | Planned |
+| T-5 | **Boundary:** the core imports no `sqlalchemy`, BAR, `models`, `repositories`, `importlib`, `pkgutil`, `os`, `glob` or `sys` (`test_package_boundary.py`, extended). Adapters issue SELECT only. `implementation_reference` is never imported dynamically. There is no scanning, decorator or import-time registration | K-3, K-10; `RTA-001 §6.6` | Existing file; extension planned |
+| T-6 | **BAR registration adapter, read-only, on an FK-enforcing harness** (as `test_bar_transaction_safety.py` does; the shared `conftest.py` does not enforce FKs):<br>– a seeded registration gives `REGISTERED` with the exact record;<br>– absent gives `NOT_REGISTERED`;<br>– a failure raises, giving `REGISTRATION_SOURCE_UNAVAILABLE`;<br>– ledger and registration counts are unchanged, with no flush or commit | §16.E; §19.7b parity | Planned |
+| T-7 | **Organization independence:** two unrelated Organizations get identical resolution for the same identifier. No organization or claim reaches the BAR or binding lookup | RD-M2-03; §12; `§21.4` | Planned |
+| T-8 | **TD-167:** a `None` or wrongly typed resolver, lookup or binding result gives `EXECUTION_FAILED` and never raises | TD-167 | Planned |
+| T-9 | **Result-invariant regression:** no path yields `COMPLETED`; stage 5 onward stays `NOT_IMPLEMENTED` | M1 invariant | Existing behaviour; regression planned |
+| T-10 | **Mutation probes** (§19.7b): remove, in turn, the identifier-equality check, the status check, the strict type check, the binding-identifier check and the realization-presence check. Each removal must be caught | §19.7b | Planned |
+| T-11 | **`BindingSource` behaviour:**<br>– present gives the binding record;<br>– absent gives `ACTIVITY_NOT_RESOLVED` / `BINDING_ABSENT`;<br>– raises gives `BINDING_SOURCE_UNAVAILABLE`;<br>– an identifier ≠ requested, an empty reference, or more than one row (a defensive case) gives `MALFORMED_BINDING_RESPONSE` | §16.I | Planned |
+| T-12 | **Unregistered or invalid identifier:** a malformed identifier is rejected at M1 construction. A well-formed unregistered identifier gives `ACTIVITY_NOT_REGISTERED`, and the binding lookup is **never reached**, even if a binding row exists | §16.B; §16.I | Planned |
+| T-13 | **`REALIZATION_UNAVAILABLE`:** a binding with no realization entry gives `EXECUTION_FAILED` / `REALIZATION_UNAVAILABLE`, with no fallback | §16.I; FQ-6 | Planned |
+| T-14 | **Many-to-one:** two identifiers bound to one `implementation_reference` both resolve to the same handle. No uniqueness is assumed | FQ-4 | Planned |
+| T-15 | **Start-up reconciliation:**<br>– aligned passes;<br>– a binding without a realization fails closed **for that identifier only**, other identifiers still resolve, and the host is not aborted;<br>– a realization without a binding is a reported orphan;<br>– missing binding and missing realization are distinguished;<br>– nothing is invoked | FQ-6; §16.F | Planned |
+| T-16 | **Binding adapter against M2-P's real table,** on an FK-enforcing harness: correct reads; row count unchanged; no INSERT, UPDATE, DELETE, flush or commit issued | FO-3 §12; §16.E | Planned (needs M2-P) |
+| T-17 | **Database read-only role:** the adapter runs under the read-only role, and a write attempt is rejected by the database. Without provisioned roles this is **OUTSTANDING evidence, never passed** | FQ-7; RD-M2-08 | Planned (needs infrastructure) |
+| T-18 | **PostgreSQL/asyncpg:** T-6, T-11, T-15 and T-16 run on PostgreSQL | TD-176 | Planned (needs environment) |
+| T-19 | **No binding writes from M2:** a session spy and a static check show no M2 module writes the binding store, and no write, replace or unbind API exists in M2 | FQ-1 (c), FQ-3; RD-M2-07 | Planned |
+| T-20 | **No BAR writes from M2:** BAR counts unchanged; no BAR service write method is called; no identifier is issued | K-2; D2, D5 | Planned |
+| T-21 | **No discovery:** an unknown reference is never resolved through import or scanning; realization comes only from explicit construction | K-3, K-10; `ADR-042 §4.3` | Planned |
+
+**Mapping of the §13.6 coverage list:**
+
+| Coverage item | Tests |
 |---|---|
-| T-1 | Each of the five §5 cases yields exactly its stage status and outcome; the other stages are `NOT_REACHED` |
-| T-2 | Strict typing: a truthy non-lookup, a `REGISTERED` lookup with no record, a record with a mismatched identifier, and `registration_status` ≠ `"REGISTERED"` each fail closed as malformed (extends F-02) |
-| T-3 | The resolver: unknown identifier → `UNRESOLVED`; construction rejects duplicates, mismatched identity and missing implementation; the mapping is immutable after construction; same input → same output |
-| T-4 | The implementation reference is **never invoked** in M2 (a spy implementation records zero calls on every path) |
-| T-5 | Boundary: the core still imports no `sqlalchemy`, BAR, `importlib`, `pkgutil`, `os`, `glob` or `sys`; the binding module has no decorator or registry-global state; the host adapter calls only `get_by_identifier` |
-| T-6 | Host adapter, against a real session in the AuthService harness with FK enforcement confirmed (§19.7b parity): a seeded registration → `REGISTERED` with the exact record; absent → `NOT_REGISTERED`; session or DB failure → raises → `REGISTRATION_SOURCE_UNAVAILABLE`; **read-only proof** (`count_registered` and ledger count unchanged; no flush or commit issued) |
-| T-7 | Tenant: two unrelated Organizations invoking the same identifier get an identical resolution; the organization and claims are never passed to the BAR query or the binding lookup |
-| T-8 | TD-167: a `None` or non-`ManifestResolution` resolver result returns `EXECUTION_FAILED`, never raises |
-| T-9 | No path yields `COMPLETED`; the result invariant holds |
-| T-10 | Mutation probes: remove the identifier-equality check, the status check and the strict type check in turn; each must be caught (§19.7b method requirement) |
+| `BindingSource` behaviour | T-11 |
+| Missing binding | T-11 |
+| Invalid or unregistered identifier | T-12 |
+| `REALIZATION_UNAVAILABLE` | T-13 |
+| Shared reference | T-14 |
+| Start-up fail-closed | T-15 |
+| Read-only role | T-17 |
+| PostgreSQL | T-18 |
+| Two organizations | T-7 |
+| No binding writes | T-19 |
+| No BAR writes | T-20 |
+| No discovery | T-5, T-21 |
+| M2/M5 boundary | T-4, T-9 |
 
-### 13.7 Regression suites (must pass, counts re-measured)
-- BAE full suite (baseline 93);
-- `Backend/Runtime/AuthorizationEngine` (106);
-- AuthService BAR A–C + WP-13 (33);
-- AuthService full suite (972);
-- the frontend is untouched, so no frontend build is required.
+### 13.7 Regression baselines
 
-### 13.8 Forbidden scope
-- Any BAR write, schema, service, repository or migration change.
-- Registering a BA, or assigning or issuing an identifier.
-- Populating `BAR-INDEX.md`.
-- Workstream D or E.
-- M3 context construction, M4 authorization changes, M5 execution or transactions, M6 errors, state or observability.
-- Invoking an implementation.
-- Creating a first consumer or binding any real capability activity.
-- Modifying any router, capability service or AuthorizationEngine file.
-- Filesystem, decorator, route or import-time discovery.
-- A new table or migration. *(2026-09-29, RD-M2-07: this remains valid for M2. The B2 binding store, its migration and write operation are delivered by the pre-M2 milestone M2-P, not by M2.)*
-- `git add -A` / `git add .`; push.
+**Historical only, not to be reused:** BAE 93; AuthorizationEngine 106; AuthService BAR A–C + WP-13 subset 33; AuthService full 972 (2026-09-25). These predate `355ebbe`, `203bed1`, `b0f5a12` and later commits.
+
+**Fresh measurement is required**, both before M2 implementation starts (the pre-change baseline) and at M2 acceptance. Each measurement uses `Backend/Services/AuthService/venv/Scripts/python.exe -m pytest`:
+
+| Suite | Path | Notes |
+|---|---|---|
+| BAE full | `Backend/Runtime/BusinessActivityEngine/tests/` | Not run by CI; measured locally |
+| AuthorizationEngine full | `Backend/Runtime/AuthorizationEngine/tests/` | Unchanged by M2 |
+| AuthService BAR A–C | `tests/test_bar_identifier_service.py`, `test_bar_registration_service.py`, `test_bar_transaction_safety.py` | Must stay green and unchanged |
+| AuthService full | `Backend/Services/AuthService/tests/` | Needs `JWT_SECRET_KEY` and `JWT_ALGORITHM=HS256` set (TD-010). This mirrors `.github/workflows/authservice-ci.yml`'s `pytest tests/` job |
+| PostgreSQL evidence | T-6, T-11, T-15, T-16 on PostgreSQL/asyncpg | TD-176. The CI bootstrap job has a `postgres:16` service, but the test job runs on SQLite. The venue must be fixed at authorization |
+
+The frontend is untouched, so no frontend build is required. Every count is recorded as measured, never copied.
+
+### 13.8 Forbidden scope / explicit exclusions
+
+**M2-P is outside the M2 implementation and commit boundary.** M2 must not:
+- create a binding table or a binding migration, or **any** table or migration;
+- write, replace or unbind binding rows (FQ-3);
+- expose an HTTP or runtime binding-write path (FQ-1 (c));
+- perform a runtime authority check for binding creation (FQ-1 (c));
+- add an actor or approver field (IP-3), or host, tenant or lifecycle columns (OQ-1, OQ-2, FO-3 §4);
+- make `implementation_reference` UNIQUE (FQ-4);
+- read BAR across services outside `RO-M1-11` (FQ-5);
+- write BAR registration, change BAR schema, service or repository code, register a Business Activity, or issue or assign an identifier (K-2);
+- populate `BAR-INDEX.md`;
+- use dynamic import, filesystem, module, decorator or route scanning, or import-time registration (K-3, K-10);
+- cache or snapshot bindings (OQ-3) unless separately authorized;
+- invoke the opaque handle, or define an invocation signature or transaction semantics (M5);
+- do Workstream D or E; M3, M4 or M6 work;
+- bind a real capability activity;
+- modify a router, capability service or AuthorizationEngine file;
+- modify an existing AuthService module other than the RD-M2-05-approved start-up wiring point;
+- implement any TD-171 work;
+- provision infrastructure (RD-M2-08);
+- use `git add -A` / `git add .`; push.
 
 ### 13.9 Stop conditions (implementation halts and reports)
-- Any need to change BAR.
-- Any field or datum not listed in §4 D or §6.
-- A binding form other than the decided one.
-- A need to invoke an implementation or to fix its signature.
-- A need to modify an existing AuthService module beyond adding the new `bae_integration` package.
-- A regression failure.
-- Any M3–M6 dependency surfacing.
-- Any conflict with ADR-042, D2, D5 or D8.
 
-### 13.10 Independent review
-- On completion, M2 is submitted to a **fresh-context independent reviewer** (§19.7). The reviewer re-runs the suites and performs from-scratch probes per §19.7b.
-- Any remediation is independently verified before acceptance, as done for M1.
-- The Work Package-level five-gate closure remains at WP closure (M7).
+Retained:
+- any need to change BAR;
+- any field or datum not listed in §4 D, §6 or FO-3 §4;
+- a binding form other than B2;
+- a need to invoke an implementation or fix its signature;
+- a regression failure;
+- any M3 to M6 dependency surfacing;
+- any conflict with `ADR-042`, `ADR-043`, D2, D5 or D8.
 
-### 13.11 Commit and push boundary
-- Nothing is committed before RO acceptance of M2.
-- Then one M2 commit, staging only the 13.4 files and the WP-BAE-001 hunks of shared governance files.
-- No push without the RO's separate instruction and the §19.7b gates the RO requires.
+B2-specific:
+- M2 begins writing the binding store, or its scope expands into M2-P;
+- M2 creates a BAR identity or writes BAR registration;
+- a runtime binding-authority check is introduced;
+- FQ-7 role separation proves infeasible (record the constraint; never weaken it);
+- a second binding row becomes possible for one identifier, or `implementation_reference` becomes UNIQUE;
+- a cross-service BAR read appears without `RO-M1-11`;
+- dynamic import or discovery appears;
+- reconciliation cannot distinguish a missing binding from a missing realization, or start-up does not fail closed per identifier;
+- the PostgreSQL evidence TD-176 requires is absent at acceptance;
+- the TD-171 boundary is violated (M2 treats TD-171 as resolved, or implements its enforcement);
+- M2 invokes the resolved implementation;
+- the start-up wiring point needs an AuthService change RD-M2-05 did not approve;
+- M2-P's store does not offer what the read-only adapter needs;
+- any undocumented governance decision becomes necessary.
+
+### 13.10 Independent review and release-readiness gates
+
+This sequence is defined here; it is **not authorized** by this document.
+
+**M2-P gates first.** M2-P has its **own** `§19` checklist, implementation authorization and `§19.7` gate, including independent review. M2 does not consume M2-P's physical store until that gate passes. M2-P acceptance is not M2 acceptance, and the reverse also holds.
+
+**M2 gates, in order:**
+1. Implementation is completed within the authorized M2 scope (§13.2, §13.4).
+2. The M2 targeted tests (§13.6) pass.
+3. The full regression suites (§13.7) pass, with fresh counts recorded.
+4. PostgreSQL verification (T-18, TD-176) passes. T-17 passes, or is recorded as outstanding infrastructure evidence under RD-M2-08.
+5. A **fresh-context independent reviewer** examines the implementation. The reviewer re-runs the suites and performs from-scratch probes with negative controls (§19.7, §19.7b).
+6. All Critical, High and Medium findings are resolved, or explicitly governed (`§19.8.5`). Any remediation is independently verified.
+7. A release-readiness audit covers git status, commit scope and governance-document accuracy.
+8. Repository Owner acceptance.
+9. M2 closure, only after the authorized gates. The Work Package–level five-gate closure remains at M7.
+
+### 13.11 Commit boundary
+
+- **A. M2-P:** its own implementation and governance commits, under its own authorized scope. Never combined with M2.
+- **B. M2:** after Repository Owner acceptance of M2, one M2 commit containing only the §13.4 A files and the WP-BAE-001 hunks of shared governance files.
+  - no M2-P schema or migration files;
+  - no infrastructure provisioning;
+  - no BAR A–C changes;
+  - no TD-171 implementation.
+- **C. Governance:** only when explicitly authorized.
+- **Throughout:** exact-path staging only (never `git add -A` / `git add .`). No push without the Repository Owner's separate instruction and the §19.7b gates the RO requires.
 
 ---
 
