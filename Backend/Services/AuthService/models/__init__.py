@@ -31,6 +31,8 @@ from .c023_entitlement_context import C023EntitlementContext
 from .c132_notification import C132Notification
 from .c021_offering_definition import C021OfferingDefinition
 from .c022_commercial_account import C022CommercialAccount
+from .bar_identifier_ledger import BarIdentifierLedger
+from .bar_registration import BarRegistration
 
 __all__ = [
     "Base",
@@ -63,4 +65,6 @@ __all__ = [
     "C132Notification",
     "C021OfferingDefinition",
     "C022CommercialAccount",
+    "BarIdentifierLedger",
+    "BarRegistration",
 ]
