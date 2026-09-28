@@ -5,7 +5,7 @@
 **Status:** ~~**READINESS ASSESSMENT — NOT IMPLEMENTATION-READY.** One blocking dependency finding (§3.1) and six Repository Owner decisions (§14) must be resolved before M2 code.~~ *(Updated 2026-09-25 — Repository Owner decision pass, §0.)* **READINESS ASSESSMENT — NOT IMPLEMENTATION-READY.**
 - Decided: RD-M2-01, RD-M2-03, RD-M2-04 and RD-M2-06; RD-M2-05 is decided in principle.
 - ~~**RD-M2-02 remains OPEN**; see `ROD-BAE-001-M2-Identifier-Implementation-Binding-Decision-Preparation.md`.~~ *(Updated 2026-09-28.)* **RD-M2-02 decided: Option B2** (governed persistent binding registry), recorded in `ADR-043` and `ROD-BAE-001-M2 …` §0.6. M2 remains **NOT AUTHORIZED**.
-- ~~M2 is blocked until WP-23 Workstreams A–C are closed and independently verified (RD-M2-01), and until RD-M2-02 is decided.~~ *(Updated 2026-09-28.)* The **RD-M2-01 prerequisite is satisfied** (§0): WP-23 A–C were accepted, committed (`b0f5a12`) and independently verified; WP-23 is not certified or closed and remains OPEN. **RD-M2-02 is decided** (Option B2, `ADR-043`). **Neither decision authorizes M2.** FO-2 (the M2 detailed design redone for B2, `ADR-043 §9`) ~~remains outstanding~~ ~~*(2026-09-28: design prepared in §16, **pending RO approval**)*~~ *(2026-09-28: **FO-2 design approved**; OQ-1 to OQ-4 decided, §16.L. Not M2 authorization; FO-1, FO-3, the §13 regeneration and the M2 authorization remain outstanding, §16.K)*, and **TD-171 remains OPEN** (`ROD-BAE-001-M2 §0.5`).
+- ~~M2 is blocked until WP-23 Workstreams A–C are closed and independently verified (RD-M2-01), and until RD-M2-02 is decided.~~ *(Updated 2026-09-28.)* The **RD-M2-01 prerequisite is satisfied** (§0): WP-23 A–C were accepted, committed (`b0f5a12`) and independently verified; WP-23 is not certified or closed and remains OPEN. **RD-M2-02 is decided** (Option B2, `ADR-043`). **Neither decision authorizes M2.** FO-2 (the M2 detailed design redone for B2, `ADR-043 §9`) ~~remains outstanding~~ ~~*(2026-09-28: design prepared in §16, **pending RO approval**)*~~ *(2026-09-28: **FO-2 design approved**; OQ-1 to OQ-4 decided, §16.L. Not M2 authorization; ~~FO-1,~~ FO-3, the §13 regeneration and the M2 authorization remain outstanding, §16.K. FO-1: the Master Technical Architecture was amended on 2026-09-28 (AMD-017, v7.4))*, and **TD-171 remains OPEN** (`ROD-BAE-001-M2 §0.5`).
 - **M2 remains NOT AUTHORIZED and NOT STARTED.**
 **Baseline:** M1 ACCEPTED — COMPLETE (`94c99a1`; roadmap `ddf4869`). Governance prerequisites `aa263bc`.
 
@@ -481,7 +481,7 @@ Each test must be purpose-built, with negative controls where §19.7b applies.
 2. RD-M2-02 is **decided**: Option B2, `ADR-043`.
 
 **M2 remains NOT AUTHORIZED and NOT STARTED, and is not implementation-ready.** Remaining prerequisites before any M2 authorization request include:
-- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`); ~~*(2026-09-28: prepared in §16, pending RO approval. The full list of remaining prerequisites is in §16.K.)*~~ *(2026-09-28: **FO-2 design approved** (§16.L). FO-2 design approval is **not** M2 implementation authorization. Remaining prerequisites (FO-1, FO-3, TD-171, the §13 regeneration and the explicit M2 authorization) are in §16.K.)*
+- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`); ~~*(2026-09-28: prepared in §16, pending RO approval. The full list of remaining prerequisites is in §16.K.)*~~ *(2026-09-28: **FO-2 design approved** (§16.L). FO-2 design approval is **not** M2 implementation authorization. Remaining prerequisites (~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the explicit M2 authorization) are in §16.K. FO-1: the Master Technical Architecture was amended (AMD-017, 2026-09-28).)*
 - **TD-171:** act-to-row enforcement must exist before `bar_registration` decides execution eligibility (`ROD-BAE-001-M2 §0.5`).
 
 The original statement follows, unchanged.
@@ -505,7 +505,7 @@ The original statement follows, unchanged.
 
 **Prepared** by Repository Owner instruction: "Proceed with FO-2 — M2 redesign for B2, DESIGN ONLY." This is the follow-on `ADR-043 §9` FO-2 requires.
 
-**Status:** ~~**DESIGN PREPARED — PENDING REPOSITORY OWNER APPROVAL.**~~ *(Updated 2026-09-28, §16.L.)* **FO-2 DESIGN APPROVED** (OQ-1 to OQ-4 decided by the RO). **M2 remains NOT AUTHORIZED and NOT STARTED.** FO-1, FO-3, TD-171, the §13 regeneration and the M2 authorization remain outstanding (§16.K).
+**Status:** ~~**DESIGN PREPARED — PENDING REPOSITORY OWNER APPROVAL.**~~ *(Updated 2026-09-28, §16.L.)* **FO-2 DESIGN APPROVED** (OQ-1 to OQ-4 decided by the RO). **M2 remains NOT AUTHORIZED and NOT STARTED.** ~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the M2 authorization remain outstanding (§16.K). *(2026-09-28: FO-1 architecture amended, AMD-017 in the Master Technical Architecture v7.4; §16.K.)*
 - It supersedes, for B2, the M-B design in §7 (binding options), §11 (execution contract), §13.2 (scope) and §13.4 (file list). Those sections are preserved as the analysis at 2026-09-25.
 - The §5 outcome model, §6 per-datum analysis and §12 tenant placement **still apply**, extended here.
 - Every design choice below is `[DESIGN — pending approval]` unless it restates a decided source.
@@ -703,7 +703,7 @@ These replace the M-B design in §7, §11, §13.2 and §13.4.
 - ~~**OQ-2:** any binding lifecycle beyond present-equals-bound.~~ **DECIDED** (§16.L): none in M2.
 - ~~**OQ-3:** the adapter refresh or caching rule (`ADR-043 §4.4` "needs a defined refresh rule").~~ **DECIDED** (§16.L): no caching in M2.
 - ~~**OQ-4:** where reconciliation runs.~~ **DECIDED** (§16.L): both pre-deployment/CI and host start-up.
-- **FO-1:** the Master Technical Architecture amendment.
+- ~~**FO-1:** the Master Technical Architecture amendment.~~ **Amended 2026-09-28:** AMD-017, `Master_Technical_Architecture.md` v7.4, PART K ADDENDUM (architectural record only; the physical form is FO-3).
 - **FO-3:** the physical binding schema and implementation-reference form, plus the governed write path and its authorization.
 - **TD-171:** open, with its hard condition.
 - **TD-170:** the four unverifiable `§6.16.5` data.
@@ -715,7 +715,7 @@ These replace the M-B design in §7, §11, §13.2 and §13.4.
 
 **Prerequisites before an M2 implementation authorization request can be considered:**
 1. ~~RO approval of this FO-2 design (16.A to 16.I), with answers to OQ-1 to OQ-4.~~ **DONE (2026-09-28, §16.L):** OQ-1 to OQ-4 decided; FO-2 design approved. This is not M2 authorization.
-2. FO-1: an approved Master Technical Architecture amendment for the binding table.
+2. ~~FO-1: an approved Master Technical Architecture amendment for the binding table.~~ **DONE (2026-09-28):** FO-1 architecture amended (AMD-017, MTA v7.4). This records the concept only; the physical table is FO-3.
 3. FO-3: the approved physical binding contract and implementation-reference form, including the governed write path and its authorization.
 4. **TD-171** closed, or an explicit RO decision on how M2 may consume `bar_registration` while TD-171 is open.
 5. A §13 implementation-start checklist regenerated for B2: files, tests (including FK/constraint-enforced and PostgreSQL-verification items, TD-176) and stop conditions.
@@ -728,7 +728,7 @@ These replace the M-B design in §7, §11, §13.2 and §13.4.
 | # | Prerequisite before an M2 implementation authorization request | State |
 |---|---|---|
 | 1 | FO-2 design approved, with OQ-1 to OQ-4 answered | **DONE** (§16.L) |
-| 2 | FO-1: Master Technical Architecture amendment for the binding table | **OUTSTANDING** (not authorized) |
+| 2 | FO-1: Master Technical Architecture amendment for the binding table | ~~**OUTSTANDING** (not authorized)~~ **DONE 2026-09-28**: architecture amended, design prerequisite satisfied (AMD-017, `Master_Technical_Architecture.md` v7.4, PART K ADDENDUM). Architectural record only; not committed yet |
 | 3 | FO-3: physical binding contract and implementation-reference form, governed write path and its authorization, and act-to-row enforcement for bindings | **OUTSTANDING** (not authorized) |
 | 4 | TD-171 closed, or an explicit RO decision on how M2 may consume `bar_registration` while it is open | **OUTSTANDING**; TD-171 **OPEN** |
 | 5 | §13 implementation-start checklist regenerated for B2 (files, tests including FK/constraint-enforced and PostgreSQL items, TD-176, and stop conditions), now reflecting OQ-1 to OQ-4: no host column, no lifecycle, no cache, and reconciliation in CI and at host start-up | **OUTSTANDING** |

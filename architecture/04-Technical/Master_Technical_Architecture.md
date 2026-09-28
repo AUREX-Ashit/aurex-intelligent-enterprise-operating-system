@@ -1,4 +1,4 @@
-AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.3)
+AUREX 360: MASTER TECHNICAL ARCHITECTURE DOCUMENT (COMBINED, FINAL v7.4)
 -- ALIGNED TO BLUEPRINT v2.2 -- GOLD STANDARD --
 -- v6.0 additionally incorporates the Gold Standard Alignment Amendment v1.0,
 -- reconciling this schema with URA-001 v2.1 (User/Role/Permission/Event/
@@ -306,6 +306,24 @@ DOCUMENT VERSION HISTORY
     0 new tables, 1 column added to an existing table, 1 new RLS policy.
     Final verified total: 150 distinct tables, 110 RLS policies — net
     +0/+1 from v7.2.
+  v7.4 (this version): AMD-017 applied — Business Activity
+    Implementation Binding (FO-1). Per `ADR-043` (RD-M2-02 = Option B2)
+    and the approved FO-2 design (`IRA-BAE-001-M2 §16`, RO decisions
+    OQ-1 to OQ-4 at §16.L, commit accc127), this document now records the
+    architectural concept of a governed, host-specific, platform-global
+    binding from a BAR-issued Business Activity Identifier to an opaque
+    Implementation Reference. The binding is authoritative; code-side
+    realization is subordinate; BAR identity and registration authority
+    are unchanged. Reconciliation is required at pre-deployment/CI and at
+    host start-up. See PART K ADDENDUM (AMD-017) at the end of this
+    document. ARCHITECTURAL RECORD ONLY: no table, column, index, RLS
+    policy or migration is added. The physical binding contract, the
+    Implementation Reference form, the governed write path and
+    act-to-row enforcement are FO-3 and not decided here. TD-171 remains
+    OPEN. WP-BAE-001 M2 remains NOT AUTHORIZED. Net addition: 0 new
+    tables, 0 columns, 0 RLS policies.
+    Final verified total: 150 distinct tables, 110 RLS policies —
+    unchanged from v7.3 (no structural change).
 
 ======================================================================
 AMD-011 CHANGELOG — GOLD STANDARD ALIGNMENT AMENDMENT v1.0
@@ -5269,6 +5287,22 @@ internal inconsistencies were found and resolved, and 2 genuine
 cross-referencing gaps were found and flagged. See Part I for the complete
 findings.
 
+H.5 — (AMD-017, 2026-09-28) Two items are open, recorded rather than
+invented:
+  (a) The physical Business Activity Implementation Binding store (table,
+      columns, constraints, Implementation Reference form, governed write
+      path and act-to-row enforcement) is not defined in this document.
+      It is ADR-043 FO-3. PART K ADDENDUM records the concept only.
+  (b) Pre-existing gap, not introduced by AMD-017. The BAR tables
+      committed under WP-23 Workstreams A-C (bar_identifier_ledger,
+      bar_registration; commit b0f5a12) are not recorded in this
+      document. The same is true of other recently committed
+      service-owned tables (for example c021_offering_definition,
+      c022_commercial_account and c132_notification). PART K therefore
+      references BAR by its governing authority (WP-23 A-C; D2/D5), not
+      by a table in this document. Recording those tables here needs its
+      own authorization and is not performed by AMD-017.
+
 APPENDIX I: TECHNICAL SECTION REVIEW FINDINGS
 
 I.1 — 7D.1 Locked Engineering Strategy: reviewed, no discrepancy found.
@@ -5769,3 +5803,169 @@ SELECT DISTINCT ON (organization_id, domain_name)
 FROM domain_coverage_snapshot
 ORDER BY organization_id, domain_name, snapshot_timestamp DESC;
 
+======================================================================
+PART K ADDENDUM: BUSINESS ACTIVITY IMPLEMENTATION BINDING (AMD-017)
+======================================================================
+
+Governing decision: ADR-043 (Business Activity Identifier -> Implementation
+Binding, RD-M2-02 = Option B2), follow-on FO-1 (ADR-043 §9). Approved
+design: IRA-BAE-001-M2 §16 (FO-2), with Repository Owner decisions OQ-1 to
+OQ-4 recorded at §16.L (committed accc127). Decision preparation:
+ROD-BAE-001-M2-Identifier-Implementation-Binding-Decision-Preparation.md.
+
+Purpose. The locked delegation clauses ONT-001-041 and PLT-001-038
+("Implementation Reference") assign physical realization to CMD-001 and
+this document. The RD-M2-02 investigation found no canonical attribute or
+object anywhere in this document binding a Business Activity Identifier
+to its executable implementation (ROD-BAE-001-M2 §0.2, K-6). This
+addendum establishes that architectural concept.
+
+It is an ARCHITECTURAL RECORD ONLY:
+  - no CREATE TABLE, column, index, RLS policy, migration, service,
+    adapter or code is added by this amendment;
+  - the physical binding contract (table name, columns, types,
+    constraints), the physical form of the implementation reference, the
+    governed write path and its authorization, and act-to-row enforcement
+    for bindings are FO-3 (ADR-043 §9), not decided here.
+
+K.1  Concepts established
+
+  Business Activity Implementation Binding (the "governed binding")
+    The governed, persisted record that binds one BAR-issued Business
+    Activity Identifier (BA-NNNNNN) to one opaque Implementation
+    Reference, within one hosting service.
+
+  Implementation Reference
+    The opaque value, held in the governed binding against a Business
+    Activity Identifier, that identifies the executable implementation
+    bound to that Business Activity (ADR-043 §4.2). It is:
+      - NOT a BAR attribute, and never held in BAR's stores;
+      - NOT a module path, import target or dynamic-import key;
+      - NOT a runtime discovery mechanism;
+      - never invoked by WP-BAE-001 M2.
+    Its physical representation is FO-3.
+
+  Code-side realization
+    The immutable, explicitly constructed mapping, held in the hosting
+    service's code, from Implementation Reference to implementation
+    object (IRA-BAE-001-M2 §16.D). It is keyed by the Implementation
+    Reference, never by the Business Activity Identifier.
+
+K.2  Authority model (ADR-043 §4.1; RD-23-03 layered-authority precedent)
+
+  | Concern                                | Authority                                       |
+  |----------------------------------------|-------------------------------------------------|
+  | Business Activity identity/registration | BAR (WP-23 A-C; D2/D5). Unchanged. Canonical     |
+  | Identifier -> Implementation Reference  | The governed binding. Authoritative             |
+  | Implementation Reference -> object      | Code-side realization. SUBORDINATE, never an    |
+  |                                        | authority for Business Activity identity         |
+  | Runtime resolution                     | Business Activity Engine (ADR-042 §4.3)          |
+
+  - Separation. The governed binding is NOT part of BAR registration. It
+    issues no identifier, holds no registration state, and does not
+    replace or duplicate BAR identity or registration authority (ADR-042
+    §7; K-2). A binding never implies registration; registration never
+    implies a binding.
+  - No second identity registry. The governed binding must never be used
+    as, or grow into, a Business Activity identity or registration
+    registry.
+  - Subordination. A realization entry is never proof of a binding, and
+    it can never override the governed binding. A mismatch is a failure,
+    never a fallback.
+
+K.3  Hosting and tenancy (OQ-1, OQ-2; ADR-043 §4.4)
+
+  - Host-specific. There is one governed binding store per hosting
+    service that hosts BAE-routed Business Activities. The hosting service
+    is implied by the store's physical location; no explicit
+    hosting-service value exists in the conceptual contract (OQ-1).
+    Cross-host consolidation is outside WP-BAE-001 M2 and would need a
+    separate governed decision (and interacts with the deferred RO-M1-11).
+  - Platform-global. The store has no tenant/organization column and no
+    RLS tenant policy. Resolution is organization-independent (RD-M2-03).
+    CLAUDE.md §21.4 must be re-checked if any write endpoint is added.
+  - Lifecycle. A binding present means bound. There is no status,
+    unbinding or retirement lifecycle in M2 (OQ-2); any future lifecycle
+    needs a separate governed decision.
+  - Uniqueness. At most one current binding per Business Activity
+    Identifier per hosting service.
+
+K.4  Runtime consumption (IRA-BAE-001-M2 §16.B, §16.E; OQ-3)
+
+  - The Business Activity Engine owns resolution and consumes the governed
+    binding read-only through a host-side adapter. The BAE core remains
+    persistence-independent (it imports no persistence, repository or
+    table).
+  - Order. The BAR registration check runs first; the governed binding is
+    consulted second; the code-side realization third. There are two
+    read-only queries per resolution (registration, binding); neither
+    writes.
+  - No caching in M2 (OQ-3). The adapter reads the governed binding
+    directly. Any future cache or refresh rule must be separately designed
+    and governed.
+  - Prohibited: dynamic import of the Implementation Reference;
+    filesystem, module, decorator or route scanning; import-time
+    self-registration; naming-convention or runtime guessing (ADR-042
+    §4.3; RTA-001 §6.6; IMP-001 §6.22.8).
+
+K.5  Reconciliation (OQ-4; IRA-BAE-001-M2 §16.F)
+
+  The architecture requires the governed binding and the code-side
+  realization to be reconciled, per hosting service, at BOTH:
+    (1) pre-deployment/CI (a consistency check before deployment); AND
+    (2) host start-up (a runtime safety check against inconsistent
+        deployed state).
+  States:
+    - aligned: valid;
+    - binding without realization: failure, fail-closed at resolution;
+    - realization without binding: reported orphan, inert;
+    - disagreement: rejected at realization construction, or a malformed
+      binding at resolution.
+  The check never invokes a Business Activity. Its mechanism is not
+  implemented by this amendment.
+
+  This is NOT the BAR reconciliation between registering act,
+  bar_registration and BAR-INDEX.md, which remains TD-171.
+
+K.6  M2 / M5 boundary (RD-M2-06)
+
+  WP-BAE-001 M2 resolves and returns an opaque implementation handle and
+  never invokes it. The invocation contract, the validation of a realized
+  object against it, and transaction semantics (IMP-001 §6.19) are M5.
+
+K.7  Write-path separation
+
+  Three distinct architectural concerns are established and kept apart:
+    (a) governed binding AUTHORITY: this addendum (K.1-K.3);
+    (b) the governed WRITE PATH that creates or changes a binding: a
+        governance act only (ADR-043 §4.1). Its design, its authorization
+        and act-to-row enforcement are FO-3 and are NOT defined here.
+        Without act-to-row enforcement a binding would carry the same
+        fail-open governance risk TD-171 records for bar_registration
+        (IRA-BAE-001-M2 §16.C). That risk is recorded, not resolved;
+    (c) BAE runtime RESOLUTION: read-only consumption (K.4), which never
+        writes a binding.
+
+K.8  Explicit non-decisions
+
+  This amendment does NOT:
+    - define the physical schema or the Implementation Reference form
+      (FO-3);
+    - create any table, column, index, RLS policy or migration;
+    - resolve or close TD-171 (BAR execution-eligibility / act-to-row
+      enforcement), which remains OPEN and a separate prerequisite to any
+      WP-BAE-001 M2 implementation authorization;
+    - modify BAR (WP-23 A-C) or BAR-INDEX.md, or register any Business
+      Activity;
+    - verify PostgreSQL/asyncpg behaviour: TD-176's limitation applies
+      equally to the future binding store and adapter;
+    - authorize WP-BAE-001 M2, which remains NOT AUTHORIZED and NOT
+      STARTED.
+
+K.9  Traceability
+
+  RD-M2-02 and ADR-043 (§4.1-§4.4, §9 FO-1); IRA-BAE-001-M2 §16 and §16.L
+  (FO-2, approved; OQ-1 to OQ-4); ADR-042 §4.3, §7; IMP-001 §6.15.4,
+  §6.16.5, §6.19; WP-23 A-C (commit b0f5a12, BAR identity and registration
+  authority); ONT-001-041 and PLT-001-038 (delegation of physical
+  realization to this document); FO-3; TD-171; TD-176.
