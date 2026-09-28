@@ -5,7 +5,7 @@
 **Status:** ~~**READINESS ASSESSMENT — NOT IMPLEMENTATION-READY.** One blocking dependency finding (§3.1) and six Repository Owner decisions (§14) must be resolved before M2 code.~~ *(Updated 2026-09-25 — Repository Owner decision pass, §0.)* **READINESS ASSESSMENT — NOT IMPLEMENTATION-READY.**
 - Decided: RD-M2-01, RD-M2-03, RD-M2-04 and RD-M2-06; RD-M2-05 is decided in principle.
 - ~~**RD-M2-02 remains OPEN**; see `ROD-BAE-001-M2-Identifier-Implementation-Binding-Decision-Preparation.md`.~~ *(Updated 2026-09-28.)* **RD-M2-02 decided: Option B2** (governed persistent binding registry), recorded in `ADR-043` and `ROD-BAE-001-M2 …` §0.6. M2 remains **NOT AUTHORIZED**.
-- ~~M2 is blocked until WP-23 Workstreams A–C are closed and independently verified (RD-M2-01), and until RD-M2-02 is decided.~~ *(Updated 2026-09-28.)* The **RD-M2-01 prerequisite is satisfied** (§0): WP-23 A–C were accepted, committed (`b0f5a12`) and independently verified; WP-23 is not certified or closed and remains OPEN. **RD-M2-02 is decided** (Option B2, `ADR-043`). **Neither decision authorizes M2.** FO-2 (the M2 detailed design redone for B2, `ADR-043 §9`) remains outstanding, and **TD-171 remains OPEN** (`ROD-BAE-001-M2 §0.5`).
+- ~~M2 is blocked until WP-23 Workstreams A–C are closed and independently verified (RD-M2-01), and until RD-M2-02 is decided.~~ *(Updated 2026-09-28.)* The **RD-M2-01 prerequisite is satisfied** (§0): WP-23 A–C were accepted, committed (`b0f5a12`) and independently verified; WP-23 is not certified or closed and remains OPEN. **RD-M2-02 is decided** (Option B2, `ADR-043`). **Neither decision authorizes M2.** FO-2 (the M2 detailed design redone for B2, `ADR-043 §9`) ~~remains outstanding~~ ~~*(2026-09-28: design prepared in §16, **pending RO approval**)*~~ *(2026-09-28: **FO-2 design approved**; OQ-1 to OQ-4 decided, §16.L. Not M2 authorization; FO-1, FO-3, the §13 regeneration and the M2 authorization remain outstanding, §16.K)*, and **TD-171 remains OPEN** (`ROD-BAE-001-M2 §0.5`).
 - **M2 remains NOT AUTHORIZED and NOT STARTED.**
 **Baseline:** M1 ACCEPTED — COMPLETE (`94c99a1`; roadmap `ddf4869`). Governance prerequisites `aa263bc`.
 
@@ -127,7 +127,7 @@ This is the per-datum analysis required by `RO-M1-05`; see §6. Whether M2 may c
 - The BAE never infers an identifier from a route, function name or module path (`ADR-042 §4.3`).
 - How a *given invoker* knows the identifier for the activity it fronts belongs to the first consumer's own adapter (M7). M2 designs none.
 
-**C. Exact BAR lookup required.**
+**C. Exact BAR lookup required.** *(FO-2 note, 2026-09-28: the BAR lookup below is unchanged under B2. §16.B adds a second, separate read-only lookup of the governed binding, so "exactly one read-only query per invocation" becomes two, one per authority.)*
 - Exactly one read-only query per invocation: `BarRegistrationRepository.get_by_identifier(identifier: str) -> BarRegistration | None` (untracked; see B-1). This is the surface the Charter §10 M2 names.
 - `get_by_work_package_and_reference` is **not** used. It is BAR's duplicate-registration helper and would key resolution on non-canonical fields.
 - `BarRegistrationService.register`, `BarIdentifierService` and every write path are never called.
@@ -185,6 +185,8 @@ This is the per-datum analysis required by `RO-M1-05`; see §6. Whether M2 may c
 ---
 
 ## 7. Answers — Implementation Resolution (F, G, H) and the Manifest Contract
+
+*(FO-2 note, 2026-09-28: RD-M2-02 selected **B2** (`ADR-043`). The M-B design below is preserved as the analysis at 2026-09-25 and is superseded for M2 by §16.)*
 
 **What an implementation reference is.**
 - The reference is **the object the BAE will later invoke at Business Rule Execution (stage 9, M5)**.
@@ -306,6 +308,8 @@ All other `§6.29.6` sections (Authorization, Transactions, Execution, …) are 
 
 ## 11. M2 Execution Contract (limited to what M2 owns)
 
+*(FO-2 note, 2026-09-28: superseded for B2 by the §16.B resolution flow, which adds the governed binding and realization steps. The contract below is preserved as written.)*
+
 ```
 BusinessActivityInvocation (from invoker; identifier = BAR-issued BA-NNNNNN)
   │
@@ -358,6 +362,8 @@ The pipeline order, the sixteen stages, the result invariant and stage 4 are unc
 - [ ] Explicit Repository Owner **M2 implementation authorization**, naming its scope (Charter §17).
 
 ### 13.2 Authorized scope (proposed, if §14 recommendations are adopted)
+
+*(FO-2 note, 2026-09-28: §13.2 and §13.4 describe the M-B form and no longer match B2. They must be regenerated from §16 once §16 is approved (§16.K, prerequisite 5). Preserved as written.)*
 The M2 subset of the Charter §10 M2 objective:
 - the typed read-only BAR registration consumption;
 - the five-way outcome discrimination (§5);
@@ -475,7 +481,7 @@ Each test must be purpose-built, with negative controls where §19.7b applies.
 2. RD-M2-02 is **decided**: Option B2, `ADR-043`.
 
 **M2 remains NOT AUTHORIZED and NOT STARTED, and is not implementation-ready.** Remaining prerequisites before any M2 authorization request include:
-- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`);
+- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`); ~~*(2026-09-28: prepared in §16, pending RO approval. The full list of remaining prerequisites is in §16.K.)*~~ *(2026-09-28: **FO-2 design approved** (§16.L). FO-2 design approval is **not** M2 implementation authorization. Remaining prerequisites (FO-1, FO-3, TD-171, the §13 regeneration and the explicit M2 authorization) are in §16.K.)*
 - **TD-171:** act-to-row enforcement must exist before `bar_registration` decides execution eligibility (`ROD-BAE-001-M2 §0.5`).
 
 The original statement follows, unchanged.
@@ -492,5 +498,273 @@ The original statement follows, unchanged.
 - No Charter, ADR, `IMP-001`, `RTA-001`, WP-23 or TECH-DEBT entry was changed.
 - The stale statements found (§3.1) are recorded, not corrected.
 - Nothing was staged, committed or pushed.
+
+---
+
+## 16. FO-2 — M2 Redesign for Option B2 (2026-09-28)
+
+**Prepared** by Repository Owner instruction: "Proceed with FO-2 — M2 redesign for B2, DESIGN ONLY." This is the follow-on `ADR-043 §9` FO-2 requires.
+
+**Status:** ~~**DESIGN PREPARED — PENDING REPOSITORY OWNER APPROVAL.**~~ *(Updated 2026-09-28, §16.L.)* **FO-2 DESIGN APPROVED** (OQ-1 to OQ-4 decided by the RO). **M2 remains NOT AUTHORIZED and NOT STARTED.** FO-1, FO-3, TD-171, the §13 regeneration and the M2 authorization remain outstanding (§16.K).
+- It supersedes, for B2, the M-B design in §7 (binding options), §11 (execution contract), §13.2 (scope) and §13.4 (file list). Those sections are preserved as the analysis at 2026-09-25.
+- The §5 outcome model, §6 per-datum analysis and §12 tenant placement **still apply**, extended here.
+- Every design choice below is `[DESIGN — pending approval]` unless it restates a decided source.
+- No code, table, schema, migration, adapter, test or binding row is created.
+
+**Governing sources, re-read for this section:**
+- `ADR-043` (B2, §4.1 to §4.4, §9);
+- `ADR-042 §4.3`;
+- `ROD-BAE-001-M2 …` (K-1 to K-11, §0.2 to §0.6);
+- this document's §0 (RD-M2-01 to 06);
+- `IMP-001 §6.15.4` ("Activity Resolution — Locate the Business Activity implementation") and `§6.16.5` ("resolve … using the Business Activity Registry … Activities that cannot be resolved shall terminate before execution begins");
+- the committed M1 ports (`Backend/Runtime/BusinessActivityEngine/business_activity_engine/ports.py`: `RegistrationSource.is_registered -> bool`, the content-free `ManifestResolver`/`ManifestResolution`);
+- `identity.py` (`BA-\d{6}` shape validation at construction);
+- the committed BAR read surface (`BarRegistrationRepository.get_by_identifier`, `b0f5a12`);
+- `ROD-WP-23-AC …` §0 (RD-23-03);
+- `TECH-DEBT.md` TD-170, TD-171 and TD-176.
+
+### 16.A M2 responsibility boundary under B2
+
+| M2 will | M2 will not |
+|---|---|
+| Resolve a validated `BA-NNNNNN` identifier to a `ResolvedBusinessActivity` in stage 2 (`ACTIVITY_RESOLUTION`) and hand it to stage 3 | Invoke, import or execute the implementation (RD-M2-06; M5) |
+| Consume BAR registration state read-only, through a host adapter (RD-M2-04) | Write, change or re-define BAR registration or identifiers (K-2); implement the Workstream E gate |
+| Consume the **governed binding** read-only, through a host adapter (`ADR-043 §4.1`) | Create, change or retire bindings; define the governed write path (that is the FO-1/FO-3 and binding-governance design, §16.C) |
+| Look the implementation reference up in a host-supplied, immutable **realization** (§16.D) | Discover implementations: no dynamic import, scanning, decorators, route inspection or naming heuristics (K-3/K-10) |
+| Verify only the identifier and registration status of `§6.16.5` and report the other four data as NOT VERIFIED (RD-M2-03, TD-170) | Invent sources for version, invocation method, domain or platform version |
+| Produce stage outcomes and discriminators (§16.I) | Define the canonical `§6.28` error taxonomy (M6) or any HTTP/API behaviour (none exists for the BAE) |
+| Resolve identically for any organization (RD-M2-03, K-9) | Take organization or claims into the BAR or binding lookups |
+
+### 16.B Resolution flow (stage 2, replacing the §11 M-B flow)
+
+```
+BusinessActivityInvocation (identifier already a validated BusinessActivityIdentifier — M1)
+  ▼ Stage 2  ACTIVITY_RESOLUTION
+  │  2a Identity         identifier from the invoker; never derived (§4 B)
+  │  2b BAR registration  RegistrationSource.lookup(identifier)            ── host adapter → BAR (bar_registration, read-only)
+  │                       authority: BAR (D2/D5).  NOT registered → stop (ACTIVITY_NOT_REGISTERED)
+  │  2c Governed binding  BindingSource.lookup(identifier)                 ── host adapter → the host's binding table (read-only)
+  │                       authority: governed binding (ADR-043).  no binding → stop (ACTIVITY_NOT_RESOLVED)
+  │  2d Binding validation record identifier == requested; implementation reference present and well-formed
+  │  2e Realization       Realization.get(implementation_reference)        ── immutable, host-constructed, BAE-owned type
+  │                       authority: none — subordinate; must conform to 2c
+  │  2f Result            ResolvedBusinessActivity(identifier, registration record, binding record, opaque implementation handle)
+  ▼ Stage 3  EXECUTION_CONTEXT_INITIALIZATION (receives ResolvedBusinessActivity; M1 subset; M3)
+  ▼ Stage 4  AUTHORIZATION_EVALUATION (unchanged)
+  ▼ Stage 5+ NOT_IMPLEMENTED — the implementation handle is never invoked in M2
+```
+
+**Two authorities, kept separate:**
+- **BAR registration (2b)** answers "is this canonical Business Activity registered?"
+- **The governed binding (2c)** answers "which implementation is it bound to?"
+
+A binding never implies registration: 2b always runs first, and a binding for an unregistered identifier is inert. Registration never implies a binding: 2c must independently find one. Neither authority reads or writes the other's store.
+
+**Query count.** This supersedes §4 C's "exactly one read-only query per invocation". Under B2 there are two read-only queries per invocation, one registration and one binding, and neither writes.
+
+### 16.C Governed binding model — conceptual contract (FO-3 fixes the physical form)
+
+`[DESIGN — pending approval]`. This is a minimum contract. No physical schema is created, and FO-1/FO-3 remain outstanding.
+
+| Element | Required? | Meaning and basis |
+|---|---|---|
+| **Business Activity Identifier** | **Yes** | The `BA-NNNNNN` value. It keys the binding and must equal the BAR-issued identifier. **At most one current binding per identifier per hosting service** (uniqueness), so that resolution is deterministic (`ADR-043 §4.4`) |
+| **Implementation reference** | **Yes** | The opaque, non-empty value `ADR-043 §4.2` defines. Never interpreted as a module path or import target (K-3/K-10). Its physical form belongs to FO-3 |
+| **Governing act** | **Yes** | A citation of the governance act that created or last changed the binding. `ADR-043 §4.1` makes binding changes governance acts; this mirrors `bar_registration.registering_act`. It gives traceability, not verification (see the TD-171 analogue below) |
+| **Bound-at timestamp** | **Yes** | When the binding was recorded. Audit traceability, mirroring `bar_registration.registered_at` |
+| Hosting service | **Not a required column** | K-7 / `ADR-043 §4.4` put one table in each hosting service, so the host is implied by where the table lives. An explicit value would be needed only if bindings were ever consolidated across hosts (`RO-M1-11`, deferred). ~~**Open question OQ-1**~~ **OQ-1 DECIDED (2026-09-28, §16.L): no explicit hosting-service value;** the host is implied by the table's location |
+| Binding status / lifecycle | **Not in the minimum** | A row present means bound, mirroring BAR's D2 two-state model. No version, suspension or retirement state is introduced: `§6.22.9`/`§6.23.8` have no source, per TD-170, and none is invented. "Invalid or unsupported state" in §16.I therefore means a malformed record, not a lifecycle value. ~~**Open question OQ-2:** whether the RO wants an explicit unbinding or retirement semantic~~ **OQ-2 DECIDED (2026-09-28, §16.L): no unbinding or retirement lifecycle in M2;** present = bound. A future lifecycle needs a separate governed decision |
+| Effective/current semantics | Implied | Uniqueness makes the single row *the* current binding. There are no effective-dating or version columns (see OQ-2) |
+| Tenant column | **None** | The binding is platform-global (K-9; `ADR-043 §4.4`). `CLAUDE.md §21.4` must be re-checked if a write endpoint is ever added |
+| FK to `bar_registration` | **No** `[DESIGN — pending approval]` | A non-AuthService host cannot hold one, because BAR lives in AuthService's database (`RO-M1-11`). The authorities also stay separate: registration is checked at run time in 2b, not by a constraint. Integrity for the binding table's own fields (non-null, uniqueness) is expected to be enforced by the database |
+
+**Integrity expectations.**
+- The identifier is well-formed (`BA-\d{6}`), one row per identifier, and the implementation reference is non-empty.
+- **Writes only through a governed write path** citing a governance act (`ADR-043 §4.1`, `§7`). That write path, its authorization and its act-to-row enforcement are **not designed here**; they belong with FO-1/FO-3.
+- **TD-171 analogue.** Without act-to-row enforcement, a binding row would carry the same fail-open governance risk TD-171 records for `bar_registration`. This redesign **records** that risk as a requirement on the future write-path design. It does **not** resolve it, and it does **not** absorb TD-171 (§16.H).
+
+### 16.D Code-side realization (subordinate)
+
+`[DESIGN — pending approval]`.
+- **Shape.** An immutable mapping from **implementation reference → implementation object**, constructed explicitly in the hosting service's composition root. It is passed into the BAE as a BAE-owned, content-free type, the same construction discipline §7 described for M-B.
+- **The key is the implementation reference, not the BAR identifier.** Code therefore never asserts which Business Activity it implements, and the BAR identifier appears in code nowhere as an independent authority.
+- **Subordination.** A realization entry is never proof of a binding, because stage 2 reaches the realization only through a governed binding (2c → 2e). A realization entry no binding points to is inert. When the realization and the governed binding differ, the governed binding wins, and the mismatch is a failure (§16.I), never a fallback.
+- **Construction is fail-fast:** duplicate references, an empty reference, or a missing implementation object all make construction fail (`ROD-BAE-001-M2 §6` disciplines).
+- **Prohibited:**
+  - dynamic import or `importlib`-style resolution of the stored reference;
+  - filesystem, module, decorator or route scanning;
+  - import-time self-registration;
+  - naming-convention or runtime guessing;
+  - a BAR identifier held in code as an independent source of authority;
+  - realization content overriding, or standing in for, the governed binding;
+  - any default, fallback or prefix-matched entry.
+- **Opacity (RD-M2-06).** The implementation object's type is unconstrained in M2. M2 validates only that an entry exists for the reference, and never inspects or calls it.
+
+### 16.E Host-side adapter
+
+`[DESIGN — pending approval]`. The integration boundary is under RD-M2-05, selected in principle: `Backend/Services/AuthService/bae_integration/`.
+- **Responsibility.** Implement two BAE-owned ports read-only against the hosting service's own session:
+  - **`RegistrationSource`**, over `BarRegistrationRepository.get_by_identifier`, extended from the M1 `bool` port to a typed lookup (§5);
+  - **`BindingSource`** (new port), over the host's governed binding table.
+- **Boundary.** The adapter translates host persistence into BAE port results, and nothing else:
+  - no writes, flushes or commits;
+  - ~~no caching policy unless a refresh rule is approved (**OQ-3**, `ADR-043 §4.4`);~~ **no caching in M2** (OQ-3 DECIDED, 2026-09-28, §16.L). `BindingSource` reads the governed binding directly; any future cache or refresh mechanism must be separately designed and governed (`ADR-043 §4.4`);
+  - no organization or claims input;
+  - no fallback between the two sources.
+- **Failure translation.** Session or database failures are **raised**, never converted into "not registered" or "no binding". The BAE maps them to `*_SOURCE_UNAVAILABLE` (§16.I).
+- **The BAE core stays persistence-free** (K-10): the core imports no adapter, repository or table. Hosts inject the adapters.
+- **Per host** (K-7): each hosting service provides its own `BindingSource` over its own table. A non-AuthService host's `RegistrationSource` depends on the deferred `RO-M1-11`.
+
+### 16.F Reconciliation (designed, not implemented)
+
+`[DESIGN — pending approval]`. Reconciliation compares, per hosting service, the set of implementation references in that host's governed binding table with the set of keys in that host's realization.
+
+| State | Meaning | Expected treatment |
+|---|---|---|
+| **Aligned** | Every bound reference has a realization entry, and every realization entry is referenced by at least one binding | Valid |
+| **Binding without realization** | A governed binding points to a reference the host's code does not realize (deployment drift, or a binding recorded before the code shipped) | **Reconciliation failure.** At run time, resolution of that identifier fails closed: `EXECUTION_FAILED` / `REALIZATION_UNAVAILABLE` (§16.I) |
+| **Realization without binding** | Code realizes a reference no governed binding uses | **Reported orphan.** It has no runtime effect (unreachable, §16.D) and is not treated as a binding |
+| **Both exist but disagree** | Under reference-keyed realization, this can only be (i) a realization entry whose declared reference differs from its key, or (ii) a binding row inconsistent with the requested identifier | (i) rejected at realization construction (fail-fast); (ii) `MALFORMED_BINDING_RESPONSE` at run time (§16.I). A realization/implementation *contract* mismatch is an M5 concern (§16.G) |
+
+**Where it runs.** ~~The check point is **open question OQ-4:** a pre-deployment/CI consistency check, a host start-up check, or both.~~ **OQ-4 DECIDED (2026-09-28, §16.L): both.** The check is designed for (1) pre-deployment/CI validation and (2) host start-up validation. It fails closed and never invokes a Business Activity. The ROD's B-with-realization framing calls for "a mandatory consistency test" (`ROD-BAE-001-M2 §4`). Nothing is implemented.
+
+**Relation to BAR reconciliation.** This reconciles *binding ↔ realization*. It is not the RD-23-03 *registering act ↔ `bar_registration` ↔ `BAR-INDEX.md`* reconciliation, which remains TD-171.
+
+### 16.G M2 / M5 boundary (RD-M2-06, preserved)
+
+- **M2** establishes resolution and binding semantics. It returns an **opaque implementation handle** inside `ResolvedBusinessActivity` and **never invokes it**. A spy-based test is still required (§13.6 T-4).
+- **Deferred to M5:**
+  - the implementation's invocation signature and contract;
+  - validating that a realized object satisfies that contract;
+  - Business Rule Execution;
+  - transaction semantics (`IMP-001 §6.19`).
+- **Also deferred:** full context construction (M3); activity-scoped authorization policy (M4); the canonical error taxonomy (M6).
+
+### 16.H BAR execution-gate boundary (RD-M2-04, preserved) and TD-171
+
+- **Workstream E** remains the BAR-side execution-gate authority. The BAE *consumes* registration state (2b) and holds no gate policy of its own (RD-M2-04). The implementation binding (2c–2e) is a BAE-side resolution concern, distinct from BAR execution eligibility.
+- **TD-171 is not absorbed and not resolved by this redesign.** Stage 2b makes a registration-based stop decision, so an implemented M2 would use `bar_registration` to decide whether a Business Activity proceeds. That is exactly the use TD-171's hard condition prohibits until act-to-row enforcement exists (`ROD-BAE-001-M2 §0.5`).
+- **TD-171 therefore remains a prerequisite to any M2 implementation authorization** (§16.K). The Repository Owner must either close it or explicitly decide how M2 may proceed while it is open. This design does neither.
+
+### 16.I Failure and denial semantics
+
+`[DESIGN — pending approval]`. This extends §5. The outcomes are stage-level. There is no HTTP or API behaviour, because none exists for the BAE; mapping to transport errors is the invoker adapter's concern (M7) and the `§6.28` taxonomy's (M6). Raw exception text is not copied into `reason` (TD-169).
+
+| Case | Detected at | Stage 2 result | `ExecutionOutcome` / discriminator |
+|---|---|---|---|
+| Malformed identifier (not `BA-\d{6}`) | M1 identifier construction | never reaches the engine | construction error (M1, unchanged) |
+| **Unknown BAR identifier** (well-formed, never issued) | 2b: no `bar_registration` row | TERMINATED | `ACTIVITY_NOT_REGISTERED`. M2 reads registration only, so an unissued identifier and an issued-but-unregistered one are indistinguishable, and need not be told apart (RD-M2-03) |
+| **Not registered** | 2b | TERMINATED | `ACTIVITY_NOT_REGISTERED` (existing) |
+| Registration source unavailable | 2b raises | TERMINATED | `EXECUTION_FAILED` / `REGISTRATION_SOURCE_UNAVAILABLE` (§5) |
+| Malformed registration response | 2b | TERMINATED | `EXECUTION_FAILED` / `MALFORMED_REGISTRATION_RESPONSE` (§5) |
+| **Registered, no binding** | 2c: no binding row | TERMINATED | `ACTIVITY_NOT_RESOLVED` (proposed in §5) / `BINDING_ABSENT`. A governance state, not a platform fault |
+| Binding source unavailable | 2c raises | TERMINATED | `EXECUTION_FAILED` / `BINDING_SOURCE_UNAVAILABLE` |
+| **Conflicting / invalid binding** (identifier ≠ requested, empty or malformed reference, more than one current row) | 2d | TERMINATED | `EXECUTION_FAILED` / `MALFORMED_BINDING_RESPONSE` |
+| **Binding with unavailable realization** (including a *stale* binding whose reference the code no longer realizes) | 2e | TERMINATED | `EXECUTION_FAILED` / `REALIZATION_UNAVAILABLE`. A reconciliation failure, §16.F |
+| Unsupported binding state | 2d | TERMINATED | Under the minimum model there is no state column (§16.C), so any unrecognized record shape is `MALFORMED_BINDING_RESPONSE`. ~~OQ-2 governs any future state~~ OQ-2 is decided (§16.L): no lifecycle in M2, and any future state needs a separate governed decision |
+| Resolved | 2f | COMPLETED → stage 3 | — (M2 never yields overall `COMPLETED`) |
+
+**Rules:**
+- Every non-resolved path **terminates before execution begins** (`IMP-001 §6.16.5`).
+- No path fabricates a resolution, falls back to another binding or reference, or treats a realization entry as a binding.
+
+### 16.J Governance and traceability
+
+| Source | How this redesign conforms |
+|---|---|
+| RD-M2-01 | Satisfied (§0). It depends on WP-23 A–C as committed (`b0f5a12`) |
+| RD-M2-02 / `ADR-043` | B2 applied: the governed binding is authoritative (16.C), realization is subordinate (16.D), reconciliation is designed (16.F), and the implementation reference is opaque (16.D, 16.G) |
+| RD-M2-03 | Only the identifier and registration status are verified; the other four data are NOT VERIFIED (TD-170); organization-independent (16.A, 16.E) |
+| RD-M2-04 | BAE consumes registration state; Workstream E is untouched (16.H) |
+| RD-M2-05 | Additive `bae_integration/` host boundary (16.E). Detailed design only; no implementation authorized |
+| RD-M2-06 | Reference only; invocation deferred to M5 (16.G) |
+| `ADR-042 §4.3` | BAE owns resolution; prohibited discovery mechanisms respected (16.D) |
+| `IMP-001 §6.15.4` / `§6.16.5` | "Locate the Business Activity implementation … using the Business Activity Registry"; unresolved activities terminate before execution (16.B, 16.I). `§6.17` to `§6.19` (context, authorization integration, transactions) are untouched by M2 (16.G) |
+| WP-23 A–C | Read-only consumer of `get_by_identifier`. No BAR code, schema or `BAR-INDEX.md` change (K-2) |
+| FO-1 / FO-3 | The physical table, its Master Technical Architecture record and the physical reference form remain outstanding. 16.C is conceptual only |
+| TD-171 | Recorded as a prerequisite and as an analogue risk for the binding write path; not resolved (16.C, 16.H) |
+| TD-176 | PostgreSQL/asyncpg verification applies equally to the binding table and adapter. Carried to the §13.10 verification plan |
+
+### 16.K Readiness impact
+
+**What FO-2 now resolves (as a design, ~~pending RO approval~~ *approved 2026-09-28, §16.L*):**
+- the B2-consistent M2 responsibility boundary;
+- the two-authority resolution flow;
+- the minimum conceptual binding contract;
+- the reference-keyed, subordinate realization;
+- the host-adapter boundary;
+- the reconciliation states;
+- the failure semantics.
+
+These replace the M-B design in §7, §11, §13.2 and §13.4.
+
+**What remains unresolved:**
+- ~~**OQ-1:** whether the binding carries an explicit hosting-service value.~~ **DECIDED** (§16.L): no explicit value.
+- ~~**OQ-2:** any binding lifecycle beyond present-equals-bound.~~ **DECIDED** (§16.L): none in M2.
+- ~~**OQ-3:** the adapter refresh or caching rule (`ADR-043 §4.4` "needs a defined refresh rule").~~ **DECIDED** (§16.L): no caching in M2.
+- ~~**OQ-4:** where reconciliation runs.~~ **DECIDED** (§16.L): both pre-deployment/CI and host start-up.
+- **FO-1:** the Master Technical Architecture amendment.
+- **FO-3:** the physical binding schema and implementation-reference form, plus the governed write path and its authorization.
+- **TD-171:** open, with its hard condition.
+- **TD-170:** the four unverifiable `§6.16.5` data.
+- **TD-176:** PostgreSQL verification.
+- **`RO-M1-11`:** cross-service BAR access for non-AuthService hosts.
+- A revised §13 checklist (files, tests, stop conditions) regenerated for B2 once 16.A to 16.I are approved.
+
+**Why this is not M2 authorization.** FO-2 is a design artifact prepared on instruction. It creates nothing executable and changes no decision. `WP-BAE-001` Charter §17 requires an explicit Repository Owner act naming the M2 scope, and §13.1 keeps that box unticked.
+
+**Prerequisites before an M2 implementation authorization request can be considered:**
+1. ~~RO approval of this FO-2 design (16.A to 16.I), with answers to OQ-1 to OQ-4.~~ **DONE (2026-09-28, §16.L):** OQ-1 to OQ-4 decided; FO-2 design approved. This is not M2 authorization.
+2. FO-1: an approved Master Technical Architecture amendment for the binding table.
+3. FO-3: the approved physical binding contract and implementation-reference form, including the governed write path and its authorization.
+4. **TD-171** closed, or an explicit RO decision on how M2 may consume `bar_registration` while TD-171 is open.
+5. A §13 implementation-start checklist regenerated for B2: files, tests (including FK/constraint-enforced and PostgreSQL-verification items, TD-176) and stop conditions.
+6. The explicit M2 implementation authorization naming its scope (Charter §17).
+
+**M2 remains NOT AUTHORIZED and NOT STARTED.** WP-23 remains OPEN (A–C accepted and committed; D–H not implemented). TD-171 remains OPEN.
+
+*(Readiness reassessment, 2026-09-28, after §16.L.)* **FO-2 design approved ≠ M2 implementation authorized.**
+
+| # | Prerequisite before an M2 implementation authorization request | State |
+|---|---|---|
+| 1 | FO-2 design approved, with OQ-1 to OQ-4 answered | **DONE** (§16.L) |
+| 2 | FO-1: Master Technical Architecture amendment for the binding table | **OUTSTANDING** (not authorized) |
+| 3 | FO-3: physical binding contract and implementation-reference form, governed write path and its authorization, and act-to-row enforcement for bindings | **OUTSTANDING** (not authorized) |
+| 4 | TD-171 closed, or an explicit RO decision on how M2 may consume `bar_registration` while it is open | **OUTSTANDING**; TD-171 **OPEN** |
+| 5 | §13 implementation-start checklist regenerated for B2 (files, tests including FK/constraint-enforced and PostgreSQL items, TD-176, and stop conditions), now reflecting OQ-1 to OQ-4: no host column, no lifecycle, no cache, and reconciliation in CI and at host start-up | **OUTSTANDING** |
+| 6 | Explicit M2 implementation authorization naming its scope (Charter §17) | **OUTSTANDING** |
+
+TD-170 (the four unverifiable `§6.16.5` data), TD-176 (PostgreSQL verification) and `RO-M1-11` (cross-service BAR access) remain open matters carried into prerequisites 3 and 5.
+
+**Integrity (§16):**
+- No code, model, migration, schema, table, adapter, realization, test or binding row was created.
+- No BAR or BAE file was modified.
+- TD-170 and TD-171 are unchanged.
+- ADR-042, ADR-043, the ROD, `IMP-001`, `RTA-001` and the Master Technical Architecture are unchanged.
+- Nothing was staged, committed or pushed.
+
+### 16.L Repository Owner Decision Record — OQ-1 to OQ-4 (2026-09-28)
+
+**Recorded** by direct Repository Owner instruction ("Record the following Repository Owner (RO) decisions for OQ-1 through OQ-4 in the existing FO-2 governance artifact"). Each decision is recorded as stated and is not reinterpreted.
+
+| OQ | Decision | Rationale (as recorded by the RO) | Affected §16 design |
+|---|---|---|---|
+| **OQ-1** — Hosting service | **DECIDED: no explicit hosting-service value.** The governed binding table is host-specific, and the hosting service is implied by the table's physical location. No hosting-service column is added to the conceptual B2 binding contract | Consistent with `ADR-043 §4.4`. One binding table per hosting service is the governed model. It avoids redundant host identity. Cross-host consolidation stays outside M2 and would need a separate governed decision | §16.C "Hosting service" row |
+| **OQ-2** — Binding lifecycle | **DECIDED: no explicit unbinding or retirement lifecycle in M2.** For M2, a row present means bound. No status or lifecycle column, and no unbinding semantic, is introduced. Any lifecycle beyond present-equals-bound needs a separate governed decision | It keeps M2's binding contract minimal, preserves the two-state model in §16, and does not prevent a future governed lifecycle decision | §16.C "Binding status / lifecycle" and "Effective/current semantics"; §16.I "Unsupported binding state" |
+| **OQ-3** — Adapter refresh/caching | **DECIDED: no caching in M2.** `BindingSource` reads the governed binding directly. No cache or refresh mechanism is part of M2. Any future caching or refresh requirement must be separately designed and governed before implementation | It preserves the authoritative governed database binding, avoids a second state or stale binding source, and is consistent with `ADR-043 §4.4`'s requirement that any refresh rule be explicitly defined | §16.E host-side adapter |
+| **OQ-4** — Reconciliation location | **DECIDED: both.** The binding-to-realization consistency check is designed for (1) pre-deployment/CI validation **and** (2) host start-up validation | CI catches governed-binding/code-realization mismatches before deployment. Host start-up is a runtime safety check against an inconsistent deployed state. The check fails closed and does not invoke Business Activities. It satisfies the ROD's requirement for "a mandatory consistency test" (`ROD-BAE-001-M2 §4`) and preserves the M2/M5 boundary | §16.F reconciliation |
+
+**Effect on FO-2.**
+- OQ-1 to OQ-4 are resolved, and the corresponding §16 design choices are approved.
+- §16.K prerequisite 1 required "RO approval of this FO-2 design (16.A to 16.I), with answers to OQ-1 to OQ-4". On the basis of this instruction, which describes the result as "FO-2 design approved", **the FO-2 design (16.A to 16.I, as decided here) is recorded as APPROVED.** The status is therefore **FO-2 DESIGN APPROVED**.
+
+**FO-2 design approval is not M2 implementation authorization.** These decisions do **not**:
+- authorize FO-3;
+- authorize FO-1 implementation;
+- close TD-171;
+- authorize M2;
+- create any runtime implementation.
+
+**M2 remains NOT AUTHORIZED and NOT STARTED.**
 
 *End of IRA-BAE-001-M2.*
