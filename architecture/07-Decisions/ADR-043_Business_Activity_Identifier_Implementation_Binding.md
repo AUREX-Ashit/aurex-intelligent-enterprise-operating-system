@@ -108,7 +108,7 @@ Determinism: B2 "depends on a database read per resolution or a cached snapshot;
   - The binding form is decided.
   - The M-B / composition-root design text in `IRA-BAE-001-M2 §7` and `§13.2`–`§13.4` (proposed files such as `binding.py`, and the "no table, no migration" statements) **no longer reflects the decided form**. The M2 detailed design must be redone for B2 before any M2 implementation authorization.
   - M2 still requires its own explicit authorization.
-- **For hosting services:** each host that runs BAE-routed Business Activities will need its own binding table, migration, host-side adapter and governed write path once implementation is authorized (K-7, K-10).
+- **For hosting services:** each host that runs BAE-routed Business Activities will need its own binding table, migration, host-side adapter and governed write path once implementation is authorized (K-7, K-10). *(Reconciliation 2026-09-29: ownership concretized in §12.)*
 - **For BAR / WP-23:** none. BAR scope, `bar_registration`, `BAR-INDEX.md` and Workstreams D–H are unchanged (K-2).
 - **Verification:** PostgreSQL/asyncpg behaviour of any new persistent store remains unverified in this environment. This is recorded as an implementation and verification matter (TD-176's scope is BAR A–C, but the same limitation will apply to the binding table).
 - **No code consequence** arises from this ADR alone.
@@ -155,3 +155,12 @@ This ADR does **not** authorize or decide any of the following:
 ## 11. Status / Approval
 
 **Accepted**, recording the Repository Owner's RD-M2-02 selection of Option B2 (2026-09-28). No implementation is authorized. Nothing is staged, committed or pushed by the creation of this ADR.
+
+## 12. Reconciliation Addendum (2026-09-29)
+
+*The decision recorded above is unchanged.*
+- The §6 consequence "for hosting services" (each host needs its own binding table, migration, host-side adapter and governed write path) is now concretized by RD-M2-07 (`ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11).
+- **WP-BAE-001 milestone M2-P** owns the binding table, schema and migration, the governed deployment-time write operation and CI act-citation verification, in the hosting service's own database.
+- **M2** owns the read-only host adapter and start-up reconciliation.
+- Infrastructure provisioning (CI target-store access, database roles) is an external operational prerequisite under RD-M2-08.
+- No implementation is authorized. TD-171 remains OPEN. M2 remains NOT AUTHORIZED and NOT STARTED.

@@ -364,6 +364,10 @@ They share a root cause, the absence of a canonical governance-act model, and FQ
 - No `CREATE TABLE`, SQL, migration, ORM model, repository, service, adapter, router or test is created by this document.
 - The table name is not fixed here. It is to be chosen at implementation design and recorded in the MTA under AMD-017's concept.
 - The MTA itself is not amended by FO-3: AMD-017 records the concept, and a physical MTA entry follows implementation authorization.
+- *(Traceability, 2026-09-29.)* RD-M2-07 assigns the physical implementation of this design (C1 table and migration, C2 deployment-time write operation, C3 CI act-citation verification) to WP-BAE-001 milestone **M2-P**. M2 remains read-only.
+  - RD-M2-08 makes infrastructure provisioning (IP-4, and the target-store part of IP-5) an external operational prerequisite before the first deployed binding write.
+  - See `ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11.
+  - This design, FQ-1 to FQ-8 and IP-3 are unchanged. Nothing is authorized.
 
 ## 18. Traceability
 

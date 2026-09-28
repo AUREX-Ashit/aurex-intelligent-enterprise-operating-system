@@ -166,6 +166,25 @@ No milestone below is authorized to begin by this document (§17). No dates are 
   - The authorization text is recorded in `IMP-REPORT-WP-BAE-001 §"Repository Owner Disposition — F-01"`.
   - No milestone scope is otherwise amended by this note.
 
+**M2-P — Governed Implementation Binding Store** *(Added 2026-09-29 by Repository Owner decision RD-M2-07, `ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11. It precedes M2. The M1–M7 numbering is unchanged. **NOT AUTHORIZED, NOT STARTED.**)*
+- *Objective:* Deliver the physical B2 governed binding store that M2 consumes read-only. It follows the approved FO-3 design (`TDS-BAE-001-M2-FO3_Implementation_Binding_Physical_Contract_and_Governed_Write_Path.md`) under `ADR-043`.
+- *Major scope:*
+  - C1: the binding table, schema and migration, in the first hosting service's own database and migration chain (AuthService, under RD-M2-05), per FO-3 §4–§6;
+  - C2: the governed deployment-time binding write operation (FQ-1 (c); create-only, FQ-3; no actor field, FO-3 §15.B);
+  - C3: CI governing-act citation verification (FQ-2 (a));
+  - the in-repository specification of database-role separation (FQ-7). Provisioning is an external prerequisite under RD-M2-08.
+- *Outputs/deliverables:* The binding store and its governed creation path. No binding row for a real Business Activity unless separately authorized.
+- *Dependencies:* M1; FO-3 (design approved); the RD-M2-05 detailed design. RD-M2-08 infrastructure must exist before the first governed binding write against a deployed environment. TD-176 (PostgreSQL verification) applies equally to the new store.
+- *Verification expectations:* Its own `CLAUDE.md §19` checklist and `§19.7` completion gate. Verification against both SQLite and PostgreSQL (FQ-8, TD-176). Negative controls per `§19.7b`.
+- *Explicit exclusions:*
+  - any BAR write or BAR schema change; BAR registration or identifier issuance;
+  - any persistence in the BAE core;
+  - a runtime or HTTP write path;
+  - an actor or approver field; lifecycle, replace, cache, host or tenant columns;
+  - M2 resolution, the `BindingSource` adapter, the realization and start-up reconciliation (all M2);
+  - CI target-store reconciliation and infrastructure provisioning (RD-M2-08);
+  - TD-171 work; cross-service BAR reads (`RO-M1-11`); invocation (M5).
+
 **M2 — Business Activity Resolution & BAR Integration**
 - *Objective:* Implement Activity Resolution (`§6.15.4`) as a real, structurally complete query against BAR's own existing, delivered surface (`BarRegistrationRepository.get_by_identifier`/`get_by_work_package_and_reference`) — the one responsibility already having a real, reusable dependency (`IRA-BAE-001 §16`). *(C-4 annotation, 2026-09-28, `IRA-WP-23-AC §7` S-5, first clause only: "existing, delivered surface" predated independent verification of WP-23 A–C. The tranche is now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified. The M2-scope point about `get_by_work_package_and_reference` (S-5 second clause, group G-C) is intentionally not addressed here and stays for M2 authorization.)*
 - *Major scope:* Manifest Resolution; enforcement of the already-decided execution-time BAR gate (D2/D8) and registry-exclusive discovery rule (`IMP-001 §6.22.8`/`RTA-001 §6.6`).
@@ -173,6 +192,11 @@ No milestone below is authorized to begin by this document (§17). No dates are 
 - *Dependencies:* M1; BAR (`WP-23` Workstreams A–C, already delivered) — read-only, no BAR schema change. *(C-4 annotation, 2026-09-28, S-3: "already delivered" predated independent verification. WP-23 A–C are now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified. M2 remains NOT AUTHORIZED and NOT STARTED.)*
 - *Verification expectations:* Tenant-isolation and gate-enforcement tests per `CLAUDE.md §21.4`'s Mandatory Tenant-Isolation Test Checklist, applied fresh at this milestone; no fabricated resolution for an unregistered Business Activity.
 - *Explicit exclusions:* No write to BAR; no change to BAR's own schema, service, or repository code.
+- *RD-M2-07 note (2026-09-29, `ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11; M2 scope text above preserved):*
+  - Under B2 (`ADR-043`), M2 is a **read-only consumer/resolver** of the governed binding store delivered by M2-P.
+  - M2 does not create, modify, retire or write binding rows, and it creates no table or migration (approved FO-2 `IRA-BAE-001-M2 §16.A`).
+  - M2 owns the `BindingSource` port and read-only host adapter (C7) and host start-up reconciliation (C5).
+  - M2 depends on M2-P passing its own `§19.7` gate. M2 remains NOT AUTHORIZED and NOT STARTED.
 
 **M3 — Context Construction & Execution Pipeline**
 - *Objective:* Implement Context Initialization (the full 18-part Context model, `§6.17`) and the remaining structural pipeline stages (Validation, Metadata Resolution, Workflow Resolution) as real, tested logic.
@@ -214,7 +238,7 @@ No milestone below is authorized to begin by this document (§17). No dates are 
 - *Verification expectations:* Independent Certification, Verification & Validation Audit, and Release Readiness Audit per `CLAUDE.md §19.7b`, in full.
 - *Explicit exclusions:* Bulk migration of every existing certified Business Activity onto this Engine — remains each capability's own future, separately-scoped decision (§5 above).
 
-~~No milestone above is marked complete. No milestone has begun.~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* M1 is ACCEPTED and COMPLETE (`IMP-REPORT-WP-BAE-001`). M2–M7 are not authorized and not started.
+~~No milestone above is marked complete. No milestone has begun.~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* M1 is ACCEPTED and COMPLETE (`IMP-REPORT-WP-BAE-001`). M2–M7 are not authorized and not started. *(2026-09-29: M2-P was added by RD-M2-07. It is not authorized and not started.)*
 
 ## 11. Dependencies
 
@@ -278,7 +302,7 @@ This Charter itself delivers exactly one artifact: this document. No milestone d
 ## 16. Completion / Closure Criteria
 
 This Charter is complete when accepted by the Repository Owner for the purpose of enabling future `WPR-001 §2a` registration (§17). The Work Package it charters is complete only when, per `CLAUDE.md §19.7b`, every milestone in §10 has been implemented, independently certified, V&V-audited, remediated where required (with independent verification of that remediation), and passed a Release Readiness Audit — mirroring `WP-RTA-001`'s own Exit Criteria discipline. At minimum, closure requires:
-- All seven milestones (§10) implemented and independently reviewed and certified.
+- All seven milestones (§10) implemented and independently reviewed and certified. *(2026-09-29: together with M2-P, added by RD-M2-07.)*
 - At least one real Business Capability's Business Activity gating through this Engine end-to-end (mirrors `WP-RTA-001`'s own identical Acceptance Criterion).
 - No tier, stage, or decision ever fabricated (`CLAUDE.md §19.8.5`).
 - WP-23 Workstream D's own Charter formally re-scoped to integration (a distinct, later act — not performed by this Charter, see §5/§7 above) as part of, or immediately following, this Work Package's own closure.
@@ -291,7 +315,7 @@ None of the above has occurred. This Charter records the boundary; it does not s
 - Governing Implementation Readiness Assessment: **PREPARED AND EXISTING** (`IRA-BAE-001`).
 - This Charter: ~~**PREPARED**, pending Repository Owner review/approval.~~ *(Updated 2026-09-23.)* **APPROVED** by direct Repository Owner decision for formal `WPR-001 §2a` registration.
 - `WP-BAE-001` registration in `WPR-001 §2a`: ~~**NOT YET REGISTERED.** This document does not perform that registration.~~ *(Updated 2026-09-23.)* **REGISTERED** — see `WPR-001_Work_Package_Roadmap.md §2a`. **Charter approval and registration authorize this Work Package's own constitutional existence only — they do NOT authorize implementation of M1 or any other milestone.**
-- Implementation authorization: ~~**NOT YET GRANTED.**~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* Granted for **M1 only** (the M1 skeleton authorization of 2026-09-24; see the §10 M1 disposition note). **Not granted for M2–M7.** No milestone in §10 may begin under this Charter or this registration alone.
+- Implementation authorization: ~~**NOT YET GRANTED.**~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* Granted for **M1 only** (the M1 skeleton authorization of 2026-09-24; see the §10 M1 disposition note). **Not granted for M2–M7.** No milestone in §10 may begin under this Charter or this registration alone. *(2026-09-29: not granted for M2-P either, which RD-M2-07 added to §10. M2-P needs its own `§19` checklist and explicit implementation authorization.)*
 - Milestone status: ~~**No milestone has passed. No milestone has begun.**~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* **M1 ACCEPTED — COMPLETE.** M2–M7 not started.
 - Independent verification (Certification, V&V Audit, Release Readiness Audit, per `CLAUDE.md §19.7b`): ~~**NOT PERFORMED** — none applies yet, as no implementation exists.~~ *(Updated 2026-09-25 — WP-BAE-001 M1 accepted by the Repository Owner.)* M1 was independently reviewed (`IRA-BAE-001-M1_Independent_Review.md`, PASS WITH CONDITIONS), and its remediation was independently verified (`IRA-BAE-001-M1_Remediation_Independent_Review.md`, VERIFIED), per the `§19.7` milestone gate. The Work Package–level `§19.7b` closure gates have **not** been performed.
 - Closure/certification of this Work Package: **NOT PERFORMED.**

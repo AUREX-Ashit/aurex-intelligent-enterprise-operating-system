@@ -6,6 +6,11 @@
 - Decided: RD-M2-01, RD-M2-03, RD-M2-04 and RD-M2-06; RD-M2-05 is decided in principle.
 - ~~**RD-M2-02 remains OPEN**; see `ROD-BAE-001-M2-Identifier-Implementation-Binding-Decision-Preparation.md`.~~ *(Updated 2026-09-28.)* **RD-M2-02 decided: Option B2** (governed persistent binding registry), recorded in `ADR-043` and `ROD-BAE-001-M2 …` §0.6. M2 remains **NOT AUTHORIZED**.
 - ~~M2 is blocked until WP-23 Workstreams A–C are closed and independently verified (RD-M2-01), and until RD-M2-02 is decided.~~ *(Updated 2026-09-28.)* The **RD-M2-01 prerequisite is satisfied** (§0): WP-23 A–C were accepted, committed (`b0f5a12`) and independently verified; WP-23 is not certified or closed and remains OPEN. **RD-M2-02 is decided** (Option B2, `ADR-043`). **Neither decision authorizes M2.** FO-2 (the M2 detailed design redone for B2, `ADR-043 §9`) ~~remains outstanding~~ ~~*(2026-09-28: design prepared in §16, **pending RO approval**)*~~ *(2026-09-28: **FO-2 design approved**; OQ-1 to OQ-4 decided, §16.L. Not M2 authorization; ~~FO-1,~~ FO-3, the §13 regeneration and the M2 authorization remain outstanding, §16.K. FO-1: the Master Technical Architecture was amended on 2026-09-28 (AMD-017, v7.4))*, and **TD-171 remains OPEN** (`ROD-BAE-001-M2 §0.5`).
+- *(2026-09-29.)* **RD-M2-07 DECIDED:** Option B. A pre-M2 WP-BAE-001 milestone, **M2-P**, owns the B2 binding store, write operation and CI act-citation verification; M2 stays read-only. **RD-M2-08 DECIDED:** Option (a). Infrastructure is an external operational prerequisite. See `ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11.
+  - Governance decision: **complete**.
+  - Infrastructure and M2-P implementation: **outstanding**.
+  - M2 authorization: **outstanding**.
+  - The full B2 §13 regeneration is the **next governance task**.
 - **M2 remains NOT AUTHORIZED and NOT STARTED.**
 **Baseline:** M1 ACCEPTED — COMPLETE (`94c99a1`; roadmap `ddf4869`). Governance prerequisites `aa263bc`.
 
@@ -25,6 +30,8 @@
 | **RD-M2-04** WP-23 Workstream E relationship | **SELECTED.** The BAE consumes BAR registration state. WP-23 Workstream E remains the BAR-side execution-gate authority. The BAE must not duplicate or redefine Workstream E. The WP-23 Charter is **not** modified by this decision. | **RESOLVED** |
 | **RD-M2-05** Host integration | **SELECTED IN PRINCIPLE.** M2 may use an additive AuthService integration boundary, proposed as `Backend/Services/AuthService/bae_integration/`, subject to the detailed M2 implementation design. **This does not authorize implementation.** No unrelated AuthService refactoring is authorized. | **RESOLVED IN PRINCIPLE**; detailed design and implementation authorization pending |
 | **RD-M2-06** Reference vs invocation | **SELECTED.** M2 resolves an **opaque implementation reference** and does **not** invoke it. The invocation contract is deferred to the later milestone the governing WP-BAE-001 design identifies, currently **M5**. No invocation signature is introduced in M2 for convenience. | **RESOLVED** |
+| **RD-M2-07** B2 binding infrastructure ownership *(added 2026-09-29)* | **SELECTED: Option B.** A separate pre-M2 milestone within WP-BAE-001 (**M2-P**) owns C1 (table, schema, migration), C2 (governed deployment-time write) and C3 (CI act-citation verification). M2 remains a read-only consumer; it owns C5 (start-up reconciliation) and C7 (`BindingSource` adapter). FO-2 §16.A is not reopened | **DECIDED** (`ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11). It authorizes no implementation |
+| **RD-M2-08** Infrastructure prerequisites *(added 2026-09-29)* | **SELECTED: Option (a).** CI target-store access and database-role provisioning are an external operational prerequisite, required before the first governed binding write against a deployed environment. FQ-7 stays REQUIRED. CI must not claim target-store reconciliation without an accessible target store. No infrastructure Work Package is created | **DECIDED** (`ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11). FQ-6 and FQ-7 evidence remain **OUTSTANDING** |
 
 **Immediate engineering priority, per RD-M2-01:** WP-23 Workstreams A–C closure, **not** M2. Workstreams D and E, a BAR-to-BAE adapter, any BAE M2 code, any Business Activity registration and any identifier assignment all remain out of scope.
 
@@ -351,6 +358,8 @@ The pipeline order, the sixteen stages, the result invariant and stage 4 are unc
 
 **Status: PREPARED — NOT APPROVED. M2 implementation is NOT AUTHORIZED.** No code may be written until every box in 13.1 is ticked by a Repository Owner act.
 
+*(2026-09-29: RD-M2-07 and RD-M2-08 are decided (§0). Only the minimum decision-state references in §13.1 and §13.8 are updated here. **The full B2 regeneration of §13 is the next governance task.** It must follow RD-M2-07/08 and precede any M2 authorization. Until then, §16.K is the authoritative list of B2 prerequisites.)*
+
 ### 13.1 Preconditions (all required)
 - [x] **RD-M2-01** BAR A–C dependency state decided (§3.1). *(Decided 2026-09-25, §0.)*
 - [x] **RD-M2-01 prerequisite met:** WP-23 Workstreams A–C closed, committed and independently verified; stale statements reconciled (`IRA-WP-23-AC_…_Closure_Readiness.md`). *(Satisfied 2026-09-28; see §0. A–C were independently verified at Gates 1–5, ACCEPTED under `IRA-WP-23-AC §0.2` (the RD-23-02 tranche terminal state), committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`, and C-4-reconciled in `bae8350b89771c48ad0b9acd57c829cdb62be615`. WP-23 is NOT certified and NOT closed; it remains OPEN, with D–H not implemented. This does not authorize M2.)*
@@ -359,6 +368,9 @@ The pipeline order, the sixteen stages, the result invariant and stage 4 are unc
 - [x] **RD-M2-04** Workstream E relationship decided (§8). *(Decided 2026-09-25, §0.)*
 - [ ] **RD-M2-05** Host integration and packaging (TD-165) scope decided (§10). *(Decided in principle 2026-09-25, §0; detailed design pending.)*
 - [x] **RD-M2-06** Implementation-reference vs invocation-contract split decided (§7). *(Decided 2026-09-25, §0.)*
+- [x] **RD-M2-07** B2 binding infrastructure ownership decided. *(Decided 2026-09-29: Option B, M2-P; §0.)*
+- [x] **RD-M2-08** Infrastructure prerequisites decided. *(Decided 2026-09-29: Option (a); §0. The infrastructure itself remains OUTSTANDING.)*
+- [ ] **M2-P** complete through its own `§19.7` gate, and the other B2 prerequisites in §16.K. *(Added 2026-09-29; merged into this list by the §13 regeneration.)*
 - [ ] Explicit Repository Owner **M2 implementation authorization**, naming its scope (Charter §17).
 
 ### 13.2 Authorized scope (proposed, if §14 recommendations are adopted)
@@ -428,7 +440,7 @@ Each test must be purpose-built, with negative controls where §19.7b applies.
 - Creating a first consumer or binding any real capability activity.
 - Modifying any router, capability service or AuthorizationEngine file.
 - Filesystem, decorator, route or import-time discovery.
-- A new table or migration.
+- A new table or migration. *(2026-09-29, RD-M2-07: this remains valid for M2. The B2 binding store, its migration and write operation are delivered by the pre-M2 milestone M2-P, not by M2.)*
 - `git add -A` / `git add .`; push.
 
 ### 13.9 Stop conditions (implementation halts and reports)
@@ -481,7 +493,7 @@ Each test must be purpose-built, with negative controls where §19.7b applies.
 2. RD-M2-02 is **decided**: Option B2, `ADR-043`.
 
 **M2 remains NOT AUTHORIZED and NOT STARTED, and is not implementation-ready.** Remaining prerequisites before any M2 authorization request include:
-- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`); ~~*(2026-09-28: prepared in §16, pending RO approval. The full list of remaining prerequisites is in §16.K.)*~~ *(2026-09-28: **FO-2 design approved** (§16.L). FO-2 design approval is **not** M2 implementation authorization. Remaining prerequisites (~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the explicit M2 authorization) are in §16.K. FO-1: the Master Technical Architecture was amended (AMD-017, 2026-09-28).)*
+- **FO-2:** the M2 detailed design must be redone for B2 (`ADR-043 §9`); ~~*(2026-09-28: prepared in §16, pending RO approval. The full list of remaining prerequisites is in §16.K.)*~~ *(2026-09-28: **FO-2 design approved** (§16.L). FO-2 design approval is **not** M2 implementation authorization. Remaining prerequisites (~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the explicit M2 authorization) are in §16.K. FO-1: the Master Technical Architecture was amended (AMD-017, 2026-09-28).)* *(2026-09-29: FO-3 is DESIGN APPROVED / NOT IMPLEMENTED (`e7c713b`). RD-M2-07/08 are decided (§0). M2-P implementation, infrastructure, TD-171, TD-176, the TD-170 commit, RD-M2-05/TD-165, the §13 regeneration and the M2 authorization remain outstanding; see §16.K.)*
 - **TD-171:** act-to-row enforcement must exist before `bar_registration` decides execution eligibility (`ROD-BAE-001-M2 §0.5`).
 
 The original statement follows, unchanged.
@@ -505,7 +517,7 @@ The original statement follows, unchanged.
 
 **Prepared** by Repository Owner instruction: "Proceed with FO-2 — M2 redesign for B2, DESIGN ONLY." This is the follow-on `ADR-043 §9` FO-2 requires.
 
-**Status:** ~~**DESIGN PREPARED — PENDING REPOSITORY OWNER APPROVAL.**~~ *(Updated 2026-09-28, §16.L.)* **FO-2 DESIGN APPROVED** (OQ-1 to OQ-4 decided by the RO). **M2 remains NOT AUTHORIZED and NOT STARTED.** ~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the M2 authorization remain outstanding (§16.K). *(2026-09-28: FO-1 architecture amended, AMD-017 in the Master Technical Architecture v7.4; §16.K.)*
+**Status:** ~~**DESIGN PREPARED — PENDING REPOSITORY OWNER APPROVAL.**~~ *(Updated 2026-09-28, §16.L.)* **FO-2 DESIGN APPROVED** (OQ-1 to OQ-4 decided by the RO). **M2 remains NOT AUTHORIZED and NOT STARTED.** ~~FO-1,~~ FO-3, TD-171, the §13 regeneration and the M2 authorization remain outstanding (§16.K). *(2026-09-28: FO-1 architecture amended, AMD-017 in the Master Technical Architecture v7.4; §16.K.)* *(2026-09-29: FO-3 DESIGN APPROVED / NOT IMPLEMENTED, `e7c713b`. RD-M2-07/08 decided; §16.K.)*
 - It supersedes, for B2, the M-B design in §7 (binding options), §11 (execution contract), §13.2 (scope) and §13.4 (file list). Those sections are preserved as the analysis at 2026-09-25.
 - The §5 outcome model, §6 per-datum analysis and §12 tenant placement **still apply**, extended here.
 - Every design choice below is `[DESIGN — pending approval]` unless it restates a decided source.
@@ -681,7 +693,7 @@ A binding never implies registration: 2b always runs first, and a binding for an
 | `ADR-042 §4.3` | BAE owns resolution; prohibited discovery mechanisms respected (16.D) |
 | `IMP-001 §6.15.4` / `§6.16.5` | "Locate the Business Activity implementation … using the Business Activity Registry"; unresolved activities terminate before execution (16.B, 16.I). `§6.17` to `§6.19` (context, authorization integration, transactions) are untouched by M2 (16.G) |
 | WP-23 A–C | Read-only consumer of `get_by_identifier`. No BAR code, schema or `BAR-INDEX.md` change (K-2) |
-| FO-1 / FO-3 | The physical table, its Master Technical Architecture record and the physical reference form remain outstanding. 16.C is conceptual only |
+| FO-1 / FO-3 | The physical table, its Master Technical Architecture record and the physical reference form remain outstanding. 16.C is conceptual only. *(2026-09-29: FO-1 is done, `867af46`. FO-3 is design-approved and not implemented, `e7c713b`. Its physical implementation is owned by M2-P (RD-M2-07))* |
 | TD-171 | Recorded as a prerequisite and as an analogue risk for the binding write path; not resolved (16.C, 16.H) |
 | TD-176 | PostgreSQL/asyncpg verification applies equally to the binding table and adapter. Carried to the §13.10 verification plan |
 
@@ -728,11 +740,16 @@ These replace the M-B design in §7, §11, §13.2 and §13.4.
 | # | Prerequisite before an M2 implementation authorization request | State |
 |---|---|---|
 | 1 | FO-2 design approved, with OQ-1 to OQ-4 answered | **DONE** (§16.L) |
-| 2 | FO-1: Master Technical Architecture amendment for the binding table | ~~**OUTSTANDING** (not authorized)~~ **DONE 2026-09-28**: architecture amended, design prerequisite satisfied (AMD-017, `Master_Technical_Architecture.md` v7.4, PART K ADDENDUM). Architectural record only; not committed yet |
-| 3 | FO-3: physical binding contract and implementation-reference form, governed write path and its authorization, and act-to-row enforcement for bindings | **OUTSTANDING** (not authorized) |
+| 2 | FO-1: Master Technical Architecture amendment for the binding table | ~~**OUTSTANDING** (not authorized)~~ **DONE 2026-09-28**: architecture amended, design prerequisite satisfied (AMD-017, `Master_Technical_Architecture.md` v7.4, PART K ADDENDUM). Architectural record only; ~~not committed yet~~ *committed `867af46` (2026-09-29 reconciliation)* |
+| 3 | FO-3: physical binding contract and implementation-reference form, governed write path and its authorization, and act-to-row enforcement for bindings | ~~**OUTSTANDING** (not authorized)~~ **DESIGN APPROVED / NOT IMPLEMENTED** (2026-09-29, `e7c713b`; FQ-1 to FQ-8 decided; IP-3 resolved). Physical implementation is owned by M2-P (row 7) |
 | 4 | TD-171 closed, or an explicit RO decision on how M2 may consume `bar_registration` while it is open | **OUTSTANDING**; TD-171 **OPEN** |
-| 5 | §13 implementation-start checklist regenerated for B2 (files, tests including FK/constraint-enforced and PostgreSQL items, TD-176, and stop conditions), now reflecting OQ-1 to OQ-4: no host column, no lifecycle, no cache, and reconciliation in CI and at host start-up | **OUTSTANDING** |
+| 5 | §13 implementation-start checklist regenerated for B2 (files, tests including FK/constraint-enforced and PostgreSQL items, TD-176, and stop conditions), now reflecting OQ-1 to OQ-4: no host column, no lifecycle, no cache, and reconciliation in CI and at host start-up | **OUTSTANDING**. *(2026-09-29: the **next governance task**, after RD-M2-07/08 and before M2 authorization.)* |
 | 6 | Explicit M2 implementation authorization naming its scope (Charter §17) | **OUTSTANDING** |
+| 7 | *(Added 2026-09-29.)* RD-M2-07: ownership of the B2 binding infrastructure | **DECIDED** (Option B). **M2-P** owns C1 to C3; M2 owns C5 and C7. **M2-P implementation: NOT AUTHORIZED / NOT STARTED**, and it must pass its own `§19.7` gate before M2 |
+| 8 | *(Added 2026-09-29.)* RD-M2-08: infrastructure prerequisites | **DECIDED** (Option (a)). The infrastructure itself remains **OUTSTANDING**: FQ-6 target-store access and FQ-7 role provisioning must exist before the first governed binding write against a deployed environment. FQ-7 is not weakened |
+| 9 | *(Added 2026-09-29.)* TD-176: PostgreSQL verification before the first execution-eligibility consumer | **OUTSTANDING** |
+| 10 | *(Added 2026-09-29.)* TD-170: register entry committed | **OUTSTANDING** (present only in the uncommitted working tree) |
+| 11 | *(Added 2026-09-29.)* RD-M2-05 detailed design and the TD-165 packaging choice | **OUTSTANDING**; a governance decision is required |
 
 TD-170 (the four unverifiable `§6.16.5` data), TD-176 (PostgreSQL verification) and `RO-M1-11` (cross-service BAR access) remain open matters carried into prerequisites 3 and 5.
 

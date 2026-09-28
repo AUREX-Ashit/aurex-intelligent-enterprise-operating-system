@@ -99,7 +99,7 @@ The Repository Owner's decisions `RO-M1-01`, `RO-M1-02`, and `RO-M1-03`, recorde
 This ADR does **not** decide, authorize, or alter any of the following:
 
 - **Implementation:** any BAE implementation, including the M1 skeleton, M2–M7, or creation of `Backend/Runtime/BusinessActivityEngine/`.
-- **Manifest contract:** the manifest contract, schema, storage, or artifact form (M2, `RO-M1-03`); whether a new governed artifact is required (M2).
+- **Manifest contract:** the manifest contract, schema, storage, or artifact form (M2, `RO-M1-03`); whether a new governed artifact is required (M2). *(Reconciliation 2026-09-29: see the addendum at the end of this ADR.)*
 - **Registration gate:** the BAE ↔ WP-23 Workstream E interface (`RO-M1-04`, M2). It is not recorded in this ADR.
 - **Resolution verification:** the per-datum authoritative-source analysis for Activity Resolution (`RO-M1-05`, M2).
 - **Other M1 dispositions:** `RO-M1-04` through `RO-M1-12` are recorded at `IRA-BAE-001-M1 §0`. None of them is formalized by this ADR.
@@ -161,6 +161,19 @@ A related non-`RTA-001` item is outside this ADR's scope and is recorded only: t
 **Accepted.** The three decisions recorded in §3 were approved by the Repository Owner on 2026-09-24 (`RO-M1-01`, `RO-M1-02`, `RO-M1-03`; `IRA-BAE-001-M1 §0`). Creation of this ADR was separately authorized on 2026-09-24.
 
 This ADR partially satisfies `IRA-BAE-001-M1 §16` Condition 1 (ADR formalization). The `RTA-001` correction pass (§9, RC-01–RC-03) that the same condition anticipates remains outstanding and is not performed. `IRA-BAE-001-M1` itself is not edited by this ADR; its Condition 1 text continues to describe the pre-ADR state until a later documentation update.
+
+
+## Reconciliation Addendum (2026-09-29)
+
+*The decisions recorded above are unchanged. This addendum only reconciles later decisions against §6.*
+- §6 left the manifest contract, schema, **storage** and artifact form to M2.
+- For the physical implementation boundary of the B2 identifier → implementation binding, that deferral is now resolved by later approved decisions:
+  - `ADR-043` (RD-M2-02 = B2);
+  - FO-2, approved (`IRA-BAE-001-M2 §16.A`), which keeps M2 read-only;
+  - FO-3, design approved (`TDS-BAE-001-M2-FO3 …`);
+  - RD-M2-07 (`ROD-BAE-001-M2-Binding-Infrastructure-Ownership-Decision-Preparation.md` §11).
+- Under RD-M2-07, the physical binding storage (table, schema, migration), its governed write operation and CI act-citation verification belong to WP-BAE-001 milestone **M2-P**. M2 is the read-only consumer.
+- `RO-M1-03` (BAE ownership of the mapping) is unchanged. M2-P is a WP-BAE-001 milestone.
 
 ---
 
