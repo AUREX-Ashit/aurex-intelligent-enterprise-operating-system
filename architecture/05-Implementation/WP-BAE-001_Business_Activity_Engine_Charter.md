@@ -129,6 +129,9 @@ Business Activity Engine   (this Charter, future)
         │  → Post-Commit Processing → Response Generation
         ▼
 Enterprise BAR              (WP-23, already delivered — queried, never owned or duplicated)
+        │  [C-4 note 2026-09-28, IRA-WP-23-AC §7 S-4: "already delivered" predated
+        │   verification; WP-23 A–C accepted and committed b0f5a12 (not certified;
+        │   WP-23 OPEN, D–H not implemented)]
         │  registration/identity lookup only
         ▼
 Authorization Engine        (WP-RTA-001, already delivered — invoked, never re-implemented)
@@ -164,10 +167,10 @@ No milestone below is authorized to begin by this document (§17). No dates are 
   - No milestone scope is otherwise amended by this note.
 
 **M2 — Business Activity Resolution & BAR Integration**
-- *Objective:* Implement Activity Resolution (`§6.15.4`) as a real, structurally complete query against BAR's own existing, delivered surface (`BarRegistrationRepository.get_by_identifier`/`get_by_work_package_and_reference`) — the one responsibility already having a real, reusable dependency (`IRA-BAE-001 §16`).
+- *Objective:* Implement Activity Resolution (`§6.15.4`) as a real, structurally complete query against BAR's own existing, delivered surface (`BarRegistrationRepository.get_by_identifier`/`get_by_work_package_and_reference`) — the one responsibility already having a real, reusable dependency (`IRA-BAE-001 §16`). *(C-4 annotation, 2026-09-28, `IRA-WP-23-AC §7` S-5, first clause only: "existing, delivered surface" predated independent verification of WP-23 A–C. The tranche is now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified. The M2-scope point about `get_by_work_package_and_reference` (S-5 second clause, group G-C) is intentionally not addressed here and stays for M2 authorization.)*
 - *Major scope:* Manifest Resolution; enforcement of the already-decided execution-time BAR gate (D2/D8) and registry-exclusive discovery rule (`IMP-001 §6.22.8`/`RTA-001 §6.6`).
 - *Outputs/deliverables:* A real, tested Activity Resolution stage consuming BAR read-only.
-- *Dependencies:* M1; BAR (`WP-23` Workstreams A–C, already delivered) — read-only, no BAR schema change.
+- *Dependencies:* M1; BAR (`WP-23` Workstreams A–C, already delivered) — read-only, no BAR schema change. *(C-4 annotation, 2026-09-28, S-3: "already delivered" predated independent verification. WP-23 A–C are now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified. M2 remains NOT AUTHORIZED and NOT STARTED.)*
 - *Verification expectations:* Tenant-isolation and gate-enforcement tests per `CLAUDE.md §21.4`'s Mandatory Tenant-Isolation Test Checklist, applied fresh at this milestone; no fabricated resolution for an unregistered Business Activity.
 - *Explicit exclusions:* No write to BAR; no change to BAR's own schema, service, or repository code.
 
@@ -216,7 +219,8 @@ No milestone below is authorized to begin by this document (§17). No dates are 
 ## 11. Dependencies
 
 **Already available (delivered, certified, reusable as-is):**
-- Enterprise BAR (`WP-23` Workstreams A–C) — `bar_identifier_ledger`, `bar_registration`, and their repository/service query surface. No BAR schema change is anticipated by this Charter.
+- ~~Enterprise BAR (`WP-23` Workstreams A–C) — `bar_identifier_ledger`, `bar_registration`, and their repository/service query surface. No BAR schema change is anticipated by this Charter.~~ *(C-4 correction, 2026-09-28, `IRA-WP-23-AC §7` S-12: this bullet wrongly sat under "delivered, certified". The item is restated below as a dated note. The heading and the Authorization Engine bullet are unchanged.)*
+- *(C-4 note, 2026-09-28.)* Enterprise BAR (`WP-23` Workstreams A–C) — `bar_identifier_ledger`, `bar_registration`, and their repository/service query surface. It is implemented, independently verified (Gates 1–5) and **accepted** (`IRA-WP-23-AC §0.2`), committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`. It is **not certified**, and WP-23 remains OPEN (Workstreams D–H not implemented). No BAR schema change is anticipated by this Charter.
 - `Backend/Runtime/AuthorizationEngine` (`WP-RTA-001`) — M1–M6 delivered, `CERTIFIED WITH CONDITIONS`; its own M4 adapter interface is the intended integration point for future M4 (§10 above).
 - `IMP-001 §6.15`–`§6.19`, `RTA-001 §6.6`/`§11.2`/`§11.5`/`§11.13` — the governing specifications, Active/LOCKED.
 - ~~Existing platform services this Engine would coordinate with, where independently verified to exist and already consumed directly by certified capabilities: Persistence Services, Event Bus, Audit Engine, Observability Platform.~~ *(Corrected 2026-09-24, per `RO-M1-12`, factual correction only — `IRA-BAE-001-M1 §4`/`§14`, `X-07`.)* Existing mechanisms this Engine could coordinate with, as they actually exist today:

@@ -92,7 +92,7 @@
 - register a Business Activity or assign a Business Activity Identifier;
 - change RD-23-03 or RD-23-04.
 
-**Commit:** WP-23 A–C are committed together with this record, as one commit, using the boundary proposed in `RRA-WP-23-AC §7`. Nothing is pushed.
+**Commit:** WP-23 A–C are committed together with this record, as one commit, using the boundary proposed in `RRA-WP-23-AC §7`. Nothing is pushed. *(C-4, 2026-09-28: commit `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`, parent `203bed15cdcb963e98266e89391399fb607611f4`, 26 files; not pushed.)*
 
 ### RD-23-01 — missing prerequisites (the STOP report the decision requires)
 
@@ -248,8 +248,8 @@ RO decisions RD-23-01..03 (§6)
 | P-8 – P-11 | ~~Not started~~ *(ST-6, 2026-09-28)* See the rows below | ~~Depend on P-7~~ |
 | P-8 | **DONE** *(added 2026-09-28)* | Gate 3 remediation (IMP-REPORT) and Gate 4 independent verification: PASS. Gate 5: PASS WITH CONDITIONS; ~~C-1 and C-2 are being remediated~~ *(C-3 addendum: C-1 and C-2 completed)* |
 | P-9 | ~~**NOT DONE**~~ **DONE** *(C-3 addendum, 2026-09-28)* | RO acceptance of A–C: Gate 5 condition C-3, ~~not performed~~ **satisfied by the Acceptance Record, §0.2** |
-| P-10 | ~~**NOT DONE**~~ **DONE with this record** *(C-3 addendum, 2026-09-28)* | WP-23 A–C commit. P-2 is met; the boundary follows `RRA-WP-23-AC §7`. ~~It awaits P-9~~ One commit, made together with §0.2; not pushed |
-| P-11 | **NOT DONE** *(added 2026-09-28)* | Stale-statement reconciliation of S-1 to S-12 and CERT-F-11: Gate 5 condition C-4, after the commit |
+| P-10 | ~~**NOT DONE**~~ **DONE with this record** *(C-3 addendum, 2026-09-28)* | WP-23 A–C commit. P-2 is met; the boundary follows `RRA-WP-23-AC §7`. ~~It awaits P-9~~ One commit, made together with §0.2; not pushed *(C-4: `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`)* |
+| P-11 | ~~**NOT DONE**~~ **DONE in the working tree** *(C-4, 2026-09-28)* | Stale-statement reconciliation of S-1 to S-12 and CERT-F-11 (Gate 5 condition C-4): see §7.2. It is not yet committed; a commit needs separate RO authorization |
 
 ## 6. Repository Owner Decisions Required for WP-23 A–C
 
@@ -274,11 +274,15 @@ RO decisions RD-23-01..03 (§6)
 | S-5 | same Charter `:167` (§10 M2 Objective) | "BAR's own existing, delivered surface (`BarRegistrationRepository.get_by_identifier`/`get_by_work_package_and_reference`)" | "BAR's implemented surface (`…get_by_identifier`), once WP-23 A–C is closed". Also note that RD-M2-01/`IRA-BAE-001-M2 §4 C` excludes `get_by_work_package_and_reference` from M2 use. Objective scope is otherwise untouched |
 | S-6 | `IRA-BAE-001_…_Readiness_Assessment.md:92` | "the one responsibility with a delivered, reusable dependency today" | "…with an implemented (not yet verified) dependency" |
 | S-7 | `IRA-BAE-001_…_Readiness_Assessment.md:130` | "BAR's own already-delivered query surface" | "BAR's implemented (not yet verified) query surface" |
-| S-8 | `architecture/06-Reviews/IRA-BAE-001-M1_Runtime_Contract_and_Gap_Analysis.md:373` (§13) | "BAR A–C read surface \| M2 \| Delivered; read-only" | "Implemented, uncommitted, unverified; read-only; closure required first (RD-M2-01)" |
+| S-8 | `architecture/06-Reviews/IRA-BAE-001-M1_Runtime_Contract_and_Gap_Analysis.md:373` (§13) | "BAR A–C read surface &#124; M2 &#124; Delivered; read-only" | "Implemented, uncommitted, unverified; read-only; closure required first (RD-M2-01)" |
 | S-9 | `architecture/06-Reviews/BAR-WP23-WORKSTREAM-D-BUSINESS-ACTIVITY-ENGINE-PREREQUISITE-INVESTIGATION.md:142` | "Workstreams A–C remain delivered and usable" | "Workstreams A–C remain implemented (pending closure/verification) and usable" |
 | S-10 | same investigation `:144` | "BAR's own decided scope (D1–D9) is fully delivered on the registration side regardless" | "…is fully implemented on the registration side (pending closure/verification) regardless" |
 | S-11 | same investigation `:174` | "already substantially delivered by Workstreams A–C" | "already substantially implemented by Workstreams A–C" |
 | S-12 | `architecture/05-Implementation/WP-BAE-001_Business_Activity_Engine_Charter.md:218–219` (§11 Dependencies) | "**Already available (delivered, certified, reusable as-is):** — Enterprise BAR (`WP-23` Workstreams A–C) — `bar_identifier_ledger`, `bar_registration`, and their repository/service query surface." | Move the BAR bullet out of "Already available (delivered, certified …)" into a dated note: "Enterprise BAR (`WP-23` Workstreams A–C): implemented, uncommitted, not yet independently verified; closure required before M2 (RD-M2-01)". The heading and the AuthorizationEngine bullet are accurate and stay unchanged |
+
+| S-13 *(added 2026-09-28, C-4; Gate 1 CERT-F-11)* | `architecture/06-Reviews/BAR-WP23-WORKSTREAM-D-BUSINESS-ACTIVITY-ENGINE-PREREQUISITE-INVESTIGATION.md:198` | "WP-23's own already-completed gates for Workstreams A–C" | Annotate only (dated review record): premature when written; the A–C tranche gates have since run and A–C are accepted and committed; WP-level WP-23 closure has not occurred |
+
+*(C-4 note, 2026-09-28: the S-8 row's quoted pipe characters were written as `\|` escapes. That is valid in GitHub-Flavored Markdown, but a naive pipe count read it as extra cells. They are now written as the `&#124;` entity. The rendered text is identical, and every renderer and pipe-counting check sees four cells.)*
 
 *(S-12 added 2026-09-25 on re-verification of this inventory against `HEAD` by `git grep`; it was missed in the first pass. The same sweep confirmed these hits are **not** stale: `WPR-001:117`, whose "already-certified" refers to the Authorization Engine adapter; Charter `:100`/`:134`/`:186`, which refer to `WP-RTA-001`; and `IRA-BAE-001-M1_Independent_Review.md:244`, which refers to M1's own delivered scope.)*
 
@@ -297,6 +301,46 @@ RO decisions RD-23-01..03 (§6)
 | **G-A: say "certified"** | S-1, S-2, S-12 | The claim is false now **and stays false after acceptance**: under RD-23-02 the A–C terminal state is ACCEPTED, and WP-level certification happens at WP-23 completion. The correct replacement wording (the acceptance record, the verification artifacts, the commit hash) exists only after P-9 and P-10 | After P-9 and P-10: strike through and replace with "WP-23 A–C tranche implemented, independently verified and accepted (`<acceptance record>`, commit `<hash>`); WP-23 remains OPEN" |
 | **G-B: say "delivered"** | S-3, S-4, S-5 (first clause), S-6, S-7, S-8, S-9, S-10, S-11 | The claim was premature when written but will become substantively true at acceptance plus commit. Rewriting now would only be rewritten again | After P-10: a dated annotation beside the original wording, not a rewrite. The annotation records that the statement predated A–C verification and cites the acceptance record and commit. S-8 (M1 analysis) and S-9–S-11 (investigation) are dated review records: annotate only, never alter |
 | **G-C: M2 scope point, not A–C status** | S-5 (second clause: `get_by_work_package_and_reference` named as an M2 surface) | Not an A–C status statement. It belongs to WP-BAE-001 M2 scope (`IRA-BAE-001-M2 §4 C`) | At M2 implementation authorization, in the WP-BAE-001 Charter synchronization, not in the A–C pass |
+
+### 7.2 C-4 Reconciliation Record (2026-09-28)
+
+**Performed** by Repository Owner instruction ("Proceed with C-4 reconciliation for WP-23 A–C … governance/documentation reconciliation only").
+
+**Authoritative state reconciled against:**
+- WP-23 A–C are **ACCEPTED** (§0.2) and **COMMITTED** in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`, whose parent is `203bed15cdcb963e98266e89391399fb607611f4`.
+- They are not certified and not closed. WP-23 remains OPEN, with Workstreams D–H not implemented.
+- TD-171 remains OPEN, with its hard execution-eligibility condition in force.
+- M2 remains NOT AUTHORIZED and NOT STARTED.
+
+The form of each correction follows §7.1:
+
+| Row | Group | Action taken |
+|---|---|---|
+| S-1 | G-A | "Delivered, certified" struck and replaced: accepted, committed `b0f5a12…`, not certified, WP-23 OPEN |
+| S-2 | G-A | `WPR-001` WP-BAE-001 row: "delivered and certified" struck and replaced, with the same content |
+| S-3 | G-B | Dated annotation beside the unchanged wording (WP-BAE-001 Charter §10 M2 Dependencies) |
+| S-4 | G-B | Dated annotation lines added inside the §9 diagram, under the unchanged line, following the `RO-M1-12` in-diagram precedent |
+| S-5 | G-B / G-C | First clause annotated. The second clause (the M2 surface) is **not** addressed; it stays for M2 authorization (G-C) |
+| S-6, S-7 | G-B | Dated annotations beside the unchanged wording (`IRA-BAE-001`) |
+| S-8 | G-B | Annotation appended inside the last cell of the M1 analysis §13 row (a dated review record; original words kept) |
+| S-9, S-10, S-11 | G-B | Dated annotations beside the unchanged wording (Workstream D investigation, a dated review record) |
+| S-12 | G-A | The BAR bullet under "Already available (delivered, certified …)" is struck and restated as a dated note. The heading and the Authorization Engine bullet are unchanged |
+| S-13 (CERT-F-11) | G-B | Dated annotation beside the unchanged wording: premature when written; the tranche gates have since run; WP-level closure has not occurred |
+
+**CERT-F-11 (Gate 1, Low): RESOLVED.**
+- The finding was that the S-inventory omitted a committed stale statement.
+- The statement is now inventoried as S-13 and annotated against evidence that exists in the repository: the Gate 1, 2, 4 and 5 artifacts, the §0.2 acceptance record, and commit `b0f5a12…`.
+- The annotation does not claim WP-level closure.
+
+**Not changed by C-4:**
+- the Gate 1, 2, 4 and 5 artifacts, which are historical reviewer records;
+- RD-23-03 and RD-23-04;
+- any code, migration or test;
+- TD-170 and the M2 artifacts;
+- WP-22, C-040 and D-002;
+- the "Informational, not stale" items above (the `IMP-REPORT-WP-BAE-001` / `94c99a1` "33 passed" count remains a historical record).
+
+**Technical-debt statuses: unchanged.** TD-096 and TD-171 to TD-176 remain Open.
 
 **Rows correctable before A–C acceptance:** none. The informational items (the "33 passed" test count in `IMP-REPORT-WP-BAE-001` and `94c99a1`) are historical records: annotate only, and only after P-10.
 

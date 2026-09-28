@@ -370,7 +370,7 @@ The comparison that supported it is retained for the record:
 
 | Dependency | Needed by | Status |
 |---|---|---|
-| BAR A–C read surface | M2 | Delivered; read-only |
+| BAR A–C read surface | M2 | Delivered; read-only *(C-4 annotation, 2026-09-28, `IRA-WP-23-AC §7` S-8: "Delivered" predated independent verification of WP-23 A–C; historical wording kept. The tranche is now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified)* |
 | WP-23 Workstream E gate mechanism/authority | M2 | **Not built** (WP-23 Charter §9). The BAE consumes it (`RO-M1-04`). The interface is designed in M2. Whether M2 can proceed against the raw BAR read surface before Workstream E exists is an M2 question |
 | Governed manifest contract (CBAM instance or equivalent) | M2, M3, M4 | **None exists.** M2 defines the minimum contract (`RO-M1-03`) |
 | `AuthorizationAdapter` / `EvaluationPipeline` | M4 | Delivered; consumed by WP-13; reusable unmodified |

@@ -139,9 +139,9 @@ Assessed directly against `IMP-001 §6.15.4`'s own "Activity Resolution" respons
 
 **Governance required:** a Repository Owner acknowledgment that Workstream D is deferred pending a future, independently governed Business Activity Engine — no new governance artifact is strictly required beyond recording this decision.
 
-**Effect on existing WP-23:** Workstreams A–C remain delivered and usable; Workstreams E–H remain blocked or partially blocked by the same missing consumer (E explicitly depends on D per the WP-23 Charter's own Workstream sequencing; F/G/H do not strictly require D to exist first, but their own eventual completion still needs D/E to close the loop).
+**Effect on existing WP-23:** Workstreams A–C remain delivered and usable *(C-4 annotation, 2026-09-28, `IRA-WP-23-AC §7` S-9: "delivered" predated independent verification; historical wording kept. WP-23 A–C are now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified; WP-23 remains OPEN)*; Workstreams E–H remain blocked or partially blocked by the same missing consumer (E explicitly depends on D per the WP-23 Charter's own Workstream sequencing; F/G/H do not strictly require D to exist first, but their own eventual completion still needs D/E to close the loop).
 
-**Effect on BAR:** none — BAR's own decided scope (D1–D9) is fully delivered on the registration side regardless.
+**Effect on BAR:** none — BAR's own decided scope (D1–D9) is fully delivered on the registration side regardless. *(C-4 annotation, 2026-09-28, S-10: "fully delivered" predated independent verification; historical wording kept. The registration side (Workstreams A–C) is now accepted and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified. Discovery and the execution gate (D, E) and the retroactive registrations (F) are not implemented.)*
 
 **Dependencies:** a future, separately-governed Business Activity Engine Work Package (Option B) or an equivalent future decision.
 
@@ -171,7 +171,7 @@ Assessed directly against `IMP-001 §6.15.4`'s own "Activity Resolution" respons
 
 ### OPTION C — Narrow WP-23 Workstream D's own scope
 
-**Engineering scope:** redefine Workstream D's own deliverable as "the BAR-side discovery contract/query surface a future Business Activity Engine will consume" — which, per §9 above, is already substantially delivered by Workstreams A–C — rather than "rewire an existing engine."
+**Engineering scope:** redefine Workstream D's own deliverable as "the BAR-side discovery contract/query surface a future Business Activity Engine will consume" — which, per §9 above, is already substantially delivered by Workstreams A–C *(C-4 annotation, 2026-09-28, S-11: "delivered" predated independent verification; A–C are now accepted and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`, not certified)* — rather than "rewire an existing engine."
 
 **Governance required:** a WP-23 Charter amendment narrowing Workstream D's own stated objective (`§8`) to match what is actually achievable without an Engine.
 
@@ -195,7 +195,7 @@ Assessed directly against `IMP-001 §6.15.4`'s own "Activity Resolution" respons
 
 - D1–D9 are unaffected by any of the three options — none touches enterprise BAR scope, identity authority, retroactivity, the `IMP-001` relationship, registration-record placement, or the transitional gate.
 - `C-024 D10` is unaffected — BA-01 remains NOT STARTED and outside any of these options' own scope.
-- Option B's own eventual Work Package would need its own full governance sequence (Charter → IRA → the five-gate closure), independent of and not shortcut by WP-23's own already-completed gates for Workstreams A–C.
+- Option B's own eventual Work Package would need its own full governance sequence (Charter → IRA → the five-gate closure), independent of and not shortcut by WP-23's own already-completed gates for Workstreams A–C. *(C-4 annotation, 2026-09-28, Gate 1 CERT-F-11 / `IRA-WP-23-AC §7` S-13: when written, no gate had run for Workstreams A–C, so "already-completed" was premature; historical wording kept. The A–C gate sequence has since run: Gate 1 STOP (blockers resolved), Gate 2 FAIL, Gate 3 remediation, Gate 4 PASS, Gate 5 PASS WITH CONDITIONS. A–C are accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`. These are tranche gates; WP-level five-gate closure of WP-23 has **not** occurred, and WP-23 remains OPEN. The point of this sentence, that Option B's work package needs its own full governance sequence, is unaffected.)*
 - Option C's own Charter amendment would need to be weighed against `CLAUDE.md §19.7`'s own Business Activity Completion Gate discipline — amending a chartered Workstream's own objective after the fact is a disclosed, not silent, act if chosen.
 
 ## 12. Engineering Implications

@@ -66,7 +66,7 @@ This decision:
 |---|---|---|
 | `IMP-001 §6.15`–`§6.19` | Governing specification the Engine must conform to | Exists, Active |
 | `RTA-001 §6.6`/`§11.2`/`§11.5`/`§11.13` | Discovery-exclusivity and Authorization-invocation principles the Engine must conform to | Exists, LOCKED |
-| Enterprise BAR (`WP-23` Workstreams A–C: `bar_identifier_ledger`, `bar_registration`) | The registry the Engine's own Activity Resolution responsibility (`§6.15.4`) would query — **consumed, never owned or duplicated** | Delivered, certified, and directly reusable as-is; no BAR schema change is anticipated by this document |
+| Enterprise BAR (`WP-23` Workstreams A–C: `bar_identifier_ledger`, `bar_registration`) | The registry the Engine's own Activity Resolution responsibility (`§6.15.4`) would query — **consumed, never owned or duplicated** | ~~Delivered, certified, and directly reusable as-is~~ *(C-4 correction, 2026-09-28, `IRA-WP-23-AC §7` S-1: the WP-23 A–C tranche is implemented, independently verified (Gates 1–5) and **accepted** (`IRA-WP-23-AC §0.2`), committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; **not certified**; WP-23 remains OPEN. It was not delivered or certified when this was written.)* Reusable as-is; no BAR schema change is anticipated by this document |
 | `Backend/Runtime/AuthorizationEngine` (`WP-RTA-001`) | The separately built, already-certified consumer the future Engine would invoke (`RTA-001 §11.13`), handing it a constructed `AuthorizationContext` | Exists, `CERTIFIED WITH CONDITIONS`; its own disclosed condition ("no Business Capability consumes this engine's decisions in production use," `IRA-RTA-001 §15`) would be resolved once, and only once, a real Business Activity Engine actually invokes it — a future milestone-level fact, not decided here |
 | `AgentOrchestrator` (`IMP-001 §13.5`/`§13.6a`) | A second, independent future consumer with "a hard dependency, not a convention" on the Engine (`§13.6c`) | Specified only; zero code exists; not built by this document or by the future Engine Work Package itself |
 | WP-23 Workstream D (discovery integration) | The originating blocked task this future Work Package exists to unblock | Deferred, pending this future Work Package (§0 above) |
@@ -89,7 +89,7 @@ This decision:
 
 Per `IMP-001 §6.15.4`/`§6.16.3`/`§6.17`–`§6.19`, restated as this future Work Package's own eventual scope (implementation deferred to its own future milestones, not defined here):
 
-- Activity Resolution (querying BAR — the one responsibility with a delivered, reusable dependency today, per §6 above)
+- Activity Resolution (querying BAR — the one responsibility with a delivered, reusable dependency today, per §6 above) *(C-4 annotation, 2026-09-28, `IRA-WP-23-AC §7` S-6: "delivered" predated independent verification of WP-23 A–C. The tranche is now accepted (`IRA-WP-23-AC §0.2`) and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified.)*
 - Context Initialization / the full 18-part Business Activity Context model
 - Input Validation
 - Authorization invocation (constructing `AuthorizationContext`, invoking the existing Authorization Engine — never re-implementing its evaluation)
@@ -127,7 +127,7 @@ Restated from `IRA-RTA-001 §10`, confirmed to apply identically to this second 
 - `IMP-001 §6.15`–`§6.19`'s own specification is assumed correct and complete as the target specification to (eventually) implement — it is canonical text, not a design choice this IRA introduces.
 - The future Engine's eventual service/module placement (embedded, standalone, or shared-library) is **not** assumed here and is explicitly deferred to the future Work Package's own milestone-level design, informed by `CLAUDE.md §8`'s service-boundary rules at that time — mirroring `IRA-RTA-001 §11`'s identical deferral for the Authorization Engine.
 - Existing certified Business Activities' direct-FastAPI-routing execution path is assumed to remain operative until each capability separately decides to migrate onto the future Engine — this document does not assume a mandatory, repository-wide cutover, mirroring `IRA-RTA-001 §11`'s own identical disclosure for `PLATFORM_ADMIN` gating.
-- BAR's own already-delivered query surface (`BarRegistrationRepository.get_by_identifier`, `get_by_work_package_and_reference`) is assumed sufficient, unmodified, for the future Engine's own Activity Resolution responsibility — no BAR schema change is anticipated by this document; any actual gap discovered during future milestone-level design would be its own disclosed finding at that time, not assumed away here.
+- BAR's own already-delivered query surface *(C-4 annotation, 2026-09-28, S-7: "already-delivered" predated independent verification; WP-23 A–C are now accepted, `IRA-WP-23-AC §0.2`, and committed in `b0f5a12e84a9a3f7d9622bcbea4cee87b934be85`; not certified)* (`BarRegistrationRepository.get_by_identifier`, `get_by_work_package_and_reference`) is assumed sufficient, unmodified, for the future Engine's own Activity Resolution responsibility — no BAR schema change is anticipated by this document; any actual gap discovered during future milestone-level design would be its own disclosed finding at that time, not assumed away here.
 
 ## 12. Risks
 
