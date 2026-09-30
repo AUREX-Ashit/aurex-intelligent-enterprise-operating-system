@@ -290,6 +290,23 @@ The tests:
 - controlled read-only reconciliation access;
 - a target PostgreSQL environment.
 
+**R3 External Prerequisites Request (synchronized 2026-09-30).**
+- *Status synchronization of the committed request package `architecture/06-Reviews/TDS-WP23-TD-171-R3-External-Prerequisites-Request.md` (`7a3b639`).*
+- The package was issued to **Platform Engineering**: the ownership **role** defined by responsibility in `Backend/Services/AuthService/docs/OPERATIONAL_OWNERSHIP.md` ("Deployment and release"; "Database ownership"). No individual is named.
+- **The request package is committed. The prerequisites themselves remain outstanding.** This records the issuance of a **request**, not delivery, and **does not change the R3 gate state**.
+
+| EP | Request | Status |
+|---|---|---|
+| EP-01 | Canonical production environment designation: an authoritative designation of the actual canonical production environment and database for enterprise-global BAR identifiers. `ENVIRONMENT=production` is **not** itself treated as that designation. No environment or database identity has been invented | **REQUESTED / NOT PROVIDED** |
+| EP-02 | Database-role separation: an evidenced PostgreSQL privilege boundary under which the AuthService runtime cannot INSERT, UPDATE or DELETE either BAR table, and the governed deployment-time operation is the controlled BAR write authority. **Evidence finding (not a completed prerequisite):** `scripts/run_bootstrap.py` uses the same `db_manager` / `DATABASE_URL` connection pattern as the runtime, so a separate write-capable deployment connection does not yet exist. No role provisioning is claimed | **REQUESTED / NOT PROVIDED** |
+| EP-03 | Controlled read-only reconciliation access: environment-scoped, controlled read-only access sufficient for reconciliation, with no write capability. No access is claimed to exist | **REQUESTED / NOT PROVIDED** |
+| EP-04 | PostgreSQL verification environment: a PostgreSQL-capable environment or fixture sufficient for the R4 verification plan, using the existing CI PostgreSQL capability where appropriate. **CI/test PostgreSQL is distinct from canonical production PostgreSQL** and does not satisfy EP-01/C-10 | **REQUESTED / NOT PROVIDED** |
+
+**Boundary:**
+- These are external-prerequisite **requests**. None has been provided, and no infrastructure has been provisioned through the repository.
+- **C-07, C-09 and C-10 remain not satisfied (no PASS).** No R3 criterion is satisfied by issuing a request.
+- **R3: NOT SATISFIED; NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171: OPEN.**
+
 ---
 
 ~~*End of IMP-REPORT-WP-23 (A–C tranche). IMPLEMENTATION COMPLETE — AWAITING INDEPENDENT VERIFICATION. WP-23 OPEN. Nothing staged, committed or pushed.*~~
@@ -301,3 +318,5 @@ The tests:
 *(2026-09-30 addendum.) TD-171 remediation tranche (Charter §21a): ACCEPTED (R1); AUTHORIZED (R2, `d2aaade`); R3–R6 NOT SATISFIED; implementation not started; TD-171 OPEN. M2 NOT AUTHORIZED / NOT STARTED; M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED.*
 
 *(2026-09-30 addendum, R3 design synchronization.) OD-1, OD-2, OD-3 and OD-5 DESIGN DECIDED (`fa93fc7`, `649f55a`); OD-4 OPEN / EXTERNAL. R3 NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. Nothing implemented. TD-171 OPEN.*
+
+*(2026-09-30 addendum, external prerequisites.) Request package issued to Platform Engineering (`7a3b639`). EP-01 to EP-04 REQUESTED / NOT PROVIDED. R3 NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 OPEN.*
