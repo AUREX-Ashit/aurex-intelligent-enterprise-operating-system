@@ -454,16 +454,16 @@ R4 would consume:
 
 | Document / statement | Finding | Classification |
 |---|---|---|
-| Charter §21a.6 R-01 ("act … naming the BAR Business Activity Identifier") | Consistent under OD-1: the identifier is named in the execution addendum of the same act. A clarifying note is useful | **1. Required governance synchronization** (clarification) |
-| Charter §21a.6 R-02 ("`register()` does not remain an unrestricted … production write path") and R-03 ("only the governed write path holds registration-write capability") | OD-2 extends these to `issue_identifier()` and the ledger. It is within §21a.3 C–D (access restriction, not allocation redesign) | **1. Required governance synchronization** (wording). Not a scope amendment |
+| Charter §21a.6 R-01 ("act … naming the BAR Business Activity Identifier") | Consistent under OD-1: the identifier is named in the execution addendum of the same act. A clarifying note is useful | **1. Required governance synchronization** (clarification). *(Reconciled 2026-09-30: **COMPLETED / SYNCHRONIZED** in `649f55a`, Charter §21a.6 R-01 note.)* |
+| Charter §21a.6 R-02 ("`register()` does not remain an unrestricted … production write path") and R-03 ("only the governed write path holds registration-write capability") | OD-2 extends these to `issue_identifier()` and the ledger. It is within §21a.3 C–D (access restriction, not allocation redesign) | **1. Required governance synchronization** (wording). Not a scope amendment. *(Reconciled 2026-09-30: **COMPLETED / SYNCHRONIZED** in `649f55a`, Charter §21a.6 R-02 and R-03 notes.)* |
 | Charter §21a.6 R-07 ("classify, quarantine or block") | OD-5 selects "block". Consistent | **4. No change required** |
 | Charter §21a.3 exclusions (identifier allocation redesign; D5 unchanged) | OD-1 and OD-2 preserve D5 and allocation | **4. No change required** |
 | Remediation ROD §19: OQ-R-4 (act identifies the identifier) | Satisfied by OD-1's addendum | **4. No change required.** An optional pointer could be added at R6 |
-| Remediation ROD §19: OQ-R-3 (`register()` restriction) | Extended by OD-2 to `issue_identifier()` | **1. Governance synchronization** (a pointer to OD-2) |
+| Remediation ROD §19: OQ-R-3 (`register()` restriction) | Extended by OD-2 to `issue_identifier()` | **1. Governance synchronization** (a pointer to OD-2). *(Reconciled 2026-09-30: **COMPLETED / SYNCHRONIZED** in `649f55a`, ROD §19.1 OQ-R-3 pointer and §19.7.)* |
 | R2 ROD §19.2 condition 3 (citation rule designed and approved within R3) | Advanced by OD-1 and OD-3. Approval still happens at R3 acceptance | **4. No change required** |
 | `BAR-INDEX.md` §3 ("Registering Act" column) and §8 procedure | The column cites `governing_act_id`, and both parts live in one record. Consistent. §8 may later cite the convention when the first registration occurs | **4. No change now.** A future **1** at R4/R6 |
 | Workstream B/C design (`ENTERPRISE-BAR-MECHANISM-DESIGN-AND-IMPLEMENTATION-READINESS.md` §18; Charter §7 "mirroring the CBOR-ADR pattern") | OD-3 extends the CBOR-ADR-mirroring convention with a metadata block. No contradiction. The convention is recorded in this TDS | **2. Design amendment** (recorded here). No change to the design document now |
-| `IMP-REPORT-WP-23` | Records R2 status. It should record R3 design decisions at R3 acceptance | **1.** Future synchronization (at R3) |
+| `IMP-REPORT-WP-23` | Records R2 status. It should record R3 design decisions at R3 acceptance | **1.** Future synchronization (at R3). *(Reconciled 2026-09-30: the R3 design-decision synchronization is **COMPLETED / SYNCHRONIZED** in `560d0fa`, ahead of R3 acceptance. R3 itself remains NOT SATISFIED.)* |
 | `WPR-001` WP-23 row | Consistent (R2 authorized; R3 not satisfied) | **4. No change required** |
 | `ADR-043` | A separate binding store. Unaffected | **4. No change required** |
 | RD-M2-05 (AuthService in-process on the shared engine; OQ-05-3) | A read-only runtime principal on BAR tables is consistent with M2's read-only contract. The test harness must provision it explicitly (OQ-05-3) | **4. No change required** |
