@@ -342,12 +342,12 @@ All of the following are outstanding:
 - the exact machine-verifiable act-citation rule;
 - the remediation design and `§19` checklist;
 - TD-176 PostgreSQL verification;
-- tranche authorization (R2).
+- ~~tranche authorization (R2).~~ *(Reconciled 2026-09-30: **SATISFIED / COMPLETED**. R2 was authorized in `d2aaade` and synchronized into Charter §21a.7, WPR-001 and IMP-REPORT-WP-23 in `032d8d8`. This entry had been retained here, stale; see the R2 Status Reconciliation below.)*
 
 **R3 External Prerequisites Request Note (synchronized 2026-09-30).**
 - *Synchronization only; no new decision.* The TD-171 R3 external-prerequisites request (`TDS-WP23-TD-171-R3-External-Prerequisites-Request.md`, `7a3b639`; recorded in IMP-REPORT-WP-23 `566d424` and the WPR-001 WP-23 row `76acac2`) has been **issued to Platform Engineering**, the ownership role in `OPERATIONAL_OWNERSHIP.md`.
 - The request records issuance only. It does not record any action by Platform Engineering.
-- These are **external prerequisites, not repository implementation**. None is provisioned, available, verified, accepted or completed. The list above and the R1–R6 gates are unchanged.
+- These are **external prerequisites, not repository implementation**. None is provisioned, available, verified, accepted or completed. ~~The list above and the R1–R6 gates are unchanged.~~ *(Reconciled 2026-09-30: the list above is unchanged **except** its stale "tranche authorization (R2)" entry, now reconciled as SATISFIED. The R1–R6 gate states in §21a.7 are unchanged.)*
 
 | EP | Prerequisite | Status |
 |---|---|---|
@@ -356,6 +356,14 @@ All of the following are outstanding:
 | EP-03 | Controlled, environment-scoped, read-only reconciliation access | **REQUESTED / NOT PROVIDED** |
 | EP-04 | PostgreSQL verification environment | **REQUESTED / NOT PROVIDED** |
 
+- **R3 remains NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 remains OPEN.**
+
+**R2 Status Reconciliation (2026-09-30).**
+- *Reconciliation of a stale status only; no new decision.* R2 (tranche authorization) was already **SATISFIED** by the Repository Owner decision in `d2aaade`, and `032d8d8` synchronized it into §21a.7.
+- This §21a.9 list had nonetheless kept "tranche authorization (R2)" as outstanding. The R3 External Prerequisites Request Note above (`4e0f24a`) carried that stale entry forward.
+- A read-only cross-record reconciliation identified the inconsistency. The stale wording is preserved above, struck through.
+- **Now aligned with §21a.7:** R1 SATISFIED; **R2 SATISFIED**; R3–R6 NOT SATISFIED. The R2 decision and its scope, R-01 to R-10, and OD-1 to OD-5 (OD-1, OD-2, OD-3, OD-5 DECIDED; OD-4 OPEN / EXTERNAL) are unchanged.
+- **Still outstanding:** the other items in the list above, and EP-01 to EP-04, all **REQUESTED / NOT PROVIDED**.
 - **R3 remains NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 remains OPEN.**
 
 ### 21a.10 Boundary with WP-BAE-001 M2
