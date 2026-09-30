@@ -10,7 +10,7 @@
 - **`bar_registration`:** runtime execution registration. A row is not proof of authorization.
 - **`BAR-INDEX.md`:** governance catalogue only.
 - **Reconciliation:** must stay traceable; no mechanism is decided yet.
-**Scope of this report:** **Workstreams A (BAR index), B (identifier issuance) and C (registration mechanism).** Workstreams D, E, F, G and H are not implemented and not started. **WP-23 remains OPEN.**
+**Scope of this report:** **Workstreams A (BAR index), B (identifier issuance) and C (registration mechanism).** Workstreams D, E, F, G and H are not implemented and not started. **WP-23 remains OPEN.** *(2026-09-30: this report also carries the governance status of the TD-171 remediation tranche, Charter §21a; see "TD-171 Remediation Tranche (Charter §21a): Governance Status" below. No tranche implementation evidence exists yet.)*
 
 **Implementation Status:** ~~***IMPLEMENTATION COMPLETE — AWAITING INDEPENDENT VERIFICATION*** (A–C tranche).~~
 - ~~Not independently verified, not accepted, not certified and not committed.~~
@@ -234,6 +234,38 @@ The tests:
 - **Gate 2:** VV-F-03 (harness FK and migration parity, TD-096), VV-F-04 (model/migration drift), VV-F-05 (six-digit overflow), VV-F-06 (no database format check), VV-F-07 (a pending ledger row after a non-database error), O-01.
 - **Gate 1:** CERT-F-02 (RD-23-01 prerequisite commits), CERT-F-04 (no act↔row enforcement or reconciliation), CERT-F-05 (the pre-existing "forced collision" tests still do not collide; the new tests do), and CERT-F-08 to F-14.
 
+
+---
+
+## TD-171 Remediation Tranche (Charter §21a): Governance Status (synchronized 2026-09-30)
+
+*Governance synchronization of already-recorded decisions. It records **no implementation evidence**, because none exists. The A–C tranche content above is unchanged.*
+
+| Item | State | Record |
+|---|---|---|
+| Charter §21a amendment | **ACCEPTED / IN FORCE** (Gate R1 SATISFIED) | Charter §21a, Repository Owner Acceptance Record (`7f479bd`) |
+| Tranche authorization | **AUTHORIZED** (Gate R2 SATISFIED, Option A) | `ROD-WP23-TD-171-Remediation-Tranche-Authorization-Decision-Preparation.md` §19 (`d2aaade`) |
+| Authorization conditions | **All 14 conditions in the ROD §19.2 are binding** | Same |
+| R3: design/readiness | **NOT SATISFIED** | — |
+| R4: implementation and controlled deployment verification | **NOT SATISFIED** | — |
+| R5: independent verification/review | **NOT SATISFIED** | — |
+| R6: closure evidence and governance synchronization | **NOT SATISFIED** | — |
+| Implementation | **Not started. No implementation, tests, commits, migrations or deployment evidence exist for this tranche** | — |
+| TD-171 | **OPEN**, remediation required. Closes only at R6 (§21a.8) | `TECH-DEBT.md` (unchanged) |
+
+**Outstanding under the conditions** (not satisfied by authorization):
+- R3 design/readiness, including the machine-verifiable act-citation rule;
+- canonical production environment designation;
+- database-role separation (design and provisioning);
+- controlled read-only reconciliation access;
+- TD-176 PostgreSQL verification before closure.
+
+**Boundaries:**
+- Workstreams A–C remain **ACCEPTED** and are **not reopened**.
+- WP-23 remains **OPEN**, not certified or closed.
+- TD-172 to TD-175 are **not** authorized.
+- WP-BAE-001 **M2 NOT AUTHORIZED / NOT STARTED**; **M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED**.
+
 ---
 
 ~~*End of IMP-REPORT-WP-23 (A–C tranche). IMPLEMENTATION COMPLETE — AWAITING INDEPENDENT VERIFICATION. WP-23 OPEN. Nothing staged, committed or pushed.*~~
@@ -241,3 +273,5 @@ The tests:
 ~~*End of IMP-REPORT-WP-23 (A–C tranche). Synchronized 2026-09-28 (ST-7): IMPLEMENTATION COMPLETE — INDEPENDENTLY VERIFIED (Gates 1, 2 and 4) — GATE 5 PASS WITH CONDITIONS (C-1 and C-2 being remediated). NOT ACCEPTED, NOT CERTIFIED, NOT COMMITTED. WP-23 OPEN. WP-BAE-001 M2 NOT AUTHORIZED and NOT STARTED.*~~
 
 *End of IMP-REPORT-WP-23 (A–C tranche). C-3 addendum 2026-09-28: IMPLEMENTATION COMPLETE — INDEPENDENTLY VERIFIED (Gates 1, 2 and 4) — GATE 5 PASS WITH CONDITIONS (C-1 and C-2 completed, C-3 satisfied, C-4 outstanding) — **ACCEPTED** (`IRA-WP-23-AC §0.2`) and committed with that record. NOT CERTIFIED, NOT CLOSED. WP-23 OPEN; Workstreams D–H not implemented. WP-BAE-001 M2 NOT AUTHORIZED and NOT STARTED.*
+
+*(2026-09-30 addendum.) TD-171 remediation tranche (Charter §21a): ACCEPTED (R1); AUTHORIZED (R2, `d2aaade`); R3–R6 NOT SATISFIED; implementation not started; TD-171 OPEN. M2 NOT AUTHORIZED / NOT STARTED; M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED.*
