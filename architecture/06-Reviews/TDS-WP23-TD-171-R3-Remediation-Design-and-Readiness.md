@@ -349,6 +349,25 @@ Negative controls against the pre-fix code are required at R5 (`§19.7b`).
   Charter §21a.7 requires these to be confirmed within R3.
 - **Designed and complete apart from the above:** the operation shape, write-path restriction, conceptual role model, CI checks, reconciliation states, PostgreSQL plan, test matrix, evidence plan, and review and closure plans.
 
+**External Prerequisites Request Note (synchronized 2026-09-30).**
+- *Governance synchronization only.* It creates or alters no decision, and does not change this section's conclusion.
+- The TD-171 R3 external-prerequisites request (`TDS-WP23-TD-171-R3-External-Prerequisites-Request.md`, `7a3b639`) was **issued to Platform Engineering**, the ownership role in `OPERATIONAL_OWNERSHIP.md`.
+- It is recorded in IMP-REPORT-WP-23 (`566d424`), the WPR-001 WP-23 row (`76acac2`), Charter §21a.9 (`4e0f24a`) and the remediation ROD §19.8 (`4765a95`).
+- **Issuance/status only.** It does not evidence any action by Platform Engineering.
+- The prerequisites remain **external to repository implementation**.
+
+| EP | Prerequisite | Status |
+|---|---|---|
+| EP-01 | Canonical production environment/database designation | **REQUESTED / NOT PROVIDED** |
+| EP-02 | DB-role separation and controlled production write path | **REQUESTED / NOT PROVIDED** |
+| EP-03 | Controlled environment-scoped read-only reconciliation access | **REQUESTED / NOT PROVIDED** |
+| EP-04 | PostgreSQL verification environment | **REQUESTED / NOT PROVIDED** |
+
+- None of EP-01 to EP-04 is provisioned, available, verified, accepted or completed.
+- The request satisfies **no** R3 checklist item. C-05, C-06, C-07, C-09, C-10 and C-11 keep their §13 states.
+- OD-1, OD-2, OD-3 and OD-5 remain DECIDED. OD-4 remains OPEN / EXTERNAL.
+- **R3 remains NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 remains OPEN.**
+
 ## §16 R4 Handoff (defined; not started)
 
 R4 would consume:
