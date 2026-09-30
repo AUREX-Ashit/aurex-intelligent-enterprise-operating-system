@@ -8,7 +8,7 @@
 
 **Governing capability:** none — this Work Package has no `CAP-001` capability of its own. It implements the enterprise Business Activity Registry (BAR) mechanism the seven original `§14` questions plus D8/D9 (implementation-planning determination) already fully decided, per `ROD-ENTERPRISE-BAR-Decision-Preparation.md`.
 
-**Status:** **CHARTERED.** Implementation is authorized to begin **only** within the boundary §20/§29 of this Charter state, subject to the standard `CLAUDE.md §19.7b` five-gate closure sequence before release. No BAR mechanism is built by this Charter. No Business Activity is registered. No Business Activity Identifier is assigned. No `WPR-001` row exists until §31's own registration step is separately performed. *(2026-09-30: a **proposed** amendment, §21a (TD-171 remediation tranche), has been prepared. It is **not accepted and not authorized**; §20 is unchanged until Gate R1/R2.)*
+**Status:** **CHARTERED.** Implementation is authorized to begin **only** within the boundary §20/§29 of this Charter state, subject to the standard `CLAUDE.md §19.7b` five-gate closure sequence before release. No BAR mechanism is built by this Charter. No Business Activity is registered. No Business Activity Identifier is assigned. No `WPR-001` row exists until §31's own registration step is separately performed. *(2026-09-30: a **proposed** amendment, §21a (TD-171 remediation tranche), has been prepared. It is **not accepted and not authorized**; §20 is unchanged until Gate R1/R2.)* *(2026-09-30, Repository Owner acceptance: §21a is **ACCEPTED / IN FORCE** (Gate R1 satisfied). The TD-171 remediation tranche remains **NOT AUTHORIZED** (Gate R2 not satisfied). §20 is unchanged.)*
 
 **Prepared under:** direct Repository Owner instruction ("Proceed with the consolidated next governed stage: WP-23 — Enterprise BAR Mechanism Implementation"), 2026-09-22, following the complete enterprise BAR governance sequence: `BAR_ENTERPRISE_MECHANISM_DECISION_INVESTIGATION.md` → `ROD-ENTERPRISE-BAR-Decision-Preparation.md` (D1 Establish, D2 LOCKED-minimum scope, D3 retroactive registration, D4 moot, D5 identifier authority/timing, D6 no `IMP-001` amendment, D7 separate registration index, D8 transitional execution gate) → `ENTERPRISE-BAR-MECHANISM-DESIGN-AND-IMPLEMENTATION-READINESS.md` (consolidated design, READY WITH CONDITIONS; §19a, D9 per-BA cutover, an implementation-planning determination, not a new Repository Owner decision) → this Charter.
 
@@ -186,14 +186,27 @@ This Charter does **not** authorize:
 
 ---
 
-## 21a. TD-171 Remediation Tranche (PROPOSED AMENDMENT — NOT ACCEPTED, NOT AUTHORIZED)
+## 21a. TD-171 Remediation Tranche (~~PROPOSED AMENDMENT — NOT ACCEPTED, NOT AUTHORIZED~~ ACCEPTED AMENDMENT — IN FORCE; TRANCHE NOT AUTHORIZED)
 
-**Amendment status: PROPOSED.**
+**Amendment status:** ~~**PROPOSED.**~~ **ACCEPTED — IN FORCE** *(2026-09-30; Repository Owner Acceptance Record below)*.
 - Prepared 2026-09-30 by Repository Owner instruction ("Prepare the WP-23 Charter amendment for the TD-171 remediation tranche"), as a governance-design task.
-- **This section is not in force until the Repository Owner accepts it (Gate R1).**
+- ~~**This section is not in force until the Repository Owner accepts it (Gate R1).**~~ *(2026-09-30: accepted; Gate R1 satisfied; in force.)*
 - **It authorizes no implementation.** The tranche needs separate authorization (Gate R2).
 - Preparing it satisfies **none** of the gates in §21a.7.
 - Until accepted, §20's authorization boundary (Workstreams A–G) is unchanged.
+
+**Repository Owner Acceptance Record (2026-09-30).** *(Recorded by direct Repository Owner instruction: "Record RO acceptance of the §21a WP-23 Charter amendment." Recorded as stated and not reinterpreted.)*
+- The Repository Owner has reviewed and **accepted §21a**. The acceptance is of **the Charter amendment itself**, committed in `e5287e2`.
+- §21a is **ACCEPTED / IN FORCE**. Under §21a.7, this acceptance is **Gate R1**, which is now satisfied.
+- **The acceptance does not authorize the TD-171 remediation tranche.**
+  - The tranche needs its own explicit implementation authorization (Gate R2).
+  - Gates **R2 to R6 remain not satisfied**.
+  - **No implementation is authorized** by this record.
+  - §20's authorization boundary (Workstreams A–G) is unchanged.
+- Workstreams **A–C remain ACCEPTED and are not reopened** (§21a.4). **WP-23 remains OPEN.**
+- **TD-171 remains OPEN** until remediation is actually completed and closed under §21a.8.
+- **No decided content changes.** OQ-R-1 to OQ-R-7, the mechanism, scope, ownership, exclusions, closure criteria, stop conditions, and the M2 and M2-P boundaries (§21a.1 to §21a.12) are accepted as written.
+- **M2 remains NOT AUTHORIZED / NOT STARTED. M2-P remains CHARTERED / NOT AUTHORIZED / NOT STARTED.**
 
 ### 21a.1 Purpose
 
@@ -273,14 +286,14 @@ No filename, class, endpoint, migration, SQL, role name or environment name is f
 
 | Gate | Condition | State at preparation |
 |---|---|---|
-| **R1** | This Charter amendment accepted by the Repository Owner | **Not satisfied** |
+| **R1** | This Charter amendment accepted by the Repository Owner | ~~**Not satisfied**~~ **Satisfied** (2026-09-30, Repository Owner Acceptance Record, §21a) |
 | **R2** | The remediation tranche separately authorized for implementation | **Not satisfied** |
 | **R3** | Design and readiness complete: the tranche's `CLAUDE.md §19` checklist; the act-citation rule; the operation, role and reconciliation design; environment designation and infrastructure prerequisites confirmed | **Not satisfied** |
 | **R4** | Implementation and controlled deployment verification complete | **Not satisfied** |
 | **R5** | Independent verification and review complete: the §16 / `§19.7b` sequence, including remediation re-verification if needed | **Not satisfied** |
 | **R6** | Closure evidence recorded. `TECH-DEBT.md` synchronization and G5-08 reassessment complete | **Not satisfied** |
 
-**Preparing this amendment satisfies none of R1–R6.**
+**Preparing this amendment satisfies none of R1–R6.** *(2026-09-30: the Repository Owner's acceptance satisfies **R1 only**. **R2 to R6 remain not satisfied.** The tranche is not authorized.)*
 
 ### 21a.8 Closure criteria
 
