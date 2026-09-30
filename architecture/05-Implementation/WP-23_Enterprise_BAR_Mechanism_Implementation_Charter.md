@@ -344,6 +344,20 @@ All of the following are outstanding:
 - TD-176 PostgreSQL verification;
 - tranche authorization (R2).
 
+**R3 External Prerequisites Request Note (synchronized 2026-09-30).**
+- *Synchronization only; no new decision.* The TD-171 R3 external-prerequisites request (`TDS-WP23-TD-171-R3-External-Prerequisites-Request.md`, `7a3b639`; recorded in IMP-REPORT-WP-23 `566d424` and the WPR-001 WP-23 row `76acac2`) has been **issued to Platform Engineering**, the ownership role in `OPERATIONAL_OWNERSHIP.md`.
+- The request records issuance only. It does not record any action by Platform Engineering.
+- These are **external prerequisites, not repository implementation**. None is provisioned, available, verified, accepted or completed. The list above and the R1–R6 gates are unchanged.
+
+| EP | Prerequisite | Status |
+|---|---|---|
+| EP-01 | Canonical production environment/database designation | **REQUESTED / NOT PROVIDED** |
+| EP-02 | DB-role separation and controlled production write path | **REQUESTED / NOT PROVIDED** |
+| EP-03 | Controlled, environment-scoped, read-only reconciliation access | **REQUESTED / NOT PROVIDED** |
+| EP-04 | PostgreSQL verification environment | **REQUESTED / NOT PROVIDED** |
+
+- **R3 remains NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 remains OPEN.**
+
 ### 21a.10 Boundary with WP-BAE-001 M2
 
 - **TD-171 closure is a prerequisite to M2 authorization.** This amendment does **not** authorize M2.
