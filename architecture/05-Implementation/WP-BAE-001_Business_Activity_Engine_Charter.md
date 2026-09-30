@@ -174,7 +174,7 @@ No milestone below is authorized to begin by this document (§17). No dates are 
   - C3: CI governing-act citation verification (FQ-2 (a));
   - the in-repository specification of database-role separation (FQ-7). Provisioning is an external prerequisite under RD-M2-08.
 - *Outputs/deliverables:* The binding store and its governed creation path. No binding row for a real Business Activity unless separately authorized.
-- *Dependencies:* M1; FO-3 (design approved); the RD-M2-05 detailed design. RD-M2-08 infrastructure must exist before the first governed binding write against a deployed environment. TD-176 (PostgreSQL verification) applies equally to the new store.
+- *Dependencies:* M1; FO-3 (design approved); ~~the RD-M2-05 detailed design~~ *(2026-09-30: RD-M2-05 is DECIDED, `ROD-BAE-001-RD-M2-05-Host-Integration-Decision-Preparation.md` §21. The host boundary is AuthService, in-process, with the FastAPI `lifespan` in `main.py` and a future additive `bae_integration/`. It is no longer an outstanding dependency. M2-P remains NOT AUTHORIZED / NOT STARTED and needs its own `§19` checklist and explicit implementation authorization)*. RD-M2-08 infrastructure must exist before the first governed binding write against a deployed environment. TD-176 (PostgreSQL verification) applies equally to the new store.
 - *Verification expectations:* Its own `CLAUDE.md §19` checklist and `§19.7` completion gate. Verification against both SQLite and PostgreSQL (FQ-8, TD-176). Negative controls per `§19.7b`.
 - *Explicit exclusions:*
   - any BAR write or BAR schema change; BAR registration or identifier issuance;

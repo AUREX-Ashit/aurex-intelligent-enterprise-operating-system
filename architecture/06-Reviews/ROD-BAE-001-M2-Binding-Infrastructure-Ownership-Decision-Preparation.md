@@ -235,7 +235,7 @@ The required infrastructure provisioning is an **external operational prerequisi
 | `M2-P` | CHARTERED — NOT AUTHORIZED / NOT STARTED |
 | TD-171 | OPEN / unresolved |
 | TD-170 | OUTSTANDING (the register entry is uncommitted) |
-| TD-165 | OUTSTANDING; a governance decision is still required (RD-M2-05) |
+| TD-165 | OUTSTANDING; ~~a governance decision is still required (RD-M2-05)~~ *(2026-09-30: RD-M2-05 is DECIDED (`ROD-BAE-001-RD-M2-05-Host-Integration-Decision-Preparation.md` §21); OQ-05-5 selected the interim WP-13 path helper. The RD-M2-05 governance decision is no longer outstanding. TD-165 itself remains OPEN, and formal packaging needs its own future decision)* |
 | TD-176 | OUTSTANDING |
 | FQ-7 implementation evidence | OUTSTANDING |
 | FQ-6 target-store infrastructure | OUTSTANDING |
