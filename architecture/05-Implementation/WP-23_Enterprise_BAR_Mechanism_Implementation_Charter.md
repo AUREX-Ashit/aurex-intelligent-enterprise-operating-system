@@ -8,7 +8,7 @@
 
 **Governing capability:** none — this Work Package has no `CAP-001` capability of its own. It implements the enterprise Business Activity Registry (BAR) mechanism the seven original `§14` questions plus D8/D9 (implementation-planning determination) already fully decided, per `ROD-ENTERPRISE-BAR-Decision-Preparation.md`.
 
-**Status:** **CHARTERED.** Implementation is authorized to begin **only** within the boundary §20/§29 of this Charter state, subject to the standard `CLAUDE.md §19.7b` five-gate closure sequence before release. No BAR mechanism is built by this Charter. No Business Activity is registered. No Business Activity Identifier is assigned. No `WPR-001` row exists until §31's own registration step is separately performed.
+**Status:** **CHARTERED.** Implementation is authorized to begin **only** within the boundary §20/§29 of this Charter state, subject to the standard `CLAUDE.md §19.7b` five-gate closure sequence before release. No BAR mechanism is built by this Charter. No Business Activity is registered. No Business Activity Identifier is assigned. No `WPR-001` row exists until §31's own registration step is separately performed. *(2026-09-30: a **proposed** amendment, §21a (TD-171 remediation tranche), has been prepared. It is **not accepted and not authorized**; §20 is unchanged until Gate R1/R2.)*
 
 **Prepared under:** direct Repository Owner instruction ("Proceed with the consolidated next governed stage: WP-23 — Enterprise BAR Mechanism Implementation"), 2026-09-22, following the complete enterprise BAR governance sequence: `BAR_ENTERPRISE_MECHANISM_DECISION_INVESTIGATION.md` → `ROD-ENTERPRISE-BAR-Decision-Preparation.md` (D1 Establish, D2 LOCKED-minimum scope, D3 retroactive registration, D4 moot, D5 identifier authority/timing, D6 no `IMP-001` amendment, D7 separate registration index, D8 transitional execution gate) → `ENTERPRISE-BAR-MECHANISM-DESIGN-AND-IMPLEMENTATION-READINESS.md` (consolidated design, READY WITH CONDITIONS; §19a, D9 per-BA cutover, an implementation-planning determination, not a new Repository Owner decision) → this Charter.
 
@@ -183,6 +183,171 @@ This Charter does **not** authorize:
   - `BAR-INDEX.md` is the human governance catalogue;
   - reconciliation between the governance and runtime records remains required.
 - **This correction is not** an expansion of WP-23 scope. It does not authorize Workstream D or E, WP-BAE-001 M2, any Business Activity registration, runtime execution gating or any new runtime behaviour. No other Charter text is amended.
+
+---
+
+## 21a. TD-171 Remediation Tranche (PROPOSED AMENDMENT — NOT ACCEPTED, NOT AUTHORIZED)
+
+**Amendment status: PROPOSED.**
+- Prepared 2026-09-30 by Repository Owner instruction ("Prepare the WP-23 Charter amendment for the TD-171 remediation tranche"), as a governance-design task.
+- **This section is not in force until the Repository Owner accepts it (Gate R1).**
+- **It authorizes no implementation.** The tranche needs separate authorization (Gate R2).
+- Preparing it satisfies **none** of the gates in §21a.7.
+- Until accepted, §20's authorization boundary (Workstreams A–G) is unchanged.
+
+### 21a.1 Purpose
+
+The tranche remediates **TD-171** (`TECH-DEBT.md`):
+- no enforcement links a registering act to a runtime `bar_registration` row (GAP-23-03-1);
+- no reconciliation exists between `bar_registration` and `BAR-INDEX.md` (GAP-23-03-2).
+
+Its purpose is to close that BAR registration-governance gap before any downstream execution-eligibility consumer, **including WP-BAE-001 M2**, relies on BAR registration state. This fulfils the Gate 1/Gate 5 condition (CERT-F-04; G5-08; C-1) that the A–C acceptance carries forward.
+
+### 21a.2 Authority
+
+- The existing WP-23 governance authority. BAR owns registration (D2, §4). Registration authority is a Repository-Owner-authorized registering act (§7, §14); RD-23-03 layered model.
+- `ROD-BAE-001-TD-171-BAR-Consumption-Decision-Preparation.md §17`: TD-171 must close before M2 authorization; BAR/WP-23 owns remediation.
+- `ROD-WP23-TD-171-Remediation-Decision-Preparation.md §19`: **OQ-R-1 to OQ-R-7** (commit `691f079`).
+- **No new authority model is created.** §14's "No new authorization architecture is created" applies unchanged.
+
+### 21a.3 Scope (bounded)
+
+The tranche covers only:
+- **A.** A governed registration operation.
+- **B.** Governing-act validation.
+- **C.** Production write-path restriction.
+- **D.** Database-role separation.
+- **E.** Repository CI verification.
+- **F.** `BAR-INDEX.md` consistency checks.
+- **G.** Environment-level row ↔ index ↔ governance reconciliation.
+- **H.** Preservation of audit and event evidence (the existing `record_audit`/`publish_event`, §15).
+- **I.** Handling of ungoverned rows.
+- **J.** PostgreSQL verification required by TD-176, where applicable.
+- **K.** Independent review and closure evidence.
+
+**The tranche does not cover:**
+- BAR identity redesign or redesign of identifier allocation (D5 unchanged);
+- new authority seats or a new authorization architecture;
+- WP-BAE-001 M2 or M2-P implementation, or BAE runtime resolution;
+- any replacement or unbinding lifecycle;
+- a new act registry;
+- tenant-specific BAR identity;
+- a new Work Package;
+- Workstreams D–H;
+- any Business Activity registration or identifier assignment.
+
+### 21a.4 Relationship to Workstreams A–C (not reopened)
+
+- Workstreams **A–C remain ACCEPTED** (RD-23-02; C-3 acceptance, `IRA-WP-23-AC …`), committed in `b0f5a12`. **Their acceptance is not revoked or reopened.**
+- This tranche does not rewrite their historical implementation, acceptance records, commit boundaries or closure decisions.
+- Any remediation touching existing registration code is performed **under this tranche's own boundary**, not by retroactively altering the A–C acceptance.
+- **WP-23 remains OPEN** (§22, RD-23-02 note). The tranche is a new, bounded tranche within WP-23, with its own implementation boundary, gate sequence and closure record.
+
+### 21a.5 Responsibility
+
+| Party | Responsibility |
+|---|---|
+| **WP-23 / BAR** | Owns the tranche: the governed registration write path; governing-act validation; registration integrity; `BAR-INDEX.md` reconciliation; TD-171 closure |
+| **Infrastructure / deployment owner** | Designates the canonical production environment (OQ-R-5); provisions database roles (OQ-R-3); provides controlled, read-only, environment-scoped reconciliation access (OQ-R-6) |
+| **WP-BAE-001 M2** | Downstream **consumer only**, read-only. Not a remediation owner. Never writes, registers, repairs or reconciles BAR, and never validates acts in place of BAR governance |
+| **WP-BAE-001 M2-P** | Not an owner. No BAR write authority. Scope unchanged (RD-M2-07) |
+
+### 21a.6 Work items (governance/design level; identifiers local to this section)
+
+| ID | Work item | Basis |
+|---|---|---|
+| R-01 | Governed registration operation and governing-act validation. The act is a repository ADR/ROD-style record naming the BAR Business Activity Identifier, the Business Activity reference, the owning capability and/or Work Package, the governing decision, the registration intent and the governance authority. A free-text `registering_act` alone is insufficient. **The machine-verifiable citation rule is to be designed** | OQ-R-2, OQ-R-4 |
+| R-02 | Production write-path restriction: the governed operation is the only production registration-write path. `register()` does not remain an unrestricted, application-callable production write path | OQ-R-2, OQ-R-3 |
+| R-03 | Database-role separation: the BAE/M2 read path cannot write registrations, and only the governed write path holds registration-write capability. Negative tests are required | OQ-R-3 |
+| R-04 | Repository CI verification of governing-act references and `BAR-INDEX.md` consistency (no database access) | OQ-R-2, OQ-R-6 |
+| R-05 | Environment-level reconciliation of persistent rows against the canonical governance and index state, using infrastructure-provided read-only access | OQ-R-2, OQ-R-6 |
+| R-06 | Designation of the single canonical production BAR/AuthService database. Identifiers are enterprise-global; no competing canonical issuance; non-production data never becomes canonical. **Not yet designated** | OQ-R-5 |
+| R-07 | Ungoverned-row handling: classify, quarantine or block, record evidence. Never silently adopt, delete or rewrite. Any disposition needs separate authorization | OQ-R-7 |
+| R-08 | PostgreSQL/asyncpg verification | TD-176 |
+| R-09 | Independent verification and review (`CLAUDE.md §19.7b`, §16), with negative controls | §16; ROD §12 |
+| R-10 | Closure and governance synchronization: TD-171 closure record; `TECH-DEBT.md` synchronization; the G5-08 severity reassessment at the applicable consumer gate | ROD §19.3; OQ-171-4, OQ-171-5 |
+
+No filename, class, endpoint, migration, SQL, role name or environment name is fixed here.
+
+### 21a.7 Gates
+
+| Gate | Condition | State at preparation |
+|---|---|---|
+| **R1** | This Charter amendment accepted by the Repository Owner | **Not satisfied** |
+| **R2** | The remediation tranche separately authorized for implementation | **Not satisfied** |
+| **R3** | Design and readiness complete: the tranche's `CLAUDE.md §19` checklist; the act-citation rule; the operation, role and reconciliation design; environment designation and infrastructure prerequisites confirmed | **Not satisfied** |
+| **R4** | Implementation and controlled deployment verification complete | **Not satisfied** |
+| **R5** | Independent verification and review complete: the §16 / `§19.7b` sequence, including remediation re-verification if needed | **Not satisfied** |
+| **R6** | Closure evidence recorded. `TECH-DEBT.md` synchronization and G5-08 reassessment complete | **Not satisfied** |
+
+**Preparing this amendment satisfies none of R1–R6.**
+
+### 21a.8 Closure criteria
+
+These trace to `ROD-WP23-TD-171 … §12` and the `§19.7b` model. TD-171 may close only with evidence of:
+1. a valid governed registration;
+2. rejection of an invalid or mismatched act;
+3. `BAR-INDEX.md` consistency;
+4. duplicate handling;
+5. an unauthorized-write negative control;
+6. role separation;
+7. rollback and failure behaviour;
+8. audit and event evidence;
+9. PostgreSQL verification;
+10. reconciliation across every applicable persistent environment;
+11. ungoverned-row handling;
+12. independent review;
+13. `TECH-DEBT.md` synchronization;
+14. the G5-08 severity reassessment.
+
+The G5-08 reassessment is **not** performed by this amendment.
+
+### 21a.9 Outstanding prerequisites
+
+All of the following are outstanding:
+- canonical production environment designation;
+- infrastructure database roles;
+- controlled read access;
+- the exact machine-verifiable act-citation rule;
+- the remediation design and `§19` checklist;
+- TD-176 PostgreSQL verification;
+- tranche authorization (R2).
+
+### 21a.10 Boundary with WP-BAE-001 M2
+
+- **TD-171 closure is a prerequisite to M2 authorization.** This amendment does **not** authorize M2.
+- **M2 remains NOT AUTHORIZED / NOT STARTED. M2-P remains CHARTERED / NOT AUTHORIZED / NOT STARTED.**
+- The tranche must close before M2 may consume BAR registration state as execution eligibility.
+
+### 21a.11 Stop conditions
+
+Tranche work halts and reports on any of the following:
+- scope expansion beyond TD-171 (§21a.3);
+- any attempt to reopen the A–C acceptance;
+- missing governing-act validation;
+- an unrestricted production `register()` remaining;
+- inability to establish write/read database-role separation (recorded, never weakened);
+- inability to inspect or reconcile the canonical environment;
+- PostgreSQL verification failure;
+- discovery of ungoverned persistent rows without an authorized disposition;
+- any attempt to make M2 the remediation owner;
+- any attempt to authorize M2 through this amendment.
+
+### 21a.12 Traceability
+
+| Source | Applied in |
+|---|---|
+| OQ-R-1 (vehicle B: bounded tranche; A–C intact; no new WP) | §21a, §21a.4, §21a.7 R1–R2 |
+| OQ-R-2 (mechanism D) | §21a.3 A, E–G; R-01, R-02, R-04, R-05 |
+| OQ-R-3 (governed operation + database-role separation; no new authority identity; not `require_platform_admin`) | §21a.3 C–D; R-02, R-03 |
+| OQ-R-4 (ADR/ROD-style act; no act registry) | R-01 |
+| OQ-R-5 (single canonical production environment; not yet designated) | R-06; §21a.9 |
+| OQ-R-6 (infrastructure-provided read-only access; M2 not the owner) | §21a.5; R-04, R-05 |
+| OQ-R-7 (quarantine/block ungoverned rows) | R-07; §21a.11 |
+| `ROD-BAE-001-TD-171 … §17`; TD-171; CERT-F-04; G5-01, G5-08, C-1; RD-23-02; RD-23-03; RD-23-04 | §21a.1, §21a.2, §21a.4, §21a.10 |
+| This Charter §4, §7, §14, §15, §16, §20, §22 | §21a.2–§21a.4 |
+
+No new decision is made by this section.
 
 ---
 
