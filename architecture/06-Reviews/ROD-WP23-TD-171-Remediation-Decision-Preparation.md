@@ -392,4 +392,22 @@ None of these sources was changed.
 - R4–R6 NOT SATISFIED. **TD-171 OPEN.**
 - M2 NOT AUTHORIZED / NOT STARTED. M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED.
 
+### 19.8 R3 External Prerequisites Request Synchronization (2026-09-30)
+
+*Governance synchronization only. It creates or alters no decision: OQ-R-1 to OQ-R-7, and §19.1 to §19.7, are unchanged.*
+- The TD-171 R3 external-prerequisites request (`TDS-WP23-TD-171-R3-External-Prerequisites-Request.md`, `7a3b639`) has been **issued to Platform Engineering**, the ownership role in `OPERATIONAL_OWNERSHIP.md`.
+- It is recorded in IMP-REPORT-WP-23 (`566d424`), the WPR-001 WP-23 row (`76acac2`) and Charter §21a.9 (`4e0f24a`).
+- **Issuance/status only.** It does not mean Platform Engineering has performed any action.
+- The prerequisites remain **external to repository implementation**.
+
+| EP | Prerequisite | Status |
+|---|---|---|
+| EP-01 | Canonical production environment/database designation | **REQUESTED / NOT PROVIDED** |
+| EP-02 | DB-role separation and controlled production write path | **REQUESTED / NOT PROVIDED** |
+| EP-03 | Controlled environment-scoped read-only reconciliation access | **REQUESTED / NOT PROVIDED** |
+| EP-04 | PostgreSQL verification environment | **REQUESTED / NOT PROVIDED** |
+
+- None of EP-01 to EP-04 is provisioned, available, verified, accepted or completed.
+- **R3 remains NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. TD-171 remains OPEN.**
+
 *~~End of decision preparation. No implementation. Nothing staged, committed or pushed.~~ End of decision record. DECIDED 2026-09-30 (vehicle B, mechanism D). TD-171 OPEN. No implementation authorized. M2 NOT AUTHORIZED / NOT STARTED.*
