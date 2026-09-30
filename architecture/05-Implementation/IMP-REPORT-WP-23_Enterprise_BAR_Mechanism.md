@@ -266,6 +266,30 @@ The tests:
 - TD-172 to TD-175 are **not** authorized.
 - WP-BAE-001 **M2 NOT AUTHORIZED / NOT STARTED**; **M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED**.
 
+**R3 Design Decisions (synchronized 2026-09-30).**
+- *This synchronizes design decisions already established in `architecture/06-Reviews/TDS-WP23-TD-171-R3-Remediation-Design-and-Readiness.md` §17.1 (`fa93fc7`), and already synchronized into Charter §21a.6 and `ROD-WP23-TD-171-Remediation-Decision-Preparation.md` §19.7 (`649f55a`).*
+- **It is not a new decision.** It records **design decisions only**: nothing is implemented, verified or satisfied by them.
+
+| OD | Design decision | State |
+|---|---|---|
+| OD-1 | **Two-part governed act.** An authorization component establishes the governed registration intent before identifier issuance. An execution/registration addendum records the BAR Business Activity Identifier actually issued at registration. D5 is unchanged, and no identifier is pre-created to satisfy the act. Until the execution evidence exists, the registration is not treated as governed, and the OD-5 block applies | **DESIGN DECIDED** (not implemented) |
+| OD-2 | **Both canonical BAR write paths are governed:** `issue_identifier()` and `register()`. The AuthService runtime database role is **intended** to have no INSERT, UPDATE or DELETE on either BAR table. The governed deployment-time operation is the controlled production write path. Static caller verification is **intended** to cover both methods. A design decision within the TD-171 tranche, not a Workstream B/C scope expansion | **DESIGN DECIDED** (role restriction and caller verification not implemented or verified) |
+| OD-3 | **Structured governed-act metadata convention**, using the repository's existing Field/Value metadata-table style, not YAML front matter. **No act registry.** It separates the human-readable governance record, machine-verifiable metadata/citation, and runtime validation inputs. The field convention is defined in the R3 TDS §17.1.3 | **DESIGN DECIDED** (no runtime validation exists yet) |
+| OD-4 | Canonical-environment identity check. No environment name, database identity, connection identifier or deployment designation is recorded or inferred | **OPEN / EXTERNAL PREREQUISITE** |
+| OD-5 | **Deployment-level integrity block** for ungoverned or unverifiable BAR rows. It detects, blocks, reports and preserves the evidence, and requires separately governed remediation. **No new BAR registration status.** M2 does not compensate for invalid BAR governance | **DESIGN DECIDED** (control not implemented or tested) |
+
+**Status distinction.** DESIGN DECIDED is not IMPLEMENTED, VERIFIED or R3 SATISFIED. The R3 checklist states are unchanged:
+- **C-05, C-06 and C-11:** designed, decision resolved. **Not implemented; no PASS.**
+- **C-07** (database-role provisioning), **C-09** (reconciliation access) and **C-10** (canonical environment designation): **not satisfied**, external.
+
+**R3: NOT SATISFIED; NOT READY FOR R3 ACCEPTANCE REVIEW.**
+
+**External prerequisites outstanding:**
+- canonical production environment designation;
+- database-role provisioning;
+- controlled read-only reconciliation access;
+- a target PostgreSQL environment.
+
 ---
 
 ~~*End of IMP-REPORT-WP-23 (A–C tranche). IMPLEMENTATION COMPLETE — AWAITING INDEPENDENT VERIFICATION. WP-23 OPEN. Nothing staged, committed or pushed.*~~
@@ -275,3 +299,5 @@ The tests:
 *End of IMP-REPORT-WP-23 (A–C tranche). C-3 addendum 2026-09-28: IMPLEMENTATION COMPLETE — INDEPENDENTLY VERIFIED (Gates 1, 2 and 4) — GATE 5 PASS WITH CONDITIONS (C-1 and C-2 completed, C-3 satisfied, C-4 outstanding) — **ACCEPTED** (`IRA-WP-23-AC §0.2`) and committed with that record. NOT CERTIFIED, NOT CLOSED. WP-23 OPEN; Workstreams D–H not implemented. WP-BAE-001 M2 NOT AUTHORIZED and NOT STARTED.*
 
 *(2026-09-30 addendum.) TD-171 remediation tranche (Charter §21a): ACCEPTED (R1); AUTHORIZED (R2, `d2aaade`); R3–R6 NOT SATISFIED; implementation not started; TD-171 OPEN. M2 NOT AUTHORIZED / NOT STARTED; M2-P CHARTERED / NOT AUTHORIZED / NOT STARTED.*
+
+*(2026-09-30 addendum, R3 design synchronization.) OD-1, OD-2, OD-3 and OD-5 DESIGN DECIDED (`fa93fc7`, `649f55a`); OD-4 OPEN / EXTERNAL. R3 NOT SATISFIED / NOT READY FOR R3 ACCEPTANCE REVIEW. Nothing implemented. TD-171 OPEN.*
