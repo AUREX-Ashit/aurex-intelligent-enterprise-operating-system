@@ -1,0 +1,56 @@
+name: BAR Governance Evidence Check
+
+# TD-171 (WP-23 Charter §21a), R-04: repository-only BAR-INDEX.md <-> governed
+# act check. Governed acts may be any Markdown record under architecture/
+# (services/bar_governance_evidence.py discovers them there), so every
+# Markdown change under architecture/ triggers this small job. It opens no
+# database connection and writes nothing.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "architecture/**/*.md"
+      - "Backend/Services/AuthService/services/bar_governed_act.py"
+      - "Backend/Services/AuthService/services/bar_governance_evidence.py"
+      - "Backend/Services/AuthService/scripts/bar_index_check.py"
+      - "Backend/Services/AuthService/tests/bar_governance_fixtures.py"
+      - "Backend/Services/AuthService/tests/test_bar_governance_evidence.py"
+      - "Backend/Services/AuthService/tests/test_bar_governed_act.py"
+      - ".github/workflows/bar-governance-ci.yml"
+  pull_request:
+    paths:
+      - "architecture/**/*.md"
+      - "Backend/Services/AuthService/services/bar_governed_act.py"
+      - "Backend/Services/AuthService/services/bar_governance_evidence.py"
+      - "Backend/Services/AuthService/scripts/bar_index_check.py"
+      - "Backend/Services/AuthService/tests/bar_governance_fixtures.py"
+      - "Backend/Services/AuthService/tests/test_bar_governance_evidence.py"
+      - "Backend/Services/AuthService/tests/test_bar_governed_act.py"
+      - ".github/workflows/bar-governance-ci.yml"
+
+defaults:
+  run:
+    working-directory: Backend/Services/AuthService
+
+jobs:
+  bar-index-check:
+    name: BAR-INDEX <-> Governed Act Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check BAR-INDEX.md against the governed acts (non-zero exit blocks)
+        run: python -m scripts.bar_index_check
+
+      - name: Run the checker and act-validator tests
+        env:
+          JWT_SECRET_KEY: ci-test-secret-key-not-for-production
+        run: python -m pytest tests/test_bar_governance_evidence.py tests/test_bar_governed_act.py -v

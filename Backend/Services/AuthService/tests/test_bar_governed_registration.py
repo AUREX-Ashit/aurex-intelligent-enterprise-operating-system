@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,7 @@ from models.bar_identifier_ledger import BarIdentifierLedger
 from models.bar_registration import BarRegistration
 from models.database import Base
 from repositories.bar_identifier_repository import BarIdentifierRepository
+from repositories.bar_registration_repository import BarRegistrationRepository
 from services.bar_governed_act import (
     GovernedActAddendumMismatch,
     GovernedActErrorCode,
@@ -481,3 +483,65 @@ def test_operation_does_not_use_the_runtime_session_manager():
     source = (Path(__file__).resolve().parents[1] / "services" / "bar_governed_registration.py").read_text(encoding="utf-8")
     assert "db_manager" not in source
     assert "models.database" not in source
+
+
+# ------------------------------------- slice 3 review: execute/confirm hardening
+
+
+async def test_addendum_rendering_failure_commits_nothing(operation, write_db, act_dir, monkeypatch):
+    """The addendum is rendered before commit: no registration is committed without its execution evidence."""
+    import services.bar_governed_registration as module
+
+    _, sessions = write_db
+
+    def failing_render(*_args, **_kwargs):
+        raise ValueError("simulated rendering failure")
+
+    monkeypatch.setattr(module, "render_execution_addendum", failing_render)
+    with pytest.raises(ValueError, match="simulated rendering failure"):
+        await operation.execute(_write_act(act_dir, "ADR-9122"), _request())
+    assert await _rows(sessions) == []
+    assert await _ledger_count(sessions) == 0
+
+
+async def test_execute_phase_is_audited_as_not_yet_governed(operation, act_dir, caplog):
+    caplog.set_level(logging.INFO, logger="authservice.audit")
+    executed = await operation.execute(_write_act(act_dir, "ADR-9123"), _request(), actor_id="deploy-operator")
+    phases = [a for a in _records(caplog, "authservice.audit") if a["action"] == "BAR_GOVERNED_REGISTRATION"]
+    assert len(phases) == 1
+    assert phases[0]["status"] == "SUCCESS"
+    assert phases[0]["metadata"] == {
+        "phase": "execute",
+        "governing_act_id": "ADR-9123",
+        "identifier": executed.bar_business_activity_identifier,
+        "execution_reference": executed.execution_reference,
+        "governed": False,
+    }
+
+
+async def test_confirm_rejects_an_addendum_dated_differently_from_the_registration(operation, act_dir):
+    act_path = _write_act(act_dir, "ADR-9124")
+    executed = await operation.execute(act_path, _request())
+    other_day = (executed.executed_on - timedelta(days=400)).isoformat()
+    _append(act_path, executed.execution_addendum.replace(executed.executed_on.isoformat(), other_day))
+    with pytest.raises(GovernedRegistrationEvidenceMismatch) as info:
+        await operation.confirm(act_path)
+    assert info.value.field == "registered_on"
+
+
+async def test_confirm_rejects_a_registration_not_in_registered_status(operation, act_dir, monkeypatch):
+    """The CHECK constraint permits only REGISTERED; confirm() verifies it rather than assuming it."""
+    act_path = _write_act(act_dir, "ADR-9125")
+    executed = await operation.execute(act_path, _request())
+    _append(act_path, executed.execution_addendum)
+    real_get = BarRegistrationRepository.get_by_identifier
+
+    async def read_other_status(self, identifier):
+        row = await real_get(self, identifier)
+        row.registration_status = "SUSPENDED"  # in-memory only; the session is closed without flush
+        return row
+
+    monkeypatch.setattr(BarRegistrationRepository, "get_by_identifier", read_other_status)
+    with pytest.raises(GovernedRegistrationEvidenceMismatch) as info:
+        await operation.confirm(act_path)
+    assert info.value.field == "registration_status"

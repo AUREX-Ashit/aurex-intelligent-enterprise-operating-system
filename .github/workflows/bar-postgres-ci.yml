@@ -1,0 +1,64 @@
+name: BAR PostgreSQL Verification
+
+# TD-171 (WP-23 Charter §21a), R-08: runs tests/test_bar_postgres.py against a
+# disposable PostgreSQL service container (the same postgres:16 service
+# pattern as the AuthService CI bootstrap job). No migrations are applied: the
+# tests create the BAR tables from the models and drop them afterwards.
+#
+# This is ordinary PostgreSQL verification of BAR behaviour (allocation,
+# concurrent collision, rollback, reconciliation, ungoverned-row blocking).
+# It is NOT production database-role verification: the container credentials
+# below are disposable CI credentials, not production roles, and the
+# role-separation tests stay skipped until a runtime principal exists (EP-02).
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Backend/Services/AuthService/**/*bar_*.py"
+      - "Backend/Services/AuthService/requirements.txt"
+      - ".github/workflows/bar-postgres-ci.yml"
+  pull_request:
+    paths:
+      - "Backend/Services/AuthService/**/*bar_*.py"
+      - "Backend/Services/AuthService/requirements.txt"
+      - ".github/workflows/bar-postgres-ci.yml"
+
+defaults:
+  run:
+    working-directory: Backend/Services/AuthService
+
+jobs:
+  bar-postgres:
+    name: BAR Tests on PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: authservice
+          POSTGRES_PASSWORD: authservice
+          POSTGRES_DB: authservice
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      BAR_POSTGRES_TEST_DATABASE_URL: postgresql+asyncpg://authservice:authservice@localhost:5432/authservice
+      BAR_POSTGRES_REQUIRED: "1"
+      JWT_SECRET_KEY: ci-test-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run BAR PostgreSQL tests (skips are listed; role tests need EP-02)
+        run: python -m pytest tests/test_bar_postgres.py -v -rs

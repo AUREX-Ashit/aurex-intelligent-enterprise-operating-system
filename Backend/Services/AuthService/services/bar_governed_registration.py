@@ -49,7 +49,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from models.bar_registration import BarRegistration
+from models.bar_registration import REGISTRATION_STATUS_REGISTERED, BarRegistration
 from observability import AuditStatus, CorrelationContext, record_audit
 from repositories.bar_identifier_repository import BarIdentifierRepository
 from repositories.bar_registration_repository import BarRegistrationRepository
@@ -200,6 +200,14 @@ class GovernedRegistrationConfirmation:
     execution_reference: str
 
 
+def registration_date(registration: BarRegistration) -> date:
+    """The UTC date of `registered_at`; a naive value (SQLite) is the UTC value it was stored as."""
+    registered_at = registration.registered_at
+    if registered_at.tzinfo is None:
+        registered_at = registered_at.replace(tzinfo=timezone.utc)
+    return registered_at.astimezone(timezone.utc).date()
+
+
 def render_execution_addendum(
     authorization: GovernedActAuthorization,
     *,
@@ -270,23 +278,39 @@ class GovernedBarRegistrationOperation:
                     is_retroactive=authorization.retroactive,
                     actor_id=actor_id,
                 )
+                # Rendered before commit: a registration is never committed
+                # without the execution evidence that must govern it.
+                executed_on = registration_date(registration)
+                addendum = render_execution_addendum(
+                    authorization,
+                    bar_business_activity_identifier=registration.identifier,
+                    execution_reference=execution_reference,
+                    executed_on=executed_on,
+                )
                 await session.commit()
             except BaseException:
                 await session.rollback()
                 raise
 
-        executed_on = registration.registered_at.astimezone(timezone.utc).date()
+        record_audit(
+            action=_ACTION,
+            resource=f"bar_registration:{registration.id}",
+            status=AuditStatus.SUCCESS,
+            actor_id=actor_id or "SYSTEM",
+            metadata={
+                "phase": "execute",
+                "governing_act_id": authorization.governing_act_id,
+                "identifier": registration.identifier,
+                "execution_reference": execution_reference,
+                "governed": False,
+            },
+        )
         return GovernedRegistrationExecution(
             governing_act_id=authorization.governing_act_id,
             bar_business_activity_identifier=registration.identifier,
             execution_reference=execution_reference,
             executed_on=executed_on,
-            execution_addendum=render_execution_addendum(
-                authorization,
-                bar_business_activity_identifier=registration.identifier,
-                execution_reference=execution_reference,
-                executed_on=executed_on,
-            ),
+            execution_addendum=addendum,
         )
 
     async def confirm(self, act_path: Path | str, *, actor_id: str | None = None) -> GovernedRegistrationConfirmation:
@@ -356,13 +380,17 @@ class GovernedBarRegistrationOperation:
             "owning_capability": authorization.owning_capability,
             "owning_work_package": authorization.owning_work_package,
             "is_retroactive": authorization.retroactive,
+            "registered_on": execution.executed_on,
+            "registration_status": REGISTRATION_STATUS_REGISTERED,
         }
+        actual = {field: getattr(registration, field) for field in expected if field != "registered_on"}
+        actual["registered_on"] = registration_date(registration)
         for field, value in expected.items():
-            if getattr(registration, field) != value:
+            if actual[field] != value:
                 self._deny(authorization.governing_act_id, GovernedRegistrationErrorCode.EVIDENCE_MISMATCH, actor_id, field)
                 raise GovernedRegistrationEvidenceMismatch(
                     GovernedRegistrationErrorCode.EVIDENCE_MISMATCH,
-                    f"persisted registration '{field}' {getattr(registration, field)!r} does not "
+                    f"persisted registration '{field}' {actual[field]!r} does not "
                     f"match the governed act's {value!r}.",
                     field=field,
                 )

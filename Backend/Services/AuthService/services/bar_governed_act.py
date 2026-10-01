@@ -213,6 +213,16 @@ def parse_governed_act(text: str, *, source_name: str) -> GovernedAct:
     return GovernedAct(source_name=source_name, authorization=authorization, execution=execution)
 
 
+def declares_governed_act(text: str) -> bool:
+    """Whether `text` carries an authorization or execution title, i.e. is a governed act to validate."""
+    return any(_title_text(line) in (AUTHORIZATION_TITLE, EXECUTION_TITLE) for line in text.splitlines())
+
+
+def table_cells(line: str) -> list[str]:
+    """One Markdown table row's cells, trimmed and unquoted exactly as act metadata cells are."""
+    return [_unquote(cell) for cell in _cells(line)]
+
+
 def _single_table(lines: list[str], title: str, source_name: str) -> dict[str, str] | None:
     title_indexes = [i for i, line in enumerate(lines) if _title_text(line) == title]
     if not title_indexes:
