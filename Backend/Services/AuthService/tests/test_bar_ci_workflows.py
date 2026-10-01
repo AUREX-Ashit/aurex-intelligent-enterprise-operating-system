@@ -128,6 +128,9 @@ def test_governance_job_runs_the_checker_from_the_service_directory():
         f"{AUTHSERVICE}/tests/bar_governance_fixtures.py",
         f"{AUTHSERVICE}/alembic/versions/2026_09_22_1000-b8c9d0e1f2a3_bar_registration.py",
         f"{AUTHSERVICE}/requirements.txt",
+        f"{AUTHSERVICE}/alembic/versions/2026_08_01_0900-a1b2c3d4e5f6_any_migration.py",
+        f"{AUTHSERVICE}/alembic/env.py",
+        f"{AUTHSERVICE}/alembic.ini",
     ],
 )
 def test_postgres_job_triggers_on_bar_code(path):
@@ -150,7 +153,26 @@ def test_postgres_job_uses_a_disposable_service_and_cannot_skip():
     assert "BAR_POSTGRES_RUNTIME_ROLE_URL" not in job["env"]  # role separation is EP-02, not this job
     runs = " ".join(step.get("run", "") for step in job["steps"])
     assert "tests/test_bar_postgres.py" in runs
-    assert "alembic" not in runs  # the tests own their disposable BAR tables
+
+
+def test_postgres_job_migrates_a_separate_database_with_the_real_alembic_chain_before_testing():
+    workflow = _load(POSTGRES_WORKFLOW)
+    (job,) = workflow["jobs"].values()
+    steps = job["steps"]
+    models_url = job["env"]["BAR_POSTGRES_TEST_DATABASE_URL"]
+    migrated_url = job["env"]["BAR_POSTGRES_MIGRATED_DATABASE_URL"]
+    assert migrated_url.rsplit("/", 1)[0] == models_url.rsplit("/", 1)[0]  # same disposable service
+    assert migrated_url != models_url  # but its own database
+    migrated_db = migrated_url.rsplit("/", 1)[1]
+
+    def index(predicate) -> int:
+        return next(i for i, step in enumerate(steps) if predicate(step))
+
+    create = index(lambda st: f"CREATE DATABASE {migrated_db}" in st.get("run", ""))
+    migrate = index(lambda st: st.get("run", "").strip() == "alembic upgrade head")
+    test = index(lambda st: "tests/test_bar_postgres.py" in st.get("run", ""))
+    assert create < migrate < test
+    assert steps[migrate]["env"]["DATABASE_URL"] == migrated_url  # alembic/env.py reads DATABASE_URL
 
 
 def test_postgres_module_fails_instead_of_skipping_when_required(tmp_path):
@@ -166,4 +188,21 @@ def test_postgres_module_fails_instead_of_skipping_when_required(tmp_path):
         cwd=DEFAULT_REPOSITORY_ROOT / AUTHSERVICE, env=env, capture_output=True, text=True, timeout=120,
     )
     assert result.returncode != 0
-    assert "BAR_POSTGRES_TEST_DATABASE_URL is unset" in result.stdout
+    assert "BAR_POSTGRES_TEST_DATABASE_URL, BAR_POSTGRES_MIGRATED_DATABASE_URL is unset" in result.stdout
+
+
+def test_postgres_module_requires_the_migrated_database_too():
+    """A model-created database alone does not satisfy BAR_POSTGRES_REQUIRED=1."""
+    import os
+    import subprocess
+    import sys
+
+    env = {k: v for k, v in os.environ.items() if not k.startswith("BAR_POSTGRES_")}
+    env["BAR_POSTGRES_REQUIRED"] = "1"
+    env["BAR_POSTGRES_TEST_DATABASE_URL"] = "postgresql+asyncpg://unused@localhost:1/unused"
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "tests/test_bar_postgres.py", "-q", "-p", "no:cacheprovider"],
+        cwd=DEFAULT_REPOSITORY_ROOT / AUTHSERVICE, env=env, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode != 0
+    assert "BAR_POSTGRES_MIGRATED_DATABASE_URL is unset" in result.stdout

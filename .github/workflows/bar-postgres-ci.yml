@@ -2,8 +2,14 @@ name: BAR PostgreSQL Verification
 
 # TD-171 (WP-23 Charter §21a), R-08: runs tests/test_bar_postgres.py against a
 # disposable PostgreSQL service container (the same postgres:16 service
-# pattern as the AuthService CI bootstrap job). No migrations are applied: the
-# tests create the BAR tables from the models and drop them afterwards.
+# pattern as the AuthService CI bootstrap job), on two schema sources:
+#
+#   * models   — the `authservice` database; the tests create the BAR tables
+#                from the models and drop them afterwards;
+#   * migrated — a second database, `bar_migrated`, brought to head by the
+#                real Alembic migration chain (`alembic upgrade head`, as the
+#                bootstrap job runs it). The tests verify the migrated BAR
+#                schema against the models and run every behaviour test on it.
 #
 # This is ordinary PostgreSQL verification of BAR behaviour (allocation,
 # concurrent collision, rollback, reconciliation, ungoverned-row blocking).
@@ -16,11 +22,15 @@ on:
     branches: [main, master]
     paths:
       - "Backend/Services/AuthService/**/*bar_*.py"
+      - "Backend/Services/AuthService/alembic/**"
+      - "Backend/Services/AuthService/alembic.ini"
       - "Backend/Services/AuthService/requirements.txt"
       - ".github/workflows/bar-postgres-ci.yml"
   pull_request:
     paths:
       - "Backend/Services/AuthService/**/*bar_*.py"
+      - "Backend/Services/AuthService/alembic/**"
+      - "Backend/Services/AuthService/alembic.ini"
       - "Backend/Services/AuthService/requirements.txt"
       - ".github/workflows/bar-postgres-ci.yml"
 
@@ -48,6 +58,7 @@ jobs:
           --health-retries 5
     env:
       BAR_POSTGRES_TEST_DATABASE_URL: postgresql+asyncpg://authservice:authservice@localhost:5432/authservice
+      BAR_POSTGRES_MIGRATED_DATABASE_URL: postgresql+asyncpg://authservice:authservice@localhost:5432/bar_migrated
       BAR_POSTGRES_REQUIRED: "1"
       JWT_SECRET_KEY: ci-test-secret-key-not-for-production
     steps:
@@ -59,6 +70,27 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Create the disposable migrated database
+        run: |
+          python - <<'PY'
+          import asyncio
+          import asyncpg
+
+          async def main():
+              conn = await asyncpg.connect("postgresql://authservice:authservice@localhost:5432/authservice")
+              try:
+                  await conn.execute("CREATE DATABASE bar_migrated")
+              finally:
+                  await conn.close()
+
+          asyncio.run(main())
+          PY
+
+      - name: Apply the real Alembic migration chain to it
+        env:
+          DATABASE_URL: postgresql+asyncpg://authservice:authservice@localhost:5432/bar_migrated
+        run: alembic upgrade head
 
       - name: Run BAR PostgreSQL tests (skips are listed; role tests need EP-02)
         run: python -m pytest tests/test_bar_postgres.py -v -rs
